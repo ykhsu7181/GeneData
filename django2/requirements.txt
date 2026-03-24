@@ -1,0 +1,6 @@
+Django>=3.2.9,<4.0
+djangorestframework>=3.12.0
+django-cors-headers>=3.10.0
+coreapi>=2.3.3  # 用于API文档
+mysqlclient>=2.0.3  # MySQL数据库驱动 
+biopython>=1.79

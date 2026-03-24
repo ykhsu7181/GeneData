@@ -1,0 +1,93 @@
+# -----------------------------
+# OS / Editor
+# -----------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.suo
+*.user
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+
+# -----------------------------
+# Python / Django
+# -----------------------------
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*$py.class
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+venv/
+.venv/
+env/
+ENV/
+
+# Django runtime artifacts
+/django2/db.sqlite3
+/django2/*.sqlite3
+/django2/static/
+/django2/staticfiles/
+/django2/media/codonw_results/
+/django2/media/genome-files/
+/django2/media/codonw_tasks.json
+/django2/media/*.log
+/django2/*.log
+
+# -----------------------------
+# Node / Vue
+# -----------------------------
+node_modules/
+dist/
+coverage/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local env files
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.local
+
+# -----------------------------
+# Project-specific large/generated data
+# -----------------------------
+/raw_data/
+/manual_files/
+/codon.IR64/
+/TEs.IR64/
+/Core&Variable Blocks/
+/django-cors-headers-3.13.0/
+
+# Archives / packaged outputs
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# Office / document files
+*.pptx
+*.pdf
+*.docx
