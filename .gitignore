@@ -1,0 +1,120 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.pyre/
+.coverage
+.coverage.*
+htmlcov/
+pip-wheel-metadata/
+*.egg-info/
+
+# Python virtualenvs and local package caches
+.venv/
+venv/
+env/
+ENV/
+.pip-tmp/
+.wheels/
+.wheels_stage1/
+.extract_test_django/
+.extract_test_requests/
+.pydeps/
+.pydeps2/
+.pydeps_manual/
+.pydeps_runtime/
+.pydeps_stage1/
+
+# Django runtime artifacts
+db.sqlite3
+*.sqlite3
+*.sqlite3-journal
+media/
+staticfiles/
+
+# Node / frontend caches
+node_modules/
+**/node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+.parcel-cache/
+.eslintcache
+coverage/
+**/coverage/
+dist/
+**/dist/
+build/
+**/build/
+
+# Archives / packaged outputs
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Project-specific non-source assets and data
+/raw_data/
+/manual_files/
+/tools/
+/Core&Variable Blocks/
+/codon.IR64/
+/TEs.IR64/
+/django-cors-headers-3.13.0/
+
+# Project-specific generated and local-only directories
+/django2/.venv/
+/django2/.pip-tmp/
+/django2/.wheels/
+/django2/.wheels_stage1/
+/django2/.extract_test_django/
+/django2/.extract_test_requests/
+/django2/.pydeps/
+/django2/.pydeps2/
+/django2/.pydeps_manual/
+/django2/.pydeps_runtime/
+/django2/.pydeps_stage1/
+/django2/media/
+/vue_project/dist/
+/vue_project/dist.zip
+
+# Root-only local docs/artifacts that are not part of source
+/package.json
+/yarn.lock
+/django2-bake.zip
+/生产环境总部署流程.pdf
+/基因仓库近期工作记录.md
+/开发环境启动流程.md
