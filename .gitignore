@@ -1,4 +1,4 @@
-# -----------------------------
+﻿# -----------------------------
 # OS / Editor
 # -----------------------------
 .DS_Store
@@ -76,7 +76,6 @@ pnpm-debug.log*
 /manual_files/
 /codon.IR64/
 /TEs.IR64/
-/Core&Variable Blocks/
 /django-cors-headers-3.13.0/
 
 # Archives / packaged outputs
