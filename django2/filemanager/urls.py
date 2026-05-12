@@ -37,7 +37,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("gd/api/files/", include("files.urls")),
     path("gd/api/admin/", include("files.urls")),
-    path("gd/api/integrations/", include("integrations.urls")),
     path("api/files/", include("files.urls")),
     path("api/admin/", include("files.urls")),
     path("api-auth/", include("rest_framework.urls")),
