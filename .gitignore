@@ -90,7 +90,6 @@ build/
 /raw_data/
 /manual_files/
 /tools/
-/Core&Variable Blocks/
 /codon.IR64/
 /TEs.IR64/
 /django-cors-headers-3.13.0/
