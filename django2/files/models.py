@@ -5,6 +5,9 @@ from django.db.models import Q
 class FileType(models.Model):
     """文件类型模型"""
 
+    code = models.CharField(max_length=50, unique=True, db_index=True, blank=True, null=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    format = models.CharField(max_length=100, blank=True, null=True)
     name = models.CharField(max_length=100, verbose_name='类型名称')
     extension = models.CharField(max_length=20, verbose_name='文件扩展名')
     description = models.TextField(blank=True, null=True, verbose_name='描述')
@@ -15,6 +18,24 @@ class FileType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Species(models.Model):
+    species_code = models.CharField(max_length=100, unique=True, db_index=True)
+    scientific_name = models.CharField(max_length=255, blank=True, null=True)
+    chinese_name = models.CharField(max_length=255, blank=True, null=True)
+    common_name = models.CharField(max_length=255, blank=True, null=True)
+    taxonomy_id = models.CharField(max_length=100, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'species'
+        ordering = ['species_code']
+
+    def __str__(self):
+        return self.scientific_name or self.common_name or self.species_code
 
 
 class Organism(models.Model):
@@ -48,6 +69,13 @@ class FileCategory(models.Model):
 
 
 class Accession(models.Model):
+    species = models.ForeignKey(
+        'Species',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='accessions',
+    )
     accession = models.CharField(max_length=50, unique=True, db_index=True)
     genetic_stock_id = models.CharField(max_length=100, blank=True, null=True)
     sub_population = models.CharField(max_length=100, blank=True, null=True)
@@ -70,6 +98,123 @@ class Accession(models.Model):
     @property
     def default_assembly(self):
         return self.assemblies.filter(is_default=True).first()
+
+
+class Sample(models.Model):
+    sample_code = models.CharField(max_length=100, unique=True, db_index=True)
+    sample_name = models.CharField(max_length=255, blank=True, null=True)
+    species = models.ForeignKey(
+        'Species',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='samples',
+    )
+    accession = models.ForeignKey(
+        'Accession',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='samples',
+    )
+    tissue = models.CharField(max_length=100, blank=True, null=True)
+    treatment = models.CharField(max_length=255, blank=True, null=True)
+    replicate = models.CharField(max_length=100, blank=True, null=True)
+    data_type = models.CharField(max_length=100, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'sample'
+        ordering = ['sample_code']
+
+    def __str__(self):
+        return self.sample_name or self.sample_code
+
+
+class Project(models.Model):
+    project_code = models.CharField(max_length=100, unique=True, db_index=True)
+    project_name = models.CharField(max_length=255, blank=True, null=True)
+    owner = models.CharField(max_length=255, blank=True, null=True)
+    status = models.CharField(max_length=100, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'project'
+        ordering = ['project_code']
+
+    def __str__(self):
+        return self.project_name or self.project_code
+
+
+class Dataset(models.Model):
+    DATASET_TYPE_CHOICES = [
+        ('genome', 'Genome'),
+        ('annotation', 'Annotation'),
+        ('transcriptome', 'Transcriptome'),
+        ('population_genetics', 'Population genetics'),
+        ('variant', 'Variant'),
+        ('phenotype', 'Phenotype'),
+        ('other', 'Other'),
+    ]
+    VISIBILITY_CHOICES = [
+        ('private', 'Private'),
+        ('lab_internal', 'Lab internal'),
+        ('public', 'Public'),
+    ]
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('approved', 'Approved'),
+        ('released', 'Released'),
+        ('archived', 'Archived'),
+    ]
+
+    dataset_code = models.CharField(max_length=100, unique=True, db_index=True)
+    dataset_name = models.CharField(max_length=255, blank=True, null=True)
+    dataset_type = models.CharField(
+        max_length=50,
+        choices=DATASET_TYPE_CHOICES,
+        default='other',
+    )
+    species = models.ForeignKey(
+        'Species',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='datasets',
+    )
+    project = models.ForeignKey(
+        'Project',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='datasets',
+    )
+    version = models.CharField(max_length=100, blank=True, null=True)
+    visibility = models.CharField(
+        max_length=50,
+        choices=VISIBILITY_CHOICES,
+        default='private',
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default='draft',
+    )
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'dataset'
+        ordering = ['dataset_code']
+
+    def __str__(self):
+        return self.dataset_name or self.dataset_code
 
 
 class Assembly(models.Model):
@@ -148,27 +293,107 @@ class Annotation(models.Model):
         return f"{self.assembly}:{self.name}"
 
 
+class DataFile(models.Model):
+    file_code = models.CharField(max_length=100, unique=True, db_index=True)
+    dataset = models.ForeignKey(
+        'Dataset',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='data_files',
+    )
+    file_type = models.ForeignKey(
+        FileType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='data_files',
+    )
+    file_name = models.CharField(max_length=255)
+    original_name = models.CharField(max_length=255, blank=True, null=True)
+    file_path = models.CharField(max_length=500, unique=True, db_index=True)
+    file_size = models.BigIntegerField(blank=True, null=True)
+    md5 = models.CharField(max_length=64, blank=True, null=True)
+    is_current = models.BooleanField(default=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'data_file'
+        ordering = ['file_code']
+
+    def __str__(self):
+        return self.file_name
+
+
+class FileRelation(models.Model):
+    RELATED_TYPE_CHOICES = [
+        ('accession', 'Accession'),
+        ('assembly', 'Assembly'),
+        ('annotation', 'Annotation'),
+        ('dataset', 'Dataset'),
+        ('sample', 'Sample'),
+        ('expression_matrix', 'Expression matrix'),
+        ('variant_set', 'Variant set'),
+        ('population_analysis', 'Population analysis'),
+        ('other', 'Other'),
+    ]
+
+    file = models.ForeignKey(
+        'DataFile',
+        on_delete=models.CASCADE,
+        related_name='relations',
+    )
+    related_type = models.CharField(max_length=50, choices=RELATED_TYPE_CHOICES)
+    related_id = models.CharField(max_length=100)
+    related_code = models.CharField(max_length=255, blank=True, null=True)
+    file_role = models.CharField(max_length=100)
+    is_primary = models.BooleanField(default=False)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'file_relation'
+        ordering = ['related_type', 'related_id', 'file_role', 'id']
+        indexes = [
+            models.Index(fields=['related_type', 'related_id'], name='idx_fr_related'),
+            models.Index(fields=['related_type', 'related_id', 'file_role'], name='idx_fr_related_role'),
+            models.Index(fields=['file', 'related_type', 'related_id', 'file_role'], name='idx_fr_file_related_role'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['file', 'related_type', 'related_id', 'file_role'],
+                name='uniq_file_relation_role',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.file_id}:{self.related_type}:{self.related_id}:{self.file_role}"
+
+
 class GenomeFile(models.Model):
     """基因组文件模型"""
 
     FILE_CATEGORY_CHOICES = [
         ('variableBlocks', 'Variable Blocks'),
-        ('genome', '基因组序列'),
-        ('transcriptome.all', '转录组-All'),
-        ('transcriptome.root', '转录组-Root'),
-        ('transcriptome.stem', '转录组-Stem'),
-        ('transcriptome.leaf', '转录组-Leaf'),
-        ('transcriptome.panicles', '转录组-Panicles'),
-        ('transcriptome.shoot', '转录组-Shoot'),
-        ('miRNA', '微RNA'),
-        ('tRNA', '转运RNA'),
-        ('rRNA', '核糖体RNA'),
-        ('codon', '密码子'),
-        ('centromere', '着丝粒'),
-        ('TEs', '转座子'),
-        ('annotation', '基因注释'),
-        ('coreBlocks', '核心区块'),
-        ('other', '其他'),
+        ('genome', 'Genome'),
+        ('transcriptome.all', 'Transcriptome-All'),
+        ('transcriptome.root', 'Transcriptome-Root'),
+        ('transcriptome.stem', 'Transcriptome-Stem'),
+        ('transcriptome.leaf', 'Transcriptome-Leaf'),
+        ('transcriptome.panicles', 'Transcriptome-Panicles'),
+        ('transcriptome.shoot', 'Transcriptome-Shoot'),
+        ('miRNA', 'miRNA'),
+        ('tRNA', 'tRNA'),
+        ('rRNA', 'rRNA'),
+        ('codon', 'Codon'),
+        ('centromere', 'Centromere'),
+        ('TEs', 'TEs'),
+        ('annotation', 'Annotation'),
+        ('coreBlocks', 'Core Blocks'),
+        ('other', 'Other'),
     ]
 
     name = models.CharField(max_length=255, verbose_name='文件名')
@@ -197,7 +422,7 @@ class GenomeFile(models.Model):
         related_name='files',
         verbose_name='Annotation',
     )
-    category = models.CharField(max_length=50, choices=FILE_CATEGORY_CHOICES, verbose_name='文件类别')
+    category = models.CharField(max_length=50, choices=FILE_CATEGORY_CHOICES, verbose_name='File Category')
     file_path = models.CharField(max_length=500, verbose_name='文件路径')
     file_type = models.ForeignKey(FileType, on_delete=models.SET_NULL, null=True, verbose_name='文件类型')
     description = models.TextField(blank=True, null=True, verbose_name='描述')

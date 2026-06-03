@@ -1,8 +1,21 @@
+from django.db import IntegrityError
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from .models import Accession, Annotation, Assembly, FileType, GenomeFile
+from .models import (
+    Accession,
+    Annotation,
+    Assembly,
+    DataFile,
+    Dataset,
+    FileRelation,
+    FileType,
+    GenomeFile,
+    Project,
+    Sample,
+    Species,
+)
 
 
 class ProjectRoutingSmokeTest(SimpleTestCase):
@@ -52,6 +65,112 @@ class AccessionHierarchyModelTestCase(TestCase):
 
     def test_assembly_default_annotation_property(self):
         self.assertEqual(self.default_assembly.default_annotation, self.default_annotation)
+
+
+class DataWarehousePhaseOneModelTestCase(TestCase):
+    def test_accession_species_is_optional_and_can_be_linked(self):
+        accession = Accession.objects.create(accession='IR64')
+        species = Species.objects.create(
+            species_code='oryza_sativa',
+            scientific_name='Oryza sativa',
+            common_name='rice',
+        )
+
+        self.assertIsNone(accession.species)
+
+        accession.species = species
+        accession.save(update_fields=['species'])
+
+        self.assertEqual(Accession.objects.get(accession='IR64').species, species)
+
+    def test_data_file_uses_file_path_as_phase_one_dedup_key(self):
+        file_type = FileType.objects.create(
+            name='GFF3',
+            extension='gff3',
+            code='gff3',
+            category='annotation',
+            format='gff3',
+        )
+        data_file = DataFile.objects.create(
+            file_code='FILE-001',
+            file_type=file_type,
+            file_name='annotation.IR64.gff3',
+            original_name='annotation.IR64.gff3',
+            file_path='/tmp/annotation.IR64.gff3',
+            file_size=123,
+        )
+
+        self.assertTrue(data_file.is_current)
+
+        with self.assertRaises(IntegrityError):
+            DataFile.objects.create(
+                file_code='FILE-002',
+                file_name='duplicate.gff3',
+                file_path='/tmp/annotation.IR64.gff3',
+            )
+
+    def test_file_relation_allows_one_file_to_link_multiple_objects(self):
+        accession = Accession.objects.create(accession='IR64')
+        assembly = Assembly.objects.create(
+            accession=accession,
+            name='default',
+            is_default=True,
+        )
+        data_file = DataFile.objects.create(
+            file_code='FILE-003',
+            file_name='genome.IR64.fasta',
+            file_path='/tmp/genome.IR64.fasta',
+        )
+
+        FileRelation.objects.create(
+            file=data_file,
+            related_type='accession',
+            related_id=str(accession.id),
+            related_code=accession.accession,
+            file_role='genome_fasta',
+        )
+        FileRelation.objects.create(
+            file=data_file,
+            related_type='assembly',
+            related_id=str(assembly.id),
+            related_code=assembly.name,
+            file_role='genome_fasta',
+            is_primary=True,
+        )
+
+        self.assertEqual(data_file.relations.count(), 2)
+
+        with self.assertRaises(IntegrityError):
+            FileRelation.objects.create(
+                file=data_file,
+                related_type='assembly',
+                related_id=str(assembly.id),
+                related_code=assembly.name,
+                file_role='genome_fasta',
+            )
+
+    def test_project_dataset_and_sample_are_optional_scaffolding(self):
+        species = Species.objects.create(species_code='oryza_sativa')
+        project = Project.objects.create(project_code='PRJ-001', project_name='Rice project')
+        dataset = Dataset.objects.create(
+            dataset_code='DS-001',
+            dataset_name='IR64 genome dataset',
+            dataset_type='genome',
+            species=species,
+            project=project,
+            visibility='lab_internal',
+            status='draft',
+        )
+        sample = Sample.objects.create(
+            sample_code='SMP-001',
+            sample_name='IR64 leaf sample',
+            species=species,
+            tissue='leaf',
+            data_type='transcriptome',
+        )
+
+        self.assertEqual(dataset.project, project)
+        self.assertEqual(sample.species, species)
 
 
 class AccessionDetailApiTestCase(APITestCase):
