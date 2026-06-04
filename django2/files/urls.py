@@ -9,13 +9,14 @@ from .views import (
     admin_delete_accession, admin_data_management_list,
     admin_upload_data_file, admin_download_data_file, admin_delete_data_file,
     admin_batch_delete_accessions, admin_subpopulation_stats,
-    accession_detail
+    accession_detail, download_datafile
 )
 
 
 # 先定义自定义路径，避免与router冲突
 urlpatterns = [
     path('accessions/<str:accession>/', accession_detail, name='accession-detail'),
+    path('data-files/<int:file_id>/download/', download_datafile, name='datafile-download'),
     path('download-transcriptome/', GenomeFileViewSet.as_view({'get': 'download_transcriptome'}), name='download-transcriptome'),
     path('transcriptome-types/', GenomeFileViewSet.as_view({'get': 'transcriptome_types'}), name='transcriptome-types'),
     path('genome-files/get_chromosomes/', GenomeFileViewSet.as_view({'get': 'get_chromosomes'}), name='get-chromosomes'),
