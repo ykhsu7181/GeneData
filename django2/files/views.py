@@ -143,6 +143,35 @@ def _adapt_manual_annotation_file(file_path):
     }
 
 
+def _adapt_overview_file_service_result(service_file):
+    file_size = service_file.get('file_size')
+    return {
+        'id': service_file.get('file_id'),
+        'name': service_file.get('file_name'),
+        'file_path': service_file.get('file_path'),
+        'category': service_file.get('file_role'),
+        'size': file_size,
+        'file_size': file_size,
+        'created_at': None,
+        'source': service_file.get('source'),
+        'file_code': service_file.get('file_code'),
+        'md5': service_file.get('md5'),
+    }
+
+
+def _adapt_overview_genome_file(file_obj):
+    return {
+        'id': file_obj.id,
+        'name': file_obj.name,
+        'file_path': file_obj.file_path,
+        'category': file_obj.category,
+        'size': file_obj.size,
+        'file_size': file_obj.size,
+        'created_at': file_obj.created_at,
+        'source': 'legacy_genomefile',
+    }
+
+
 @lru_cache(maxsize=128)
 def _parse_annotation_summary(annotation_file_path):
     summary = {
@@ -3501,17 +3530,27 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
             def serialize_file(file_obj):
                 if not file_obj:
                     return None
-                return {
-                    'id': file_obj.id,
-                    'name': file_obj.name,
-                    'file_path': file_obj.file_path,
-                    'size': file_obj.size,
-                    'created_at': file_obj.created_at,
-                }
+                if isinstance(file_obj, dict):
+                    return {
+                        'id': file_obj.get('id'),
+                        'name': file_obj.get('name'),
+                        'file_path': file_obj.get('file_path'),
+                        'size': file_obj.get('size'),
+                        'file_size': file_obj.get('file_size'),
+                        'category': file_obj.get('category'),
+                        'created_at': file_obj.get('created_at'),
+                        'source': file_obj.get('source'),
+                    }
+                return _adapt_overview_genome_file(file_obj)
+
+            def file_category(file_obj):
+                if isinstance(file_obj, dict):
+                    return file_obj.get('category') or ''
+                return file_obj.category or ''
 
             def first_file(files, category):
                 for file_obj in files:
-                    if file_obj.category == category:
+                    if file_category(file_obj) == category:
                         return file_obj
                 return None
 
@@ -3560,35 +3599,58 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
                 if not default_assembly and assemblies:
                     default_assembly = assemblies[0]
 
-                default_assembly_files = list(default_assembly.files.all()) if default_assembly else []
                 default_annotations = list(default_assembly.annotations.all()) if default_assembly else []
                 default_annotation = next((annotation for annotation in default_annotations if annotation.is_default), None)
                 if not default_annotation and default_annotations:
                     default_annotation = default_annotations[0]
 
-                default_annotation_files = list(default_annotation.files.all()) if default_annotation else []
-                legacy_files = list(accession_obj.files.all())
+                relation_files = get_files_for_accession(accession_obj.id)
+                if relation_files:
+                    overview_files = [
+                        _adapt_overview_file_service_result(item)
+                        for item in relation_files
+                    ]
+                    default_annotation_files = [
+                        item for item in overview_files
+                        if file_category(item) == 'annotation'
+                    ]
+                    default_assembly_files = [
+                        item for item in overview_files
+                        if file_category(item) != 'annotation'
+                    ]
+                else:
+                    default_assembly_files = list(default_assembly.files.all()) if default_assembly else []
+                    default_annotation_files = list(default_annotation.files.all()) if default_annotation else []
+                    legacy_files = list(accession_obj.files.all())
 
-                if not default_assembly_files and legacy_files:
-                    default_assembly_files = [file_obj for file_obj in legacy_files if not file_obj.annotation_id]
+                    if not legacy_files:
+                        legacy_files = list(
+                            GenomeFile.objects.filter(organism=accession_obj.accession)
+                            .select_related('file_type', 'accession', 'assembly', 'annotation')
+                            .order_by('category', 'name', 'id')
+                        )
 
-                if not default_annotation_files and legacy_files:
-                    if default_annotation:
-                        default_annotation_files = [
-                            file_obj for file_obj in legacy_files
-                            if file_obj.annotation_id == default_annotation.id
-                        ]
-                    else:
-                        default_annotation_files = [
-                            file_obj for file_obj in legacy_files if file_obj.category == 'annotation'
-                        ]
+                    if not default_assembly_files and legacy_files:
+                        default_assembly_files = [file_obj for file_obj in legacy_files if not file_obj.annotation_id]
+
+                    if not default_annotation_files and legacy_files:
+                        if default_annotation:
+                            default_annotation_files = [
+                                file_obj for file_obj in legacy_files
+                                if file_obj.annotation_id == default_annotation.id
+                            ]
+                        else:
+                            default_annotation_files = [
+                                file_obj for file_obj in legacy_files if file_obj.category == 'annotation'
+                            ]
 
                 rows.append({
                     'accession': accession_obj.accession,
                     'genome': serialize_file(first_file(default_assembly_files, 'genome')),
                     'annotation': serialize_file(first_file(default_annotation_files, 'annotation')),
                     'hasTranscriptome': any(
-                        file_obj.category.startswith('transcriptome.') for file_obj in default_assembly_files
+                        file_category(file_obj).startswith('transcriptome.')
+                        for file_obj in default_assembly_files
                     ),
                     'codon': serialize_file(first_file(default_assembly_files, 'codon')),
                     'centromere': serialize_file(first_file(default_assembly_files, 'centromere')),
