@@ -1,0 +1,13 @@
+started_at	2026-06-03T10:31:53.935218+00:00
+dry_run	False
+with_md5	False
+limit	
+scanned	50
+datafile_created	0
+datafile_reused	50
+datafile_updated	0
+relation_created	0
+relation_reused	105
+unmapped	1
+missing_files	0
+finished_at	2026-06-03T10:31:54.193004+00:00
