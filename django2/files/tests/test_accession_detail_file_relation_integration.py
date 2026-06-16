@@ -58,9 +58,15 @@ class AccessionDetailFileRelationIntegrationTestCase(TestCase):
         self.assertEqual(files[0]["category"], "genome")
         self.assertEqual(files[0]["file_size"], 1234)
         self.assertEqual(files[0]["source"], "new_relation")
+        self.assertEqual(
+            files[0]["datafile_download_url"],
+            f"/gd/api/files/data-files/{data_file.id}/download/",
+        )
+        self.assertEqual(files[0]["download_url"], files[0]["datafile_download_url"])
+        self.assertNotIn("/genome-files/", files[0]["download_url"])
 
-    def test_accession_detail_falls_back_to_legacy_genomefile_files(self):
-        legacy_file = GenomeFile.objects.create(
+    def test_accession_detail_does_not_fallback_to_legacy_genomefile_files(self):
+        GenomeFile.objects.create(
             name="annotation.IR64.gff",
             organism="IR64",
             accession=self.accession,
@@ -76,13 +82,8 @@ class AccessionDetailFileRelationIntegrationTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         files = payload["data"]["files"]
-        self.assertEqual(payload["data"]["file_count"], 1)
-        self.assertEqual(files[0]["id"], legacy_file.id)
-        self.assertEqual(files[0]["name"], "annotation.IR64.gff")
-        self.assertEqual(files[0]["file_path"], "/tmp/legacy/annotation.IR64.gff")
-        self.assertEqual(files[0]["category"], "annotation")
-        self.assertEqual(files[0]["file_size"], 5678)
-        self.assertEqual(files[0]["source"], "legacy_genomefile")
+        self.assertEqual(payload["data"]["file_count"], 0)
+        self.assertEqual(files, [])
 
     @override_settings(MANUAL_FILES_DIR="")
     def test_download_endpoint_still_uses_genomefile(self):

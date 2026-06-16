@@ -101,7 +101,7 @@ class FileRelationServiceTestCase(TestCase):
         self.assertEqual(files[0]["file_code"], "FILE000002")
         self.assertEqual(files[0]["file_role"], "transcriptome.root")
 
-    def test_falls_back_to_genome_file_when_relation_missing(self):
+    def test_returns_empty_when_relation_missing_even_if_genome_file_exists(self):
         GenomeFile.objects.create(
             name="annotation.IR64.gff",
             organism="IR64",
@@ -114,14 +114,7 @@ class FileRelationServiceTestCase(TestCase):
 
         files = get_files_for_accession(self.accession.id, file_role="annotation")
 
-        self.assertEqual(len(files), 1)
-        self.assertIsNone(files[0]["file_code"])
-        self.assertEqual(files[0]["file_name"], "annotation.IR64.gff")
-        self.assertEqual(files[0]["file_size"], 5678)
-        self.assertEqual(files[0]["file_role"], "annotation")
-        self.assertEqual(files[0]["related_type"], "accession")
-        self.assertEqual(files[0]["related_id"], str(self.accession.id))
-        self.assertEqual(files[0]["source"], "legacy_genomefile")
+        self.assertEqual(files, [])
 
     def test_get_primary_file_prefers_primary_relation(self):
         self.add_relation("accession", self.accession.id, file_role="genome", is_primary=False)

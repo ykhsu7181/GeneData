@@ -79,10 +79,16 @@ class PaginatedOverviewFileRelationIntegrationTestCase(TestCase):
         self.assertEqual(row["genome"]["category"], "genome")
         self.assertEqual(row["genome"]["file_size"], 1234)
         self.assertEqual(row["genome"]["source"], "new_relation")
+        self.assertEqual(
+            row["genome"]["datafile_download_url"],
+            f"/gd/api/files/data-files/{genome_file.id}/download/",
+        )
+        self.assertEqual(row["genome"]["download_url"], row["genome"]["datafile_download_url"])
+        self.assertNotIn("/genome-files/", row["genome"]["download_url"])
         self.assertTrue(row["hasTranscriptome"])
 
-    def test_paginated_overview_falls_back_to_genomefile(self):
-        legacy_file = GenomeFile.objects.create(
+    def test_paginated_overview_does_not_fallback_to_genomefile(self):
+        GenomeFile.objects.create(
             name=f"genome.{self.accession_code}.fasta",
             organism=self.accession_code,
             accession=self.accession,
@@ -97,15 +103,10 @@ class PaginatedOverviewFileRelationIntegrationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         row = response.json()["results"][0]
-        self.assertEqual(row["genome"]["id"], legacy_file.id)
-        self.assertEqual(row["genome"]["name"], f"genome.{self.accession_code}.fasta")
-        self.assertEqual(row["genome"]["file_path"], f"/tmp/legacy/genome.{self.accession_code}.fasta")
-        self.assertEqual(row["genome"]["category"], "genome")
-        self.assertEqual(row["genome"]["file_size"], 2345)
-        self.assertEqual(row["genome"]["source"], "legacy_genomefile")
+        self.assertIsNone(row["genome"])
 
-    def test_paginated_overview_falls_back_to_organism_legacy_file(self):
-        legacy_file = GenomeFile.objects.create(
+    def test_paginated_overview_does_not_fallback_to_organism_legacy_file(self):
+        GenomeFile.objects.create(
             name=f"annotation.{self.accession_code}.gff",
             organism=self.accession_code,
             category="annotation",
@@ -118,11 +119,7 @@ class PaginatedOverviewFileRelationIntegrationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         row = response.json()["results"][0]
-        self.assertEqual(row["annotation"]["id"], legacy_file.id)
-        self.assertEqual(row["annotation"]["file_path"], f"/tmp/legacy/annotation.{self.accession_code}.gff")
-        self.assertEqual(row["annotation"]["category"], "annotation")
-        self.assertEqual(row["annotation"]["file_size"], 3456)
-        self.assertEqual(row["annotation"]["source"], "legacy_genomefile")
+        self.assertIsNone(row["annotation"])
 
     def test_compare_overview_files_command_writes_report(self):
         GenomeFile.objects.create(

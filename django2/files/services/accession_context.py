@@ -1,4 +1,7 @@
-from files.models import Accession, Annotation, Assembly, GenomeFile
+from types import SimpleNamespace
+
+from files.models import Accession, Annotation, Assembly
+from files.services.file_relation_service import get_primary_file
 
 
 DEFAULT_ASSEMBLY_NAME = 'default'
@@ -122,20 +125,31 @@ def get_context_genome_file(*, assembly_id=None, accession=None, organism=None):
     )
 
     if assembly:
-        genome_file = (
-            GenomeFile.objects.filter(assembly=assembly, category='genome')
-            .select_related('file_type', 'accession', 'assembly', 'annotation')
-            .order_by('id')
-            .first()
+        genome_file = _service_file_to_context_file(
+            get_primary_file('assembly', assembly.id, file_role='genome')
         )
         if genome_file:
             return accession_obj, assembly, genome_file
 
-    accession_code = accession_obj.accession if accession_obj else (organism or accession)
-    genome_file = (
-        GenomeFile.objects.filter(organism=accession_code, category='genome')
-        .select_related('file_type', 'accession', 'assembly', 'annotation')
-        .order_by('id')
-        .first()
+    if not accession_obj:
+        return accession_obj, assembly, None
+
+    genome_file = _service_file_to_context_file(
+        get_primary_file('accession', accession_obj.id, file_role='genome')
     )
     return accession_obj, assembly, genome_file
+
+
+def _service_file_to_context_file(service_file):
+    if not service_file:
+        return None
+    return SimpleNamespace(
+        id=service_file.get('file_id'),
+        name=service_file.get('file_name'),
+        file_path=service_file.get('file_path'),
+        category=service_file.get('file_role'),
+        source=service_file.get('source'),
+        file_code=service_file.get('file_code'),
+        file_size=service_file.get('file_size'),
+        md5=service_file.get('md5'),
+    )

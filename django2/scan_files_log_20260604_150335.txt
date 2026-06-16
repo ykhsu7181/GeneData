@@ -1,0 +1,15 @@
+started_at	2026-06-04T07:03:35.544419+00:00
+path	D:\gene_manage_system\gene_manage_system\manual_files
+write_mode	dual
+dry_run	False
+limit	10
+scanned_count	10
+created_datafile_count	0
+reused_datafile_count	9
+created_filerelation_count	0
+reused_filerelation_count	19
+created_or_updated_genomefile_count	0
+removed_genomefile_count	0
+unmapped_count	1
+warnings	1
+finished_at	2026-06-04T07:03:35.879594+00:00

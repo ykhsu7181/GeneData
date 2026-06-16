@@ -74,10 +74,19 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
         self.assertEqual(payload["annotation_file"]["category"], "annotation")
         self.assertEqual(payload["annotation_file"]["file_size"], os.path.getsize(new_path))
         self.assertEqual(payload["annotation_file"]["source"], "new_relation")
+        self.assertEqual(
+            payload["annotation_file"]["datafile_download_url"],
+            f"/gd/api/files/data-files/{data_file.id}/download/",
+        )
+        self.assertEqual(
+            payload["annotation_file"]["download_url"],
+            payload["annotation_file"]["datafile_download_url"],
+        )
+        self.assertNotIn("/genome-files/", payload["annotation_file"]["download_url"])
 
-    def test_annotation_endpoint_falls_back_to_genomefile(self):
+    def test_annotation_endpoint_does_not_fallback_to_genomefile(self):
         legacy_path = self.create_annotation_file("annotation.legacy.IR64.gff3")
-        legacy_file = GenomeFile.objects.create(
+        GenomeFile.objects.create(
             name="annotation.legacy.IR64.gff3",
             organism="IR64",
             accession=self.accession,
@@ -93,15 +102,10 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
             f"/gd/api/files/genome-files/get_annotation_data/?annotation_id={self.annotation.id}"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 404)
         payload = response.json()
-        self.assertEqual(payload["count"], 1)
-        self.assertEqual(payload["annotation_file"]["id"], legacy_file.id)
-        self.assertEqual(payload["annotation_file"]["name"], "annotation.legacy.IR64.gff3")
-        self.assertEqual(payload["annotation_file"]["file_path"], legacy_path)
-        self.assertEqual(payload["annotation_file"]["category"], "annotation")
-        self.assertEqual(payload["annotation_file"]["file_size"], os.path.getsize(legacy_path))
-        self.assertEqual(payload["annotation_file"]["source"], "legacy_genomefile")
+        self.assertIn("未找到", payload["error"])
+        self.assertNotIn("annotation_file", payload)
 
     def test_download_endpoint_still_uses_genomefile(self):
         file_path = self.create_annotation_file("annotation.download.IR64.gff3")

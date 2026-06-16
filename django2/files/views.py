@@ -35,6 +35,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _datafile_download_url(file_id):
+    if not file_id:
+        return None
+    return f"/gd/api/files/data-files/{file_id}/download/"
+
+
 def _build_compatibility_file_summary(files_data, default_assembly_id=None, default_annotation_id=None):
     """
     Compatibility-only summary for legacy callers.
@@ -67,6 +73,8 @@ def _adapt_accession_file_service_result(service_file, accession_obj, legacy_fil
     legacy_file = legacy_files_by_path.get(service_file.get('file_path'))
     category = service_file.get('file_role')
     file_size = service_file.get('file_size')
+    is_new_relation = service_file.get('source') == 'new_relation'
+    datafile_download_url = _datafile_download_url(service_file.get('file_id')) if is_new_relation else None
 
     return {
         'id': service_file.get('file_id'),
@@ -85,32 +93,15 @@ def _adapt_accession_file_service_result(service_file, accession_obj, legacy_fil
         'source': service_file.get('source'),
         'file_code': service_file.get('file_code'),
         'md5': service_file.get('md5'),
-    }
-
-
-def _adapt_legacy_genome_file_for_accession_detail(file_obj, accession_obj):
-    return {
-        'id': file_obj.id,
-        'name': file_obj.name,
-        'organism': file_obj.organism,
-        'category': file_obj.category,
-        'file_type_name': file_obj.file_type.name if file_obj.file_type else None,
-        'file_path': file_obj.file_path,
-        'size': file_obj.size,
-        'file_size': file_obj.size,
-        'created_at': file_obj.created_at,
-        'accession_id': accession_obj.id,
-        'assembly_id': file_obj.assembly_id,
-        'annotation_id': file_obj.annotation_id,
-        'scope': classify_file_scope(file_obj.category),
-        'source': 'legacy_genomefile',
-        'file_code': None,
-        'md5': None,
+        'datafile_download_url': datafile_download_url,
+        'download_url': datafile_download_url,
     }
 
 
 def _adapt_annotation_file_service_result(service_file):
     file_path = service_file.get('file_path')
+    is_new_relation = service_file.get('source') == 'new_relation'
+    datafile_download_url = _datafile_download_url(service_file.get('file_id')) if is_new_relation else None
     return {
         'id': service_file.get('file_id'),
         'name': service_file.get('file_name'),
@@ -118,33 +109,15 @@ def _adapt_annotation_file_service_result(service_file):
         'category': service_file.get('file_role'),
         'file_size': service_file.get('file_size'),
         'source': service_file.get('source'),
-    }
-
-
-def _adapt_annotation_genome_file(file_obj):
-    return {
-        'id': file_obj.id,
-        'name': file_obj.name,
-        'file_path': file_obj.file_path,
-        'category': file_obj.category,
-        'file_size': file_obj.size,
-        'source': 'legacy_genomefile',
-    }
-
-
-def _adapt_manual_annotation_file(file_path):
-    return {
-        'id': None,
-        'name': os.path.basename(file_path) if file_path else None,
-        'file_path': file_path,
-        'category': 'annotation',
-        'file_size': os.path.getsize(file_path) if file_path and os.path.exists(file_path) else None,
-        'source': 'legacy_genomefile',
+        'datafile_download_url': datafile_download_url,
+        'download_url': datafile_download_url,
     }
 
 
 def _adapt_overview_file_service_result(service_file):
     file_size = service_file.get('file_size')
+    is_new_relation = service_file.get('source') == 'new_relation'
+    datafile_download_url = _datafile_download_url(service_file.get('file_id')) if is_new_relation else None
     return {
         'id': service_file.get('file_id'),
         'name': service_file.get('file_name'),
@@ -156,19 +129,8 @@ def _adapt_overview_file_service_result(service_file):
         'source': service_file.get('source'),
         'file_code': service_file.get('file_code'),
         'md5': service_file.get('md5'),
-    }
-
-
-def _adapt_overview_genome_file(file_obj):
-    return {
-        'id': file_obj.id,
-        'name': file_obj.name,
-        'file_path': file_obj.file_path,
-        'category': file_obj.category,
-        'size': file_obj.size,
-        'file_size': file_obj.size,
-        'created_at': file_obj.created_at,
-        'source': 'legacy_genomefile',
+        'datafile_download_url': datafile_download_url,
+        'download_url': datafile_download_url,
     }
 
 
@@ -653,7 +615,11 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
-        """下载文件"""
+        """Deprecated legacy GenomeFile download endpoint.
+
+        Business interfaces should return DataFile download URLs instead.
+        This endpoint is kept temporarily so old direct links do not break.
+        """
         try:
             file_obj = self.get_object()
             file_path = file_obj.file_path
@@ -1528,27 +1494,6 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
                 if candidate_path and os.path.exists(candidate_path):
                     annotation_file_path = candidate_path
                     annotation_file_info = _adapt_annotation_file_service_result(annotation_file)
-                    break
-
-        if not annotation_file_path and resolved_assembly:
-            legacy_annotation_file = (
-                GenomeFile.objects.filter(assembly=resolved_assembly, category='annotation')
-                .select_related('file_type')
-                .order_by('id')
-                .first()
-            )
-            if legacy_annotation_file and legacy_annotation_file.file_path and os.path.exists(legacy_annotation_file.file_path):
-                annotation_file_path = legacy_annotation_file.file_path
-                annotation_file_info = _adapt_annotation_genome_file(legacy_annotation_file)
-
-        # Legacy organism compatibility fallback.
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        if not annotation_file_path:
-            for extension in ['gff', 'gff3']:
-                candidate = os.path.join(manual_files_dir, f'annotation.{resolved_organism}.{extension}')
-                if os.path.exists(candidate):
-                    annotation_file_path = candidate
-                    annotation_file_info = _adapt_manual_annotation_file(candidate)
                     break
 
         if not annotation_file_path or not os.path.exists(annotation_file_path):
@@ -3545,8 +3490,10 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
                         'category': file_obj.get('category'),
                         'created_at': file_obj.get('created_at'),
                         'source': file_obj.get('source'),
+                        'datafile_download_url': file_obj.get('datafile_download_url'),
+                        'download_url': file_obj.get('download_url'),
                     }
-                return _adapt_overview_genome_file(file_obj)
+                return None
 
             def file_category(file_obj):
                 if isinstance(file_obj, dict):
@@ -3624,30 +3571,8 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
                         if file_category(item) != 'annotation'
                     ]
                 else:
-                    default_assembly_files = list(default_assembly.files.all()) if default_assembly else []
-                    default_annotation_files = list(default_annotation.files.all()) if default_annotation else []
-                    legacy_files = list(accession_obj.files.all())
-
-                    if not legacy_files:
-                        legacy_files = list(
-                            GenomeFile.objects.filter(organism=accession_obj.accession)
-                            .select_related('file_type', 'accession', 'assembly', 'annotation')
-                            .order_by('category', 'name', 'id')
-                        )
-
-                    if not default_assembly_files and legacy_files:
-                        default_assembly_files = [file_obj for file_obj in legacy_files if not file_obj.annotation_id]
-
-                    if not default_annotation_files and legacy_files:
-                        if default_annotation:
-                            default_annotation_files = [
-                                file_obj for file_obj in legacy_files
-                                if file_obj.annotation_id == default_annotation.id
-                            ]
-                        else:
-                            default_annotation_files = [
-                                file_obj for file_obj in legacy_files if file_obj.category == 'annotation'
-                            ]
+                    default_assembly_files = []
+                    default_annotation_files = []
 
                 rows.append({
                     'accession': accession_obj.accession,
@@ -5768,58 +5693,6 @@ def admin_subpopulation_stats(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def accession_detail(request, accession):
-    """获取单个 accession 的详情信息"""
-    try:
-        accession_obj = Accession.objects.filter(accession=accession).first()
-
-        if not accession_obj:
-            return Response({
-                'success': False,
-                'message': f'Accession "{accession}" 不存在'
-            }, status=status.HTTP_404_NOT_FOUND)
-
-        # 第一优先：使用新的 accession 外键
-        files_qs = GenomeFile.objects.filter(accession=accession_obj).select_related('file_type')
-
-        # 兼容旧数据：如果还没建立外键，则回退到 organism 字段
-        if not files_qs.exists():
-            files_qs = GenomeFile.objects.filter(organism=accession).select_related('file_type')
-
-        accession_data = AccessionSerializer(accession_obj).data
-        files_data = AccessionGenomeFileSerializer(files_qs.order_by('category', 'name'), many=True).data
-
-        file_status = {}
-        file_names = {}
-
-        for category_code, _ in GenomeFile.FILE_CATEGORY_CHOICES:
-            matched_files = [item for item in files_data if item['category'] == category_code]
-            status_key = category_code.replace('.', '_')
-
-            file_status[status_key] = len(matched_files) > 0
-            file_names[status_key] = matched_files[0]['name'] if matched_files else None
-
-        return Response({
-            'success': True,
-            'data': {
-                'accession': accession_data,
-                'file_status': file_status,
-                'file_names': file_names,
-                'files': files_data,
-                'file_count': len(files_data),
-            }
-        })
-
-    except Exception as e:
-        logger.error(f"获取 accession 详情失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': f'获取 accession 详情失败: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def accession_detail(request, accession):
     """获取单个 accession 的层级详情信息"""
     try:
         accession_obj = Accession.objects.filter(accession=accession).first()
@@ -5852,55 +5725,12 @@ def accession_detail(request, accession):
                 None,
             )
 
-        files_qs = GenomeFile.objects.filter(accession=accession_obj).select_related(
-            'file_type', 'accession', 'assembly', 'annotation'
-        )
-        if not files_qs.exists():
-            files_qs = GenomeFile.objects.filter(organism=accession).select_related(
-                'file_type', 'accession', 'assembly', 'annotation'
-            )
-
-        all_files = list(files_qs.order_by('category', 'name', 'id'))
-        legacy_files_by_path = {file_obj.file_path: file_obj for file_obj in all_files if file_obj.file_path}
         relation_files = get_files_for_accession(accession_obj.id)
-        if relation_files:
-            files_data = [
-                _adapt_accession_file_service_result(item, accession_obj, legacy_files_by_path)
-                for item in relation_files
-            ]
-        else:
-            files_data = [
-                _adapt_legacy_genome_file_for_accession_detail(file_obj, accession_obj)
-                for file_obj in all_files
-            ]
+        files_data = [
+            _adapt_accession_file_service_result(item, accession_obj)
+            for item in relation_files
+        ]
 
-        files_data_by_path = {
-            item.get('file_path'): item
-            for item in files_data
-            if item.get('file_path')
-        }
-        for file_obj in all_files:
-            file_data = files_data_by_path.get(file_obj.file_path)
-            if file_obj.annotation_id and file_obj.annotation_id in annotation_map:
-                annotation_map[file_obj.annotation_id].prefetched_files.append(file_obj)
-                continue
-            if file_obj.assembly_id and file_obj.assembly_id in assembly_map:
-                assembly_map[file_obj.assembly_id].prefetched_files.append(file_obj)
-                continue
-
-            if file_obj.category == 'annotation' and default_annotation:
-                default_annotation.prefetched_files.append(file_obj)
-                if file_data:
-                    file_data['annotation_id'] = default_annotation.id
-                    file_data['assembly_id'] = default_assembly.id if default_assembly else None
-                    file_data['scope'] = 'annotation'
-            elif default_assembly:
-                default_assembly.prefetched_files.append(file_obj)
-                if file_data:
-                    file_data['assembly_id'] = default_assembly.id
-                    file_data['scope'] = 'assembly'
-
-        manual_files_dir = settings.MANUAL_FILES_DIR
         for assembly in assemblies:
             for annotation in assembly.prefetched_annotations:
                 annotation_files = getattr(annotation, 'prefetched_files', []) or []
@@ -5913,12 +5743,6 @@ def accession_detail(request, accession):
                 )
 
                 annotation_file_path = annotation_source_file.file_path if annotation_source_file else None
-                if not annotation_file_path:
-                    for extension in ['gff', 'gff3']:
-                        candidate = os.path.join(manual_files_dir, f'annotation.{accession_obj.accession}.{extension}')
-                        if os.path.exists(candidate):
-                            annotation_file_path = candidate
-                            break
 
                 annotation.summary_metadata = _parse_annotation_summary(annotation_file_path)
 
