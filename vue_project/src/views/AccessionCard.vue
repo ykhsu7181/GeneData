@@ -970,7 +970,7 @@ export default {
         loadingOrganisms.value = true;
 
         if (query) {
-          const response = await axios.get(`/files/genome-files/organisms/?search=${encodeURIComponent(query)}`);
+          const response = await axios.get(`/files/query/organisms/?search=${encodeURIComponent(query)}`);
           const remoteOptions = response.data || [];
           const merged = [...recentAccessions.value, ...remoteOptions];
           organismOptions.value = Array.from(new Set(merged));
@@ -1350,13 +1350,19 @@ export default {
     };
 
     const downloadFile = (file) => {
+      const baseApiUrl = (axios.defaults.baseURL || '/gd/api').replace(/\/$/, '');
+      const directUrl = file?.download_url || file?.datafile_download_url;
+      if (directUrl) {
+        window.open(new URL(directUrl, window.location.origin).toString(), '_blank');
+        return;
+      }
+
       if (!file?.id) {
         ElMessage.error('文件缺少下载标识');
         return;
       }
 
-      const baseApiUrl = (axios.defaults.baseURL || '/gd/api').replace(/\/$/, '');
-      const downloadUrl = `${baseApiUrl}/files/genome-files/${file.id}/download/`;
+      const downloadUrl = `${baseApiUrl}/files/data-files/${file.id}/download/`;
       window.open(downloadUrl, '_blank');
     };
 

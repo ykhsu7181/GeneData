@@ -356,7 +356,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms/');
+        const response = await axios.get('/files/query/organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
@@ -371,7 +371,7 @@ export default {
     const fetchSubPopulations = async () => {
       try {
         loadingSubPopulations.value = true;
-        const response = await axios.get('/files/genome-files/sub_populations/');
+        const response = await axios.get('/files/query/sub-populations/');
         allSubPopulations.value = response.data || [];
         // 默认全选
         selectedSubPopulations.value = [...allSubPopulations.value];
@@ -469,7 +469,7 @@ export default {
           params.sub_populations = 'NONE';
         }
 
-        const response = await axios.get('/files/genome-files/paginated_overview/', { params });
+        const response = await axios.get('/files/query/paginated-overview/', { params });
         const data = response.data;
 
         // 直接更新数据，不触发整个组件重新渲染
@@ -510,7 +510,7 @@ export default {
           params.sub_populations = 'NONE';
         }
 
-        const response = await axios.get('/files/genome-files/paginated_overview/', { params });
+        const response = await axios.get('/files/query/paginated-overview/', { params });
         const data = response.data;
 
         tableData.value = data.results || [];

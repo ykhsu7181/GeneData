@@ -258,7 +258,7 @@ export default {
     // 获取亚群列表
     const fetchSubPopulations = async () => {
       try {
-        const response = await axios.get('/files/genome-files/sub_populations/');
+        const response = await axios.get('/files/query/sub-populations/');
         // 将后端返回的"未知亚群"替换为"Unknown"
         const subPopulations = (response.data || []).map(subPop =>
           subPop === '未知亚群' ? 'Unknown' : subPop
@@ -274,7 +274,7 @@ export default {
     // 获取补充数据
     const fetchSupplementaryData = async () => {
       try {
-        const response = await axios.get('/files/genome-files/supplementary_data/');
+        const response = await axios.get('/files/query/supplementary-data/');
         const rawData = response.data || {};
 
         // 转换补充数据中的亚群信息，将"未知亚群"替换为"Unknown"

@@ -642,7 +642,7 @@ export default {
     // 获取补充数据
     const fetchSupplementaryData = async () => {
       try {
-        const response = await axios.get('/files/genome-files/supplementary_data/');
+        const response = await axios.get('/files/query/supplementary-data/');
         supplementaryData.value = response.data || {};
         console.log('补充数据加载成功:', Object.keys(supplementaryData.value).length, '条记录');
 
@@ -679,7 +679,7 @@ export default {
     // 获取亚群列表
     const fetchSubPopulations = async () => {
       try {
-        const response = await axios.get('/files/genome-files/sub_populations/');
+        const response = await axios.get('/files/query/sub-populations/');
         allSubPopulations.value = response.data || [];
       } catch (error) {
         console.error('获取亚群列表失败:', error);
@@ -760,7 +760,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms/');
+        const response = await axios.get('/files/query/organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {

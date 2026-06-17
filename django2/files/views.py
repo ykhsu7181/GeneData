@@ -34,6 +34,20 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+GENOMEFILE_ARCHIVE_MESSAGE = "GenomeFile API is archived, use DataFile API instead."
+GENOMEFILE_DOWNLOAD_ARCHIVE_MESSAGE = "GenomeFile download is archived, use DataFile download."
+
+
+def _genomefile_archived_response(message=None):
+    return Response(
+        {
+            "success": False,
+            "archived": True,
+            "message": message or GENOMEFILE_ARCHIVE_MESSAGE,
+        },
+        status=status.HTTP_410_GONE,
+    )
+
 
 def _datafile_download_url(file_id):
     if not file_id:
@@ -221,12 +235,40 @@ class FileCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = FileCategorySerializer
 
 class GenomeFileViewSet(viewsets.ModelViewSet):
-    """基因组文件视图集"""
-    queryset = GenomeFile.objects.all()
+    """Archived GenomeFile API.
+
+    GenomeFile is retained only as a historical archive table. Standard CRUD
+    and the old GenomeFile download endpoint are closed; use DataFile APIs for
+    active file query, write and download paths.
+    """
+    queryset = GenomeFile._meta.default_manager.none()
     serializer_class = GenomeFileSerializer
 
     # 类变量，确保清理调度器只启动一次
     _cleanup_scheduler_started = False
+    archive_message = GENOMEFILE_ARCHIVE_MESSAGE
+    archive_download_message = GENOMEFILE_DOWNLOAD_ARCHIVE_MESSAGE
+
+    def _archived_response(self, message=None):
+        return _genomefile_archived_response(message or self.archive_message)
+
+    def list(self, request, *args, **kwargs):
+        return self._archived_response()
+
+    def retrieve(self, request, *args, **kwargs):
+        return self._archived_response()
+
+    def create(self, request, *args, **kwargs):
+        return self._archived_response()
+
+    def update(self, request, *args, **kwargs):
+        return self._archived_response()
+
+    def partial_update(self, request, *args, **kwargs):
+        return self._archived_response()
+
+    def destroy(self, request, *args, **kwargs):
+        return self._archived_response()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -596,561 +638,40 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
         return GenomeFileSerializer
     
     def get_queryset(self):
-        queryset = GenomeFile.objects.all()
-        organism = self.request.query_params.get('organism', None)
-        category = self.request.query_params.get('category', None)
-        
-        # 定义已知的组织类型，这些不应该被当作生物体
-        tissue_types = ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']
-        
-        # 过滤掉organism是组织类型的记录
-        queryset = queryset.exclude(organism__in=tissue_types)
-        
-        if organism:
-            queryset = queryset.filter(organism=organism)
-        if category:
-            queryset = queryset.filter(category=category)
-            
-        return queryset
+        return self.queryset
     
     @action(detail=True, methods=['get'])
     def download(self, request, pk=None):
-        """Deprecated legacy GenomeFile download endpoint.
-
-        Business interfaces should return DataFile download URLs instead.
-        This endpoint is kept temporarily so old direct links do not break.
-        """
-        try:
-            file_obj = self.get_object()
-            file_path = file_obj.file_path
-            
-            # 检查文件是否存在
-            if not os.path.exists(file_path):
-                return Response(
-                    {"error": "文件不存在"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # 获取文件类型
-            content_type, _ = mimetypes.guess_type(file_path)
-            if content_type is None:
-                content_type = 'application/octet-stream'
-            
-            # 创建文件响应
-            response = FileResponse(open(file_path, 'rb'), content_type=content_type)
-            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-            return response
-        
-        except Exception as e:
-            logger.error(f"文件下载失败: {str(e)}")
-            return Response(
-                {"error": f"文件下载失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        """Archived legacy GenomeFile download endpoint."""
+        return self._archived_response(self.archive_download_message)
     
     @action(detail=False, methods=['get'])
     def download_transcriptome(self, request):
-        """下载特定类型的转录组文件"""
-        try:
-            organism = request.query_params.get('organism')
-            tissue_type = request.query_params.get('type')
-            
-            if not organism or not tissue_type:
-                return Response(
-                    {"error": "缺少必要的参数: organism 或 type"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # 1. 首先尝试从数据库查找特定类型的转录组文件
-            category = f"transcriptome.{tissue_type}"
-            file_obj = GenomeFile.objects.filter(
-                organism=organism,
-                category=category
-            ).first()
-            
-            if file_obj:
-                file_path = file_obj.file_path
-            else:
-                # 2. 尝试在manual_files目录中查找特定命名格式的文件
-                directory = settings.MANUAL_FILES_DIR
-                # 支持多种可能的扩展名
-                possible_extensions = ['fastaq.gz', 'fasta.gz', 'fa.gz', 'fq.gz', 'fastq.gz']
-                file_path = None
-                
-                for ext in possible_extensions:
-                    temp_path = os.path.join(directory, f"transcriptome.{tissue_type}.{organism}.{ext}")
-                    if os.path.exists(temp_path):
-                        file_path = temp_path
-                        break
-                
-                # 3. 如果特定类型文件不存在，尝试回退到通用转录组文件
-                if not file_path:
-                    file_obj = GenomeFile.objects.filter(
-                        organism=organism,
-                        category='transcriptome'
-                    ).first()
-                    
-                    if file_obj:
-                        file_path = file_obj.file_path
-                    else:
-                        # 4. 最后尝试查找任何可能的通用转录组文件
-                        for ext in possible_extensions:
-                            temp_path = os.path.join(directory, f"transcriptome.{organism}.{ext}")
-                            if os.path.exists(temp_path):
-                                file_path = temp_path
-                                break
-                        
-                        if not file_path:
-                            return Response(
-                                {"error": f"未找到 {organism} 的 {tissue_type} 类型转录组文件"},
-                                status=status.HTTP_404_NOT_FOUND
-                            )
-            
-            # 检查文件是否存在
-            if not os.path.exists(file_path):
-                return Response(
-                    {"error": f"文件不存在: {os.path.basename(file_path)}"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # 获取文件类型
-            content_type, _ = mimetypes.guess_type(file_path)
-            if content_type is None:
-                content_type = 'application/octet-stream'
-            
-            # 创建文件响应
-            response = FileResponse(open(file_path, 'rb'), content_type=content_type)
-            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-            return response
-        
-        except Exception as e:
-            logger.error(f"转录组文件下载失败: {str(e)}")
-            return Response(
-                {"error": f"转录组文件下载失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    @action(detail=False, methods=['get'])
-    def get_chromosomes(self, request):
-
-        # 导入数据库连接模块
-        from django.db import connection
-        # 打印接口使用的数据库名称
-        # logger.info(f"get_chromosomes接口连接的数据库: {connection.settings_dict['NAME']}")
-
-        """获取指定生物体的染色体列表"""
-        organism = request.query_params.get('organism')
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # 查找对应的基因组文件
-        genome_file = GenomeFile.objects.filter(
-            organism=organism,
-            category='genome'
-        ).first()
-        
-        if not genome_file:
-            return Response(
-                {"error": f"未找到 {organism} 的基因组文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # 解析FASTA文件获取染色体信息
-        chromosomes = []
-        try:
-            with open(genome_file.file_path, 'r') as f:
-                for line in f:
-                    if line.startswith('>'):
-                        # 提取染色体名称（去掉>符号和后续描述）
-                        chrom_name = line.strip().split()[0][1:]
-                        chromosomes.append(chrom_name)
-        except Exception as e:
-            logger.error(f"解析基因组文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析基因组文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-        return Response(chromosomes)
-
-    @action(detail=False, methods=['get'])
-    def get_chromosome_length(self, request):
-        """获取指定生物体和染色体的实际长度"""
-        organism = request.query_params.get('organism')
-        chromosome = request.query_params.get('chromosome')
-
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not chromosome:
-            return Response(
-                {"error": "缺少必要的参数: chromosome"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 查找对应的基因组文件
-        genome_file = GenomeFile.objects.filter(
-            organism=organism,
-            category='genome'
-        ).first()
-
-        if not genome_file:
-            return Response(
-                {"error": f"未找到 {organism} 的基因组文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # 解析FASTA文件获取指定染色体的长度
-        try:
-            from Bio import SeqIO
-            import gzip
-
-            # 检查文件是否是压缩文件
-            if genome_file.file_path.endswith('.gz'):
-                with gzip.open(genome_file.file_path, 'rt') as f:
-                    for record in SeqIO.parse(f, "fasta"):
-                        if record.id == chromosome:
-                            return Response({"length": len(record.seq)})
-            else:
-                with open(genome_file.file_path, 'r') as f:
-                    for record in SeqIO.parse(f, "fasta"):
-                        if record.id == chromosome:
-                            return Response({"length": len(record.seq)})
-
-            # 如果没有找到指定的染色体
-            return Response(
-                {"error": f"在基因组文件中未找到染色体 {chromosome}"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        except Exception as e:
-            logger.error(f"解析基因组文件获取染色体长度失败: {str(e)}")
-            return Response(
-                {"error": f"解析基因组文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def get_chromosomes(self, request):
-        """Return chromosomes for the resolved genome context."""
-        assembly_id = request.query_params.get('assembly_id')
-        accession = request.query_params.get('accession')
-        organism = request.query_params.get('organism')
-
-        if not any([assembly_id, accession, organism]):
-            return Response(
-                {"error": "缺少必要的参数: organism / accession / assembly_id"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        resolved_organism, _, _, _ = get_context_organism(
-            assembly_id=assembly_id,
-            accession=accession,
-            organism=organism,
-        )
-        _, _, genome_file = get_context_genome_file(
-            assembly_id=assembly_id,
-            accession=accession,
-            organism=organism,
-        )
-
-        if not genome_file:
-            context_label = resolved_organism or accession or assembly_id
-            return Response(
-                {"error": f"未找到 {context_label} 的基因组文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        chromosomes = []
-        try:
-            with open(genome_file.file_path, 'r') as f:
-                for line in f:
-                    if line.startswith('>'):
-                        chromosomes.append(line.strip().split()[0][1:])
-        except Exception as e:
-            logger.error(f"解析基因组文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析基因组文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return Response(chromosomes)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def get_chromosome_length(self, request):
-        """Return chromosome length for the resolved genome context."""
-        assembly_id = request.query_params.get('assembly_id')
-        accession = request.query_params.get('accession')
-        organism = request.query_params.get('organism')
-        chromosome = request.query_params.get('chromosome')
+        return self._archived_response()
 
-        if not any([assembly_id, accession, organism]):
-            return Response(
-                {"error": "缺少必要的参数: organism / accession / assembly_id"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    @action(detail=False, methods=['get'])
+    def get_chromosomes(self, request):
+        return self._archived_response()
 
-        if not chromosome:
-            return Response(
-                {"error": "缺少必要的参数: chromosome"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        resolved_organism, _, _, _ = get_context_organism(
-            assembly_id=assembly_id,
-            accession=accession,
-            organism=organism,
-        )
-        _, _, genome_file = get_context_genome_file(
-            assembly_id=assembly_id,
-            accession=accession,
-            organism=organism,
-        )
-
-        if not genome_file:
-            context_label = resolved_organism or accession or assembly_id
-            return Response(
-                {"error": f"未找到 {context_label} 的基因组文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        try:
-            from Bio import SeqIO
-            import gzip
-
-            if genome_file.file_path.endswith('.gz'):
-                with gzip.open(genome_file.file_path, 'rt') as f:
-                    for record in SeqIO.parse(f, "fasta"):
-                        if record.id == chromosome:
-                            return Response({"length": len(record.seq)})
-            else:
-                with open(genome_file.file_path, 'r') as f:
-                    for record in SeqIO.parse(f, "fasta"):
-                        if record.id == chromosome:
-                            return Response({"length": len(record.seq)})
-
-            return Response(
-                {"error": f"在基因组文件中未找到染色体 {chromosome}"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        except Exception as e:
-            logger.error(f"解析基因组文件获取染色体长度失败: {str(e)}")
-            return Response(
-                {"error": f"解析基因组文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    @action(detail=False, methods=['get'])
+    def get_chromosome_length(self, request):
+        return self._archived_response()
 
     def get_tes(self, request):
-        """获取指定生物体和染色体的TEs数据"""
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"get_tes called with path: {request.path}, method: {request.method}")
-
-        organism = request.query_params.get('organism')
-        chromosome = request.query_params.get('chromosome')
-
-        logger.info(f"get_tes parameters - organism: {organism}, chromosome: {chromosome}")
-
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not chromosome:
-            return Response(
-                {"error": "缺少必要的参数: chromosome"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 构建TEs文件路径 - 从tar.gz压缩包中读取
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        tar_file_path = os.path.join(manual_files_dir, f'TEs.{organism}.tar.gz')
-        target_file_name = f'{organism}.fasta.mod.EDTA.TEanno.gff3'
-
-        logger.info(f"Looking for TEs tar file at: {tar_file_path}")
-        logger.info(f"Target file in tar: {target_file_name}")
-
-        if not os.path.exists(tar_file_path):
-            return Response(
-                {"error": f"未找到 {organism} 的TEs压缩文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # 解析GFF3文件获取TEs数据
-        tes_data = []
-        count = 0
-        max_records = 1000  # 限制返回的记录数量，避免前端性能问题
-
-        try:
-            import tarfile
-
-            # 从tar.gz文件中读取目标文件
-            with tarfile.open(tar_file_path, 'r:gz') as tar:
-                # 查找目标文件
-                target_member = None
-                for member in tar.getmembers():
-                    if member.name.endswith(target_file_name) or member.name == target_file_name:
-                        target_member = member
-                        break
-
-                if target_member is None:
-                    return Response(
-                        {"error": f"在压缩包中未找到文件 {target_file_name}"},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-
-                # 读取文件内容
-                file_obj = tar.extractfile(target_member)
-                if file_obj is None:
-                    return Response(
-                        {"error": f"无法读取压缩包中的文件 {target_file_name}"},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                    )
-
-                # 逐行处理文件内容
-                for line_bytes in file_obj:
-                    line = line_bytes.decode('utf-8').strip()
-                    # 跳过注释行和空行
-                    if line.startswith('#') or not line:
-                        continue
-
-                    parts = line.split('\t')
-                    if len(parts) >= 9:
-                        seqid = parts[0]
-                        source = parts[1]
-                        sequence_ontology = parts[2]
-                        start = int(parts[3])
-                        end = int(parts[4])
-                        score = parts[5]
-                        strand = parts[6]
-                        phase = parts[7]
-                        attributes = parts[8]
-
-                        # 只返回指定染色体的数据
-                        if seqid == chromosome:
-                            # 限制记录数量
-                            if count >= max_records:
-                                break
-
-                            # 解析attributes字段，只保留重要的属性
-                            attr_dict = {}
-                            for attr in attributes.split(';'):
-                                if '=' in attr:
-                                    key, value = attr.split('=', 1)
-                                    # 只保留重要的属性
-                                    if key in ['ID', 'Name', 'Classification', 'Identity', 'Method']:
-                                        attr_dict[key] = value
-
-                            tes_data.append({
-                                'seqid': seqid,
-                                'source': source,
-                                'sequence_ontology': sequence_ontology,
-                                'start': start,
-                                'end': end,
-                                'score': score,
-                                'strand': strand,
-                                'phase': phase,
-                                'attributes': attr_dict
-                            })
-                            count += 1
-        except Exception as e:
-            logger.error(f"解析TEs文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析TEs文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return Response(tes_data)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def get_codon_data(self, request):
-        """获取指定生物体的密码子使用偏好性数据"""
-        import logging
-        import tarfile
-        import re
+        return self._archived_response()
 
-        logger = logging.getLogger(__name__)
-        organism = request.query_params.get('organism')
-
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 检查是否是CodonW分析结果
-        if organism.startswith('CodonW Analysis (Task:') and organism.endswith(')'):
-            # 提取task_id
-            import re
-            match = re.search(r'Task:\s*([^)]+)', organism)
-            if match:
-                task_id = match.group(1).strip()
-                logger.info(f"检测到CodonW分析结果请求，任务ID: {task_id}")
-                # 调用codonw_results方法的逻辑
-                return self._get_codonw_results_data(task_id)
-
-        # 构建codon文件路径 - 从tar.gz压缩包中读取
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        tar_file_path = os.path.join(manual_files_dir, f'codon.{organism}.tar.gz')
-
-        logger.info(f"Looking for codon tar file at: {tar_file_path}")
-
-        if not os.path.exists(tar_file_path):
-            return Response(
-                {"error": f"未找到 {organism} 的codon压缩文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        try:
-            codon_data = {
-                'organism': organism,
-                'codon_usage': {},
-                'statistics': {},
-                'amino_acids': {}
-            }
-
-            with tarfile.open(tar_file_path, 'r:gz') as tar:
-                # 读取密码子使用频率文件 (.blk)
-                blk_member = None
-                stats_member = None
-
-                for member in tar.getmembers():
-                    if member.name.endswith('.blk'):
-                        blk_member = member
-                    elif member.name.endswith('.fa.txt'):
-                        stats_member = member
-
-                # 解析密码子使用频率数据
-                if blk_member:
-                    file_obj = tar.extractfile(blk_member)
-                    if file_obj:
-                        content = file_obj.read().decode('utf-8')
-                        codon_data['codon_usage'] = self._parse_codon_usage(content)
-                        codon_data['amino_acids'] = self._group_by_amino_acid(codon_data['codon_usage'])
-
-                # 解析统计数据
-                if stats_member:
-                    file_obj = tar.extractfile(stats_member)
-                    if file_obj:
-                        content = file_obj.read().decode('utf-8')
-                        codon_data['statistics'] = self._parse_codon_statistics(content)
-
-            return Response(codon_data)
-
-        except Exception as e:
-            logger.error(f"解析codon文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析codon文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
     def _parse_codon_usage(self, content):
         """解析密码子使用频率数据"""
@@ -1285,179 +806,15 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def get_centromere(self, request):
-        """获取指定生物体和染色体的centromere数据"""
-        organism = request.query_params.get('organism')
-        chromosome = request.query_params.get('chromosome')
-
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not chromosome:
-            return Response(
-                {"error": "缺少必要的参数: chromosome"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 构建centromere文件路径
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        centromere_bed_path = os.path.join(manual_files_dir, f'centromere.{organism}.bed')
-
-        if not os.path.exists(centromere_bed_path):
-            return Response(
-                {"error": f"未找到 {organism} 的centromere文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # 解析BED文件获取centromere数据
-        centromere_data = []
-        try:
-            with open(centromere_bed_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    parts = line.split('\t')
-                    if len(parts) >= 3:
-                        seqid = parts[0]
-                        start = int(parts[1])
-                        end = int(parts[2])
-
-                        # 只返回指定染色体的数据
-                        if seqid == chromosome:
-                            centromere_data.append({
-                                'seqid': seqid,
-                                'start': start,
-                                'end': end
-                            })
-        except Exception as e:
-            logger.error(f"解析centromere文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析centromere文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return Response(centromere_data)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def get_coreblocks(self, request):
-        """获取指定生物体和染色体的coreBlocks数据"""
-        organism = request.query_params.get('organism')
-        chromosome = request.query_params.get('chromosome')
-
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not chromosome:
-            return Response(
-                {"error": "缺少必要的参数: chromosome"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 构建coreBlocks文件路径
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        coreblocks_bed_path = os.path.join(manual_files_dir, f'coreBlocks.{organism}.bed')
-
-        if not os.path.exists(coreblocks_bed_path):
-            return Response(
-                {"error": f"未找到 {organism} 的coreBlocks文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # 解析BED文件获取coreBlocks数据
-        coreblocks_data = []
-        try:
-            with open(coreblocks_bed_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    parts = line.split('\t')
-                    if len(parts) >= 3:
-                        seqid = parts[0]
-                        start = int(parts[1])
-                        end = int(parts[2])
-
-                        # 只返回指定染色体的数据
-                        if seqid == chromosome:
-                            coreblocks_data.append({
-                                'seqid': seqid,
-                                'start': start,
-                                'end': end,
-                                'length': end - start
-                            })
-        except Exception as e:
-            logger.error(f"解析coreBlocks文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析coreBlocks文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return Response(coreblocks_data)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def get_variableblocks(self, request):
-        """获取指定生物体和染色体的 variableBlocks 数据"""
-        organism = request.query_params.get('organism')
-        chromosome = request.query_params.get('chromosome')
-
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not chromosome:
-            return Response(
-                {"error": "缺少必要的参数: chromosome"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        variableblocks_bed_path = os.path.join(manual_files_dir, f'variableBlocks.{organism}.bed')
-
-        if not os.path.exists(variableblocks_bed_path):
-            return Response(
-                {"error": f"未找到 {organism} 的 variableBlocks 文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        variableblocks_data = []
-        try:
-            with open(variableblocks_bed_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    parts = line.split('\t')
-                    if len(parts) >= 3:
-                        seqid = parts[0]
-                        start = int(parts[1])
-                        end = int(parts[2])
-
-                        if seqid == chromosome:
-                            variableblocks_data.append({
-                                'seqid': seqid,
-                                'start': start,
-                                'end': end,
-                                'length': end - start
-                            })
-        except Exception as e:
-            logger.error(f"解析variableBlocks文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析variableBlocks文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return Response(variableblocks_data)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def get_annotation_data(self, request):
@@ -1593,309 +950,12 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def get_rna_data(self, request):
-        """获取指定生物体和染色体的RNA数据（rRNA, miRNA, tRNA）"""
-        organism = request.query_params.get('organism')
-        chromosome = request.query_params.get('chromosome')
-        rna_type = request.query_params.get('type')  # rRNA, miRNA, tRNA
-
-        if not organism:
-            return Response(
-                {"error": "缺少必要的参数: organism"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not chromosome:
-            return Response(
-                {"error": "缺少必要的参数: chromosome"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if not rna_type or rna_type not in ['rRNA', 'miRNA', 'tRNA']:
-            return Response(
-                {"error": "缺少或无效的参数: type (必须是 rRNA, miRNA, tRNA 之一)"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 构建RNA文件路径
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        rna_bed_path = os.path.join(manual_files_dir, f'{rna_type}.{organism}.bed')
-
-        if not os.path.exists(rna_bed_path):
-            return Response(
-                {"error": f"未找到 {organism} 的{rna_type}文件"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # 解析BED文件获取RNA数据
-        rna_data = []
-        count = 0
-        max_records = 1000  # 限制返回的记录数量
-
-        try:
-            with open(rna_bed_path, 'r') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    parts = line.split('\t')
-                    if len(parts) >= 4:
-                        # 处理不同格式的BED文件
-                        if rna_type == 'miRNA' and len(parts) >= 8:
-                            # miRNA格式: name family seqid start end strand score e_value
-                            name = parts[0]
-                            family = parts[1]
-                            seqid = parts[2]
-                            start = int(parts[3])
-                            end = int(parts[4])
-                            strand = parts[5] if len(parts) > 5 else '.'
-                            score = parts[6] if len(parts) > 6 else '.'
-                            e_value = parts[7] if len(parts) > 7 else '.'
-
-                            # 只返回指定染色体的数据
-                            if seqid == chromosome:
-                                if count >= max_records:
-                                    break
-
-                                rna_data.append({
-                                    'seqid': seqid,
-                                    'start': start,
-                                    'end': end,
-                                    'name': name,
-                                    'family': family,
-                                    'strand': strand,
-                                    'score': score,
-                                    'e_value': e_value,
-                                    'type': rna_type
-                                })
-                                count += 1
-                        else:
-                            # rRNA和tRNA格式: seqid start end name
-                            seqid = parts[0]
-                            start = int(parts[1])
-                            end = int(parts[2])
-                            name = parts[3] if len(parts) > 3 else ''
-
-                            # 只返回指定染色体的数据
-                            if seqid == chromosome:
-                                if count >= max_records:
-                                    break
-
-                                rna_data.append({
-                                    'seqid': seqid,
-                                    'start': start,
-                                    'end': end,
-                                    'name': name,
-                                    'type': rna_type
-                                })
-                                count += 1
-        except Exception as e:
-            logger.error(f"解析{rna_type}文件失败: {str(e)}")
-            return Response(
-                {"error": f"解析{rna_type}文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        return Response(rna_data)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def scan_directory(self, request):
-        """扫描目录，自动添加文件到数据库并清理不存在的文件记录"""
-        try:
-            directory = settings.MANUAL_FILES_DIR
-            files_added = 0
-            files_removed = 0
-            
-            if not os.path.exists(directory):
-                return Response(
-                    {"error": f"目录不存在: {directory}"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # 获取所有现存文件的路径集合
-            existing_files = set()
-            for root, _, files in os.walk(directory):
-                for filename in files:
-                    file_path = os.path.join(root, filename)
-                    existing_files.add(file_path)
-            
-            # 清理数据库中不存在的文件记录
-            for file_obj in GenomeFile.objects.all():
-                if file_obj.file_path not in existing_files:
-                    file_obj.delete()
-                    files_removed += 1
-            
-            # 获取有效的文件扩展名映射
-            extension_map = {}
-            for file_type in FileType.objects.all():
-                extension_map[file_type.extension] = file_type
-                
-            # 定义有效的组织类型，这些不应被视为生物体/物种
-            tissue_types = ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']
-                
-            # 扫描目录中的文件（包括子目录）
-            for root, _, files in os.walk(directory):
-                for filename in files:
-                    file_path = os.path.join(root, filename)
-                    
-                    # 检查文件是否已存在
-                    if GenomeFile.objects.filter(file_path=file_path).exists():
-                        continue
-                        
-                    parts = filename.split('.')
-                    extension = parts[-1] if len(parts) > 1 else ''
-                    
-                    # 特殊处理压缩文件格式
-                    if extension in ['gz', 'zip', 'bz2', 'xz']:
-                        if len(parts) > 2:
-                            extension = f"{parts[-2]}.{parts[-1]}"  # 例如: fasta.gz
-                    
-                    # 获取或创建文件类型
-                    file_type = extension_map.get(extension)
-                    if not file_type:
-                        file_type = FileType.objects.create(
-                            name=extension.upper() if extension else 'UNKNOWN',
-                            extension=extension
-                        )
-                        extension_map[extension] = file_type
-                    
-                    # 处理不同的文件命名格式
-                    
-                    # 1. 处理格式: transcriptome.type.organism.extension[.gz]
-                    # 例如: transcriptome.leaf.MH63.fastaq.gz
-                    if len(parts) >= 4 and parts[0] == 'transcriptome' and parts[1] in tissue_types:
-                        tissue_type = parts[1]
-                        organism = parts[2]
-                        category = f"transcriptome.{tissue_type}"
-                        
-                        # 确保这个organism是有效的生物体，而不是组织类型
-                        if organism in tissue_types:
-                            # 如果organism是组织类型，可能文件命名有问题，跳过或处理
-                            logger.warning(f"文件名格式有问题，organism与组织类型冲突: {filename}")
-                            continue
-                        
-                        GenomeFile.objects.create(
-                            name=filename,
-                            organism=organism,
-                            category=category,
-                            file_path=file_path,
-                            file_type=file_type,
-                            size=os.path.getsize(file_path)
-                        )
-                        files_added += 1
-                    
-                    # 2. 处理注释数据文件格式: annotation.organism.gff[.gz]
-                    # 例如: annotation.MH63.gff, annotation.ZS97.gff.gz
-                    elif len(parts) >= 3 and parts[0] == 'annotation' and (parts[-1] == 'gff' or (len(parts) > 3 and parts[-2] == 'gff')):
-                        organism = parts[1]
-                        category = 'annotation'
-                        
-                        # 确保organism不是组织类型
-                        if organism in tissue_types:
-                            logger.warning(f"文件名格式有问题，organism与组织类型冲突: {filename}")
-                            continue
-                        
-                        GenomeFile.objects.create(
-                            name=filename,
-                            organism=organism,
-                            category=category,
-                            file_path=file_path,
-                            file_type=file_type,
-                            size=os.path.getsize(file_path)
-                        )
-                        files_added += 1
+        return self._archived_response()
 
-                    # 3. 处理coreBlocks数据文件格式: coreBlocks.organism.bed[.gz]
-                    # 例如: coreBlocks.IR64.bed, coreBlocks.MH63.bed.gz
-                    elif len(parts) >= 3 and parts[0] in ['coreBlocks', 'variableBlocks'] and (parts[-1] == 'bed' or (len(parts) > 3 and parts[-2] == 'bed')):
-                        organism = parts[1]
-                        category = parts[0]
-
-                        # 确保organism不是组织类型
-                        if organism in tissue_types:
-                            logger.warning(f"文件名格式有问题，organism与组织类型冲突: {filename}")
-                            continue
-
-                        GenomeFile.objects.create(
-                            name=filename,
-                            organism=organism,
-                            category=category,
-                            file_path=file_path,
-                            file_type=file_type,
-                            size=os.path.getsize(file_path)
-                        )
-                        files_added += 1
-
-                    # 4. 处理格式: category.organism.extension[.gz]
-                    # 例如: transcriptome.MH63.fasta, genome.ZS97.fasta.gz
-                    elif len(parts) >= 3:
-                        category = parts[0]
-                        organism = parts[1]
-                        
-                        # 确保organism不是组织类型
-                        if organism in tissue_types:
-                            # 这可能是转录组类型的文件，使用不同的解析方式
-                            if category == 'transcriptome':
-                                tissue_type = organism  # 组织类型实际上是第二个部分
-                                organism = parts[2] if len(parts) > 2 else 'unknown'  # 生物体是第三个部分
-                                category = f"transcriptome.{tissue_type}"
-                            else:
-                                # 如果不是转录组但organism是组织类型，可能文件命名有问题
-                                logger.warning(f"文件名格式有问题，organism与组织类型冲突: {filename}")
-                                continue
-                        
-                        # 验证category和organism
-                        valid_category = False
-                        for cat_choice, _ in GenomeFile.FILE_CATEGORY_CHOICES:
-                            if cat_choice == category:
-                                valid_category = True
-                                break
-                        
-                        # 验证organism是否有效（不为空且不是组织类型）
-                        valid_organism = organism and organism not in tissue_types
-
-                        if valid_category and valid_organism:
-                            GenomeFile.objects.create(
-                                name=filename,
-                                organism=organism,
-                                category=category,
-                                file_path=file_path,
-                                file_type=file_type,
-                                size=os.path.getsize(file_path)
-                            )
-                            files_added += 1
-                        else:
-                            # 如果不符合预期格式，记录但不抛出错误
-                            logger.warning(f"文件名格式不符合预期: {filename}")
-                    
-                    else:
-                        # 如果不符合预期格式，记录但不抛出错误
-                        logger.warning(f"文件名格式不符合预期: {filename}")
-            
-            # 清理不再使用的Organism记录
-            # 获取当前所有文件中使用的organism
-            active_organisms = set(GenomeFile.objects.values_list('organism', flat=True).distinct())
-            
-            # 从Organism表中删除不再使用的记录
-            from files.models import Organism
-            deleted_organisms = 0
-            for org in Organism.objects.all():
-                if org.code not in active_organisms:
-                    org.delete()
-                    deleted_organisms += 1
-                    logger.info(f"删除不再使用的生物体记录: {org.code}")
-            
-            return Response({
-                "message": f"成功添加 {files_added} 个文件，删除 {files_removed} 个不存在的文件记录，清理 {deleted_organisms} 个不再使用的生物体记录",
-                "details": f"扫描目录: {directory}"
-            })
-        
-        except Exception as e:
-            logger.error(f"扫描目录失败: {str(e)}")
-            return Response(
-                {"error": f"扫描目录失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
     def _load_supplementary_data(self):
         """加载补充数据文件"""
@@ -1946,73 +1006,12 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def organisms(self, request):
-        """获取生物体列表，支持搜索参数"""
-        try:
-            # 获取搜索参数
-            search = request.query_params.get('search', '').strip()
-
-            # 1. 首先尝试使用静态方法获取所有生物体
-            if hasattr(GenomeFile, 'get_all_organisms'):
-                organisms = GenomeFile.get_all_organisms()
-                logger.info(f"使用get_all_organisms方法获取生物体列表: {organisms}")
-            else:
-                # 2. 如果静态方法不存在，回退到从数据库中获取
-                organisms = list(GenomeFile.objects.values_list('organism', flat=True).distinct())
-
-                # 3. 过滤掉组织类型，它们不应该被当作生物体
-                tissue_types = ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']
-                organisms = [org for org in organisms if org not in tissue_types]
-
-                # 4. 排序结果
-                organisms.sort()
-                logger.info(f"从数据库获取生物体列表: {organisms}")
-
-            # 5. 如果有搜索条件，进行过滤
-            if search:
-                organisms = [org for org in organisms if search.lower() in org.lower()]
-                logger.info(f"搜索'{search}'后的生物体列表: {organisms}")
-
-            # 如果列表为空，返回空列表
-            if not organisms:
-                logger.info("生物体列表为空，返回空列表")
-                return Response([])
-
-            return Response(organisms)
-        except Exception as e:
-            logger.error(f"获取生物体列表时发生错误: {str(e)}")
-            # 出错时返回空列表
-            return Response([])
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def organisms_with_annotation(self, request):
-        """获取有注释文件的生物体列表"""
-        try:
-            # 获取所有生物体列表
-            if hasattr(GenomeFile, 'get_all_organisms'):
-                all_organisms = GenomeFile.get_all_organisms()
-            else:
-                all_organisms = list(GenomeFile.objects.values_list('organism', flat=True).distinct())
-                tissue_types = ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']
-                all_organisms = [org for org in all_organisms if org not in tissue_types]
+        return self._archived_response()
 
-            # 检查每个生物体是否有注释文件
-            organisms_with_annotation = []
-            manual_files_dir = settings.MANUAL_FILES_DIR
-
-            for organism in all_organisms:
-                annotation_file_path = os.path.join(manual_files_dir, f'annotation.{organism}.gff')
-                if os.path.exists(annotation_file_path):
-                    organisms_with_annotation.append(organism)
-
-            # 排序结果
-            organisms_with_annotation.sort()
-            logger.info(f"有注释文件的生物体列表: {organisms_with_annotation}")
-
-            return Response(organisms_with_annotation)
-        except Exception as e:
-            logger.error(f"获取有注释文件的生物体列表时发生错误: {str(e)}")
-            # 出错时返回空列表
-            return Response([])
 
     @method_decorator(csrf_exempt, name='dispatch')
     @action(detail=False, methods=['post'])
@@ -3620,169 +2619,24 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def categories(self, request):
-        """获取所有文件类别列表"""
-        categories = GenomeFile.get_all_categories()
-        return Response(categories)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def all_files(self, request):
-        """获取所有文件（不分页，用于特殊页面如转录组概览）"""
-        try:
-            # 定义已知的组织类型，这些不应该被当作生物体
-            tissue_types = ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']
-
-            # 获取所有文件，排除组织类型
-            files = GenomeFile.objects.exclude(organism__in=tissue_types)
-
-            # 序列化数据
-            serializer = GenomeFileListSerializer(files, many=True)
-            return Response(serializer.data)
-
-        except Exception as e:
-            logger.error(f"获取所有文件失败: {str(e)}")
-            return Response(
-                {"error": f"获取所有文件失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def sub_populations(self, request):
-        """获取所有可用的亚群列表"""
-        try:
-            supplementary_data = self._load_supplementary_data()
-
-            # 提取所有不为空的亚群
-            sub_populations = set()
-            for data in supplementary_data.values():
-                sub_pop = data.get('sub_population')
-                if sub_pop and sub_pop.strip():
-                    sub_populations.add(sub_pop.strip())
-
-            # 转换为排序后的列表
-            sub_populations_list = sorted(list(sub_populations))
-
-            # 添加"未知亚群"选项
-            sub_populations_list.append('未知亚群')
-
-            return Response(sub_populations_list)
-
-        except Exception as e:
-            logger.error(f"获取亚群列表失败: {str(e)}")
-            return Response(
-                {"error": f"获取亚群列表失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def transcriptome_types(self, request):
-        """获取所有转录组类型"""
-        types = GenomeFile.get_transcriptome_types()
-        return Response(types)
+        return self._archived_response()
 
     @action(detail=False, methods=['get'])
     def paginated_transcriptome_overview(self, request):
-        """获取分页的转录组一览表"""
-        try:
-            # 获取查询参数
-            page = int(request.query_params.get('page', 1))
-            page_size = int(request.query_params.get('page_size', 20))
-            search = request.query_params.get('search', '')
-            # 获取亚群筛选参数，支持多个亚群，用逗号分隔
-            sub_populations = request.query_params.get('sub_populations', '')
+        return self._archived_response()
 
-            # 定义已知的组织类型，这些不应该被当作生物体
-            tissue_types = ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']
-
-            # 获取所有转录组文件，按生物体分组，排除组织类型和无效的organism值
-            files = GenomeFile.objects.filter(
-                category__startswith='transcriptome.'
-            ).exclude(organism__in=tissue_types).exclude(
-                organism__isnull=True
-            ).exclude(organism='').exclude(organism='unknown')
-
-            # 如果有搜索条件，过滤生物体
-            if search:
-                files = files.filter(organism__icontains=search)
-
-            # 按生物体分组
-            organism_map = {}
-            for file in files:
-                organism = file.organism
-                if organism not in organism_map:
-                    organism_map[organism] = {
-                        'accession': organism,
-                        'transcriptomeTypes': set()
-                    }
-
-                # 提取转录组类型
-                type_part = file.category.split('.')[1] if '.' in file.category else 'all'
-                organism_map[organism]['transcriptomeTypes'].add(type_part)
-
-            # 获取补充数据（亚群信息）
-            try:
-                supplementary_data_file = os.path.join(settings.MEDIA_ROOT, 'genome-files', 'supplementary_data', 'supplementary_data.json')
-                if os.path.exists(supplementary_data_file):
-                    with open(supplementary_data_file, 'r', encoding='utf-8') as f:
-                        supplementary_data = json.load(f)
-                else:
-                    supplementary_data = {}
-            except Exception as e:
-                logger.warning(f"读取补充数据失败: {str(e)}")
-                supplementary_data = {}
-
-            # 构建结果列表
-            organisms_list = []
-            for organism, data in organism_map.items():
-                # 获取亚群信息
-                sub_population = supplementary_data.get(organism, {}).get('sub_population', None)
-
-                organism_data = {
-                    'accession': organism,
-                    'subPopulation': sub_population,
-                    'transcriptomeTypes': list(data['transcriptomeTypes'])
-                }
-                organisms_list.append(organism_data)
-
-            # 亚群筛选
-            if sub_populations and sub_populations != 'NONE':
-                if sub_populations == '':
-                    # 如果参数为空字符串，返回所有数据
-                    pass
-                else:
-                    # 解析亚群筛选参数
-                    selected_sub_populations = [sp.strip() for sp in sub_populations.split(',') if sp.strip()]
-                    if selected_sub_populations:
-                        organisms_list = [
-                            org for org in organisms_list
-                            if org['subPopulation'] in selected_sub_populations
-                        ]
-            elif sub_populations == 'NONE':
-                # 如果参数为'NONE'，返回空结果
-                organisms_list = []
-
-            # 按accession排序
-            organisms_list.sort(key=lambda x: x['accession'])
-
-            # 手动分页
-            total = len(organisms_list)
-            start_index = (page - 1) * page_size
-            end_index = start_index + page_size
-            paginated_data = organisms_list[start_index:end_index]
-
-            # 返回分页结果
-            return Response({
-                'count': total,
-                'next': f"?page={page + 1}&page_size={page_size}" if end_index < total else None,
-                'previous': f"?page={page - 1}&page_size={page_size}" if page > 1 else None,
-                'results': paginated_data
-            })
-
-        except Exception as e:
-            logger.error(f"获取分页转录组数据失败: {str(e)}")
-            return Response(
-                {"error": f"获取分页转录组数据失败: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
 def download_manual_file(request, filename=None):
     """手动文件下载函数"""
@@ -3869,24 +2723,11 @@ def download_datafile(request, file_id):
             organism=organism,
         )
 
-        annotation_file = None
         if resolved_annotation:
-            annotation_file = (
-                GenomeFile.objects.filter(annotation=resolved_annotation, category='annotation')
-                .select_related('file_type')
-                .order_by('id')
-                .first()
-            )
-        elif resolved_assembly:
-            annotation_file = (
-                GenomeFile.objects.filter(assembly=resolved_assembly, category='annotation')
-                .select_related('file_type')
-                .order_by('id')
-                .first()
-            )
-
-        if annotation_file and annotation_file.file_path and os.path.exists(annotation_file.file_path):
-            return resolved_organism, annotation_file.file_path
+            for annotation_file in get_files_for_annotation(resolved_annotation.id, file_role='annotation'):
+                candidate_path = annotation_file.get('file_path')
+                if candidate_path and os.path.exists(candidate_path):
+                    return resolved_organism, candidate_path
 
         manual_files_dir = settings.MANUAL_FILES_DIR
         for extension in ['gff', 'gff3']:
@@ -4319,310 +3160,34 @@ def admin_login(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def admin_files_list(request):
-    """获取文件列表（管理后台）"""
-    try:
-        # 获取查询参数
-        page = int(request.GET.get('page', 1))
-        page_size = int(request.GET.get('page_size', 20))
-        search = request.GET.get('search', '')
-        category = request.GET.get('category', '')
-        organism = request.GET.get('organism', '')
-
-        # 构建查询
-        queryset = GenomeFile.objects.all()
-
-        if search:
-            queryset = queryset.filter(name__icontains=search)
-        if category:
-            queryset = queryset.filter(category=category)
-        if organism:
-            queryset = queryset.filter(organism=organism)
-
-        # 排序
-        queryset = queryset.order_by('-id')
-
-        # 分页
-        total = queryset.count()
-        start = (page - 1) * page_size
-        end = start + page_size
-        files = queryset[start:end]
-
-        # 序列化数据
-        files_data = []
-        for file_obj in files:
-            files_data.append({
-                'id': file_obj.id,
-                'name': file_obj.name,
-                'organism': file_obj.organism,
-                'category': file_obj.category,
-                'file_type': file_obj.file_type.name if file_obj.file_type else '',
-                'size': file_obj.size,
-                'file_path': file_obj.file_path,
-                'created_at': file_obj.created_at.strftime('%Y-%m-%d %H:%M:%S') if hasattr(file_obj, 'created_at') else '',
-                'exists': os.path.exists(file_obj.file_path) if file_obj.file_path else False
-            })
-
-        return Response({
-            'success': True,
-            'data': files_data,
-            'total': total,
-            'page': page,
-            'page_size': page_size,
-            'total_pages': (total + page_size - 1) // page_size
-        })
-
-    except Exception as e:
-        logger.error(f"获取文件列表失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': '获取文件列表失败'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response()
 
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 def admin_delete_file(request, file_id):
-    """删除文件"""
-    try:
-        file_obj = GenomeFile.objects.get(id=file_id)
-
-        # 删除物理文件
-        if file_obj.file_path and os.path.exists(file_obj.file_path):
-            os.remove(file_obj.file_path)
-            logger.info(f"删除物理文件: {file_obj.file_path}")
-
-        # 删除数据库记录
-        file_name = file_obj.name
-        file_obj.delete()
-
-        return Response({
-            'success': True,
-            'message': f'文件 {file_name} 删除成功'
-        })
-
-    except GenomeFile.DoesNotExist:
-        return Response({
-            'success': False,
-            'message': '文件不存在'
-        }, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        logger.error(f"删除文件失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': f'删除文件失败: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response()
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
 def admin_batch_delete(request):
-    """批量删除文件"""
-    try:
-        data = json.loads(request.body)
-        file_ids = data.get('file_ids', [])
-
-        if not file_ids:
-            return Response({
-                'success': False,
-                'message': '请选择要删除的文件'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        deleted_count = 0
-        failed_files = []
-
-        for file_id in file_ids:
-            try:
-                file_obj = GenomeFile.objects.get(id=file_id)
-
-                # 删除物理文件
-                if file_obj.file_path and os.path.exists(file_obj.file_path):
-                    os.remove(file_obj.file_path)
-
-                # 删除数据库记录
-                file_obj.delete()
-                deleted_count += 1
-
-            except GenomeFile.DoesNotExist:
-                failed_files.append(f"ID {file_id}: 文件不存在")
-            except Exception as e:
-                failed_files.append(f"ID {file_id}: {str(e)}")
-
-        message = f"成功删除 {deleted_count} 个文件"
-        if failed_files:
-            message += f"，失败 {len(failed_files)} 个"
-
-        return Response({
-            'success': True,
-            'message': message,
-            'deleted_count': deleted_count,
-            'failed_files': failed_files
-        })
-
-    except Exception as e:
-        logger.error(f"批量删除失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': f'批量删除失败: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response()
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
 def admin_batch_download(request):
-    """批量下载文件"""
-    try:
-        data = json.loads(request.body)
-        file_ids = data.get('file_ids', [])
-
-        if not file_ids:
-            return Response({
-                'success': False,
-                'message': '请选择要下载的文件'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # 获取文件对象
-        files_to_download = []
-        failed_files = []
-
-        for file_id in file_ids:
-            try:
-                file_obj = GenomeFile.objects.get(id=file_id)
-
-                # 检查文件是否存在
-                if file_obj.file_path and os.path.exists(file_obj.file_path):
-                    files_to_download.append(file_obj)
-                else:
-                    failed_files.append(f"ID {file_id}: 文件不存在")
-
-            except GenomeFile.DoesNotExist:
-                failed_files.append(f"ID {file_id}: 文件不存在")
-            except Exception as e:
-                failed_files.append(f"ID {file_id}: {str(e)}")
-
-        if not files_to_download:
-            return Response({
-                'success': False,
-                'message': '没有可下载的文件'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # 创建ZIP文件
-        import zipfile
-        import tempfile
-        from datetime import datetime
-
-        # 创建临时ZIP文件
-        temp_zip = tempfile.NamedTemporaryFile(delete=False, suffix='.zip')
-
-        with zipfile.ZipFile(temp_zip.name, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for file_obj in files_to_download:
-                try:
-                    # 添加文件到ZIP，使用原始文件名
-                    zipf.write(file_obj.file_path, file_obj.name)
-                except Exception as e:
-                    failed_files.append(f"{file_obj.name}: {str(e)}")
-
-        # 生成下载文件名
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        zip_filename = f'batch_download_{timestamp}.zip'
-
-        # 返回文件响应
-        response = FileResponse(
-            open(temp_zip.name, 'rb'),
-            as_attachment=True,
-            filename=zip_filename
-        )
-
-        # 清理临时文件（在响应发送后）
-        def cleanup():
-            try:
-                os.unlink(temp_zip.name)
-            except:
-                pass
-
-        import atexit
-        atexit.register(cleanup)
-
-        return response
-
-    except Exception as e:
-        logger.error(f"批量下载失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': f'批量下载失败: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response(GENOMEFILE_DOWNLOAD_ARCHIVE_MESSAGE)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @csrf_exempt
 def admin_upload_file(request):
-    """文件上传"""
-    try:
-        if 'file' not in request.FILES:
-            return Response({
-                'success': False,
-                'message': '请选择要上传的文件'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        uploaded_file = request.FILES['file']
-        filename = uploaded_file.name
-
-        # 保存文件到manual_files目录
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        if not os.path.exists(manual_files_dir):
-            os.makedirs(manual_files_dir)
-
-        file_path = os.path.join(manual_files_dir, filename)
-
-        # 检查文件是否已存在
-        if os.path.exists(file_path):
-            return Response({
-                'success': False,
-                'message': f'文件 {filename} 已存在'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # 保存文件
-        with open(file_path, 'wb+') as destination:
-            for chunk in uploaded_file.chunks():
-                destination.write(chunk)
-
-        # 自动识别文件类型和分类
-        file_info = _analyze_uploaded_file(filename, file_path)
-
-        # 创建数据库记录
-        file_type = None
-        if file_info['extension']:
-            file_type = FileType.objects.filter(extension=file_info['extension']).first()
-
-        genome_file = GenomeFile.objects.create(
-            name=filename,
-            organism=file_info['organism'],
-            category=file_info['category'],
-            file_path=file_path,
-            file_type=file_type,
-            size=os.path.getsize(file_path)
-        )
-
-        return Response({
-            'success': True,
-            'message': f'文件 {filename} 上传成功',
-            'file_info': {
-                'id': genome_file.id,
-                'name': filename,
-                'organism': file_info['organism'],
-                'category': file_info['category'],
-                'size': genome_file.size
-            }
-        })
-
-    except Exception as e:
-        logger.error(f"文件上传失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': f'文件上传失败: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response()
 
 
 def _analyze_uploaded_file(filename, file_path):
@@ -4682,226 +3247,19 @@ def _analyze_uploaded_file(filename, file_path):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def admin_statistics(request):
-    """获取统计信息"""
-    try:
-        # 文件总数
-        total_files = GenomeFile.objects.count()
-
-        # 按类别统计
-        category_stats = {}
-
-        # 获取补充数据以统计Accession数量
-        supplementary_data = {}
-        manual_files_dir = settings.MANUAL_FILES_DIR
-        supplementary_file = os.path.join(manual_files_dir, 'supplymentary_data.txt')
-
-        if os.path.exists(supplementary_file):
-            with open(supplementary_file, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-
-            # 跳过标题行
-            for line in lines[1:]:
-                line = line.strip()
-                if line:
-                    parts = line.split('\t')
-                    if len(parts) >= 1:  # 至少要有accession
-                        accession = parts[0].strip()
-                        supplementary_data[accession] = True
-
-        for choice in GenomeFile.FILE_CATEGORY_CHOICES:
-            category = choice[0]
-            category_name = choice[1]
-
-            # 文件数量
-            files = GenomeFile.objects.filter(category=category)
-            file_count = files.count()
-
-            if file_count > 0:
-                # 文件总大小
-                total_size = 0
-                for file_obj in files:
-                    if file_obj.size:
-                        total_size += file_obj.size
-
-                # Accession数量（除了"其他"类型，所有类型都统计）
-                accession_count = 0
-                if category != 'other':
-                    # 从文件名中提取Accession
-                    accessions = set()
-                    for file_obj in files:
-                        # 提取文件名中的Accession部分
-                        filename = file_obj.name
-                        parts = filename.split('.')
-                        potential_accession = None
-
-                        # 处理不同的文件命名格式
-                        if category.startswith('transcriptome.'):
-                            # 转录组文件格式: transcriptome.type.accession.extension
-                            # 例如: transcriptome.root.IR64.tar.gz
-                            if len(parts) >= 3:
-                                potential_accession = parts[2]
-                        else:
-                            # 其他文件格式: category.accession.extension
-                            # 例如: genome.IR64.fasta, miRNA.IR64.bed
-                            if len(parts) >= 2:
-                                potential_accession = parts[1]
-
-                        # 检查是否在补充数据中存在
-                        if potential_accession and potential_accession in supplementary_data:
-                            accessions.add(potential_accession)
-
-                    accession_count = len(accessions)
-
-                category_stats[category_name] = {
-                    'file_count': file_count,
-                    'total_size': total_size,
-                    'accession_count': accession_count if category != 'other' else None
-                }
-
-        # 按生物体统计
-        organism_stats = {}
-        organisms = GenomeFile.objects.values_list('organism', flat=True).distinct()
-        for organism in organisms:
-            count = GenomeFile.objects.filter(organism=organism).count()
-            organism_stats[organism] = count
-
-        # 文件大小统计
-        total_size = 0
-        for file_obj in GenomeFile.objects.all():
-            if file_obj.size:
-                total_size += file_obj.size
-
-        # 检查文件存在性
-        existing_files = 0
-        missing_files = 0
-        for file_obj in GenomeFile.objects.all():
-            if file_obj.file_path and os.path.exists(file_obj.file_path):
-                existing_files += 1
-            else:
-                missing_files += 1
-
-        return Response({
-            'success': True,
-            'data': {
-                'total_files': total_files,
-                'total_size': total_size,
-                'total_size_mb': round(total_size / (1024 * 1024), 2),
-                'existing_files': existing_files,
-                'missing_files': missing_files,
-                'category_stats': category_stats,
-                'organism_stats': organism_stats
-            }
-        })
-
-    except Exception as e:
-        logger.error(f"获取统计信息失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': '获取统计信息失败'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response()
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def admin_rescan_files(request):
-    """重新扫描文件目录"""
-    try:
-        directory = settings.MANUAL_FILES_DIR
-        files_added = 0
-        files_removed = 0
-
-        if not os.path.exists(directory):
-            return Response({
-                'success': False,
-                'message': f'目录不存在: {directory}'
-            }, status=status.HTTP_404_NOT_FOUND)
-
-        # 获取所有现存文件的路径集合
-        existing_files = set()
-        for root, _, files in os.walk(directory):
-            for filename in files:
-                file_path = os.path.join(root, filename)
-                existing_files.add(file_path)
-
-        # 清理数据库中不存在的文件记录
-        for file_obj in GenomeFile.objects.all():
-            if file_obj.file_path not in existing_files:
-                file_obj.delete()
-                files_removed += 1
-
-        # 扫描新文件并添加到数据库
-        for file_path in existing_files:
-            if not GenomeFile.objects.filter(file_path=file_path).exists():
-                filename = os.path.basename(file_path)
-                file_info = _analyze_uploaded_file(filename, file_path)
-
-                # 获取文件类型
-                file_type = None
-                if file_info['extension']:
-                    file_type = FileType.objects.filter(extension=file_info['extension']).first()
-
-                # 创建数据库记录
-                GenomeFile.objects.create(
-                    name=filename,
-                    organism=file_info['organism'],
-                    category=file_info['category'],
-                    file_path=file_path,
-                    file_type=file_type,
-                    size=os.path.getsize(file_path)
-                )
-                files_added += 1
-
-        return Response({
-            'success': True,
-            'message': f'扫描完成：新增 {files_added} 个文件，清理 {files_removed} 个无效记录',
-            'files_added': files_added,
-            'files_removed': files_removed
-        })
-
-    except Exception as e:
-        logger.error(f"重新扫描失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': f'重新扫描失败: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response()
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def admin_download_file(request, file_id):
-    """下载文件（管理后台）"""
-    try:
-        file_obj = GenomeFile.objects.get(id=file_id)
-        file_path = file_obj.file_path
-
-        # 检查文件是否存在
-        if not os.path.exists(file_path):
-            return Response({
-                'success': False,
-                'message': '文件不存在'
-            }, status=status.HTTP_404_NOT_FOUND)
-
-        # 获取文件类型
-        content_type, _ = mimetypes.guess_type(file_path)
-        if content_type is None:
-            content_type = 'application/octet-stream'
-
-        # 创建文件响应
-        response = FileResponse(open(file_path, 'rb'), content_type=content_type)
-        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-        return response
-
-    except GenomeFile.DoesNotExist:
-        return Response({
-            'success': False,
-            'message': '文件不存在'
-        }, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        logger.error(f"下载文件失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': '下载文件失败'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response(GENOMEFILE_DOWNLOAD_ARCHIVE_MESSAGE)
 
 
 # ==================== 数据表格管理API ====================
@@ -5479,65 +3837,7 @@ def admin_upload_data_file(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def admin_download_data_file(request, accession, file_type):
-    """下载数据文件"""
-    try:
-        manual_files_dir = settings.MANUAL_FILES_DIR
-
-        # 根据文件类型查找文件
-        file_patterns = {
-            'genome': [f'genome.{accession}.fasta', f'genome.{accession}.fa', f'genome.{accession}.fas'],
-            'annotation': [f'annotation.{accession}.gff', f'annotation.{accession}.gff3'],
-            'transcriptome.all': [f'transcriptome.all.{accession}.tar.gz'],
-            'transcriptome.leaf': [f'transcriptome.leaf.{accession}.tar.gz'],
-            'transcriptome.panicles': [f'transcriptome.panicles.{accession}.tar.gz'],
-            'transcriptome.shoot': [f'transcriptome.shoot.{accession}.tar.gz'],
-            'transcriptome.stem': [f'transcriptome.stem.{accession}.tar.gz'],
-            'transcriptome.root': [f'transcriptome.root.{accession}.tar.gz'],
-            'codon': [f'codon.{accession}.tar.gz'],
-            'centromere': [f'centromere.{accession}.bed'],
-            'TEs': [f'TEs.{accession}.tar.gz'],
-            'coreBlocks': [f'coreBlocks.{accession}.bed'],
-            'miRNA': [f'miRNA.{accession}.bed'],
-            'tRNA': [f'tRNA.{accession}.bed'],
-            'rRNA': [f'rRNA.{accession}.bed']
-        }
-
-        if file_type not in file_patterns:
-            return Response({
-                'success': False,
-                'message': f'不支持的文件类型: {file_type}'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # 查找文件
-        file_path = None
-        for pattern in file_patterns[file_type]:
-            potential_path = os.path.join(manual_files_dir, pattern)
-            if os.path.exists(potential_path):
-                file_path = potential_path
-                break
-
-        if not file_path:
-            return Response({
-                'success': False,
-                'message': f'未找到 {accession} 的 {file_type} 文件'
-            }, status=status.HTTP_404_NOT_FOUND)
-
-        # 获取文件类型
-        content_type, _ = mimetypes.guess_type(file_path)
-        if content_type is None:
-            content_type = 'application/octet-stream'
-
-        # 创建文件响应
-        response = FileResponse(open(file_path, 'rb'), content_type=content_type)
-        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
-        return response
-
-    except Exception as e:
-        logger.error(f"文件下载失败: {str(e)}")
-        return Response({
-            'success': False,
-            'message': f'文件下载失败: {str(e)}'
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return _genomefile_archived_response(GENOMEFILE_DOWNLOAD_ARCHIVE_MESSAGE)
 
 
 @api_view(['DELETE'])
@@ -5784,3 +4084,4 @@ def accession_detail(request, accession):
             'success': False,
             'message': f'获取 accession 详情失败: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

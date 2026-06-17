@@ -313,7 +313,7 @@ export default {
     // 获取TEs数据
     const fetchTEsData = async (organism, chromosome) => {
       try {
-        const response = await axios.get('/files/genome-files/get_tes/', {
+        const response = await axios.get('/files/query/tes/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome
@@ -329,7 +329,7 @@ export default {
     // 获取centromere数据
     const fetchCentromereData = async (organism, chromosome) => {
       try {
-        const response = await axios.get('/files/genome-files/get_centromere/', {
+        const response = await axios.get('/files/query/centromere/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome
@@ -345,7 +345,7 @@ export default {
     // 获取RNA数据的通用函数
     const fetchRNAData = async (organism, chromosome, rnaType) => {
       try {
-        const response = await axios.get('/files/genome-files/get_rna_data/', {
+        const response = await axios.get('/files/query/rna-data/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome,
@@ -377,7 +377,7 @@ export default {
     // 获取coreBlocks数据
     const fetchCoreBlocksData = async (organism, chromosome) => {
       try {
-        const response = await axios.get('/files/genome-files/get_coreblocks/', {
+        const response = await axios.get('/files/query/core-blocks/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome
@@ -393,7 +393,7 @@ export default {
     // 获取染色体长度
     const getChromosomeLength = async (organism, chromosome) => {
       try {
-        const response = await axios.get('/files/genome-files/get_chromosome_length/', {
+        const response = await axios.get('/files/query/chromosome-length/', {
           params: {
             ...buildGenomeContextParams(),
             chromosome
@@ -846,7 +846,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms/');
+        const response = await axios.get('/files/query/organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
@@ -877,7 +877,7 @@ export default {
 
       try {
         loadingChromosomes.value = true;
-        const response = await axios.get('/files/genome-files/get_chromosomes/', {
+        const response = await axios.get('/files/query/chromosomes/', {
           params: buildGenomeContextParams()
         });
         const nextChromosomes = response.data || [];

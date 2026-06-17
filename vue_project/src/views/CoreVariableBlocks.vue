@@ -506,7 +506,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms/');
+        const response = await axios.get('/files/query/organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
@@ -533,9 +533,10 @@ export default {
     };
 
     const fetchChromosomesFromCoreBlocksFile = async () => {
-      if (!coreBlocksFile.value?.id) return [];
+      const downloadUrl = coreBlocksFile.value?.download_url || coreBlocksFile.value?.datafile_download_url;
+      if (!downloadUrl) return [];
       try {
-        const response = await axios.get(`/files/genome-files/${coreBlocksFile.value.id}/download/`, { responseType: 'text' });
+        const response = await axios.get(new URL(downloadUrl, window.location.origin).toString(), { responseType: 'text' });
         return parseChromosomesFromBedText(response.data);
       } catch (error) {
         console.error('Failed to parse chromosomes from coreBlocks file:', error);
@@ -549,7 +550,7 @@ export default {
         chromosomeSource.value = '';
         let chromosomes = [];
         try {
-          const response = await axios.get('/files/genome-files/get_chromosomes/', {
+          const response = await axios.get('/files/query/chromosomes/', {
             params: {
               ...(contextAssemblyId.value ? { assembly_id: contextAssemblyId.value } : {}),
               ...(contextAccession.value ? { accession: contextAccession.value } : {}),
@@ -585,7 +586,7 @@ export default {
       }
       try {
         loadingBlocks.value = true;
-        const response = await axios.get('/files/genome-files/get_coreblocks/', {
+        const response = await axios.get('/files/query/core-blocks/', {
           params: {
             ...(contextAssemblyId.value ? { assembly_id: contextAssemblyId.value } : {}),
             ...(contextAccession.value ? { accession: contextAccession.value } : {}),
@@ -612,7 +613,7 @@ export default {
       }
       try {
         loadingVariableBlocks.value = true;
-        const response = await axios.get('/files/genome-files/get_variableblocks/', {
+        const response = await axios.get('/files/query/variable-blocks/', {
           params: {
             ...(contextAssemblyId.value ? { assembly_id: contextAssemblyId.value } : {}),
             ...(contextAccession.value ? { accession: contextAccession.value } : {}),

@@ -479,7 +479,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms_with_annotation/');
+        const response = await axios.get('/files/query/annotation-organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
@@ -506,7 +506,7 @@ export default {
           pageSizeValue: pageSize.value
         });
 
-        const response = await axios.get('/files/genome-files/get_annotation_data/', { params });
+        const response = await axios.get('/files/query/annotation-data/', { params });
         const data = response.data;
 
         annotationData.value = data.results || [];
@@ -553,7 +553,7 @@ export default {
           pageSizeValue: 10000
         });
 
-        const response = await axios.get('/files/genome-files/get_annotation_data/', { params });
+        const response = await axios.get('/files/query/annotation-data/', { params });
         const data = response.data;
 
         visualizationData.value = data.results || [];
@@ -591,7 +591,7 @@ export default {
           chromosome: selectedChromosome.value
         });
 
-        const response = await axios.get('/files/genome-files/get_chromosome_length/', { params });
+        const response = await axios.get('/files/query/chromosome-length/', { params });
         chromosomeLength.value = response.data.length;
         console.log('染色体实际长度:', chromosomeLength.value, 'bp');
         console.log('染色体实际长度:', (chromosomeLength.value / 1000000).toFixed(2), 'Mb');

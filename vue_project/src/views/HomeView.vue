@@ -472,7 +472,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms/');
+        const response = await axios.get('/files/query/organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
@@ -487,7 +487,7 @@ export default {
     const fetchSubPopulations = async () => {
       try {
         loadingSubPopulations.value = true;
-        const response = await axios.get('/files/genome-files/sub_populations/');
+        const response = await axios.get('/files/query/sub-populations/');
         // 将后端返回的"未知亚群"替换为"Unknown"
         const subPopulations = (response.data || []).map(subPop =>
           subPop === '未知亚群' ? 'Unknown' : subPop
@@ -543,7 +543,7 @@ export default {
           params.sub_populations = 'NONE';
         }
 
-        const response = await axios.get('/files/genome-files/paginated_overview/', { params });
+        const response = await axios.get('/files/query/paginated-overview/', { params });
         const data = response.data;
 
         // 处理表格数据中的亚群信息，将"未知亚群"替换为"Unknown"
@@ -661,9 +661,15 @@ export default {
 
     // 下载文件
     const downloadFile = (file) => {
+      const directUrl = file?.download_url || file?.datafile_download_url;
+      if (directUrl) {
+        window.open(new URL(directUrl, window.location.origin).toString(), '_blank');
+        return;
+      }
+
       if (!file || !file.id) return;
 
-      const url = `/files/genome-files/${file.id}/download/`;
+      const url = `/files/data-files/${file.id}/download/`;
       window.open(axios.defaults.baseURL + url, '_blank');
     };
 

@@ -201,7 +201,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms/');
+        const response = await axios.get('/files/query/organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
@@ -250,7 +250,7 @@ export default {
           params.search = searchOrganism.value;
         }
 
-        const response = await axios.get('/files/genome-files/paginated_transcriptome_overview/', { params });
+        const response = await axios.get('/files/query/paginated-transcriptome-overview/', { params });
         const data = response.data;
 
         // 直接更新数据，不触发整个组件重新渲染
@@ -285,7 +285,7 @@ export default {
           params.search = searchOrganism.value;
         }
 
-        const response = await axios.get('/files/genome-files/paginated_transcriptome_overview/', { params });
+        const response = await axios.get('/files/query/paginated-transcriptome-overview/', { params });
         const data = response.data;
 
         tableData.value = data.results || [];

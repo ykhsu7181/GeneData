@@ -62,6 +62,17 @@ db.sqlite3
 *.sqlite3-journal
 media/
 staticfiles/
+audit_reports/
+file_migration_audit_*.txt
+file_migration_audit_*.tsv
+legacy_fallback_report_*.tsv
+broken_file_relations_*.tsv
+legacy_fix_todo_*.tsv
+legacy_usage_report_*.tsv
+validate_new_file_structure_*.txt
+validate_new_file_structure_*.tsv
+genomefile_archive_status_*.txt
+genomefile_archive_status_*.tsv
 
 # Node / frontend caches
 node_modules/

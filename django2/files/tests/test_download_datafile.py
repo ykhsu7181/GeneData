@@ -58,7 +58,7 @@ class DataFileDownloadTestCase(TransactionTestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    def test_legacy_genomefile_download_still_works(self):
+    def test_legacy_genomefile_download_is_archived(self):
         accession_code = f"IR64_{self.code_suffix}"
         file_type = FileType.objects.create(
             name=f"FASTA_DOWNLOAD_{self.code_suffix}",
@@ -84,7 +84,7 @@ class DataFileDownloadTestCase(TransactionTestCase):
 
         response = self.client.get(f"/gd/api/files/genome-files/{genome_file.id}/download/")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("legacy-genomefile-download.fasta", response["Content-Disposition"])
-        self.assertEqual(b"".join(response.streaming_content), b">chr1\nATGC\n")
-        response.close()
+        self.assertEqual(response.status_code, 410)
+        payload = response.json()
+        self.assertTrue(payload["archived"])
+        self.assertIn("GenomeFile download is archived", payload["message"])

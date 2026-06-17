@@ -360,7 +360,7 @@ export default {
     // 上传配置
     const uploadUrl = computed(() => {
       // Element Plus的上传组件需要完整的URL，不会自动使用axios的baseURL
-      const fullUrl = axios.defaults.baseURL + '/files/genome-files/codonw_analysis/';
+      const fullUrl = axios.defaults.baseURL + '/files/codonw/analysis/';
       console.log('上传完整URL:', fullUrl);
       return fullUrl;
     });
@@ -669,7 +669,7 @@ export default {
     const pollAnalysisStatus = (taskId) => {
       const poll = async () => {
         try {
-          const response = await axios.get(`/files/genome-files/codonw_status/${taskId}/`);
+          const response = await axios.get(`/files/codonw/status/${taskId}/`);
           const { status, progress, message } = response.data;
 
           analysisProgress.value = progress || 0;
@@ -703,7 +703,7 @@ export default {
     const fetchAnalysisHistory = async () => {
       try {
         loadingHistory.value = true;
-        const response = await axios.get('/files/genome-files/codonw_history/', {
+        const response = await axios.get('/files/codonw/history/', {
           params: {
             page: currentPage.value,
             page_size: pageSize.value,
@@ -752,7 +752,7 @@ export default {
     // 下载结果
     const downloadResults = async (row) => {
       try {
-        const response = await axios.get(`/files/genome-files/codonw_download/${row.id}/`, {
+        const response = await axios.get(`/files/codonw/download/${row.id}/`, {
           responseType: 'blob'
         });
 
@@ -796,7 +796,7 @@ export default {
           }
         );
 
-        await axios.delete(`/files/genome-files/codonw_delete/${row.id}/`, {
+        await axios.delete(`/files/codonw/delete/${row.id}/`, {
           params: { client_id: getClientId() },
           headers: { 'X-Client-ID': getClientId() }
         });

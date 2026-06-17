@@ -188,7 +188,7 @@ class PaginatedOverviewDownloadUnaffectedTestCase(TransactionTestCase):
             handle.write(content)
         return path
 
-    def test_download_endpoint_still_uses_genomefile(self):
+    def test_genomefile_download_endpoint_is_archived(self):
         file_path = self.create_disk_file(f"genome.{self.accession_code}.fasta")
         genome_file = GenomeFile.objects.create(
             name=f"genome.{self.accession_code}.fasta",
@@ -203,7 +203,7 @@ class PaginatedOverviewDownloadUnaffectedTestCase(TransactionTestCase):
 
         response = self.client.get(f"/gd/api/files/genome-files/{genome_file.id}/download/")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(f"genome.{self.accession_code}.fasta", response["Content-Disposition"])
-        b"".join(response.streaming_content)
-        response.close()
+        self.assertEqual(response.status_code, 410)
+        payload = response.json()
+        self.assertTrue(payload["archived"])
+        self.assertIn("GenomeFile download is archived", payload["message"])

@@ -575,7 +575,7 @@ export default {
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/genome-files/organisms/');
+        const response = await axios.get('/files/query/organisms/');
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
@@ -625,14 +625,14 @@ export default {
           if (match) {
             const taskId = match[1].trim();
             console.log('检测到CodonW分析结果，任务ID:', taskId);
-            const response = await axios.get(`/files/genome-files/codonw_results/${taskId}/`);
+            const response = await axios.get(`/files/codonw/results/${taskId}/`);
             codonData.value = response.data;
           } else {
             throw new Error('无法解析CodonW任务ID');
           }
         } else {
           // 普通生物体，使用原有接口
-          const response = await axios.get(`/files/genome-files/get_codon_data/?organism=${selectedOrganism.value}`);
+          const response = await axios.get(`/files/query/codon-data/?organism=${selectedOrganism.value}`);
           codonData.value = response.data;
         }
       } catch (err) {
@@ -786,7 +786,7 @@ export default {
         loading.value = true;
         error.value = null;
 
-        const response = await axios.get(`/files/genome-files/codonw_results/${taskId}/`);
+        const response = await axios.get(`/files/codonw/results/${taskId}/`);
         const data = response.data;
 
         // 转换CodonW结果为codon-card格式
@@ -851,7 +851,7 @@ export default {
 
     // 上传相关逻辑
     const resultUploadRef = ref(null);
-    const uploadUrl = '/gd/api/files/genome-files/codonw_result_upload/';
+    const uploadUrl = '/gd/api/files/codonw/result-upload/';
 
     // 上传头部信息
     const uploadHeaders = computed(() => {

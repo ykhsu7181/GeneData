@@ -86,7 +86,7 @@ class AccessionDetailFileRelationIntegrationTestCase(TestCase):
         self.assertEqual(files, [])
 
     @override_settings(MANUAL_FILES_DIR="")
-    def test_download_endpoint_still_uses_genomefile(self):
+    def test_genomefile_download_endpoint_is_archived(self):
         file_path = os.path.join(self.temp_dir.name, "genome.IR64.fasta")
         with open(file_path, "wb") as handle:
             handle.write(b">chr1\nATGC\n")
@@ -103,9 +103,10 @@ class AccessionDetailFileRelationIntegrationTestCase(TestCase):
 
         response = self.client.get(f"/gd/api/files/genome-files/{genome_file.id}/download/")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("genome.IR64.fasta", response["Content-Disposition"])
-        response.close()
+        self.assertEqual(response.status_code, 410)
+        payload = response.json()
+        self.assertTrue(payload["archived"])
+        self.assertIn("GenomeFile download is archived", payload["message"])
 
     def test_compare_accession_files_command_writes_report(self):
         GenomeFile.objects.create(

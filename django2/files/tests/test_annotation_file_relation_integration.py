@@ -107,7 +107,7 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
         self.assertIn("未找到", payload["error"])
         self.assertNotIn("annotation_file", payload)
 
-    def test_download_endpoint_still_uses_genomefile(self):
+    def test_genomefile_download_endpoint_is_archived(self):
         file_path = self.create_annotation_file("annotation.download.IR64.gff3")
         genome_file = GenomeFile.objects.create(
             name="annotation.download.IR64.gff3",
@@ -123,9 +123,10 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
 
         response = self.client.get(f"/gd/api/files/genome-files/{genome_file.id}/download/")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("annotation.download.IR64.gff3", response["Content-Disposition"])
-        response.close()
+        self.assertEqual(response.status_code, 410)
+        payload = response.json()
+        self.assertTrue(payload["archived"])
+        self.assertIn("GenomeFile download is archived", payload["message"])
 
     def test_compare_annotation_files_command_writes_report(self):
         file_path = self.create_annotation_file("annotation.compare.IR64.gff3")
