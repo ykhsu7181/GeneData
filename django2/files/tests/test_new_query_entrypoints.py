@@ -4,7 +4,7 @@ import uuid
 
 from django.test import TestCase
 
-from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType
+from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, Species
 
 
 class NewQueryEntrypointsTestCase(TestCase):
@@ -80,6 +80,38 @@ class NewQueryEntrypointsTestCase(TestCase):
         self.assertEqual(payload["count"], 1)
         self.assertEqual(payload["results"][0]["genome"]["id"], genome_file.id)
         self.assertEqual(payload["results"][0]["genome"]["source"], "new_relation")
+
+    def test_query_paginated_overview_supports_species_search(self):
+        self.accession.species = Species.objects.create(
+            species_code=f"RICE_{self.suffix}",
+            chinese_name="水稻",
+            scientific_name="Oryza sativa",
+        )
+        self.accession.save(update_fields=["species"])
+
+        response = self.client.get(
+            "/gd/api/files/query/paginated-overview/",
+            {"search": "水稻"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["results"][0]["accession"], self.accession_code)
+
+    def test_query_supplementary_data_includes_region_and_country(self):
+        self.accession.country = "China"
+        self.accession.region = "Yunnan"
+        self.accession.longitude = 102.71
+        self.accession.latitude = 25.04
+        self.accession.save(update_fields=["country", "region", "longitude", "latitude"])
+
+        response = self.client.get("/gd/api/files/query/supplementary-data/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload[self.accession_code]["country"], "China")
+        self.assertEqual(payload[self.accession_code]["region"], "Yunnan")
 
 
 class FrontendUsesNewQueryEntrypointsTestCase(TestCase):

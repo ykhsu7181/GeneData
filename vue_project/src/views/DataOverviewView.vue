@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="home-view">
     <div class="page-header">
       <h2 class="title">{{ $t('page.dataOverview.title') }}</h2>
@@ -11,7 +11,7 @@
       </div>
     </div>
     
-    <!-- 搜索框 -->
+    <!-- 鎼滅储妗?-->
     <div class="search-container">
       <div class="search-wrapper">
         <el-icon class="search-icon"><Search /></el-icon>
@@ -291,7 +291,7 @@
           </el-table-column>
         </el-table>
         
-        <!-- 分页组件 -->
+        <!-- 鍒嗛〉缁勪欢 -->
         <div class="pagination-container">
           <el-pagination
             :current-page="currentPage"
@@ -308,10 +308,11 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { Search, Refresh, Filter, Location } from '@element-plus/icons-vue';
 
 export default {
@@ -324,6 +325,7 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const route = useRoute();
     const loading = ref(true);
     const tableData = ref([]);
     const selectedOrganism = ref('');
@@ -335,7 +337,7 @@ export default {
     const totalCount = ref(0);
     const dataVersion = ref(0);
 
-    // 亚群筛选相关
+    // 浜氱兢绛涢€夌浉鍏?
     const allSubPopulations = ref([]);
     const selectedSubPopulations = ref([]);
     const loadingSubPopulations = ref(false);
@@ -343,16 +345,34 @@ export default {
     const isAllSelected = ref(true);
     const tableRef = ref(null);
     const isFilteringOnly = ref(false);
-    
-    // 直接使用 tableData，因为分页在后端处理
-    
-    // 处理页码变化
-    const handleCurrentChange = (page) => {
-      currentPage.value = page;
-      fetchFiles(); // 重新获取当前页数据
+
+    const syncRouteFilters = () => {
+      const search = typeof route.query.search === 'string' ? route.query.search : '';
+      selectedOrganism.value = search;
+
+      const subPopulationQuery = route.query.sub_population || route.query.sub_populations;
+      if (typeof subPopulationQuery === 'string' && subPopulationQuery.trim()) {
+        const requested = subPopulationQuery
+          .split(',')
+          .map(item => item.trim())
+          .filter(Boolean);
+        selectedSubPopulations.value = requested;
+        isAllSelected.value = requested.length === allSubPopulations.value.length;
+      } else if (allSubPopulations.value.length) {
+        selectedSubPopulations.value = [...allSubPopulations.value];
+        isAllSelected.value = true;
+      }
     };
     
-    // 获取所有生物体列表
+    // 鐩存帴浣跨敤 tableData锛屽洜涓哄垎椤靛湪鍚庣澶勭悊
+    
+    // 澶勭悊椤电爜鍙樺寲
+    const handleCurrentChange = (page) => {
+      currentPage.value = page;
+      fetchFiles(); // 閲嶆柊鑾峰彇褰撳墠椤垫暟鎹?
+    };
+    
+    // 鑾峰彇鎵€鏈夌敓鐗╀綋鍒楄〃
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
@@ -360,31 +380,31 @@ export default {
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
-        console.error('获取生物体列表失败:', error);
+        console.error('鑾峰彇鐢熺墿浣撳垪琛ㄥけ璐?', error);
         ElMessage.error(t('messages.getOrganismsFailed'));
       } finally {
         loadingOrganisms.value = false;
       }
     };
 
-    // 获取所有亚群列表
+    // 鑾峰彇鎵€鏈変簹缇ゅ垪琛?
     const fetchSubPopulations = async () => {
       try {
         loadingSubPopulations.value = true;
         const response = await axios.get('/files/query/sub-populations/');
         allSubPopulations.value = response.data || [];
-        // 默认全选
+        // 榛樿鍏ㄩ€?
         selectedSubPopulations.value = [...allSubPopulations.value];
         isAllSelected.value = true;
       } catch (error) {
-        console.error('获取亚群列表失败:', error);
+        console.error('鑾峰彇浜氱兢鍒楄〃澶辫触:', error);
         ElMessage.error(t('messages.getSubPopulationsFailed'));
       } finally {
         loadingSubPopulations.value = false;
       }
     };
     
-    // 搜索生物体
+    // 鎼滅储鐢熺墿浣?
     const searchOrganisms = (query) => {
       if (query) {
         organismOptions.value = allOrganisms.value.filter(item => 
@@ -395,15 +415,15 @@ export default {
       }
     };
     
-    // 生物体选择变化
+    // 鐢熺墿浣撻€夋嫨鍙樺寲
     const handleOrganismChange = (value) => {
       selectedOrganism.value = value;
-      // 重置页码并重新获取数据
+      // 閲嶇疆椤电爜骞堕噸鏂拌幏鍙栨暟鎹?
       currentPage.value = 1;
       fetchFiles();
     };
 
-    // 获取亚群样式类名
+    // 鑾峰彇浜氱兢鏍峰紡绫诲悕
     const getSubPopulationClass = (subPopulation) => {
       const classMap = {
         'cA': 'sub-pop-ca',
@@ -417,13 +437,13 @@ export default {
       return classMap[subPopulation] || 'sub-pop-default';
     };
 
-    // 立即执行筛选的函数
+    // 绔嬪嵆鎵ц绛涢€夌殑鍑芥暟
     const applyFilter = () => {
       currentPage.value = 1;
       fetchFiles();
     };
 
-    // 亚群筛选相关函数
+    // 浜氱兢绛涢€夌浉鍏冲嚱鏁?
     const toggleSubPopulationFilter = () => {
       showSubPopulationFilter.value = !showSubPopulationFilter.value;
     };
@@ -434,19 +454,19 @@ export default {
       } else {
         selectedSubPopulations.value = [];
       }
-      // 静默筛选，不重新渲染整个组件
+      // 闈欓粯绛涢€夛紝涓嶉噸鏂版覆鏌撴暣涓粍浠?
       applyFilterSilently();
     };
 
     const handleSubPopulationSelectionChange = () => {
-      // 更新全选状态
+      // 鏇存柊鍏ㄩ€夌姸鎬?
       isAllSelected.value = selectedSubPopulations.value.length === allSubPopulations.value.length;
 
-      // 静默筛选，不重新渲染整个组件
+      // 闈欓粯绛涢€夛紝涓嶉噸鏂版覆鏌撴暣涓粍浠?
       applyFilterSilently();
     };
 
-    // 静默筛选函数
+    // 闈欓粯绛涢€夊嚱鏁?
     const applyFilterSilently = async () => {
       isFilteringOnly.value = true;
       currentPage.value = 1;
@@ -457,12 +477,12 @@ export default {
           page_size: pageSize.value
         };
 
-        // 如果有搜索条件，添加到参数中
+        // 濡傛灉鏈夋悳绱㈡潯浠讹紝娣诲姞鍒板弬鏁颁腑
         if (selectedOrganism.value) {
           params.search = selectedOrganism.value;
         }
 
-        // 如果有亚群筛选条件，添加到参数中
+        // 濡傛灉鏈変簹缇ょ瓫閫夋潯浠讹紝娣诲姞鍒板弬鏁颁腑
         if (selectedSubPopulations.value.length > 0 && selectedSubPopulations.value.length < allSubPopulations.value.length) {
           params.sub_populations = selectedSubPopulations.value.join(',');
         } else if (selectedSubPopulations.value.length === 0) {
@@ -472,22 +492,22 @@ export default {
         const response = await axios.get('/files/query/paginated-overview/', { params });
         const data = response.data;
 
-        // 直接更新数据，不触发整个组件重新渲染
+        // 鐩存帴鏇存柊鏁版嵁锛屼笉瑙﹀彂鏁翠釜缁勪欢閲嶆柊娓叉煋
         tableData.value = data.results || [];
         totalCount.value = data.count || 0;
 
       } catch (error) {
-        console.error('获取文件列表失败:', error);
+        console.error('鑾峰彇鏂囦欢鍒楄〃澶辫触:', error);
         ElMessage.error(t('messages.getFileListFailed'));
       } finally {
         isFilteringOnly.value = false;
       }
     };
     
-    // 获取文件列表（使用分页接口）
+    // 鑾峰彇鏂囦欢鍒楄〃锛堜娇鐢ㄥ垎椤垫帴鍙ｏ級
     const fetchFiles = async () => {
       try {
-        // 只有在非筛选状态下才显示 loading
+        // 鍙湁鍦ㄩ潪绛涢€夌姸鎬佷笅鎵嶆樉绀?loading
         if (!isFilteringOnly.value) {
           loading.value = true;
         }
@@ -497,16 +517,16 @@ export default {
           page_size: pageSize.value
         };
 
-        // 如果有搜索条件，添加到参数中
+        // 濡傛灉鏈夋悳绱㈡潯浠讹紝娣诲姞鍒板弬鏁颁腑
         if (selectedOrganism.value) {
           params.search = selectedOrganism.value;
         }
 
-        // 如果有亚群筛选条件，添加到参数中
+        // 濡傛灉鏈変簹缇ょ瓫閫夋潯浠讹紝娣诲姞鍒板弬鏁颁腑
         if (selectedSubPopulations.value.length > 0 && selectedSubPopulations.value.length < allSubPopulations.value.length) {
           params.sub_populations = selectedSubPopulations.value.join(',');
         } else if (selectedSubPopulations.value.length === 0) {
-          // 如果没有选择任何亚群，发送空筛选参数，后端应返回空结果
+          // 濡傛灉娌℃湁閫夋嫨浠讳綍浜氱兢锛屽彂閫佺┖绛涢€夊弬鏁帮紝鍚庣搴旇繑鍥炵┖缁撴灉
           params.sub_populations = 'NONE';
         }
 
@@ -517,7 +537,7 @@ export default {
         totalCount.value = data.count || 0;
 
       } catch (error) {
-        console.error('获取文件列表失败:', error);
+        console.error('鑾峰彇鏂囦欢鍒楄〃澶辫触:', error);
         ElMessage.error(t('messages.getFileListFailed'));
       } finally {
         loading.value = false;
@@ -526,7 +546,7 @@ export default {
     
 
     
-    // 点击外部关闭弹出框
+    // 鐐瑰嚮澶栭儴鍏抽棴寮瑰嚭妗?
     const handleClickOutside = (event) => {
       const popover = document.querySelector('.sub-population-popover');
       const button = event.target.closest('.filter-button');
@@ -539,13 +559,23 @@ export default {
     onMounted(async () => {
       fetchOrganisms();
       await fetchSubPopulations();
+      syncRouteFilters();
       fetchFiles();
 
-      // 添加全局点击事件监听
+      // 娣诲姞鍏ㄥ眬鐐瑰嚮浜嬩欢鐩戝惉
       document.addEventListener('click', handleClickOutside);
     });
 
-    // 处理地理位置点击事件
+    watch(
+      () => route.query,
+      () => {
+        syncRouteFilters();
+        currentPage.value = 1;
+        fetchFiles();
+      }
+    );
+
+    // 澶勭悊鍦扮悊浣嶇疆鐐瑰嚮浜嬩欢
     const handleGeographicClick = (accession) => {
       ElMessage.success(t('messages.jumpingToGeographicMap', { accession }));
     };
@@ -578,7 +608,7 @@ export default {
     };
 
     onUnmounted(() => {
-      // 清理事件监听
+      // 娓呯悊浜嬩欢鐩戝惉
       document.removeEventListener('click', handleClickOutside);
     });
     
@@ -706,7 +736,7 @@ export default {
   font-weight: 500;
 }
 
-/* 亚群标签基础样式 */
+/* 浜氱兢鏍囩鍩虹鏍峰紡 */
 .sub-population {
   display: inline-block !important;
   padding: 3px 10px !important;
@@ -722,7 +752,7 @@ export default {
   line-height: normal !important;
 }
 
-/* 不同亚群的颜色样式 - 7种不同颜色 */
+/* 涓嶅悓浜氱兢鐨勯鑹叉牱寮?- 7绉嶄笉鍚岄鑹?*/
 .sub-pop-ca {
   background-color: #e0f2fe;
   color: #0369a1;
@@ -763,7 +793,7 @@ export default {
   color: #6b7280;
 }
 
-/* SubPopulation 列头样式 */
+/* SubPopulation 鍒楀ご鏍峰紡 */
 .sub-population-header {
   display: flex;
   align-items: center;
@@ -785,7 +815,7 @@ export default {
   color: #409EFF;
 }
 
-/* 弹出框样式 */
+/* 寮瑰嚭妗嗘牱寮?*/
 .sub-population-dropdown {
   padding: 0;
 }
@@ -817,7 +847,7 @@ export default {
   margin-left: 8px;
 }
 
-/* 筛选容器样式 */
+/* 绛涢€夊鍣ㄦ牱寮?*/
 .filter-container {
   display: inline-block;
 }
@@ -847,7 +877,7 @@ export default {
 }
 
 
-/* 地理位置链接样式 - 与其他数据链接保持一致 */
+/* 鍦扮悊浣嶇疆閾炬帴鏍峰紡 - 涓庡叾浠栨暟鎹摼鎺ヤ繚鎸佷竴鑷?*/
 .geographic-link {
   display: flex;
   align-items: center;
@@ -856,12 +886,12 @@ export default {
 
 .geographic-icon {
   font-size: 14px;
-  color: inherit; /* 继承父元素颜色，与data-link保持一致 */
+  color: inherit; /* 缁ф壙鐖跺厓绱犻鑹诧紝涓巇ata-link淇濇寔涓€鑷?*/
 }
 
 
 
-/* 美化表格样式 */
+/* 缇庡寲琛ㄦ牸鏍峰紡 */
 :deep(.el-table) {
   --el-table-border-color: #e5e7eb;
   --el-table-header-bg-color: #f0f5ff;
@@ -881,7 +911,7 @@ export default {
   background-color: #1a56db;
 }
 
-/* 全局弹出框样式 */
+/* 鍏ㄥ眬寮瑰嚭妗嗘牱寮?*/
 :deep(.sub-population-popover) {
   padding: 0 !important;
   z-index: 9999 !important;
@@ -891,8 +921,9 @@ export default {
   padding: 0 !important;
 }
 
-/* 确保弹出框在最顶层 */
+/* 纭繚寮瑰嚭妗嗗湪鏈€椤跺眰 */
 :deep(.el-popper.sub-population-popover) {
   z-index: 9999 !important;
 }
 </style> 
+

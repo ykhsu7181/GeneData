@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
 
+from files.dashboard_views import warehouse_dashboard
 from files import views
 from files.views import GenomeFileViewSet
 
@@ -35,9 +36,11 @@ def debug_view(request):
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("gd/api/warehouse/dashboard/", warehouse_dashboard, name="warehouse-dashboard"),
     path("gd/api/files/", include("files.urls")),
     path("gd/api/admin/", include("files.urls")),
     path("gd/api/integrations/", include("integrations.urls")),
+    path("api/warehouse/dashboard/", warehouse_dashboard, name="warehouse-dashboard-api"),
     path("api/files/", include("files.urls")),
     path("api/admin/", include("files.urls")),
     path("api-auth/", include("rest_framework.urls")),

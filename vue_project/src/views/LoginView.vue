@@ -74,7 +74,7 @@ export default {
             })
             
             // 跳转到首页
-            router.push('/data-overview')
+            router.push('/dashboard')
           } else {
             ElMessage.error('用户名或密码错误')
           }

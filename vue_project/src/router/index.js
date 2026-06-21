@@ -1,6 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
-// 创建空白页面组件
 const EmptyComponent = {
   template: '<div class="empty-page"><h2>功能开发中，敬请期待...</h2></div>'
 }
@@ -13,24 +12,30 @@ const routes = [
   },
   {
     path: '/',
-    redirect: '/data'
+    redirect: '/dashboard'
+  },
+  {
+    path: '/dashboard',
+    name: 'dashboard-home',
+    component: () => import('../views/DashboardHomeView.vue'),
+    meta: {
+      requiresAuth: true
+    }
   },
   {
     path: '/data',
     name: 'home',
     component: () => import('../views/HomeView.vue'),
-    meta: { 
-      requiresAuth: true,
-      parent: 'download' 
+    meta: {
+      requiresAuth: true
     }
   },
   {
     path: '/transcriptome',
     name: 'transcriptome',
     component: () => import('../views/TranscriptomeView.vue'),
-    meta: { 
-      requiresAuth: true,
-      parent: 'download' 
+    meta: {
+      requiresAuth: true
     }
   },
   {
@@ -65,14 +70,6 @@ const routes = [
       requiresAuth: true
     }
   },
-  // {
-  //   path: '/accession-card',
-  //   name: 'accession-card',
-  //   component: EmptyComponent,
-  //   meta: { 
-  //     requiresAuth: true
-  //   }
-  // },
   {
     path: '/genome-card',
     name: 'genome-card',
@@ -137,18 +134,22 @@ const routes = [
       requiresAuth: true
     }
   },
-
   {
     path: '/tools/codonw',
     name: 'tools-codonw',
     component: () => import('../views/CodonWTool.vue'),
     meta: {
-      requiresAuth: true,
-      parent: 'tools'
+      requiresAuth: true
     }
   },
-
-  // 管理后台路由
+  {
+    path: '/placeholder',
+    name: 'placeholder',
+    component: EmptyComponent,
+    meta: {
+      requiresAuth: true
+    }
+  },
   {
     path: '/admin/login',
     name: 'admin-login',
@@ -176,33 +177,33 @@ const router = createRouter({
   routes
 })
 
-// 导航守卫
 router.beforeEach((to, from, next) => {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
   const adminToken = localStorage.getItem('admin_token')
 
-  // 检查管理员认证
-  if (to.matched.some(record => record.meta.requiresAdminAuth)) {
+  if (to.matched.some((record) => record.meta.requiresAdminAuth)) {
     if (!adminToken) {
       next('/admin/login')
       return
     }
   }
 
-  // 如果需要普通用户登录但未登录，则重定向到登录页
-  if (to.matched.some(record => record.meta.requiresAuth) && !isLoggedIn) {
+  if (to.matched.some((record) => record.meta.requiresAuth) && !isLoggedIn) {
     next('/login')
-  } else {
-    // 如果已登录且尝试访问登录页，则重定向到首页
-    if (to.path === '/login' && isLoggedIn) {
-      next('/data')
-    } else if (to.path === '/admin/login' && adminToken) {
-      // 如果已有管理员token且尝试访问管理员登录页，则重定向到管理后台
-      next('/admin/dashboard')
-    } else {
-      next()
-    }
+    return
   }
+
+  if (to.path === '/login' && isLoggedIn) {
+    next('/dashboard')
+    return
+  }
+
+  if (to.path === '/admin/login' && adminToken) {
+    next('/admin/dashboard')
+    return
+  }
+
+  next()
 })
 
-export default router 
+export default router

@@ -5,6 +5,7 @@ import tarfile
 from io import TextIOWrapper
 
 from django.http import FileResponse
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -435,6 +436,8 @@ def query_supplementary_data(request):
         payload[accession.accession] = {
             "sub_population": accession.sub_population,
             "seq_data": accession.seq_data,
+            "country": accession.country,
+            "region": accession.region,
             "longitude": accession.longitude,
             "latitude": accession.latitude,
         }
@@ -451,7 +454,13 @@ def query_paginated_overview(request):
 
     accessions = Accession.objects.all().prefetch_related("assemblies__annotations").order_by("accession")
     if search:
-        accessions = accessions.filter(accession__icontains=search)
+        accessions = accessions.filter(
+            Q(accession__icontains=search)
+            | Q(species__species_code__icontains=search)
+            | Q(species__scientific_name__icontains=search)
+            | Q(species__chinese_name__icontains=search)
+            | Q(species__common_name__icontains=search)
+        ).distinct()
 
     rows = []
     for accession_obj in accessions:
