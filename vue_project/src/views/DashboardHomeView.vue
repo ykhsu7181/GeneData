@@ -7,7 +7,9 @@
       @keyword-click="handleKeywordClick"
     />
 
-    <div v-if="isLoading" class="dashboard-loading">首页数据加载中...</div>
+    <section v-if="isLoading" class="dashboard-skeleton-grid">
+      <div v-for="index in 4" :key="index" class="dashboard-skeleton-card"></div>
+    </section>
     <div v-else-if="loadError" class="dashboard-error">{{ loadError }}</div>
     <template v-else>
       <section class="dashboard-section">
@@ -165,17 +167,10 @@ export default {
   gap: 28px;
 }
 
-.dashboard-loading,
 .dashboard-error {
   padding: 18px 22px;
   border-radius: 20px;
   font-size: 15px;
-}
-
-.dashboard-loading {
-  background: rgba(82, 125, 24, 0.08);
-  border: 1px solid rgba(82, 125, 24, 0.16);
-  color: #486719;
 }
 
 .dashboard-error {
@@ -184,17 +179,41 @@ export default {
   color: #b91c1c;
 }
 
+.dashboard-skeleton-grid,
 .dashboard-section,
 .distribution-grid {
   display: grid;
   gap: 22px;
 }
 
+.dashboard-skeleton-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-skeleton-card {
+  min-height: 260px;
+  border-radius: 28px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 37%, #e2e8f0 63%);
+  background-size: 400% 100%;
+  animation: dashboardShimmer 1.4s ease infinite;
+}
+
 .distribution-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+@keyframes dashboardShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 @media (max-width: 960px) {
+  .dashboard-skeleton-grid,
   .distribution-grid {
     grid-template-columns: 1fr;
   }

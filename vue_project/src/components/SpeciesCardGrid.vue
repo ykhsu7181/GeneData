@@ -14,9 +14,9 @@
         class="species-card"
         :style="{ '--card-accent': card.accent_color || '#1d4ed8' }"
         @click="$emit('select', card)">
-        <div class="card-banner">
-          <span class="banner-dot"></span>
-          <span>{{ card.species_code }}</span>
+        <div class="card-cover">
+          <div class="card-overlay"></div>
+          <div class="card-badge">{{ card.species_code }}</div>
         </div>
 
         <div class="card-body">
@@ -25,7 +25,7 @@
             <p>{{ card.latin_name }}</p>
           </div>
 
-          <div class="metrics-grid">
+          <div class="metrics-row">
             <div class="metric-item">
               <span>材料数</span>
               <strong>{{ formatNumber(card.accession_count) }}</strong>
@@ -37,10 +37,6 @@
             <div class="metric-item">
               <span>数据集数</span>
               <strong>{{ formatNumber(card.dataset_count) }}</strong>
-            </div>
-            <div class="metric-item">
-              <span>数据量</span>
-              <strong>{{ card.total_size_display }}</strong>
             </div>
           </div>
         </div>
@@ -106,42 +102,67 @@ export default {
 .species-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
+  gap: 22px;
 }
 
 .species-card {
+  position: relative;
+  border-radius: 26px;
   overflow: hidden;
-  border-radius: 24px;
   cursor: pointer;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.94), #ffffff);
+  background: #fff;
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.species-card::after {
+  content: '';
+  display: block;
+  height: 4px;
+  background: var(--card-accent);
 }
 
 .species-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 24px 42px rgba(15, 23, 42, 0.14);
 }
 
-.card-banner {
+.card-cover {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 18px;
-  color: #fff;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--card-accent), #0f172a);
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-height: 128px;
+  padding: 20px;
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.15), rgba(15, 23, 42, 0.22)),
+    linear-gradient(135deg, color-mix(in srgb, var(--card-accent) 48%, #1e293b), #84cc16);
 }
 
-.banner-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.28), transparent 46%),
+    linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.18));
+}
+
+.card-badge {
+  position: relative;
+  z-index: 1;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.16);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  backdrop-filter: blur(12px);
 }
 
 .card-body {
-  padding: 22px 20px 20px;
+  padding: 22px 22px 20px;
 }
 
 .card-title h3 {
@@ -152,21 +173,22 @@ export default {
 
 .card-title p {
   margin: 8px 0 0;
-  color: #475569;
+  color: #64748b;
   font-style: italic;
 }
 
-.metrics-grid {
+.metrics-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 22px;
 }
 
 .metric-item {
-  padding: 14px;
+  padding: 14px 12px;
   border-radius: 18px;
-  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
 }
 
 .metric-item span {
@@ -197,6 +219,10 @@ export default {
 
   .section-header h2 {
     font-size: 24px;
+  }
+
+  .metrics-row {
+    grid-template-columns: 1fr;
   }
 }
 </style>
