@@ -7,12 +7,12 @@
       @keyword-click="handleKeywordClick"
     />
 
-    <section v-if="isLoading" class="dashboard-skeleton-grid">
-      <div v-for="index in 4" :key="index" class="dashboard-skeleton-card"></div>
-    </section>
-    <div v-else-if="loadError" class="dashboard-error">{{ loadError }}</div>
+    <div v-if="loadError" class="dashboard-error">{{ loadError }}</div>
     <template v-else>
-      <section class="dashboard-section">
+      <section v-if="isLoading" class="dashboard-skeleton-grid">
+        <div v-for="index in 4" :key="index" class="dashboard-skeleton-card"></div>
+      </section>
+      <section v-else class="dashboard-section">
         <SpeciesCardGrid
           :cards="featuredSpeciesCards"
           @select="handleSpeciesSelect"
@@ -216,6 +216,13 @@ export default {
   .dashboard-skeleton-grid,
   .distribution-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-skeleton-card {
+    animation: none;
+    background-position: 50% 0;
   }
 }
 </style>
