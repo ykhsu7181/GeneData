@@ -169,28 +169,43 @@ export default {
 .dashboard-home {
   display: grid;
   gap: 28px;
+  padding-bottom: 24px;
+}
+
+.dashboard-section,
+.distribution-grid {
+  width: min(1480px, calc(100% - 32px));
+  margin: 0 auto;
+  display: grid;
+  gap: 22px;
+}
+
+@keyframes dashboardShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 .dashboard-error {
+  width: min(1480px, calc(100% - 32px));
+  margin: 0 auto;
   padding: 18px 22px;
   border-radius: 20px;
   font-size: 15px;
-}
-
-.dashboard-error {
   background: rgba(220, 38, 38, 0.08);
   border: 1px solid rgba(220, 38, 38, 0.18);
   color: #b91c1c;
 }
 
-.dashboard-skeleton-grid,
-.dashboard-section,
-.distribution-grid {
+.dashboard-skeleton-grid {
+  width: min(1480px, calc(100% - 32px));
+  margin: 0 auto;
   display: grid;
   gap: 22px;
-}
-
-.dashboard-skeleton-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -212,16 +227,6 @@ export default {
 
 .distribution-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@keyframes dashboardShimmer {
-  0% {
-    background-position: 100% 0;
-  }
-
-  100% {
-    background-position: -100% 0;
-  }
 }
 
 @media (max-width: 960px) {

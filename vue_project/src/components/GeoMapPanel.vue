@@ -5,7 +5,13 @@
         <p class="geo-kicker">Geographic distribution</p>
         <h3>地理分布</h3>
       </div>
-      <span class="geo-note">点击区域可跳转到地图页</span>
+      <div class="geo-scale-legend" aria-label="Geographic distribution scale">
+        <span>1 - 10</span>
+        <span>11 - 50</span>
+        <span>51 - 100</span>
+        <span>101 - 500</span>
+        <span>&gt;500</span>
+      </div>
     </div>
 
     <div v-if="points.length" class="geo-layout">
@@ -17,8 +23,8 @@
           class="legend-card"
           @click="$emit('select', point)">
           <strong>{{ point.region }}</strong>
-          <span>{{ point.accession_count }} accession</span>
-          <span>{{ point.sample_count }} sample</span>
+          <span>材料数 {{ point.accession_count }}</span>
+          <span>样本数 {{ point.sample_count }}</span>
         </button>
       </div>
     </div>
@@ -87,10 +93,9 @@ export default {
           formatter: (params) =>
             `
               <div style="padding: 6px 8px;">
-                <strong>${params.data.name}</strong><br/>
-                accession: ${params.data.accession_count}<br/>
-                sample: ${params.data.sample_count}<br/>
-                dataset: ${params.data.dataset_count}
+                地区: ${params.data.name}<br/>
+                材料数: ${params.data.accession_count}<br/>
+                样本数: ${params.data.sample_count}
               </div>
             `
         },
@@ -173,7 +178,8 @@ export default {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .geo-kicker {
@@ -191,26 +197,33 @@ export default {
   color: #0f172a;
 }
 
-.geo-note {
-  padding: 10px 14px;
+.geo-scale-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.geo-scale-legend span {
+  padding: 8px 12px;
   border-radius: 999px;
-  background: #ecfccb;
-  color: #365314;
-  font-size: 13px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .geo-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.8fr);
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.85fr);
   gap: 18px;
   margin-top: 18px;
 }
 
 .geo-map {
-  height: 460px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #eff6ff, #f8fafc);
+  height: 500px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #edf5ff, #f8fbff);
 }
 
 .geo-legend {
@@ -253,6 +266,10 @@ export default {
 }
 
 @media (max-width: 960px) {
+  .geo-scale-legend {
+    justify-content: flex-start;
+  }
+
   .geo-layout {
     grid-template-columns: 1fr;
   }
