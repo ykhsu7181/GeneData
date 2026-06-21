@@ -6,8 +6,8 @@
         <h3>{{ title }}</h3>
       </div>
       <div class="panel-switches">
-        <button class="switch-chip is-active" type="button">图表</button>
-        <button class="switch-chip" type="button">卡片</button>
+        <span class="switch-chip is-active">图表</span>
+        <span class="switch-chip">卡片</span>
       </div>
     </div>
 
