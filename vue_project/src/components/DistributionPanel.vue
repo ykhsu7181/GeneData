@@ -1,14 +1,21 @@
 <template>
   <section class="distribution-panel">
     <div class="panel-header">
-      <div>
+      <div class="panel-heading">
         <p class="panel-kicker">{{ kicker }}</p>
         <h3>{{ title }}</h3>
       </div>
-      <span class="panel-total">{{ totalValueLabel }}</span>
+      <div class="panel-switches">
+        <button class="switch-chip is-active" type="button">图表</button>
+        <button class="switch-chip" type="button">卡片</button>
+      </div>
     </div>
 
-    <div v-if="items.length" class="panel-content">
+    <div v-if="items.length" class="panel-body">
+      <aside class="panel-stat-card">
+        <span>总计</span>
+        <strong>{{ totalValueLabel }}</strong>
+      </aside>
       <div ref="chartRef" class="chart-box"></div>
       <div class="legend-list">
         <div
@@ -152,8 +159,12 @@ export default {
 .panel-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
+}
+
+.panel-heading {
+  min-width: 0;
 }
 
 .panel-kicker {
@@ -171,20 +182,60 @@ export default {
   color: #0f172a;
 }
 
-.panel-total {
-  padding: 10px 14px;
+.panel-switches {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-weight: 700;
+  background: #f1f5f9;
 }
 
-.panel-content {
+.switch-chip {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: transparent;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: default;
+}
+
+.switch-chip.is-active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.panel-body {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr);
+  grid-template-columns: 180px minmax(220px, 1fr) minmax(220px, 0.95fr);
   gap: 18px;
   align-items: center;
   margin-top: 18px;
+}
+
+.panel-stat-card {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 160px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #f8fbff, #eef6ff);
+  text-align: center;
+}
+
+.panel-stat-card span {
+  color: #64748b;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+.panel-stat-card strong {
+  color: #0f172a;
+  font-size: 34px;
+  line-height: 1;
 }
 
 .chart-box {
@@ -205,6 +256,7 @@ export default {
   padding: 12px 14px;
   border-radius: 16px;
   background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .legend-label {
@@ -212,6 +264,13 @@ export default {
   align-items: center;
   gap: 10px;
   color: #334155;
+  min-width: 0;
+}
+
+.legend-label span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .color-chip {
@@ -234,8 +293,21 @@ export default {
 }
 
 @media (max-width: 900px) {
-  .panel-content {
+  .panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .panel-switches {
+    align-self: flex-start;
+  }
+
+  .panel-body {
     grid-template-columns: 1fr;
+  }
+
+  .panel-stat-card {
+    min-height: 140px;
   }
 }
 </style>

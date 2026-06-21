@@ -19,7 +19,11 @@
         />
       </section>
 
-      <section class="distribution-grid">
+      <section v-if="isLoading" class="distribution-grid">
+        <div class="panel-skeleton"></div>
+        <div class="panel-skeleton"></div>
+      </section>
+      <section v-else class="distribution-grid">
         <DistributionPanel
           title="亚群分布"
           kicker="Subpopulation"
@@ -29,11 +33,11 @@
         />
 
         <DistributionPanel
-          title="XI 组分布"
-          kicker="XI groups"
+          title="群体分组"
+          kicker="Grouping summary"
           :items="dashboard.xi_distribution"
           value-key="accession_count"
-          empty-text="暂无 XI 组统计数据"
+          empty-text="暂无群体分组统计数据"
         />
       </section>
 
@@ -198,6 +202,14 @@ export default {
   animation: dashboardShimmer 1.4s ease infinite;
 }
 
+.panel-skeleton {
+  min-height: 360px;
+  border-radius: 26px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 37%, #e2e8f0 63%);
+  background-size: 400% 100%;
+  animation: dashboardShimmer 1.4s ease infinite;
+}
+
 .distribution-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -220,7 +232,8 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-skeleton-card {
+  .dashboard-skeleton-card,
+  .panel-skeleton {
     animation: none;
     background-position: 50% 0;
   }
