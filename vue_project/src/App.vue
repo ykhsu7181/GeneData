@@ -80,7 +80,7 @@ export default {
 
 <style>
 :root {
-  --app-bg: #f3f7fb;
+  --app-bg: #eef4fb;
   --panel-bg: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -103,8 +103,8 @@ body {
   font-family: var(--shell-font);
   color: var(--text-primary);
   background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.08), transparent 28%),
-    linear-gradient(180deg, #f8fbff, var(--app-bg));
+    radial-gradient(circle at top, rgba(28, 86, 197, 0.12), transparent 30%),
+    linear-gradient(180deg, #f7fbff 0%, #f4f8fd 30%, var(--app-bg) 100%);
 }
 
 a {
@@ -125,19 +125,21 @@ a {
   flex: 1;
   width: min(1480px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 28px 0 36px;
+  padding: 30px 0 42px;
 }
 
 .layout-main-dashboard {
-  width: min(1680px, calc(100% - 32px));
-  padding: 0 0 48px;
+  width: 100%;
+  max-width: none;
+  padding: 0 0 56px;
 }
 
 .layout-footer {
-  padding: 14px 20px 24px;
+  padding: 18px 20px 28px;
   text-align: center;
-  color: #64748b;
+  color: #5f6f85;
   font-size: 13px;
+  letter-spacing: 0.03em;
 }
 
 .empty-page {
@@ -161,7 +163,6 @@ a {
   }
 
   .layout-main-dashboard {
-    width: min(100%, calc(100% - 20px));
     padding: 0 0 36px;
   }
 }

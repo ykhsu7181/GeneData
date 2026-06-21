@@ -1,38 +1,53 @@
 <template>
-  <section class="distribution-panel">
+  <section :class="['distribution-panel', { 'is-empty': !items.length }]">
     <div class="panel-header">
       <div class="panel-heading">
         <p class="panel-kicker">{{ kicker }}</p>
         <h3>{{ title }}</h3>
       </div>
-      <div class="panel-switches">
-        <span class="switch-chip is-active">图表</span>
-        <span class="switch-chip">卡片</span>
-      </div>
+
+      <div class="panel-view-chip">图表视图</div>
     </div>
 
     <div v-if="items.length" class="panel-body">
       <aside class="panel-stat-card">
+        <div class="stat-icon">◎</div>
         <span>总计</span>
         <strong>{{ totalValueLabel }}</strong>
+        <em>{{ statisticCaption }}</em>
       </aside>
-      <div ref="chartRef" class="chart-box"></div>
+
+      <div class="chart-shell">
+        <div ref="chartRef" class="chart-box"></div>
+      </div>
+
       <div class="legend-list">
+        <div class="legend-head">
+          <span>{{ legendLabelTitle }}</span>
+          <span>{{ legendValueTitle }}</span>
+        </div>
+
         <div
           v-for="(item, index) in normalizedItems"
           :key="`${item[labelKey]}-${index}`"
-          class="legend-row">
+          class="legend-row"
+        >
           <div class="legend-label">
-            <span class="color-chip" :style="{ backgroundColor: palette[index % palette.length] }"></span>
+            <span
+              class="color-chip"
+              :style="{ backgroundColor: palette[index % palette.length] }"
+            ></span>
             <span>{{ item[labelKey] }}</span>
           </div>
-          <strong>{{ item[valueKey] }}</strong>
+          <strong>{{ formatNumber(item[valueKey]) }}</strong>
         </div>
       </div>
     </div>
 
     <div v-else class="panel-empty">
-      {{ emptyText }}
+      <div class="empty-icon">◌</div>
+      <h4>{{ emptyText }}</h4>
+      <p>当前维度暂无可展示的聚合结果，建议先补充对应主数据或切换到其他模块继续浏览。</p>
     </div>
   </section>
 </template>
@@ -41,7 +56,7 @@
 import * as echarts from 'echarts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-const palette = ['#1d4ed8', '#0f766e', '#f97316', '#9333ea', '#e11d48', '#16a34a', '#6b7280']
+const palette = ['#1f77ff', '#ff7a18', '#22b573', '#5b6cff', '#f04d4f', '#10b981', '#8c63ff', '#94a3b8']
 
 export default {
   name: 'DistributionPanel',
@@ -76,14 +91,53 @@ export default {
     const chartInstance = ref(null)
 
     const normalizedItems = computed(() => props.items.slice(0, 8))
-    const totalValueLabel = computed(() =>
-      normalizedItems.value.reduce((sum, item) => sum + Number(item[props.valueKey] || 0), 0).toLocaleString()
+    const totalValue = computed(() =>
+      props.items.reduce((sum, item) => sum + Number(item[props.valueKey] || 0), 0)
     )
+    const totalValueLabel = computed(() => totalValue.value.toLocaleString())
+    const formatNumber = (value) => Number(value || 0).toLocaleString()
+
+    const legendLabelTitle = computed(() => {
+      if (props.labelKey === 'dataset_type') {
+        return '类型'
+      }
+      if (props.labelKey === 'file_role') {
+        return '角色'
+      }
+      return '分类'
+    })
+
+    const legendValueTitle = computed(() => {
+      if (props.valueKey === 'dataset_count') {
+        return '数据集数'
+      }
+      if (props.valueKey === 'datafile_count') {
+        return '文件数'
+      }
+      return '数量'
+    })
+
+    const statisticCaption = computed(() => {
+      if (props.valueKey === 'dataset_count') {
+        return '有效数据集统计'
+      }
+      if (props.valueKey === 'datafile_count') {
+        return '正式文件统计'
+      }
+      if (props.valueKey === 'accession_count') {
+        return '材料归属统计'
+      }
+      if (props.valueKey === 'sample_count') {
+        return '样本归属统计'
+      }
+      return '对象聚合统计'
+    })
 
     const renderChart = () => {
       if (!chartRef.value) {
         return
       }
+
       if (!chartInstance.value) {
         chartInstance.value = echarts.init(chartRef.value)
       }
@@ -96,14 +150,23 @@ export default {
         series: [
           {
             type: 'pie',
-            radius: ['54%', '78%'],
+            radius: ['56%', '80%'],
+            center: ['50%', '50%'],
             avoidLabelOverlap: true,
             itemStyle: {
-              borderColor: '#fff',
-              borderWidth: 3
+              borderColor: '#ffffff',
+              borderWidth: 4
             },
             label: {
-              show: false
+              show: true,
+              formatter: ({ percent }) => (percent >= 3 ? `${Math.round(percent)}%` : ''),
+              color: '#1e3a8a',
+              fontSize: 12,
+              fontWeight: 700
+            },
+            labelLine: {
+              length: 10,
+              length2: 10
             },
             data: normalizedItems.value.map((item) => ({
               name: item[props.labelKey],
@@ -142,7 +205,11 @@ export default {
       chartRef,
       normalizedItems,
       totalValueLabel,
-      palette
+      statisticCaption,
+      legendLabelTitle,
+      legendValueTitle,
+      palette,
+      formatNumber
     }
   }
 }
@@ -150,121 +217,159 @@ export default {
 
 <style scoped>
 .distribution-panel {
-  padding: 24px;
-  border-radius: 24px;
-  background: #fff;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+  align-self: start;
+  padding: 22px 22px 24px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffffff, #fdfefe);
+  border: 1px solid rgba(210, 221, 236, 0.9);
+  box-shadow: 0 18px 40px rgba(14, 30, 66, 0.08);
 }
 
 .panel-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
-}
-
-.panel-heading {
-  min-width: 0;
 }
 
 .panel-kicker {
   margin: 0 0 6px;
   font-size: 12px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-weight: 700;
-  color: #0f766e;
+  font-weight: 800;
+  color: #1d4ed8;
 }
 
 .panel-header h3 {
   margin: 0;
-  font-size: 24px;
   color: #0f172a;
+  font-size: 32px;
+  line-height: 1.1;
 }
 
-.panel-switches {
+.panel-view-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 999px;
-  background: #f1f5f9;
-}
-
-.switch-chip {
-  border: 0;
-  border-radius: 999px;
-  padding: 8px 14px;
-  background: transparent;
-  color: #475569;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc, #eef2f8);
+  border: 1px solid rgba(212, 221, 233, 0.9);
+  color: #4f627b;
   font-size: 13px;
-  font-weight: 600;
-  cursor: default;
-}
-
-.switch-chip.is-active {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  font-weight: 800;
 }
 
 .panel-body {
   display: grid;
-  grid-template-columns: 180px minmax(220px, 1fr) minmax(220px, 0.95fr);
-  gap: 18px;
-  align-items: center;
+  grid-template-columns: 168px minmax(240px, 1fr) minmax(238px, 0.9fr);
+  gap: 16px;
+  align-items: stretch;
   margin-top: 18px;
 }
 
 .panel-stat-card {
   display: grid;
-  place-items: center;
-  gap: 10px;
-  min-height: 160px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #f8fbff, #eef6ff);
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #f7fbff, #eff6ff);
+  border: 1px solid rgba(204, 220, 240, 0.9);
   text-align: center;
 }
 
+.stat-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 20px;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.12);
+}
+
 .panel-stat-card span {
-  color: #64748b;
-  font-size: 14px;
-  letter-spacing: 0.08em;
+  color: #4b5c72;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .panel-stat-card strong {
-  color: #0f172a;
-  font-size: 34px;
+  color: #133a82;
+  font-size: 42px;
   line-height: 1;
+}
+
+.panel-stat-card em {
+  color: #6b7b91;
+  font-size: 13px;
+  font-style: normal;
+}
+
+.chart-shell {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  padding: 10px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at center, rgba(59, 130, 246, 0.08), transparent 58%),
+    linear-gradient(180deg, #fbfdff, #f6faff);
+  border: 1px solid rgba(220, 228, 240, 0.88);
 }
 
 .chart-box {
   width: 100%;
-  height: 280px;
+  height: 300px;
 }
 
 .legend-list {
   display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.legend-head,
+.legend-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: 12px;
 }
 
+.legend-head {
+  padding: 0 8px;
+  color: #5d6d82;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .legend-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
   padding: 12px 14px;
   border-radius: 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(217, 225, 235, 0.9);
+  background: linear-gradient(180deg, #fbfdff, #f7fafc);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.legend-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.22);
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.08);
 }
 
 .legend-label {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #334155;
   min-width: 0;
+  color: #334155;
 }
 
 .legend-label span:last-child {
@@ -277,29 +382,55 @@ export default {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex: 0 0 auto;
 }
 
 .legend-row strong {
-  color: #0f172a;
+  color: #15326e;
+  font-size: 15px;
 }
 
 .panel-empty {
   margin-top: 18px;
-  padding: 32px 18px;
-  border-radius: 18px;
-  background: #f8fafc;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 34px 20px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #f8fafc, #f3f7fc);
   color: #64748b;
   text-align: center;
 }
 
-@media (max-width: 900px) {
-  .panel-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+.empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 22px;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.1);
+}
 
-  .panel-switches {
-    align-self: flex-start;
+.panel-empty h4 {
+  margin: 0;
+  color: #18345f;
+  font-size: 22px;
+}
+
+.panel-empty p {
+  max-width: 420px;
+  margin: 0;
+  color: #607085;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 980px) {
+  .panel-header {
+    flex-direction: column;
   }
 
   .panel-body {
@@ -307,7 +438,7 @@ export default {
   }
 
   .panel-stat-card {
-    min-height: 140px;
+    min-height: 160px;
   }
 }
 </style>
