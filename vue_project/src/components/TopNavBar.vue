@@ -114,18 +114,15 @@ export default {
 .top-nav {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 100;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 24px;
-  padding: 14px 28px;
-  background:
-    linear-gradient(135deg, rgba(7, 36, 89, 0.98), rgba(9, 24, 56, 0.98)),
-    radial-gradient(circle at top left, rgba(26, 108, 255, 0.28), transparent 42%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 18px 32px rgba(5, 18, 46, 0.26);
-  backdrop-filter: blur(12px);
+  padding: 12px 32px;
+  background: linear-gradient(180deg, rgba(5, 33, 78, 0.98), rgba(7, 24, 58, 0.96));
+  box-shadow: 0 14px 30px rgba(4, 16, 40, 0.28);
+  backdrop-filter: blur(14px);
 }
 
 .brand {
@@ -184,10 +181,15 @@ export default {
   white-space: nowrap;
 }
 
-.nav-link:hover,
-.nav-link.is-active {
+.nav-link:hover {
   background: rgba(59, 130, 246, 0.2);
   color: #fff;
+}
+
+.nav-link.is-active {
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
 }
 
 .tools-dropdown {

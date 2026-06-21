@@ -2,14 +2,14 @@
   <div class="app-shell">
     <router-view v-if="isStandaloneRoute" />
 
-    <div v-else class="layout-shell">
+    <div v-else :class="['layout-shell', { 'is-dashboard-route': isDashboardRoute }]">
       <TopNavBar
         :current-language="currentLanguage"
         @language-change="handleLanguageChange"
         @logout="handleLogout"
       />
 
-      <main class="layout-main">
+      <main :class="['layout-main', { 'layout-main-dashboard': isDashboardRoute }]">
         <router-view />
       </main>
 
@@ -45,6 +45,7 @@ export default {
     })
 
     const isStandaloneRoute = computed(() => route.path === '/login' || route.path.startsWith('/admin'))
+    const isDashboardRoute = computed(() => route.path === '/' || route.path === '/dashboard')
 
     const handleLanguageChange = (language) => {
       locale.value = language
@@ -69,6 +70,7 @@ export default {
     return {
       currentLanguage,
       isStandaloneRoute,
+      isDashboardRoute,
       handleLanguageChange,
       handleLogout
     }
@@ -109,12 +111,12 @@ a {
   text-decoration: none;
 }
 
-.app-shell {
+.app-shell,
+.layout-shell {
   min-height: 100vh;
 }
 
 .layout-shell {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -124,6 +126,11 @@ a {
   width: min(1480px, calc(100% - 40px));
   margin: 0 auto;
   padding: 28px 0 36px;
+}
+
+.layout-main-dashboard {
+  width: min(1680px, calc(100% - 32px));
+  padding: 0 0 48px;
 }
 
 .layout-footer {
@@ -151,6 +158,11 @@ a {
   .layout-main {
     width: min(100%, calc(100% - 24px));
     padding: 18px 0 28px;
+  }
+
+  .layout-main-dashboard {
+    width: min(100%, calc(100% - 20px));
+    padding: 0 0 36px;
   }
 }
 </style>
