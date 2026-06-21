@@ -6,11 +6,19 @@
         <h3>地理分布</h3>
       </div>
       <div class="geo-scale-legend" aria-label="Geographic distribution scale">
-        <span>1 - 10</span>
-        <span>11 - 50</span>
-        <span>51 - 100</span>
-        <span>101 - 500</span>
-        <span>&gt;500</span>
+        <span
+          v-for="bucket in legendBuckets"
+          :key="bucket.label"
+          class="geo-scale-chip">
+          <i
+            class="geo-scale-dot"
+            :style="{
+              backgroundColor: bucket.color,
+              width: `${bucket.size}px`,
+              height: `${bucket.size}px`
+            }"></i>
+          {{ bucket.label }}
+        </span>
       </div>
     </div>
 
@@ -40,6 +48,21 @@ import * as echarts from 'echarts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { worldMapData } from '@/data/worldMapData.js'
 
+const GEO_BUCKETS = [
+  { label: '1 - 10', min: 1, max: 10, size: 10, color: '#22c55e' },
+  { label: '11 - 50', min: 11, max: 50, size: 14, color: '#0ea5e9' },
+  { label: '51 - 100', min: 51, max: 100, size: 18, color: '#6366f1' },
+  { label: '101 - 500', min: 101, max: 500, size: 24, color: '#f59e0b' },
+  { label: '>500', min: 501, max: Number.POSITIVE_INFINITY, size: 30, color: '#ef4444' }
+]
+
+const getBucketForAccessionCount = (count) => {
+  const accessionCount = Number(count) || 0
+  return GEO_BUCKETS.find(
+    (bucket) => accessionCount >= bucket.min && accessionCount <= bucket.max
+  ) || GEO_BUCKETS[0]
+}
+
 export default {
   name: 'GeoMapPanel',
   props: {
@@ -53,15 +76,25 @@ export default {
     const mapRef = ref(null)
     const mapInstance = ref(null)
     const topPoints = computed(() => props.points.slice(0, 6))
+    const legendBuckets = GEO_BUCKETS
 
     const buildSeriesData = () =>
-      props.points.map((point) => ({
-        name: point.region,
-        value: [point.longitude, point.latitude, point.accession_count],
-        accession_count: point.accession_count,
-        sample_count: point.sample_count,
-        dataset_count: point.dataset_count
-      }))
+      props.points.map((point) => {
+        const bucket = getBucketForAccessionCount(point.accession_count)
+        return {
+          name: point.region,
+          value: [point.longitude, point.latitude, point.accession_count],
+          accession_count: point.accession_count,
+          sample_count: point.sample_count,
+          dataset_count: point.dataset_count,
+          bucket_label: bucket.label,
+          symbolSize: bucket.size,
+          itemStyle: {
+            color: bucket.color,
+            opacity: 0.9
+          }
+        }
+      })
 
     const renderMap = () => {
       if (!mapRef.value) {
@@ -118,15 +151,11 @@ export default {
             type: 'scatter',
             coordinateSystem: 'geo',
             data: buildSeriesData(),
-            symbolSize: (value) => Math.max(10, Math.min(30, 8 + Number(value[2]) * 2)),
-            itemStyle: {
-              color: '#16a34a',
-              opacity: 0.85
-            },
             emphasis: {
               scale: 1.2,
               itemStyle: {
-                color: '#1d4ed8'
+                borderColor: '#1d4ed8',
+                borderWidth: 2
               }
             }
           }
@@ -160,6 +189,7 @@ export default {
 
     return {
       mapRef,
+      legendBuckets,
       topPoints
     }
   }
@@ -204,13 +234,24 @@ export default {
   gap: 10px;
 }
 
-.geo-scale-legend span {
+.geo-scale-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #f8fafc;
+  color: #1e293b;
   font-size: 12px;
   font-weight: 700;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.geo-scale-dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
 .geo-layout {
