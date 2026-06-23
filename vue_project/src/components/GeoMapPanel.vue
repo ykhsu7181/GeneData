@@ -40,22 +40,31 @@
         </div>
 
         <div class="geo-list-head">
-          <span>区域</span>
+          <span>点位</span>
           <span>材料数</span>
         </div>
 
-        <button
-          v-for="point in topPoints"
-          :key="`${point.region}-${point.latitude}-${point.longitude}`"
-          class="legend-card"
-          @click="$emit('select', point)"
-        >
-          <div class="legend-main">
-            <strong>{{ point.region }}</strong>
-            <span>样本数 {{ point.sample_count }}</span>
-          </div>
-          <b>{{ point.accession_count }}</b>
-        </button>
+        <div class="geo-point-list">
+          <button
+            v-for="point in topPoints"
+            :key="`${point.region}-${point.latitude}-${point.longitude}-${buildPointListText(point.accession_names, '')}`"
+            class="legend-card"
+            @click="$emit('select', point)"
+          >
+            <div class="legend-main">
+              <div class="legend-title-row">
+                <strong>{{ getRegionDisplayName(point.region) }}</strong>
+                <b>{{ point.accession_count }}</b>
+              </div>
+              <div class="legend-detail-grid">
+                <span><em>Accession</em>{{ buildPointListText(point.accession_names, '暂无') }}</span>
+                <span><em>物种</em>{{ buildPointListText(point.species_names, '暂无') }}</span>
+                <span><em>样本数</em>{{ point.sample_count }}</span>
+                <span class="legend-meta"><em>经纬度</em>{{ formatCoordinate(point.longitude) }}, {{ formatCoordinate(point.latitude) }}</span>
+              </div>
+            </div>
+          </button>
+        </div>
       </aside>
     </div>
 
@@ -67,7 +76,7 @@
 
 <script>
 import * as echarts from 'echarts'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { worldMapData } from '@/data/worldMapData.js'
 
 const GEO_BUCKETS = [
@@ -78,11 +87,51 @@ const GEO_BUCKETS = [
   { label: '>500', min: 501, max: Number.POSITIVE_INFINITY, size: 29, color: '#ef4444' }
 ]
 
+const MAX_TOOLTIP_ITEMS = 4
+
 const getBucketForAccessionCount = (count) => {
   const accessionCount = Number(count) || 0
   return GEO_BUCKETS.find(
     (bucket) => accessionCount >= bucket.min && accessionCount <= bucket.max
   ) || GEO_BUCKETS[0]
+}
+
+const getRegionDisplayName = (region) => {
+  if (!region || region === 'Unknown') {
+    return '未标注地区'
+  }
+  return region
+}
+
+const formatCoordinate = (value) => {
+  const number = Number(value)
+  return Number.isFinite(number) ? number.toFixed(2) : '--'
+}
+
+const buildTooltipList = (items, fallback = 'Unknown') => {
+  const normalized = (items || []).filter(Boolean)
+  if (!normalized.length) {
+    return fallback
+  }
+
+  const visible = normalized.slice(0, MAX_TOOLTIP_ITEMS)
+  if (normalized.length > visible.length) {
+    return `${visible.join(', ')} ... (${normalized.length})`
+  }
+  return visible.join(', ')
+}
+
+const buildPointListText = (items, fallback = '暂无') => {
+  const normalized = (items || []).filter(Boolean)
+  if (!normalized.length) {
+    return fallback
+  }
+
+  const visible = normalized.slice(0, 2)
+  if (normalized.length > visible.length) {
+    return `${visible.join(', ')} 等 ${normalized.length} 个`
+  }
+  return visible.join(', ')
 }
 
 export default {
@@ -97,6 +146,8 @@ export default {
   setup(props) {
     const mapRef = ref(null)
     const mapInstance = ref(null)
+    const resizeTimer = ref(null)
+
     const topPoints = computed(() => props.points.slice(0, 6))
     const legendBuckets = GEO_BUCKETS
     const totalPointCount = computed(() => props.points.length.toLocaleString())
@@ -106,9 +157,14 @@ export default {
         const bucket = getBucketForAccessionCount(point.accession_count)
         return {
           name: point.region,
+          region_display: getRegionDisplayName(point.region),
           value: [point.longitude, point.latitude, point.accession_count],
+          latitude: point.latitude,
+          longitude: point.longitude,
           accession_count: point.accession_count,
+          accession_names: point.accession_names || [],
           sample_count: point.sample_count,
+          species_names: point.species_names || [],
           bucket_label: bucket.label,
           symbolSize: bucket.size,
           itemStyle: {
@@ -125,32 +181,61 @@ export default {
 
       if (!mapInstance.value) {
         echarts.registerMap('world-dashboard', worldMapData)
-        mapInstance.value = echarts.init(mapRef.value)
+        mapInstance.value = echarts.init(mapRef.value, null, {
+          devicePixelRatio: window.devicePixelRatio || 2,
+          renderer: 'canvas',
+          useDirtyRect: false,
+          width: mapRef.value.clientWidth,
+          height: mapRef.value.clientHeight
+        })
       }
 
+      mapInstance.value.clear()
       mapInstance.value.setOption({
+        backgroundColor: 'transparent',
         tooltip: {
           trigger: 'item',
-          formatter: (params) =>
-            `
-              <div style="padding: 6px 8px; color: #0f172a;">
-                地区: ${params.data.name}<br/>
-                材料数: ${params.data.accession_count}<br/>
-                样本数: ${params.data.sample_count}
+          formatter: (params) => {
+            if (!params.data) {
+              return ''
+            }
+
+            return `
+              <div style="padding: 8px 10px; color: #0f172a; line-height: 1.65; min-width: 280px;">
+                <div><strong>地区:</strong> ${params.data.region_display}</div>
+                <div><strong>材料数:</strong> ${params.data.accession_count}</div>
+                <div><strong>样本数:</strong> ${params.data.sample_count}</div>
+                <div><strong>Accession:</strong> ${buildTooltipList(params.data.accession_names, '暂无')}</div>
+                <div><strong>物种名:</strong> ${buildTooltipList(params.data.species_names, '暂无')}</div>
+                <div><strong>经纬度:</strong> ${formatCoordinate(params.data.longitude)}, ${formatCoordinate(params.data.latitude)}</div>
               </div>
             `
+          }
         },
         geo: {
           map: 'world-dashboard',
           roam: true,
-          zoom: 1.12,
+          zoom: 1.48,
+          center: [18, 8],
+          layoutCenter: ['48%', '54%'],
+          layoutSize: '126%',
+          boundingCoords: [[-180, -90], [180, 90]],
           itemStyle: {
-            areaColor: '#e7eff8',
-            borderColor: '#ffffff'
+            areaColor: '#d7e6fb',
+            borderColor: '#8aa7cf',
+            borderWidth: 0.9
           },
           emphasis: {
             itemStyle: {
-              areaColor: '#cfe1fb'
+              areaColor: '#bfdbfe',
+              borderColor: '#4f6fa1',
+              borderWidth: 1.1
+            }
+          },
+          select: {
+            itemStyle: {
+              areaColor: '#93c5fd',
+              borderColor: '#315b97'
             }
           }
         },
@@ -159,37 +244,59 @@ export default {
             type: 'scatter',
             coordinateSystem: 'geo',
             data: buildSeriesData(),
+            zlevel: 3,
+            itemStyle: {
+              borderColor: '#ffffff',
+              borderWidth: 1.8,
+              shadowBlur: 14,
+              shadowColor: 'rgba(15, 23, 42, 0.28)'
+            },
             emphasis: {
               scale: 1.2,
               itemStyle: {
                 borderColor: '#ffffff',
-                borderWidth: 2
+                borderWidth: 2.4,
+                shadowBlur: 18,
+                shadowColor: 'rgba(14, 116, 144, 0.32)'
               }
             }
           }
         ]
-      })
+      }, true)
     }
 
     const resizeMap = () => {
       if (mapInstance.value) {
         mapInstance.value.resize()
+        renderMap()
       }
     }
 
-    onMounted(() => {
+    const scheduleResize = () => {
+      window.clearTimeout(resizeTimer.value)
+      resizeTimer.value = window.setTimeout(() => {
+        resizeMap()
+      }, 80)
+    }
+
+    onMounted(async () => {
+      await nextTick()
       renderMap()
-      window.addEventListener('resize', resizeMap)
+      window.addEventListener('resize', scheduleResize)
     })
 
     watch(
       () => props.points,
-      () => renderMap(),
+      async () => {
+        await nextTick()
+        renderMap()
+      },
       { deep: true }
     )
 
     onBeforeUnmount(() => {
-      window.removeEventListener('resize', resizeMap)
+      window.removeEventListener('resize', scheduleResize)
+      window.clearTimeout(resizeTimer.value)
       if (mapInstance.value) {
         mapInstance.value.dispose()
       }
@@ -199,7 +306,10 @@ export default {
       mapRef,
       legendBuckets,
       topPoints,
-      totalPointCount
+      totalPointCount,
+      getRegionDisplayName,
+      formatCoordinate,
+      buildPointListText
     }
   }
 }
@@ -207,6 +317,8 @@ export default {
 
 <style scoped>
 .geo-panel {
+  --geo-map-height: 460px;
+  --geo-column-height: 486px;
   padding: 24px;
   border-radius: 30px;
   background: linear-gradient(180deg, #ffffff, #fdfeff);
@@ -278,6 +390,7 @@ export default {
 .geo-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.75fr);
+  align-items: start;
   gap: 20px;
   margin-top: 18px;
 }
@@ -286,29 +399,36 @@ export default {
   position: relative;
   padding: 12px;
   border-radius: 26px;
-  background: linear-gradient(180deg, #f5faff, #eef5ff);
-  border: 1px solid rgba(214, 223, 235, 0.9);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: linear-gradient(180deg, #edf5ff, #dfeefe);
+  border: 1px solid rgba(173, 194, 222, 0.95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 16px 32px rgba(19, 55, 110, 0.08);
 }
 
 .geo-map {
-  height: 520px;
+  height: var(--geo-map-height);
   border-radius: 22px;
-  background: linear-gradient(180deg, #edf5ff, #f8fbff);
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(231, 241, 255, 0.55) 38%, transparent 64%),
+    linear-gradient(180deg, #e0edff, #f4f8ff);
 }
 
 .geo-side-panel {
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   align-content: start;
   gap: 12px;
+  height: var(--geo-column-height);
+  min-height: 0;
 }
 
 .geo-summary-card {
   display: grid;
   justify-items: center;
-  gap: 8px;
-  padding: 20px 16px;
-  border-radius: 22px;
+  gap: 5px;
+  padding: 12px 14px;
+  border-radius: 18px;
   background: linear-gradient(180deg, #f7fbff, #eff6ff);
   border: 1px solid rgba(204, 220, 240, 0.9);
   text-align: center;
@@ -316,19 +436,19 @@ export default {
 
 .geo-summary-card span {
   color: #4b5c72;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .geo-summary-card strong {
   color: #133a82;
-  font-size: 42px;
+  font-size: 32px;
   line-height: 1;
 }
 
 .geo-summary-card em {
   color: #6b7b91;
-  font-size: 13px;
+  font-size: 12px;
   font-style: normal;
 }
 
@@ -342,13 +462,27 @@ export default {
   font-weight: 800;
 }
 
-.legend-card {
+.geo-point-list {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  padding: 14px 16px;
-  border-radius: 18px;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.geo-point-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.geo-point-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.42);
+}
+
+.legend-card {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 14px;
   border: 1px solid rgba(217, 225, 235, 0.9);
   background: linear-gradient(180deg, #fbfdff, #f7fafc);
   text-align: left;
@@ -364,22 +498,56 @@ export default {
 
 .legend-main {
   display: grid;
-  gap: 6px;
+  gap: 7px;
 }
 
-.legend-main strong {
+.legend-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.legend-title-row strong {
   color: #15326e;
-  font-size: 15px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.legend-title-row b {
+  flex: 0 0 auto;
+  color: #15326e;
+  font-size: 16px;
+}
+
+.legend-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.legend-detail-grid span {
+  color: #5b6b81;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.legend-detail-grid em {
+  display: inline-block;
+  min-width: 52px;
+  margin-right: 6px;
+  color: #7a8ba0;
+  font-style: normal;
+  font-weight: 700;
 }
 
 .legend-main span {
   color: #5b6b81;
-  font-size: 13px;
+  font-size: 11px;
 }
 
-.legend-card b {
-  color: #15326e;
-  font-size: 18px;
+.legend-meta {
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
 }
 
 .geo-side-panel > * {

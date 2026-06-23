@@ -219,6 +219,13 @@ class DashboardApiTestCase(TestCase):
         )
         self.assertEqual(geo_yunnan["accession_count"], 2)
         self.assertEqual(geo_yunnan["sample_count"], 2)
+        self.assertEqual(geo_yunnan["latitude"], 25.04)
+        self.assertEqual(geo_yunnan["longitude"], 102.71)
+        self.assertEqual(
+            geo_yunnan["accession_names"],
+            sorted([self.accession_rice_1.accession, self.accession_rice_2.accession])
+        )
+        self.assertEqual(geo_yunnan["species_names"], [self.species_rice.chinese_name])
 
         self.assertIn("hot_keywords", payload)
         self.assertGreaterEqual(len(payload["hot_keywords"]), 1)

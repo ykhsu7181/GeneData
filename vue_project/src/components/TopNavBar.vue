@@ -13,9 +13,9 @@
 
       <nav class="nav-links" aria-label="Primary navigation">
         <button
-          v-for="item in navItems"
+          v-for="item in primaryNavItems"
           :key="item.path"
-          :class="['nav-link', { 'is-active': isActive(item.path) }]"
+          :class="['nav-link', { 'is-active': isGroupActive(item.groupKey) }]"
           @click="goTo(item.path)"
         >
           <span class="nav-icon">
@@ -24,17 +24,51 @@
           <span>{{ $t(item.labelKey) }}</span>
         </button>
 
-        <el-dropdown trigger="click" class="tools-dropdown">
-          <button :class="['nav-link', { 'is-active': isToolsActive }]">
+        <el-dropdown trigger="hover" class="nav-dropdown" popper-class="top-nav-dropdown">
+          <div :class="['nav-group-trigger', { 'is-active': isGroupActive('dataOverview') }]">
+            <button class="nav-link nav-link-main" @click.stop="goTo(topNavGroups.dataOverview.path)">
+              <span class="nav-icon">
+                <el-icon><DataAnalysis /></el-icon>
+              </span>
+              <span>{{ $t(topNavGroups.dataOverview.labelKey) }}</span>
+            </button>
+            <button class="nav-link nav-link-caret" @click.stop>
+              <span class="nav-caret">
+                <el-icon><ArrowDown /></el-icon>
+              </span>
+            </button>
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                v-for="item in topNavGroups.dataOverview.children"
+                :key="item.path"
+                @click="goTo(item.path)"
+              >
+                {{ $t(item.labelKey) }}
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+
+        <el-dropdown trigger="hover" class="nav-dropdown" popper-class="top-nav-dropdown">
+          <button :class="['nav-link', 'nav-link-tools', { 'is-active': isGroupActive('tools') }]" @click.stop>
             <span class="nav-icon">
               <el-icon><Tools /></el-icon>
             </span>
-            <span>{{ $t('nav.tools') }}</span>
+            <span>{{ $t(topNavGroups.tools.labelKey) }}</span>
+            <span class="nav-caret">
+              <el-icon><ArrowDown /></el-icon>
+            </span>
           </button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="goTo('/tools/codonw')">
-                {{ $t('nav.codonw') }}
+              <el-dropdown-item
+                v-for="item in topNavGroups.tools.children"
+                :key="item.path"
+                @click="goTo(item.path)"
+              >
+                {{ $t(item.labelKey) }}
               </el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -73,22 +107,22 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  ArrowDown,
   CollectionTag,
-  Connection,
   DataAnalysis,
-  Document,
-  Grid,
   House,
   Platform,
-  Promotion,
   SwitchButton,
   Tools,
   User
 } from '@element-plus/icons-vue'
+import { getTopNavActiveGroup, topNavGroups } from '../config/topNavConfig.mjs'
 
 export default {
   name: 'TopNavBar',
   components: {
+    ArrowDown,
+    DataAnalysis,
     Platform,
     SwitchButton,
     Tools,
@@ -105,30 +139,15 @@ export default {
     const route = useRoute()
     const router = useRouter()
 
-    const navItems = [
-      { labelKey: 'nav.home', path: '/dashboard', icon: House },
-      { labelKey: 'nav.accession', path: '/accession-card', icon: CollectionTag },
-      { labelKey: 'nav.dataOverview', path: '/data-overview', icon: DataAnalysis },
-      { labelKey: 'nav.transcriptomeOverview', path: '/transcriptome-overview', icon: Promotion },
-      { labelKey: 'nav.genome', path: '/genome-card', icon: Grid },
-      { labelKey: 'nav.annotation', path: '/annotation', icon: Document },
-      { labelKey: 'nav.coreVariableBlocks', path: '/core-variable-blocks', icon: Connection },
-      { labelKey: 'nav.codon', path: '/codon-card', icon: CollectionTag }
+    const primaryNavItems = [
+      { groupKey: 'home', labelKey: 'nav.home', path: '/dashboard', icon: House },
+      { groupKey: 'accession', labelKey: 'nav.accession', path: '/accession-card', icon: CollectionTag }
     ]
 
-    const activePathMap = {
-      '/': '/dashboard',
-      '/dashboard': '/dashboard',
-      '/annotation-card': '/annotation',
-      '/core-variable-blocks-card': '/core-variable-blocks',
-      '/accession-detail': '/accession-card'
-    }
-
     const currentLanguageLabel = computed(() => (props.currentLanguage === 'zh' ? '中文' : 'English'))
-    const normalizedActivePath = computed(() => activePathMap[route.path] || route.path)
-    const isToolsActive = computed(() => normalizedActivePath.value.startsWith('/tools/'))
+    const activeGroupKey = computed(() => getTopNavActiveGroup(route.path))
 
-    const isActive = (path) => normalizedActivePath.value === path
+    const isGroupActive = (groupKey) => activeGroupKey.value === groupKey
     const goTo = (path) => {
       if (route.path !== path) {
         router.push(path)
@@ -137,10 +156,10 @@ export default {
     const emitLanguageChange = (language) => emit('language-change', language)
 
     return {
-      navItems,
+      primaryNavItems,
+      topNavGroups,
       currentLanguageLabel,
-      isToolsActive,
-      isActive,
+      isGroupActive,
       goTo,
       emitLanguageChange
     }
@@ -262,6 +281,50 @@ export default {
   box-shadow: 0 10px 20px rgba(15, 76, 197, 0.28);
 }
 
+.nav-dropdown,
+.nav-group-trigger {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.nav-group-trigger {
+  border-radius: 14px;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-group-trigger.is-active,
+.nav-link-tools.is-active {
+  background: linear-gradient(135deg, #2d68e3 0%, #1d4ed8 100%);
+  box-shadow: 0 10px 20px rgba(15, 76, 197, 0.28);
+}
+
+.nav-group-trigger.is-active .nav-link,
+.nav-link-tools.is-active {
+  color: #ffffff;
+}
+
+.nav-link-main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.nav-link-caret {
+  padding-left: 10px;
+  padding-right: 10px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.nav-link-caret,
+.nav-link-tools {
+  gap: 10px;
+}
+
+.nav-link-tools {
+  min-width: 106px;
+  justify-content: center;
+}
+
 .nav-icon {
   display: inline-flex;
   align-items: center;
@@ -271,8 +334,11 @@ export default {
   font-size: 16px;
 }
 
-.tools-dropdown {
+.nav-caret {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
 }
 
 .nav-actions {

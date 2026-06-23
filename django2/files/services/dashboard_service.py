@@ -28,6 +28,18 @@ def _normalize_label(value, fallback="Unknown"):
     return value or fallback
 
 
+def _get_species_display_name(species):
+    if not species:
+        return "Unknown"
+    return (
+        species.chinese_name
+        or species.common_name
+        or species.scientific_name
+        or species.species_code
+        or "Unknown"
+    )
+
+
 def _sum_file_size(file_ids):
     if not file_ids:
         return 0
@@ -258,13 +270,17 @@ def _build_geo_distribution():
                 "latitude": key[1],
                 "longitude": key[2],
                 "accession_ids": set(),
+                "accession_names": set(),
                 "sample_ids": set(),
                 "dataset_ids": set(),
+                "species_names": set(),
             }
         bucket = grouped[key]
         bucket["accession_ids"].add(accession.id)
+        bucket["accession_names"].add(accession.accession)
         bucket["sample_ids"].update(accession.samples.values_list("id", flat=True))
         if accession.species_id:
+            bucket["species_names"].add(_get_species_display_name(accession.species))
             bucket["dataset_ids"].update(
                 Dataset.objects.filter(species_id=accession.species_id).values_list("id", flat=True)
             )
@@ -277,8 +293,10 @@ def _build_geo_distribution():
                 "latitude": bucket["latitude"],
                 "longitude": bucket["longitude"],
                 "accession_count": len(bucket["accession_ids"]),
+                "accession_names": sorted(bucket["accession_names"]),
                 "sample_count": len(bucket["sample_ids"]),
                 "dataset_count": len(bucket["dataset_ids"]),
+                "species_names": sorted(bucket["species_names"]),
             }
         )
     rows.sort(key=lambda item: (-item["accession_count"], item["region"]))

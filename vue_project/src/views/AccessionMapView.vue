@@ -1,6 +1,5 @@
 ﻿<template>
   <div class="accession-map-view">
-    <!-- 澶嶇敤鏁版嵁涓€瑙堣〃鐨勬爣棰樻牱寮?-->
     <div class="page-header">
       <h2 class="title">{{ $t('page.accessionMap.title') }}</h2>
       <div class="header-actions">
@@ -12,7 +11,6 @@
       </div>
     </div>
 
-    <!-- 鎼滅储妗?- 澶嶇敤鏁版嵁涓€瑙堣〃鏍峰紡 -->
     <div class="search-container">
       <div class="search-wrapper">
         <el-icon class="search-icon"><Search /></el-icon>
@@ -37,7 +35,6 @@
       </div>
     </div>
 
-    <!-- 浜氱兢绛涢€夊拰鍙鍖栭€夐」 -->
     <div class="filter-panel">
       <div class="filter-section">
         <span class="filter-label">{{ $t('page.accessionMap.subPopulationFilter') }}</span>
@@ -66,11 +63,8 @@
       </div>
     </div>
 
-    <!-- 涓撲笟绉戠爺椋庢牸鍦板浘鍗＄墖 -->
     <div class="research-map-card">
 
-
-      <!-- 鍦板浘涓讳綋 -->
       <div class="map-body">
         <div v-if="loading" class="loading-state">
           <div class="loading-spinner">
@@ -80,24 +74,18 @@
         </div>
 
         <div v-else class="map-wrapper">
-          <!-- 鍦板浘瀹瑰櫒 -->
           <div ref="mapContainer" class="echarts-map"></div>
-
-
-
 
         </div>
       </div>
 
-
     </div>
 
-    <!-- 绉戠爺椋庢牸鐨勬暟鎹憳瑕?-->
     <div class="data-summary">
       <h3 class="summary-title">{{ $t('page.accessionMap.dataOverview') }}</h3>
       <div class="summary-grid">
         <div class="summary-item">
-          <div class="summary-icon">馃尵</div>
+          <div class="summary-icon">DNA</div>
           <div class="summary-content">
             <div class="summary-number">{{ totalCount }}</div>
             <div class="summary-label">{{ $t('page.accessionMap.totalGermplasm') }}</div>
@@ -105,7 +93,7 @@
           </div>
         </div>
         <div class="summary-item">
-          <div class="summary-icon">馃搷</div>
+          <div class="summary-icon">MAP</div>
           <div class="summary-content">
             <div class="summary-number">{{ filteredData.length }}</div>
             <div class="summary-label">{{ $t('page.accessionMap.locatedGermplasm') }}</div>
@@ -113,7 +101,7 @@
           </div>
         </div>
         <div class="summary-item">
-          <div class="summary-icon">馃實</div>
+          <div class="summary-icon">REG</div>
           <div class="summary-content">
             <div class="summary-number">{{ uniqueCountries }}</div>
             <div class="summary-label">{{ $t('page.accessionMap.geographicRegions') }}</div>
@@ -121,7 +109,7 @@
           </div>
         </div>
         <div class="summary-item">
-          <div class="summary-icon">馃К</div>
+          <div class="summary-icon">SUB</div>
           <div class="summary-content">
             <div class="summary-number">{{ selectedSubPopulations.length }}</div>
             <div class="summary-label">{{ $t('page.accessionMap.activeSubPopulations') }}</div>
@@ -160,15 +148,12 @@ export default {
     const organismOptions = ref([]);
     const loadingOrganisms = ref(false);
     
-    // 浜氱兢绛涢€夌浉鍏?
     const allSubPopulations = ref([]);
     const selectedSubPopulations = ref([]);
     
-    // 鏁版嵁鐩稿叧
     const supplementaryData = ref({});
     const totalCount = ref(0);
     
-    // 鍦板浘鐩稿叧
     const mapContainer = ref(null);
     const mapInstance = ref(null);
     const mapMode = ref('scatter');
@@ -189,28 +174,23 @@ export default {
       }
     };
 
-    // 杩囨护鍚庣殑鏁版嵁
     const filteredData = computed(() => {
       let data = Object.entries(supplementaryData.value);
 
-      // 鍙繑鍥炴湁缁忕含搴︿俊鎭殑鏁版嵁
       data = data.filter(([, info]) =>
         info.longitude !== null && info.latitude !== null
       );
 
-      // 鎸夌敓鐗╀綋绛涢€?- 濡傛灉閫夋嫨浜嗙壒瀹氱殑 Accession锛屽彧鏄剧ず璇ョ偣
       if (selectedOrganism.value) {
         data = data.filter(([accession]) =>
           accession === selectedOrganism.value
         );
       } else {
-        // 鍙湁鍦ㄦ病鏈夐€夋嫨鐗瑰畾 Accession 鏃舵墠搴旂敤浜氱兢绛涢€?
         // 濡傛灉娌℃湁閫変腑浠讳綍浜氱兢锛屽垯涓嶆樉绀轰换浣曟暟鎹偣
         if (selectedSubPopulations.value.length === 0) {
-          return []; // 杩斿洖绌烘暟缁勶紝涓嶆樉绀轰换浣曠偣
+          return [];
         }
 
-        // 鎸夐€変腑鐨勪簹缇ょ瓫閫?
         data = data.filter(([, info]) => {
           const subPop = info.sub_population || 'Unknown';
           return selectedSubPopulations.value.includes(subPop);
@@ -229,7 +209,6 @@ export default {
       return data;
     });
 
-    // 娑夊強鐨勫浗瀹?鍦板尯鏁伴噺锛堢畝鍖栬绠楋級
     const uniqueCountries = computed(() => {
       const coordinates = filteredData.value.map(([, info]) => 
         `${Math.round(info.longitude)},${Math.round(info.latitude)}`
@@ -237,7 +216,6 @@ export default {
       return new Set(coordinates).size;
     });
 
-    // 鑾峰彇浜氱兢鏍峰紡绫诲悕
     const getSubPopulationClass = (subPopulation) => {
       const classMap = {
         'cA': 'sub-pop-ca',
@@ -251,63 +229,54 @@ export default {
       return classMap[subPopulation] || 'sub-pop-default';
     };
 
-    // 鑾峰彇鏈夊湴鐞嗕綅缃殑鐢熺墿浣撳垪琛?
     const fetchOrganisms = async () => {
       try {
         loadingOrganisms.value = true;
 
-        // 绛夊緟琛ュ厖鏁版嵁鍔犺浇瀹屾垚
         if (Object.keys(supplementaryData.value).length === 0) {
           await fetchSupplementaryData();
         }
 
-        // 浠庤ˉ鍏呮暟鎹腑鎻愬彇鏈夊湴鐞嗕綅缃殑 Accession
         const organismsWithLocation = Object.entries(supplementaryData.value)
           .filter(([, info]) =>
             info.longitude !== null &&
             info.latitude !== null
           )
           .map((entry) => entry[0])
-          .sort(); // 鎸夊瓧姣嶉『搴忔帓搴?
 
         allOrganisms.value = organismsWithLocation;
         organismOptions.value = organismsWithLocation;
       } catch (error) {
-        console.error('鑾峰彇鐢熺墿浣撳垪琛ㄥけ璐?', error);
+        console.error('获取材料列表失败', error);
         ElMessage.error(t('messages.getOrganismsFailed'));
       } finally {
         loadingOrganisms.value = false;
       }
     };
 
-    // 鑾峰彇浜氱兢鍒楄〃
     const fetchSubPopulations = async () => {
       try {
         const response = await axios.get('/files/query/sub-populations/');
-        // 灏嗗悗绔繑鍥炵殑"鏈煡浜氱兢"鏇挎崲涓?Unknown"
         const subPopulations = (response.data || []).map(subPop =>
-          subPop === '鏈煡浜氱兢' ? 'Unknown' : subPop
+          subPop === '未知亚群' ? 'Unknown' : subPop
         );
         allSubPopulations.value = subPopulations;
-        selectedSubPopulations.value = [...allSubPopulations.value]; // 榛樿鍏ㄩ€?
         syncRouteSelection();
       } catch (error) {
-        console.error('鑾峰彇浜氱兢鍒楄〃澶辫触:', error);
+        console.error('获取亚群列表失败:', error);
         ElMessage.error(t('messages.getSubPopulationsFailed'));
       }
     };
 
-    // 鑾峰彇琛ュ厖鏁版嵁
     const fetchSupplementaryData = async () => {
       try {
         const response = await axios.get('/files/query/supplementary-data/');
         const rawData = response.data || {};
 
-        // 杞崲琛ュ厖鏁版嵁涓殑浜氱兢淇℃伅锛屽皢"鏈煡浜氱兢"鏇挎崲涓?Unknown"
         const processedData = {};
         Object.keys(rawData).forEach(key => {
           const item = rawData[key];
-          if (item.sub_population === '鏈煡浜氱兢') {
+          if (item.sub_population === '未知亚群') {
             item.sub_population = 'Unknown';
           }
           processedData[key] = item;
@@ -316,30 +285,27 @@ export default {
         supplementaryData.value = processedData;
         totalCount.value = Object.keys(supplementaryData.value).length;
       } catch (error) {
-        console.error('鑾峰彇琛ュ厖鏁版嵁澶辫触:', error);
+        console.error('获取补充数据失败:', error);
         ElMessage.error(t('messages.getSupplementaryDataFailed'));
       }
     };
 
-    // 鑾峰彇鎵€鏈夋暟鎹?
     const fetchData = async () => {
       try {
         loading.value = true;
-        // 鍏堣幏鍙栬ˉ鍏呮暟鎹紝鍐嶈幏鍙栫敓鐗╀綋鍒楄〃锛堝洜涓虹敓鐗╀綋鍒楄〃渚濊禆琛ュ厖鏁版嵁锛?
         await fetchSupplementaryData();
         await Promise.all([
           fetchOrganisms(),
           fetchSubPopulations()
         ]);
       } catch (error) {
-        console.error('鑾峰彇鏁版嵁澶辫触:', error);
+        console.error('获取数据失败:', error);
         ElMessage.error(t('messages.getDataFailed'));
       } finally {
         loading.value = false;
       }
     };
 
-    // 鎼滅储鐢熺墿浣擄紙鍙湪鏈夊湴鐞嗕綅缃殑 Accession 涓悳绱級
     const searchOrganisms = (query) => {
       if (query) {
         organismOptions.value = allOrganisms.value.filter(item =>
@@ -350,35 +316,30 @@ export default {
       }
     };
 
-    // 鐢熺墿浣撻€夋嫨鍙樺寲
     const handleOrganismChange = (value) => {
       selectedOrganism.value = value;
 
       console.log('Selected organism:', value);
       console.log('Filtered data length:', filteredData.value.length);
 
-      // 瑙﹀彂鍦板浘鏇存柊浠ュ簲鐢ㄦ柊鐨勭瓫閫?
       nextTick(() => {
         updateMap();
 
-        // 濡傛灉閫夋嫨浜嗙壒瀹氱殑 Accession锛岃嚜鍔ㄨ皟鏁村湴鍥捐鍥惧埌璇ョ偣
         if (value && supplementaryData.value[value]) {
           const info = supplementaryData.value[value];
           if (info.longitude !== null && info.latitude !== null) {
             if (mapInstance.value) {
-              // 灏嗗湴鍥句腑蹇冪Щ鍔ㄥ埌閫変腑鐨勭偣锛屽苟閫傚綋鏀惧ぇ
               setTimeout(() => {
                 mapInstance.value.setOption({
                   geo: {
                     center: [info.longitude, info.latitude],
-                    zoom: 4 // 鏀惧ぇ鍒板悎閫傜殑绾у埆
+                    zoom: 4
                   }
                 });
               }, 100);
             }
           }
         } else if (!value) {
-          // 濡傛灉娓呯┖閫夋嫨锛屾仮澶嶅埌鍏ㄥ眬瑙嗗浘
           if (mapInstance.value) {
             mapInstance.value.setOption({
               geo: {
@@ -391,33 +352,23 @@ export default {
       });
     };
 
-    // 浜氱兢绛涢€夊彉鍖?
     const handleSubPopulationChange = () => {
-      // 绛涢€夐€昏緫宸插湪 computed 涓鐞?
       updateMap();
     };
 
-    // 鍒濆鍖栧湴鍥?
     const initMap = async () => {
       if (!mapContainer.value) return;
 
       try {
-        // 娉ㄥ唽涓栫晫鍦板浘锛堜娇鐢ㄥ鍏ョ殑涓栫晫鍦板浘鏁版嵁锛?
         echarts.registerMap('world', worldMapData);
 
-        // 鍒涘缓鍦板浘瀹炰緥 - 鍚敤楂樺垎杈ㄧ巼娓叉煋
         mapInstance.value = echarts.init(mapContainer.value, null, {
-          devicePixelRatio: window.devicePixelRatio || 2, // 楂樺垎杈ㄧ巼鏀寔
-          renderer: 'canvas', // 浣跨敤 canvas 娓叉煋鍣ㄨ幏寰楁洿濂芥€ц兘
-          useDirtyRect: false, // 绂佺敤鑴忕煩褰紭鍖栦互鑾峰緱鏇村ソ璐ㄩ噺
           width: mapContainer.value.clientWidth,
           height: mapContainer.value.clientHeight
         });
 
-        // 璁剧疆鍦板浘閰嶇疆
         updateMap();
 
-        // 鐩戝惉绐楀彛澶у皬鍙樺寲
         window.addEventListener('resize', () => {
           if (mapInstance.value) {
             mapInstance.value.resize();
@@ -425,12 +376,11 @@ export default {
         });
 
       } catch (error) {
-        console.error('鍦板浘鍒濆鍖栧け璐?', error);
+        console.error('地图初始化失败:', error);
         ElMessage.error(t('messages.mapLoadFailed'));
       }
     };
 
-    // 鏇存柊鍦板浘
     const updateMap = () => {
       if (!mapInstance.value) return;
 
@@ -454,7 +404,6 @@ export default {
         backgroundColor: '#f8fafc',
         tooltip: {
           trigger: 'item',
-          triggerOn: 'mousemove|click', // 鏀寔榧犳爣绉诲姩鍜岀偣鍑昏Е鍙?
           backgroundColor: 'rgba(255, 255, 255, 0.96)',
           borderColor: '#e2e8f0',
           borderWidth: 1,
@@ -483,11 +432,11 @@ export default {
                     </div>
                     <div style="background: #f8fafc; padding: 8px 12px; border-radius: 8px;">
                       <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Coordinates</div>
-                      <div style="font-weight: 600; color: #1e293b; font-size: 12px; font-family: 'SF Mono', Monaco, monospace;">${params.data.value[0].toFixed(3)}掳, ${params.data.value[1].toFixed(3)}掳</div>
+                      <div style="font-weight: 600; color: #1e293b; font-size: 12px; font-family: 'SF Mono', Monaco, monospace;">${params.data.value[0].toFixed(3)}°, ${params.data.value[1].toFixed(3)}°</div>
                     </div>
                   </div>
                   <div style="font-size: 11px; color: #94a3b8; text-align: center; font-style: italic; margin-top: 8px; padding: 6px 12px; background: #f1f5f9; border-radius: 6px; border: 1px solid #e2e8f0;">
-                    <span style="color: #3b82f6; font-weight: 600;">馃挕 Click to view detailed information</span>
+                    <span style="color: #3b82f6; font-weight: 600;">Click to view detailed information</span>
                   </div>
                 </div>
               `;
@@ -505,7 +454,7 @@ export default {
           top: 30,
           bottom: 30,
           boundingCoords: [[-180, -90], [180, 90]],
-          zlevel: 1, // 璁剧疆杈冧綆鐨勫眰绾?
+          zlevel: 1,
           itemStyle: {
             areaColor: '#f1f5f9',
             borderColor: '#cbd5e1',
@@ -518,7 +467,7 @@ export default {
             }
           },
           silent: false,
-          triggerEvent: true, // 鍚敤浜嬩欢瑙﹀彂
+          triggerEvent: true,
           regions: [
             {
               name: 'Antarctica',
@@ -536,7 +485,6 @@ export default {
           symbolSize: function() {
             return Math.max(pointSize.value + 3, 8);
           },
-          zlevel: 2, // 璁剧疆杈冮珮鐨勫眰绾?
           itemStyle: {
             opacity: 0.8
           },
@@ -545,10 +493,7 @@ export default {
               opacity: 1,
               scale: 1.3
             },
-            focus: 'none', // 涓嶈仛鐒︼紝淇濇寔鍦板浘鍖哄煙鐨勪氦浜?
-            blurScope: 'none' // 涓嶆ā绯婂叾浠栧厓绱?
           },
-          // 鍏佽浜嬩欢绌块€忓埌搴曞眰鍦板浘
           silent: false,
           animation: true,
           animationDuration: 800,
@@ -561,37 +506,30 @@ export default {
         }]
       };
 
-      mapInstance.value.setOption(option, false); // 浣跨敤 false 鏉ュ悎骞堕厤缃€屼笉鏄浛鎹?
-
-      // 娣诲姞浜嬩欢鐩戝惉鍣ㄦ潵澶勭悊鏁ｇ偣鍜屽湴鍥惧尯鍩熺殑浜や簰
+      mapInstance.value.setOption(option, false);
       setupMapInteraction();
-
-      // 娣诲姞鐐瑰嚮浜嬩欢鐩戝惉鍣?
       setupClickEvents();
     };
 
-    // 鑾峰彇浜氱兢棰滆壊 - 鏇翠笓涓氱殑绉戠爺閰嶈壊
     const getSubPopulationColor = (subPopulation) => {
       const colorMap = {
-        'cA': '#2563eb',      // 绉戠爺钃?
-        'cB': '#dc2626',      // 绉戠爺绾?
-        'GJ': '#16a34a',      // 绉戠爺缁?
-        'XI': '#9333ea',      // 绉戠爺绱?
-        'WILD': '#ea580c',    // 绉戠爺姗?
-        'O.glaberrima': '#db2777', // 绉戠爺绮?
-        'Unknown': '#64748b'  // 绉戠爺鐏?
+        'cA': '#2563eb',
+        'cB': '#dc2626',
+        'GJ': '#16a34a',
+        'XI': '#9333ea',
+        'WILD': '#ea580c',
+        'O.glaberrima': '#db2777',
+        'Unknown': '#64748b'
       };
       return colorMap[subPopulation] || '#64748b';
     };
 
-    // 鑾峰彇浜氱兢鏁伴噺
     const getSubPopulationCount = (subPopulation) => {
       return filteredData.value.filter(([, info]) =>
         (info.sub_population || 'Unknown') === subPopulation
       ).length;
     };
 
-    // 鍒囨崲浜氱兢鏄剧ず
     const toggleSubPopulation = (subPopulation) => {
       const index = selectedSubPopulations.value.indexOf(subPopulation);
       if (index > -1) {
@@ -602,36 +540,27 @@ export default {
       updateMap();
     };
 
-
-
-    // 璁剧疆鍦板浘浜や簰閫昏緫
     const setupMapInteraction = () => {
       if (!mapInstance.value) return;
 
-      // 璁剧疆鍦板浘瀹瑰櫒鐨凜SS锛岀‘淇濅簨浠惰兘澶熸纭紶閫?
       const mapDom = mapInstance.value.getDom();
       if (mapDom) {
         mapDom.style.pointerEvents = 'auto';
-        // 涓烘暎鐐规坊鍔犻紶鏍囨寚閽堟牱寮?
         mapDom.style.cursor = 'default';
       }
     };
 
-    // 璁剧疆鐐瑰嚮浜嬩欢
     const setupClickEvents = () => {
       if (!mapInstance.value) return;
 
-      // 娓呴櫎涔嬪墠鐨勪簨浠剁洃鍚櫒
       mapInstance.value.off('click');
       mapInstance.value.off('mouseover');
       mapInstance.value.off('mouseout');
 
-      // 鐩戝惉鏁ｇ偣鐨勭偣鍑讳簨浠?
       mapInstance.value.on('click', { seriesType: 'scatter' }, function(params) {
         if (params.data && params.data.name) {
           const accessionId = params.data.name;
 
-          // 璺宠浆鍒?Accession 椤甸潰锛屼紶閫?organism 鍙傛暟
           router.push({
             path: '/accession-card',
             query: {
@@ -639,12 +568,10 @@ export default {
             }
           });
 
-          // 鏄剧ず璺宠浆鎻愮ず
           ElMessage.success(t('messages.jumpingToDetailsPage', { accession: accessionId }));
         }
       });
 
-      // 鐩戝惉鏁ｇ偣鐨勯紶鏍囨偓鍋滀簨浠讹紝鏀瑰彉鎸囬拡鏍峰紡
       mapInstance.value.on('mouseover', { seriesType: 'scatter' }, function() {
         const mapDom = mapInstance.value.getDom();
         if (mapDom) {
@@ -652,7 +579,6 @@ export default {
         }
       });
 
-      // 鐩戝惉鏁ｇ偣鐨勯紶鏍囩寮€浜嬩欢锛屾仮澶嶆寚閽堟牱寮?
       mapInstance.value.on('mouseout', { seriesType: 'scatter' }, function() {
         const mapDom = mapInstance.value.getDom();
         if (mapDom) {
@@ -701,8 +627,6 @@ export default {
       getSubPopulationColor,
       getSubPopulationCount,
       toggleSubPopulation,
-      setupMapInteraction,
-      setupClickEvents,
       searchOrganisms,
       handleOrganismChange,
       handleSubPopulationChange,
@@ -718,7 +642,6 @@ export default {
   padding: 0;
 }
 
-/* 澶嶇敤鏁版嵁涓€瑙堣〃鐨勬爣棰樻牱寮?*/
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -738,7 +661,6 @@ export default {
   gap: 8px;
 }
 
-/* 澶嶇敤鏁版嵁涓€瑙堣〃鐨勬悳绱㈡牱寮?*/
 .search-container {
   margin-bottom: 24px;
 }
@@ -763,7 +685,6 @@ export default {
   width: 100%;
 }
 
-/* 绛涢€夐潰鏉挎牱寮?*/
 .filter-panel {
   background-color: #fff;
   border-radius: 8px;
@@ -803,7 +724,6 @@ export default {
   gap: 12px;
 }
 
-/* 浜氱兢鏍囩鏍峰紡 - 澶嶇敤鏁版嵁涓€瑙堣〃鏍峰紡 */
 .sub-population {
   display: inline-block;
   padding: 3px 10px;
@@ -855,7 +775,6 @@ export default {
   color: #6b7280;
 }
 
-/* 涓撲笟绉戠爺椋庢牸鍦板浘鍗＄墖 */
 .research-map-card {
   background: #ffffff;
   border-radius: 20px;
@@ -878,17 +797,12 @@ export default {
   transform: translateY(-2px);
 }
 
-
-
-/* 鍦板浘涓讳綋 */
 .map-body {
   position: relative;
   min-height: 800px;
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   transition: all 0.3s ease;
 }
-
-
 
 .loading-state {
   display: flex;
@@ -933,31 +847,15 @@ export default {
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  /* 纭繚楂樻竻娓叉煋 */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
-  /* 闃叉妯＄硦 */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-  /* 纭欢鍔犻€?*/
   will-change: transform;
-  /* 纭繚娓呮櫚鐨勬枃鏈覆鏌?*/
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-
-
-
-
-
-
-
-
-
-
-/* 鍔ㄧ敾鏁堟灉 */
 
 @keyframes fadeInUp {
   from {
@@ -970,7 +868,6 @@ export default {
   }
 }
 
-/* 鏁版嵁鎽樿鏍峰紡 */
 .data-summary {
   background: #ffffff;
   border-radius: 12px;
@@ -1043,7 +940,6 @@ export default {
   line-height: 1.4;
 }
 
-/* Element Plus 鏍峰紡瑕嗙洊 */
 :deep(.el-select) {
   width: 100%;
 }
@@ -1067,10 +963,7 @@ export default {
   padding-left: 8px;
 }
 
-/* 绛涢€夊鍣ㄦ牱寮?*/
 .filter-container {
   display: inline-block;
 }
 </style>
-
-
