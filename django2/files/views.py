@@ -12,7 +12,7 @@ import zipfile
 import tempfile
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.conf import settings
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets, status
@@ -21,7 +21,18 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from functools import lru_cache
-from .models import FileType, GenomeFile, Organism, FileCategory, Accession, Assembly, Annotation, DataFile
+from .models import (
+    FileType,
+    GenomeFile,
+    Organism,
+    FileCategory,
+    Accession,
+    Assembly,
+    Annotation,
+    DataFile,
+    FileRelation,
+    Sample,
+)
 from .serializers import (
     FileTypeSerializer, GenomeFileSerializer, GenomeFileListSerializer,
     OrganismSerializer, FileCategorySerializer,
@@ -53,6 +64,122 @@ def _datafile_download_url(file_id):
     if not file_id:
         return None
     return f"/gd/api/files/data-files/{file_id}/download/"
+
+
+def _format_file_size(size):
+    size = int(size or 0)
+    units = ("B", "KB", "MB", "GB", "TB")
+    value = float(size)
+    for unit in units:
+        if value < 1024 or unit == units[-1]:
+            return f"{value:.0f} {unit}" if unit == "B" else f"{value:.2f} {unit}"
+        value /= 1024
+
+
+def _build_accession_file_inventory(accession_obj, assemblies):
+    assembly_ids = [assembly.id for assembly in assemblies]
+    annotation_ids = [
+        annotation.id
+        for assembly in assemblies
+        for annotation in getattr(assembly, "prefetched_annotations", [])
+    ]
+    relation_filter = Q(
+        related_type="accession",
+        related_id=str(accession_obj.id),
+    )
+    if assembly_ids:
+        relation_filter |= Q(
+            related_type="assembly",
+            related_id__in=[str(value) for value in assembly_ids],
+        )
+    if annotation_ids:
+        relation_filter |= Q(
+            related_type="annotation",
+            related_id__in=[str(value) for value in annotation_ids],
+        )
+
+    relation_priority = {"accession": 0, "assembly": 1, "annotation": 2}
+    relations = list(
+        FileRelation.objects.filter(relation_filter)
+        .select_related("file__file_type", "file__dataset__project")
+        .order_by("file_id", "id")
+    )
+    relations.sort(key=lambda item: (item.file_id, relation_priority.get(item.related_type, 99), item.id))
+
+    assembly_labels = {
+        str(assembly.id): assembly.display_name or assembly.name
+        for assembly in assemblies
+    }
+    annotation_labels = {
+        str(annotation.id): annotation.display_name or annotation.name
+        for assembly in assemblies
+        for annotation in getattr(assembly, "prefetched_annotations", [])
+    }
+    object_labels = {
+        "accession": {str(accession_obj.id): accession_obj.accession},
+        "assembly": assembly_labels,
+        "annotation": annotation_labels,
+    }
+    relation_entries_by_file = {}
+    for relation in relations:
+        relation_entries_by_file.setdefault(relation.file_id, []).append({
+            "related_type": relation.related_type,
+            "related_id": relation.related_id,
+            "related_code": relation.related_code,
+            "related_object": (
+                object_labels.get(relation.related_type, {}).get(relation.related_id)
+                or relation.related_code
+                or relation.related_id
+            ),
+            "file_role": relation.file_role,
+            "is_primary": relation.is_primary,
+        })
+
+    inventory = []
+    seen_file_ids = set()
+    for relation in relations:
+        data_file = relation.file
+        if data_file.id in seen_file_ids:
+            continue
+        seen_file_ids.add(data_file.id)
+        dataset = data_file.dataset
+        inventory.append({
+            "id": data_file.id,
+            "file_code": data_file.file_code,
+            "name": data_file.file_name,
+            "file_name": data_file.file_name,
+            "file_path": data_file.file_path,
+            "file_size": data_file.file_size,
+            "size": data_file.file_size,
+            "size_display": _format_file_size(data_file.file_size),
+            "md5": data_file.md5,
+            "file_role": relation.file_role,
+            "category": relation.file_role,
+            "file_type": data_file.file_type.name if data_file.file_type else None,
+            "related_type": relation.related_type,
+            "related_id": relation.related_id,
+            "related_code": relation.related_code,
+            "related_object": (
+                object_labels.get(relation.related_type, {}).get(relation.related_id)
+                or relation.related_code
+                or relation.related_id
+            ),
+            "relations": relation_entries_by_file.get(data_file.id, []),
+            "accession_id": accession_obj.id,
+            "assembly_id": int(relation.related_id) if relation.related_type == "assembly" else None,
+            "annotation_id": int(relation.related_id) if relation.related_type == "annotation" else None,
+            "dataset_id": dataset.id if dataset else None,
+            "dataset_code": dataset.dataset_code if dataset else None,
+            "dataset_name": dataset.dataset_name if dataset else None,
+            "scope": relation.related_type,
+            "source": "new_relation",
+            "created_at": data_file.created_at,
+            "updated_at": data_file.updated_at,
+            "datafile_download_url": _datafile_download_url(data_file.id),
+            "download_url": _datafile_download_url(data_file.id),
+        })
+
+    return inventory, relations
 
 
 def _build_compatibility_file_summary(files_data, default_assembly_id=None, default_annotation_id=None):
@@ -4025,11 +4152,10 @@ def accession_detail(request, accession):
                 None,
             )
 
-        relation_files = get_files_for_accession(accession_obj.id)
-        files_data = [
-            _adapt_accession_file_service_result(item, accession_obj)
-            for item in relation_files
-        ]
+        files_data, hierarchy_relations = _build_accession_file_inventory(
+            accession_obj,
+            assemblies,
+        )
 
         for assembly in assemblies:
             for annotation in assembly.prefetched_annotations:
@@ -4049,6 +4175,29 @@ def accession_detail(request, accession):
         accession_obj.prefetched_assemblies = assemblies
         detail_data = AccessionDetailSerializer(accession_obj).data
         assemblies_data = detail_data.pop('assemblies', [])
+        species = accession_obj.species
+        detail_data['species'] = {
+            'id': species.id,
+            'species_code': species.species_code,
+            'scientific_name': species.scientific_name,
+            'chinese_name': species.chinese_name,
+            'common_name': species.common_name,
+        } if species else None
+
+        relation_counts = {}
+        for relation in hierarchy_relations:
+            relation_counts[(relation.related_type, relation.related_id)] = (
+                relation_counts.get((relation.related_type, relation.related_id), 0) + 1
+            )
+        for assembly_data in assemblies_data:
+            assembly_id = str(assembly_data.get('id'))
+            assembly_data['file_count'] = relation_counts.get(('assembly', assembly_id), 0)
+            for annotation_data in assembly_data.get('annotations', []):
+                annotation_id = str(annotation_data.get('id'))
+                annotation_data['file_count'] = relation_counts.get(
+                    ('annotation', annotation_id),
+                    0,
+                )
 
         file_status, file_names = _build_compatibility_file_summary(
             files_data,
@@ -4057,6 +4206,47 @@ def accession_detail(request, accession):
         )
 
         total_annotation_count = sum(len(assembly.prefetched_annotations) for assembly in assemblies)
+        total_size = sum(int(item.get('file_size') or 0) for item in files_data)
+        datasets_by_id = {}
+        projects_by_id = {}
+        for relation in hierarchy_relations:
+            dataset = relation.file.dataset
+            if not dataset:
+                continue
+            datasets_by_id[dataset.id] = {
+                'id': dataset.id,
+                'dataset_code': dataset.dataset_code,
+                'dataset_name': dataset.dataset_name,
+                'dataset_type': dataset.dataset_type,
+                'version': dataset.version,
+                'visibility': dataset.visibility,
+                'status': dataset.status,
+            }
+            project = dataset.project
+            if project:
+                projects_by_id[project.id] = {
+                    'id': project.id,
+                    'project_code': project.project_code,
+                    'project_name': project.project_name,
+                    'owner': project.owner,
+                    'status': project.status,
+                }
+
+        file_roles = {relation.file_role.lower() for relation in hierarchy_relations if relation.file_role}
+        dataset_types = {
+            item['dataset_type']
+            for item in datasets_by_id.values()
+            if item.get('dataset_type')
+        }
+
+        def readiness(*keywords):
+            return 'ready' if any(
+                any(keyword in value for keyword in keywords)
+                for value in file_roles | dataset_types
+            ) else 'unavailable'
+
+        projects = sorted(projects_by_id.values(), key=lambda item: item['project_code'])
+        datasets = sorted(datasets_by_id.values(), key=lambda item: item['dataset_code'])
 
         return Response({
             'success': True,
@@ -4067,8 +4257,28 @@ def accession_detail(request, accession):
                     'assembly_count': len(assemblies),
                     'annotation_count': total_annotation_count,
                     'file_count': len(files_data),
+                    'sample_count': Sample.objects.filter(accession=accession_obj).count(),
+                    'dataset_count': len(datasets),
+                    'total_size': total_size,
+                    'total_size_display': _format_file_size(total_size),
                     'default_assembly_id': default_assembly.id if default_assembly else None,
                     'default_annotation_id': default_annotation.id if default_annotation else None,
+                },
+                'projects': projects,
+                'datasets': datasets,
+                'data_status': {
+                    'genome': readiness('genome', 'fasta'),
+                    'annotation': readiness('annotation', 'gff', 'gtf'),
+                    'transcriptome': readiness('transcriptome', 'rna', 'expression'),
+                    'population': readiness('population', 'variant', 'vcf'),
+                },
+                'audit': {
+                    'created_at': accession_obj.created_at,
+                    'updated_at': accession_obj.updated_at,
+                    'created_by': next(
+                        (item['owner'] for item in projects if item.get('owner')),
+                        None,
+                    ),
                 },
                 # Compatibility-only flat view for old callers.
                 'files': files_data,

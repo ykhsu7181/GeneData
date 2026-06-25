@@ -32,40 +32,6 @@
         <div ref="mapRef" class="geo-map"></div>
       </div>
 
-      <aside class="geo-side-panel">
-        <div class="geo-summary-card">
-          <span>总计</span>
-          <strong>{{ totalPointCount }}</strong>
-          <em>地理点位数</em>
-        </div>
-
-        <div class="geo-list-head">
-          <span>点位</span>
-          <span>材料数</span>
-        </div>
-
-        <div class="geo-point-list">
-          <button
-            v-for="point in topPoints"
-            :key="`${point.region}-${point.latitude}-${point.longitude}-${buildPointListText(point.accession_names, '')}`"
-            class="legend-card"
-            @click="$emit('select', point)"
-          >
-            <div class="legend-main">
-              <div class="legend-title-row">
-                <strong>{{ getRegionDisplayName(point.region) }}</strong>
-                <b>{{ point.accession_count }}</b>
-              </div>
-              <div class="legend-detail-grid">
-                <span><em>Accession</em>{{ buildPointListText(point.accession_names, '暂无') }}</span>
-                <span><em>物种</em>{{ buildPointListText(point.species_names, '暂无') }}</span>
-                <span><em>样本数</em>{{ point.sample_count }}</span>
-                <span class="legend-meta"><em>经纬度</em>{{ formatCoordinate(point.longitude) }}, {{ formatCoordinate(point.latitude) }}</span>
-              </div>
-            </div>
-          </button>
-        </div>
-      </aside>
     </div>
 
     <div v-else class="geo-empty">
@@ -75,9 +41,7 @@
 </template>
 
 <script>
-import * as echarts from 'echarts'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { worldMapData } from '@/data/worldMapData.js'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const GEO_BUCKETS = [
   { label: '1 - 10', min: 1, max: 10, size: 10, color: '#22c55e' },
@@ -121,19 +85,6 @@ const buildTooltipList = (items, fallback = 'Unknown') => {
   return visible.join(', ')
 }
 
-const buildPointListText = (items, fallback = '暂无') => {
-  const normalized = (items || []).filter(Boolean)
-  if (!normalized.length) {
-    return fallback
-  }
-
-  const visible = normalized.slice(0, 2)
-  if (normalized.length > visible.length) {
-    return `${visible.join(', ')} 等 ${normalized.length} 个`
-  }
-  return visible.join(', ')
-}
-
 export default {
   name: 'GeoMapPanel',
   props: {
@@ -147,10 +98,22 @@ export default {
     const mapRef = ref(null)
     const mapInstance = ref(null)
     const resizeTimer = ref(null)
+    let mapRuntimePromise = null
 
-    const topPoints = computed(() => props.points.slice(0, 6))
     const legendBuckets = GEO_BUCKETS
-    const totalPointCount = computed(() => props.points.length.toLocaleString())
+
+    const loadMapRuntime = () => {
+      if (!mapRuntimePromise) {
+        mapRuntimePromise = Promise.all([
+          import('@/utils/dashboardCharts'),
+          import('@/data/worldMapData.js')
+        ]).then(([chartModule, mapModule]) => ({
+          echarts: chartModule.default,
+          worldMapData: mapModule.worldMapData
+        }))
+      }
+      return mapRuntimePromise
+    }
 
     const buildSeriesData = () =>
       props.points.map((point) => {
@@ -174,7 +137,12 @@ export default {
         }
       })
 
-    const renderMap = () => {
+    const renderMap = async () => {
+      if (!mapRef.value) {
+        return
+      }
+
+      const { echarts, worldMapData } = await loadMapRuntime()
       if (!mapRef.value) {
         return
       }
@@ -190,7 +158,6 @@ export default {
         })
       }
 
-      mapInstance.value.clear()
       mapInstance.value.setOption({
         backgroundColor: 'transparent',
         tooltip: {
@@ -268,7 +235,6 @@ export default {
     const resizeMap = () => {
       if (mapInstance.value) {
         mapInstance.value.resize()
-        renderMap()
       }
     }
 
@@ -305,11 +271,8 @@ export default {
     return {
       mapRef,
       legendBuckets,
-      topPoints,
-      totalPointCount,
       getRegionDisplayName,
-      formatCoordinate,
-      buildPointListText
+      formatCoordinate
     }
   }
 }
@@ -318,7 +281,6 @@ export default {
 <style scoped>
 .geo-panel {
   --geo-map-height: 460px;
-  --geo-column-height: 486px;
   padding: 24px;
   border-radius: 30px;
   background: linear-gradient(180deg, #ffffff, #fdfeff);
@@ -389,9 +351,7 @@ export default {
 
 .geo-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.75fr);
-  align-items: start;
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
   margin-top: 18px;
 }
 
@@ -414,170 +374,6 @@ export default {
     linear-gradient(180deg, #e0edff, #f4f8ff);
 }
 
-.geo-side-panel {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  align-content: start;
-  gap: 12px;
-  height: var(--geo-column-height);
-  min-height: 0;
-}
-
-.geo-summary-card {
-  display: grid;
-  justify-items: center;
-  gap: 5px;
-  padding: 12px 14px;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #f7fbff, #eff6ff);
-  border: 1px solid rgba(204, 220, 240, 0.9);
-  text-align: center;
-}
-
-.geo-summary-card span {
-  color: #4b5c72;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.geo-summary-card strong {
-  color: #133a82;
-  font-size: 32px;
-  line-height: 1;
-}
-
-.geo-summary-card em {
-  color: #6b7b91;
-  font-size: 12px;
-  font-style: normal;
-}
-
-.geo-list-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  padding: 0 6px;
-  color: #5d6d82;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.geo-point-list {
-  display: grid;
-  gap: 10px;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.geo-point-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.geo-point-list::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.42);
-}
-
-.legend-card {
-  display: block;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(217, 225, 235, 0.9);
-  background: linear-gradient(180deg, #fbfdff, #f7fafc);
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.legend-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(37, 99, 235, 0.22);
-  box-shadow: 0 12px 20px rgba(37, 99, 235, 0.08);
-}
-
-.legend-main {
-  display: grid;
-  gap: 7px;
-}
-
-.legend-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.legend-title-row strong {
-  color: #15326e;
-  font-size: 13px;
-  line-height: 1.35;
-}
-
-.legend-title-row b {
-  flex: 0 0 auto;
-  color: #15326e;
-  font-size: 16px;
-}
-
-.legend-detail-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-}
-
-.legend-detail-grid span {
-  color: #5b6b81;
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.legend-detail-grid em {
-  display: inline-block;
-  min-width: 52px;
-  margin-right: 6px;
-  color: #7a8ba0;
-  font-style: normal;
-  font-weight: 700;
-}
-
-.legend-main span {
-  color: #5b6b81;
-  font-size: 11px;
-}
-
-.legend-meta {
-  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
-}
-
-.geo-side-panel > * {
-  animation: geoFadeUp 0.55s ease both;
-}
-
-.geo-side-panel > *:nth-child(2) {
-  animation-delay: 0.06s;
-}
-
-.geo-side-panel > *:nth-child(3) {
-  animation-delay: 0.12s;
-}
-
-.geo-side-panel > *:nth-child(4) {
-  animation-delay: 0.18s;
-}
-
-@keyframes geoFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .geo-empty {
   margin-top: 18px;
   padding: 32px 18px;
@@ -588,10 +384,6 @@ export default {
 }
 
 @media (max-width: 980px) {
-  .geo-layout {
-    grid-template-columns: 1fr;
-  }
-
   .geo-map {
     height: 400px;
   }
@@ -599,12 +391,6 @@ export default {
   .geo-scale-legend {
     position: static;
     margin-bottom: 12px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .geo-side-panel > * {
-    animation: none;
   }
 }
 </style>

@@ -1,0 +1,555 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>数据一览表布局草图 - 抽屉展开版</title>
+  <style>
+    :root {
+      --blue: #1f6fee;
+      --blue-dark: #0f2f62;
+      --ink: #182944;
+      --muted: #748298;
+      --line: #e3ebf5;
+      --soft: #f5f9fe;
+      --green: #17a86b;
+      --orange: #f29c38;
+      --purple: #7357e8;
+      --cyan: #29b9c8;
+      --pink: #ee5c8b;
+      --shadow: 0 16px 42px rgba(37, 83, 143, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 1360px;
+      background: #f7faff;
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    }
+
+    .page-shell {
+      width: 98%;
+      max-width: 1880px;
+      margin: 0 auto;
+      padding: 16px 0 30px;
+    }
+
+    .topline {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      color: #52627a;
+      font-size: 13px;
+    }
+
+    .user-tools { display: flex; align-items: center; gap: 18px; font-weight: 700; }
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: 30px;
+      letter-spacing: 0.02em;
+    }
+
+    .filter-bar {
+      display: grid;
+      grid-template-columns: minmax(360px, 1.35fr) repeat(5, minmax(132px, .6fr)) 92px 118px;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .search-box {
+      display: flex;
+      height: 46px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .search-box input {
+      flex: 1;
+      border: 0;
+      outline: 0;
+      padding: 0 16px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .search-box button, .primary-btn {
+      border: 0;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .search-box button { width: 88px; }
+
+    .select, .ghost-btn {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: #42536d;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin: 18px 0 22px;
+    }
+
+    .stat-card {
+      min-height: 108px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(34, 75, 132, .08);
+    }
+
+    .stat-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .stat-label { color: #4e5f77; font-size: 14px; font-weight: 900; }
+    .stat-value { margin-top: 6px; font-size: 30px; font-weight: 950; letter-spacing: .01em; }
+    .stat-unit { margin-left: 4px; color: var(--muted); font-size: 14px; font-weight: 800; }
+
+    .view-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 14px 0 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tabs { display: flex; gap: 26px; }
+    .tab {
+      padding: 14px 2px;
+      color: #6e7d93;
+      border-bottom: 3px solid transparent;
+      font-weight: 950;
+      cursor: pointer;
+    }
+    .tab.active { color: var(--blue); border-color: var(--blue); }
+
+    .export-btn {
+      height: 42px;
+      padding: 0 18px;
+      border: 1px solid #bfd3ef;
+      border-radius: 10px;
+      background: #fff;
+      color: #365373;
+      font-weight: 900;
+    }
+
+    .table-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .table-scroll { overflow: auto; }
+
+    table {
+      width: 100%;
+      min-width: 1480px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 13px 12px;
+      border-right: 1px solid #e8eef7;
+      border-bottom: 1px solid #e8eef7;
+      text-align: center;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    th {
+      color: #41536b;
+      background: linear-gradient(180deg, #f8fbff 0%, #edf5ff 100%);
+      font-weight: 950;
+    }
+
+    td:first-child, th:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #fff;
+      text-align: left;
+      font-weight: 950;
+    }
+
+    th:first-child { background: #f0f6ff; }
+
+    .link-cell {
+      color: var(--blue);
+      font-weight: 950;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .metric-cell {
+      color: var(--green);
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .metric-cell:hover, .link-cell:hover { text-decoration: underline; }
+
+    .empty-cell { color: #9aa7b8; font-weight: 900; }
+    .building-cell { color: #b26c12; font-weight: 950; }
+
+    .tag {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 950;
+    }
+    .tag.green { color: #168b55; background: #e7f8ef; }
+    .tag.orange { color: #b8691c; background: #fff0df; }
+    .tag.purple { color: #7152d8; background: #f0ebff; }
+
+    .detail-section { margin-top: 22px; }
+    .detail-section .table-card { min-height: 330px; }
+
+    .detail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      color: var(--blue);
+      font-size: 18px;
+      font-weight: 950;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .file-btn {
+      height: 30px;
+      padding: 0 13px;
+      border: 1px solid #abc9f6;
+      border-radius: 8px;
+      color: var(--blue);
+      background: #f8fbff;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .drawer-mask {
+      position: fixed;
+      inset: 0;
+      display: none;
+      background: rgba(13, 30, 54, .16);
+      z-index: 20;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 92px;
+      right: 24px;
+      width: 430px;
+      max-width: calc(100vw - 48px);
+      bottom: 34px;
+      display: none;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 28px 80px rgba(23, 54, 95, .24);
+      z-index: 30;
+    }
+
+    .drawer.open, .drawer-mask.open { display: block; }
+
+    .drawer-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 20px 14px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, #f7fbff 0%, #fff 100%);
+    }
+
+    .drawer-title { margin: 0; color: var(--blue-dark); font-size: 18px; }
+    .drawer-meta { margin-top: 10px; color: #596a82; font-size: 13px; line-height: 1.65; }
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 50%;
+      background: #eef4fb;
+      color: #456079;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .relation-mini {
+      margin: 16px 18px;
+      padding: 14px;
+      border: 1px dashed #bfd3ee;
+      border-radius: 14px;
+      background: #f8fbff;
+    }
+
+    .relation-title {
+      color: #48617e;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .relation-flow {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: #24466f;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .node {
+      padding: 7px 9px;
+      border: 1px solid #d6e4f4;
+      border-radius: 9px;
+      background: #fff;
+    }
+
+    .drawer-table {
+      padding: 0 18px 18px;
+    }
+
+    .drawer-table table {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .drawer-table th, .drawer-table td {
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .drawer-table th:first-child, .drawer-table td:first-child {
+      position: static;
+      background: inherit;
+    }
+
+    .download-link {
+      color: var(--blue);
+      font-weight: 950;
+      text-decoration: none;
+    }
+
+    .page-foot {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 14px 0 6px;
+      color: #52627a;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .pager {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: 10px;
+    }
+
+    .pager span {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .pager .active { color: #fff; background: var(--blue); }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topline">
+      <strong>数据一览表</strong>
+      <div class="user-tools"><span>🌐 中文</span><span>👤 root</span></div>
+    </header>
+
+    <h1>数据一览表</h1>
+
+    <section class="filter-bar">
+      <div class="search-box">
+        <input placeholder="搜索 Accession / 物种 / 数据集 / 文件名" />
+        <button>搜索</button>
+      </div>
+      <div class="select">物种 <span>全部⌄</span></div>
+      <div class="select">亚群 <span>全部⌄</span></div>
+      <div class="select">数据类型 <span>全部⌄</span></div>
+      <div class="select">文件角色 <span>全部⌄</span></div>
+      <div class="select">地理位置 <span>全部⌄</span></div>
+      <div class="ghost-btn">重置</div>
+      <div class="ghost-btn">更多条件⌄</div>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card"><div class="stat-icon" style="background:#4db85c">苗</div><div><div class="stat-label">材料(Accession)</div><div class="stat-value">486</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:var(--purple)">集</div><div><div class="stat-label">数据集(Dataset)</div><div class="stat-value">8</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#3297df">文</div><div><div class="stat-label">文件(DataFile)</div><div class="stat-value">25</div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:var(--orange)">量</div><div><div class="stat-label">总数据量</div><div class="stat-value">521.21<span class="stat-unit">MB</span></div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:var(--cyan)">地</div><div><div class="stat-label">地理位置</div><div class="stat-value">39<span class="stat-unit">个点位</span></div></div></div>
+      <div class="stat-card"><div class="stat-icon" style="background:var(--pink)">时</div><div><div class="stat-label">更新时间</div><div class="stat-value" style="font-size:25px">2026-06-24</div></div></div>
+    </section>
+
+    <section class="view-tabs">
+      <div class="tabs">
+        <div class="tab active">矩阵视图</div>
+        <div class="tab">明细视图</div>
+      </div>
+      <button class="export-btn">↓ 导出当前结果</button>
+    </section>
+
+    <section class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Accession</th>
+              <th colspan="3">基本信息</th>
+              <th colspan="10">数据类型（点击单元格查看文件）</th>
+              <th rowspan="2">地理位置</th>
+            </tr>
+            <tr>
+              <th>物种</th><th>亚群</th><th>样本数</th>
+              <th>原始数据<br>Raw Data</th><th>基因组<br>Genome</th><th>注释<br>Annotation</th><th>转录组<br>Transcriptome</th>
+              <th>群体遗传<br>Population</th><th>密码子<br>Codon</th><th>着丝粒<br>Centromere</th><th>转座子<br>TEs</th><th>核心可变区块<br>CoreBlocks</th><th>ncRNA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a class="link-cell">02428</a></td><td>水稻</td><td><span class="tag green">GJ</span></td><td>12</td>
+              <td class="metric-cell" onclick="openDrawer('02428 / 原始数据', 'Raw Data', 'RAW_Rice_02428')">2 / 45 GB</td>
+              <td class="metric-cell" onclick="openDrawer('02428 / 基因组', 'Genome', 'ASM_Rice_02428_v1')">1 / 380 MB</td>
+              <td class="metric-cell" onclick="openDrawer('02428 / 注释', 'Annotation', 'ANN_Rice_02428_v1')">4 / 120 MB</td>
+              <td class="metric-cell" onclick="openDrawer('02428 / 转录组', 'Transcriptome', 'RNAseq_02428')">12 / 68 GB</td>
+              <td class="building-cell">建设中</td><td class="metric-cell">1 / 5 MB</td><td class="metric-cell">1 / 15 MB</td><td class="metric-cell">2 / 230 MB</td><td class="metric-cell">1 / 8 MB</td><td class="metric-cell">3 / 50 MB</td><td>云南，中国</td>
+            </tr>
+            <tr>
+              <td><a class="link-cell">117425</a></td><td>水稻</td><td><span class="tag orange">cB</span></td><td>8</td>
+              <td class="metric-cell">2 / 32 GB</td><td class="metric-cell">1 / 360 MB</td><td class="metric-cell">4 / 110 MB</td><td class="metric-cell">8 / 42 GB</td><td class="building-cell">建设中</td><td class="metric-cell">1 / 4 MB</td><td class="empty-cell">-</td><td class="metric-cell">2 / 180 MB</td><td class="metric-cell">1 / 6 MB</td><td class="metric-cell">2 / 32 MB</td><td>广西，中国</td>
+            </tr>
+            <tr>
+              <td><a class="link-cell">125619</a></td><td>玉米</td><td><span class="tag purple">XI</span></td><td>10</td>
+              <td class="metric-cell">1 / 25 GB</td><td class="metric-cell">1 / 2.1 GB</td><td class="metric-cell">3 / 210 MB</td><td class="metric-cell">6 / 38 GB</td><td class="building-cell">建设中</td><td class="metric-cell">1 / 6 MB</td><td class="metric-cell">1 / 18 MB</td><td class="metric-cell">3 / 250 MB</td><td class="metric-cell">1 / 7 MB</td><td class="metric-cell">4 / 60 MB</td><td>黑龙江，中国</td>
+            </tr>
+            <tr>
+              <td><a class="link-cell">C7</a></td><td>水稻</td><td><span class="tag green">CA</span></td><td>0</td>
+              <td class="empty-cell">-</td><td class="metric-cell">1 / 389 MB</td><td class="metric-cell">3 / 214 MB</td><td class="empty-cell">-</td><td class="building-cell">建设中</td><td class="empty-cell">-</td><td class="empty-cell">-</td><td class="empty-cell">-</td><td class="empty-cell">-</td><td class="empty-cell">-</td><td>广东，中国</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="detail-section">
+      <div class="detail-head">明细视图 <span style="font-size:12px;color:#6d7d94">点击“查看文件”后右侧展开基因组文件列表</span></div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>物种</th><th>Accession</th><th>数据类型</th><th>数据集(Dataset)</th><th>组装版本(Assembly)</th><th>注释版本(Annotation)</th><th>文件数</th><th>数据量</th><th>更新时间</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>水稻</td><td><a class="link-cell">02428</a></td><td>基因组(Genome)</td><td>02428 Genome v1.0</td><td>ASM_Rice_02428_v1</td><td>-</td><td>1</td><td>380 MB</td><td>2026-06-20</td><td><button class="file-btn" onclick="openDrawer('02428 / 基因组', 'Genome', 'ASM_Rice_02428_v1')">查看文件</button> <button class="file-btn">详情</button></td></tr>
+              <tr><td>水稻</td><td><a class="link-cell">02428</a></td><td>注释(Annotation)</td><td>02428 Annotation v1.0</td><td>ASM_Rice_02428_v1</td><td>ANN_Rice_02428_v1</td><td>4</td><td>120 MB</td><td>2026-06-20</td><td><button class="file-btn" onclick="openDrawer('02428 / 注释', 'Annotation', 'ANN_Rice_02428_v1')">查看文件</button> <button class="file-btn">详情</button></td></tr>
+              <tr><td>水稻</td><td><a class="link-cell">02428</a></td><td>转录组(Transcriptome)</td><td>RNA-seq 02428</td><td>ASM_Rice_02428_v1</td><td>ANN_Rice_02428_v1</td><td>12</td><td>68 GB</td><td>2026-06-19</td><td><button class="file-btn" onclick="openDrawer('02428 / 转录组', 'Transcriptome', 'RNAseq_02428')">查看文件</button> <button class="file-btn">详情</button></td></tr>
+              <tr><td>玉米</td><td><a class="link-cell">125619</a></td><td>群体遗传(Population)</td><td>建设中</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td><span class="empty-cell">暂无真实数据</span></td></tr>
+              <tr><td>褐飞虱</td><td><a class="link-cell">18WR-118</a></td><td>转录组(Transcriptome)</td><td>RNA-seq 18WR-118</td><td>-</td><td>-</td><td>10</td><td>62 GB</td><td>2026-06-17</td><td><button class="file-btn" onclick="openDrawer('18WR-118 / 转录组', 'Transcriptome', 'RNAseq_18WR_118')">查看文件</button> <button class="file-btn">详情</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="page-foot">共 4,382 条 <span class="select" style="height:32px">20条/页⌄</span><div class="pager"><span>‹</span><span class="active">1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>…</span><span>220</span><span>›</span></div><span>前往</span><span class="select" style="height:32px;width:54px">1</span><span>页</span></div>
+    </section>
+  </div>
+
+  <div id="drawerMask" class="drawer-mask" onclick="closeDrawer()"></div>
+  <aside id="fileDrawer" class="drawer open">
+    <div class="drawer-head">
+      <div>
+        <h2 id="drawerTitle" class="drawer-title">02428 / 基因组 文件列表</h2>
+        <div id="drawerMeta" class="drawer-meta">数据集：02428 Genome v1.0<br>组装版本：ASM_Rice_02428_v1<br>下载入口：DataFile download</div>
+      </div>
+      <button class="close-btn" onclick="closeDrawer()">×</button>
+    </div>
+    <div class="relation-mini">
+      <div class="relation-title">关系概览</div>
+      <div class="relation-flow"><span class="node">Accession 02428</span><span>→</span><span id="relationType" class="node">Genome</span><span>→</span><span id="relationNode" class="node">ASM_Rice_02428_v1</span><span>→</span><span class="node">DataFile</span></div>
+    </div>
+    <div class="drawer-table">
+      <table>
+        <thead><tr><th>文件名</th><th>文件角色</th><th>类型</th><th>大小</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr><td>02428.genome.fa</td><td>参考基因组序列</td><td>FASTA</td><td>380 MB</td><td><a class="download-link" href="/gd/api/files/data-files/101/download/">下载</a></td></tr>
+          <tr><td>02428.genome.fa.fai</td><td>基因组索引</td><td>FAI</td><td>20 KB</td><td><a class="download-link" href="/gd/api/files/data-files/102/download/">下载</a></td></tr>
+          <tr><td>02428.annotation.gff3</td><td>基因注释 GFF3</td><td>GFF3</td><td>120 MB</td><td><a class="download-link" href="/gd/api/files/data-files/103/download/">下载</a></td></tr>
+          <tr><td>02428.md5</td><td>校验文件</td><td>MD5</td><td>2 KB</td><td><a class="download-link" href="/gd/api/files/data-files/104/download/">下载</a></td></tr>
+        </tbody>
+      </table>
+      <p style="color:#6f7f95;font-size:12px;line-height:1.7;margin-top:14px">说明：草图默认展示“点击查看文件后的展开状态”；关闭后，可点击矩阵单元格或明细表的“查看文件”重新展开。</p>
+    </div>
+  </aside>
+
+  <script>
+    function openDrawer(title, type, relation) {
+      document.getElementById('drawerTitle').innerText = title + ' 文件列表';
+      document.getElementById('relationType').innerText = type;
+      document.getElementById('relationNode').innerText = relation;
+      document.getElementById('drawerMeta').innerHTML = '数据集：' + title + '<br>关联对象：' + relation + '<br>下载入口：DataFile download';
+      document.getElementById('fileDrawer').classList.add('open');
+      document.getElementById('drawerMask').classList.add('open');
+    }
+    function closeDrawer() {
+      document.getElementById('fileDrawer').classList.remove('open');
+      document.getElementById('drawerMask').classList.remove('open');
+    }
+  </script>
+</body>
+</html>

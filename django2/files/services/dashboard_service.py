@@ -22,6 +22,15 @@ SPECIES_CARD_COLORS = [
     "#15803d",
 ]
 
+RAW_DATA_ROLES = [
+    "raw_data",
+    "raw",
+    "fastq",
+    "wgs",
+    "resequencing",
+    "rnaseq_raw",
+]
+
 
 def _normalize_label(value, fallback="Unknown"):
     value = (value or "").strip()
@@ -47,6 +56,15 @@ def _sum_file_size(file_ids):
     for file_size in DataFile.objects.filter(id__in=file_ids).values_list("file_size", flat=True):
         total += int(file_size or 0)
     return total
+
+
+def _file_ids_for_roles(roles):
+    return list(
+        FileRelation.objects.filter(file_role__in=roles)
+        .order_by()
+        .values_list("file_id", flat=True)
+        .distinct()
+    )
 
 
 def _format_bytes(num_bytes):
@@ -125,10 +143,122 @@ def build_dashboard_payload():
         "xi_distribution": _build_xi_distribution(),
         "dataset_type_summary": _build_dataset_type_summary(),
         "file_role_summary": _build_file_role_summary(),
+        "resource_summary": _build_resource_summary(related_datafile_ids, total_size),
+        "recent_updates": _build_recent_updates(),
         "geo_distribution": _build_geo_distribution(),
         "hot_keywords": _build_hot_keywords(),
     }
     return payload
+
+
+def _resource_item(key, title, count, unit, route, *, query=None, status="normal", icon="database", count_display=None):
+    return {
+        "key": key,
+        "title": title,
+        "count": count,
+        "count_display": count_display if count_display is not None else str(count),
+        "unit": unit,
+        "route": route,
+        "query": query or {},
+        "status": status,
+        "icon": icon,
+    }
+
+
+def _build_resource_summary(related_datafile_ids, total_size):
+    raw_file_count = len(_file_ids_for_roles(RAW_DATA_ROLES))
+    transcriptome_count = Dataset.objects.filter(dataset_type="transcriptome").count()
+    population_count = Dataset.objects.filter(dataset_type="population_genetics").count()
+
+    return [
+        _resource_item(
+            "raw_data",
+            "原始数据",
+            raw_file_count,
+            "文件数",
+            "/data-overview",
+            query={"dataset_type": "raw_data"},
+            icon="raw",
+        ),
+        _resource_item(
+            "genome",
+            "基因组",
+            Assembly.objects.count(),
+            "组装数",
+            "/genome-card",
+            icon="genome",
+        ),
+        _resource_item(
+            "annotation",
+            "注释",
+            Annotation.objects.count(),
+            "记录数",
+            "/annotation",
+            icon="annotation",
+        ),
+        _resource_item(
+            "transcriptome",
+            "转录组",
+            transcriptome_count,
+            "数据集",
+            "/transcriptome-overview",
+            query={"dataset_type": "transcriptome"},
+            icon="transcriptome",
+        ),
+        _resource_item(
+            "population_genetics",
+            "群体遗传",
+            population_count,
+            "数据集",
+            "/data-overview",
+            query={"dataset_type": "population_genetics"},
+            status="coming_soon" if population_count == 0 else "normal",
+            icon="population",
+        ),
+        _resource_item(
+            "download",
+            "下载",
+            total_size,
+            "可用数据量",
+            "/data-overview",
+            query={"download_mode": "by_type"},
+            icon="download",
+            count_display=_format_bytes(total_size),
+        ),
+    ]
+
+
+def _build_recent_updates(limit=4):
+    updates = []
+    for dataset in Dataset.objects.order_by("-created_at", "-id")[:limit]:
+        updates.append(
+            {
+                "title": f"新增数据集 {dataset.dataset_name or dataset.dataset_code}",
+                "date": dataset.created_at.date().isoformat(),
+                "type": "dataset",
+                "route": "/data-overview",
+                "query": {"dataset_type": dataset.dataset_type},
+                "created_at": dataset.created_at,
+            }
+        )
+
+    for data_file in DataFile.objects.filter(relations__isnull=False).distinct().order_by("-created_at", "-id")[:limit]:
+        updates.append(
+            {
+                "title": f"新增文件 {data_file.file_name}",
+                "date": data_file.created_at.date().isoformat(),
+                "type": "datafile",
+                "route": "/data-overview",
+                "query": {},
+                "created_at": data_file.created_at,
+            }
+        )
+
+    updates.sort(key=lambda item: item["created_at"], reverse=True)
+    return [
+        {key: value for key, value in item.items() if key != "created_at"}
+        for item in updates[:limit]
+    ]
 
 
 def _build_species_cards():
@@ -162,7 +292,44 @@ def _build_species_cards():
                 "cover_image": None,
             }
         )
+
+    unassigned_card = _build_unassigned_species_card()
+    if unassigned_card:
+        cards.append(unassigned_card)
     return cards
+
+
+def _build_unassigned_species_card():
+    unassigned_accessions = Accession.objects.filter(species__isnull=True)
+    accession_count = unassigned_accessions.count()
+    if accession_count == 0:
+        return None
+
+    accession_ids = [str(value) for value in unassigned_accessions.values_list("id", flat=True)]
+    file_ids = list(
+        FileRelation.objects.filter(related_type="accession", related_id__in=accession_ids)
+        .order_by()
+        .values_list("file_id", flat=True)
+        .distinct()
+    )
+    sample_count = Sample.objects.filter(species__isnull=True).count()
+    dataset_count = Dataset.objects.filter(species__isnull=True).count()
+    total_size = _sum_file_size(file_ids)
+
+    return {
+        "species_id": "unassigned",
+        "species_code": "UNASSIGNED",
+        "name_cn": "未归属物种",
+        "latin_name": "Unassigned accessions",
+        "accession_count": accession_count,
+        "sample_count": sample_count,
+        "dataset_count": dataset_count,
+        "datafile_count": len(file_ids),
+        "total_size": total_size,
+        "total_size_display": _format_bytes(total_size),
+        "accent_color": SPECIES_CARD_COLORS[len(SPECIES_CARD_COLORS) - 1],
+        "cover_image": None,
+    }
 
 
 def _build_sub_population_distribution():

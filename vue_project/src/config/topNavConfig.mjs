@@ -11,9 +11,11 @@ export const topNavGroups = {
   },
   dataOverview: {
     key: 'dataOverview',
-    labelKey: 'nav.dataOverview',
+    labelKey: 'nav.dataResources',
     path: '/data-overview',
     children: [
+      { labelKey: 'nav.rawData', path: '/data-overview' },
+      { labelKey: 'nav.dataOverview', path: '/data-overview' },
       { labelKey: 'nav.genome', path: '/genome-card' },
       { labelKey: 'nav.annotation', path: '/annotation' },
       { labelKey: 'nav.transcriptomeOverview', path: '/transcriptome-overview' }

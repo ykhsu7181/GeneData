@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+const repoRoot = process.cwd()
+const viewPath = resolve(repoRoot, 'src/views/DataOverviewView.vue')
+const source = readFileSync(viewPath, 'utf8')
+
+assert.match(source, /query\/data-overview\//, 'DataOverviewView should use the new data overview endpoint')
+assert.match(source, /query\/data-overview-files\//, 'DataOverviewView should load drawer files from the new endpoint')
+assert.match(source, /矩阵视图/, 'matrix view tab should be present')
+assert.match(source, /明细视图/, 'detail view tab should be present')
+assert.match(source, /查看文件/, 'detail rows should provide a view files action')
+assert.match(source, /建设中/, 'population data without real data should render as building state')
+assert.match(source, /DataFile/, 'download/file drawer copy should refer to DataFile')
+assert.match(source, /selectedSpecies/, 'DataOverviewView should expose a species filter')
+assert.match(source, /params\.species/, 'DataOverviewView should submit species filters to the API')
+assert.doesNotMatch(source, /genome-files/, 'DataOverviewView must not reference old genome-files URLs')
+assert.doesNotMatch(source, /legacy_genomefile/, 'DataOverviewView must not reference legacy source names')
+assert.doesNotMatch(source, /organism_fallback/, 'DataOverviewView must not reference organism fallback')
+
+console.log('data-overview matrix source checks passed')

@@ -15,6 +15,8 @@ export const emptyDashboardPayload = () => ({
   xi_distribution: [],
   dataset_type_summary: [],
   file_role_summary: [],
+  resource_summary: [],
+  recent_updates: [],
   geo_distribution: [],
   hot_keywords: []
 })

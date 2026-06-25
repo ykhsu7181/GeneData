@@ -229,3 +229,82 @@ class DashboardApiTestCase(TestCase):
 
         self.assertIn("hot_keywords", payload)
         self.assertGreaterEqual(len(payload["hot_keywords"]), 1)
+
+    def test_dashboard_endpoint_returns_resource_summary_and_recent_updates(self):
+        genome_file = self.create_data_file(
+            "G",
+            f"genome.resource.{self.accession_rice_1.accession}.fasta",
+            dataset=self.dataset_genome,
+            size=256,
+        )
+        annotation_file = self.create_data_file(
+            "H",
+            f"annotation.resource.{self.accession_rice_1.accession}.gff3",
+            dataset=self.dataset_annotation,
+            size=128,
+        )
+        self.add_relation(genome_file, "assembly", self.assembly_rice.id, "genome", self.assembly_rice.name)
+        self.add_relation(annotation_file, "annotation", self.annotation_rice.id, "annotation", self.annotation_rice.name)
+
+        response = self.client.get("/gd/api/warehouse/dashboard/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+
+        resource_summary = payload["resource_summary"]
+        resource_keys = [item["key"] for item in resource_summary]
+        self.assertEqual(
+            resource_keys,
+            ["raw_data", "genome", "annotation", "transcriptome", "population_genetics", "download"],
+        )
+
+        genome_resource = next(item for item in resource_summary if item["key"] == "genome")
+        self.assertEqual(genome_resource["count"], 1)
+        self.assertEqual(genome_resource["route"], "/genome-card")
+
+        annotation_resource = next(item for item in resource_summary if item["key"] == "annotation")
+        self.assertEqual(annotation_resource["count"], 1)
+        self.assertEqual(annotation_resource["route"], "/annotation")
+
+        download_resource = next(item for item in resource_summary if item["key"] == "download")
+        self.assertEqual(download_resource["count"], 384)
+        self.assertEqual(download_resource["count_display"], "384 B")
+        self.assertEqual(download_resource["route"], "/data-overview")
+
+        self.assertIn("recent_updates", payload)
+        self.assertGreaterEqual(len(payload["recent_updates"]), 1)
+        self.assertTrue(
+            any(item["title"].startswith("新增文件") for item in payload["recent_updates"])
+        )
+
+    def test_dashboard_endpoint_returns_fallback_card_when_species_table_is_empty(self):
+        Sample.objects.all().delete()
+        Dataset.objects.all().delete()
+        Accession.objects.update(species=None)
+        Species.objects.all().delete()
+        accession = Accession.objects.create(
+            accession=f"NO_SPECIES_{self.suffix}",
+            sub_population="XI",
+        )
+        data_file = self.create_data_file(
+            "F",
+            f"genome.{accession.accession}.fasta",
+            size=64,
+        )
+        self.add_relation(data_file, "accession", accession.id, "genome", accession.accession)
+
+        response = self.client.get("/gd/api/warehouse/dashboard/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["summary"]["species_count"], 0)
+        self.assertGreaterEqual(len(payload["species_cards"]), 1)
+
+        fallback_card = payload["species_cards"][0]
+        self.assertEqual(fallback_card["species_id"], "unassigned")
+        self.assertEqual(fallback_card["species_code"], "UNASSIGNED")
+        self.assertEqual(fallback_card["name_cn"], "未归属物种")
+        self.assertEqual(fallback_card["latin_name"], "Unassigned accessions")
+        self.assertEqual(fallback_card["accession_count"], 5)
+        self.assertEqual(fallback_card["datafile_count"], 1)
+        self.assertEqual(fallback_card["total_size"], 64)

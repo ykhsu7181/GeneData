@@ -8,21 +8,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const sourcePath = path.resolve(__dirname, '../src/components/GeoMapPanel.vue')
 const source = fs.readFileSync(sourcePath, 'utf8')
 
-test('GeoMapPanel side list identifies unknown locations by accession, species, and coordinates', () => {
-  for (const expectedText of [
-    '点位',
-    '未标注地区',
-    'Accession',
-    '物种',
-    '经纬度',
-    'legend-title-row',
-    'legend-detail-grid',
-    'buildPointListText(point.accession_names',
-    'buildPointListText(point.species_names'
+test('GeoMapPanel removes the right-side point summary list', () => {
+  for (const removedText of [
+    'geo-side-panel',
+    'geo-summary-card',
+    'geo-list-head',
+    'geo-point-list',
+    'legend-card',
+    'totalPointCount',
+    'topPoints'
   ]) {
     assert.ok(
-      source.includes(expectedText),
-      `Expected GeoMapPanel.vue to include ${expectedText}`
+      !source.includes(removedText),
+      `Expected GeoMapPanel.vue to remove ${removedText}`
     )
   }
 })
@@ -33,12 +31,8 @@ test('GeoMapPanel keeps the dashboard map compact and fills the map shell', () =
     'Expected dashboard map to be tall enough to fill the left shell'
   )
   assert.ok(
-    source.includes('--geo-column-height: 486px'),
-    'Expected left and right columns to share a fixed visual height'
-  )
-  assert.ok(
-    source.includes('align-items: start'),
-    'Expected grid columns not to stretch the map shell taller than the map'
+    source.includes('grid-template-columns: minmax(0, 1fr);'),
+    'Expected the map layout to use the full card width after removing the side panel'
   )
   assert.ok(
     source.includes("layoutCenter: ['48%', '54%']"),
@@ -47,10 +41,6 @@ test('GeoMapPanel keeps the dashboard map compact and fills the map shell', () =
   assert.ok(
     source.includes("layoutSize: '126%'"),
     'Expected ECharts geo layout to fill the shell'
-  )
-  assert.ok(
-    source.includes('geo-point-list'),
-    'Expected point cards to scroll inside the right column instead of stretching the panel'
   )
 })
 

@@ -8,13 +8,20 @@
     />
 
     <div class="dashboard-content-shell">
-      <div v-if="loadError" class="dashboard-error">{{ loadError }}</div>
-
-      <template v-else>
-        <section v-if="isLoading" class="dashboard-skeleton-grid dashboard-overlap">
+      <template v-if="isLoading">
+        <section class="dashboard-skeleton-grid dashboard-overlap">
           <div v-for="index in 4" :key="index" class="dashboard-skeleton-card"></div>
         </section>
 
+        <section class="resource-distribution-row">
+          <div class="panel-skeleton"></div>
+          <div class="panel-skeleton"></div>
+        </section>
+      </template>
+
+      <div v-else-if="loadError" class="dashboard-error">{{ loadError }}</div>
+
+      <template v-else>
         <section :class="['species-entry-section', { 'dashboard-overlap': hasFeaturedSpeciesCards }]">
           <SpeciesCardGrid
             :cards="featuredSpeciesCards"
@@ -23,20 +30,12 @@
           />
         </section>
 
-        <section class="section-lead">
-          <p class="lead-kicker">Distribution insights</p>
-          <h2>分布概览</h2>
-          <p class="lead-description">
-            从亚群、分组、数据集类型与文件角色四个维度，快速了解数据仓库的整体构成。
-          </p>
-        </section>
+        <section class="resource-distribution-row">
+          <DataResourceSummary
+            :items="dashboard.resource_summary"
+            @navigate="navigateToRoute"
+          />
 
-        <section v-if="isLoading" class="distribution-grid">
-          <div class="panel-skeleton"></div>
-          <div class="panel-skeleton"></div>
-        </section>
-
-        <section v-else class="distribution-grid">
           <DistributionPanel
             title="亚群分布"
             kicker="Subpopulation"
@@ -44,40 +43,16 @@
             value-key="accession_count"
             empty-text="暂无分布数据"
           />
-
-          <DistributionPanel
-            title="群体分组"
-            kicker="Grouping summary"
-            :items="dashboard.xi_distribution"
-            value-key="accession_count"
-            empty-text="暂无群体分组统计数据"
-          />
-        </section>
-
-        <section class="distribution-grid">
-          <DistributionPanel
-            title="数据集类型分布"
-            kicker="Dataset types"
-            :items="dashboard.dataset_type_summary"
-            label-key="dataset_type"
-            value-key="dataset_count"
-            empty-text="暂无数据集类型分布"
-          />
-
-          <DistributionPanel
-            title="文件角色分布"
-            kicker="File roles"
-            :items="dashboard.file_role_summary"
-            label-key="file_role"
-            value-key="datafile_count"
-            empty-text="暂无文件角色统计数据"
-          />
         </section>
 
         <section class="dashboard-map-section">
           <GeoMapPanel
             :points="dashboard.geo_distribution"
             @select="handleGeoSelect"
+          />
+          <RecentUpdatesBar
+            :items="dashboard.recent_updates"
+            @navigate="navigateToRoute"
           />
         </section>
       </template>
@@ -90,9 +65,11 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
+import DataResourceSummary from '@/components/DataResourceSummary.vue'
 import DashboardHero from '@/components/DashboardHero.vue'
 import DistributionPanel from '@/components/DistributionPanel.vue'
 import GeoMapPanel from '@/components/GeoMapPanel.vue'
+import RecentUpdatesBar from '@/components/RecentUpdatesBar.vue'
 import SpeciesCardGrid from '@/components/SpeciesCardGrid.vue'
 import { keywordToRoute, resolveDashboardSearch } from '@/config/dashboardSearch'
 import { emptyDashboardPayload, fetchDashboardData } from '@/services/dashboard'
@@ -102,8 +79,10 @@ export default {
   components: {
     DashboardHero,
     SpeciesCardGrid,
+    DataResourceSummary,
     DistributionPanel,
-    GeoMapPanel
+    GeoMapPanel,
+    RecentUpdatesBar
   },
   setup() {
     const router = useRouter()
@@ -176,6 +155,7 @@ export default {
       loadError,
       featuredSpeciesCards,
       hasFeaturedSpeciesCards,
+      navigateToRoute,
       handleSearch,
       handleKeywordClick,
       handleSpeciesSelect,
@@ -236,12 +216,16 @@ export default {
   pointer-events: none;
 }
 
-.distribution-grid,
+.resource-distribution-row,
 .dashboard-map-section,
 .dashboard-skeleton-grid,
-.dashboard-error,
-.section-lead {
+.dashboard-error {
   width: 100%;
+}
+
+.dashboard-map-section {
+  display: grid;
+  gap: 16px;
 }
 
 @keyframes dashboardShimmer {
@@ -287,39 +271,11 @@ export default {
   animation: dashboardShimmer 1.4s ease infinite;
 }
 
-.section-lead {
-  padding: 6px 4px 0;
-  position: relative;
-  z-index: 1;
-}
-
-.lead-kicker {
-  margin: 0 0 8px;
-  color: #1d4ed8;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.section-lead h2 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 34px;
-}
-
-.lead-description {
-  margin: 10px 0 0;
-  color: #607085;
-  font-size: 15px;
-  line-height: 1.7;
-  max-width: 780px;
-}
-
-.distribution-grid {
+.resource-distribution-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(420px, 0.92fr) minmax(520px, 1.08fr);
   gap: 24px;
+  align-items: stretch;
 }
 
 @media (max-width: 960px) {
@@ -338,17 +294,10 @@ export default {
   }
 
   .dashboard-skeleton-grid,
-  .distribution-grid {
+  .resource-distribution-row {
     grid-template-columns: 1fr;
   }
 
-  .section-lead h2 {
-    font-size: 28px;
-  }
-
-  .lead-description {
-    font-size: 14px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

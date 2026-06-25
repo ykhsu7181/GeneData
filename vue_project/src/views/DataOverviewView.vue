@@ -1,929 +1,861 @@
 ﻿<template>
-  <div class="home-view">
-    <div class="page-header">
-      <h2 class="title">{{ $t('page.dataOverview.title') }}</h2>
-      <div class="header-actions">
-        <el-tooltip :content="$t('page.dataOverview.refreshData')" placement="top">
-          <el-button circle size="small" @click="fetchFiles">
-            <el-icon><Refresh /></el-icon>
-          </el-button>
-        </el-tooltip>
+  <div class="data-overview-modern">
+    <header class="overview-header">
+      <div>
+        <p class="breadcrumb">首页 / 数据资源</p>
+        <h1>数据一览表</h1>
       </div>
-    </div>
-    
-    <!-- 鎼滅储妗?-->
-    <div class="search-container">
-      <div class="search-wrapper">
-        <el-icon class="search-icon"><Search /></el-icon>
-        <el-select
-          v-model="selectedOrganism"
-          filterable
-          remote
-          :placeholder="$t('page.dataOverview.searchPlaceholder')"
-          :remote-method="searchOrganisms"
-          :loading="loadingOrganisms"
-          clearable
-          @change="handleOrganismChange"
-          class="search-select"
-        >
-          <el-option
-            v-for="item in organismOptions"
-            :key="item"
-            :label="item"
-            :value="item"
-          />
-        </el-select>
+      <button class="refresh-button" type="button" @click="fetchOverview">刷新</button>
+    </header>
+
+    <section class="filter-panel">
+      <div class="search-box">
+        <span class="search-icon">⌕</span>
+        <input
+          v-model="searchKeyword"
+          type="text"
+          placeholder="搜索 Accession / 物种 / 数据集 / 文件名"
+          @keyup.enter="applyFilters"
+        />
+        <button type="button" @click="applyFilters">搜索</button>
       </div>
-    </div>
-    
-    <div class="data-card">
-      <div v-if="loading" class="loading">
-        <el-skeleton :rows="6" animated />
-      </div>
-      
-      <div v-else class="table-container">
-        <el-table
-          ref="tableRef"
-          :data="tableData"
-          border
-          highlight-current-row
-          height="calc(100vh - 340px)"
-          style="width: 100%"
-          :header-cell-style="{ background: '#f0f5ff', color: '#1a56db', fontWeight: 'bold' }"
-          table-layout="fixed"
-          key="stable-table">
-          
-          <el-table-column prop="accession" :label="$t('page.dataOverview.accession')" width="180">
-            <template #default="scope">
-              <div class="accession-cell">
-                <router-link
-                  :to="{ path: '/accession-card', query: buildAccessionQuery(scope.row) }"
-                  class="accession-link">
-                  {{ scope.row.accession }}
-                </router-link>
-              </div>
-            </template>
-          </el-table-column>
 
-          <el-table-column prop="subPopulation" width="150">
-            <template #header>
-              <div class="sub-population-header">
-                <span>{{ $t('page.dataOverview.subPopulation') }}</span>
-                <div class="filter-container">
-                  <el-popover
-                    :visible="showSubPopulationFilter"
-                    placement="bottom-start"
-                    :width="220"
-                    trigger="manual"
-                    :teleported="true"
-                    :persistent="false"
-                    :z-index="9999"
-                    popper-class="sub-population-popover">
-                    <template #reference>
-                      <el-button
-                        size="small"
-                        type="text"
-                        :loading="loadingSubPopulations"
-                        @click="toggleSubPopulationFilter"
-                        class="filter-button">
-                        <el-icon><Filter /></el-icon>
-                      </el-button>
-                    </template>
-                    <div class="sub-population-dropdown">
-                      <div class="dropdown-header">
-                        <el-checkbox
-                          v-model="isAllSelected"
-                          @change="handleSelectAllChange"
-                          class="select-all-checkbox">
-                          {{ $t('page.dataOverview.selectAll') }}
-                        </el-checkbox>
-                      </div>
-                      <el-checkbox-group
-                        v-model="selectedSubPopulations"
-                        @change="handleSubPopulationSelectionChange"
-                        class="checkbox-group">
-                        <el-checkbox
-                          v-for="subPop in allSubPopulations"
-                          :key="`filter-${subPop}`"
-                          :label="subPop"
-                          class="checkbox-item">
-                          <span :class="['sub-population', getSubPopulationClass(subPop)]">
-                            {{ subPop }}
-                          </span>
-                        </el-checkbox>
-                      </el-checkbox-group>
-                    </div>
-                  </el-popover>
-                </div>
-              </div>
-            </template>
-            <template #default="scope">
-              <span
-                v-if="scope.row.subPopulation"
-                :class="['sub-population', getSubPopulationClass(scope.row.subPopulation)]">
-                {{ scope.row.subPopulation }}
-              </span>
-              <span
-                v-else
-                :class="['sub-population', getSubPopulationClass('Unknown')]">
-                Unknown
-              </span>
-            </template>
-          </el-table-column>
+      <label class="filter-item">
+        <span>物种</span>
+        <select v-model="selectedSpecies" @change="applyFilters">
+          <option value="">全部</option>
+          <option v-for="item in filters.species" :key="item.key" :value="item.key">{{ item.label }}</option>
+        </select>
+      </label>
 
-          <el-table-column :label="$t('page.dataOverview.seqData')" min-width="200">
-            <template #default="scope">
-              <a
-                v-if="scope.row.seqData"
-                :href="scope.row.seqData"
-                target="_blank"
-                class="data-link">
-                seqdata.{{ scope.row.accession }}
-              </a>
-              <span v-else class="data-empty">-</span>
-            </template>
-          </el-table-column>
+      <label class="filter-item">
+        <span>亚群</span>
+        <select v-model="selectedSubPopulation" @change="applyFilters">
+          <option value="">全部</option>
+          <option v-for="item in filters.sub_populations" :key="item" :value="item">{{ item }}</option>
+        </select>
+      </label>
 
-          <el-table-column label="Genome" min-width="150">
-            <template #default="scope">
-              <div class="resource-cell">
-                <router-link
-                  v-if="scope.row.genome"
-                  :to="{ path: '/genome-card', query: buildGenomeQuery(scope.row) }"
-                  class="data-link">
-                  genome.{{ scope.row.accession }}
-                </router-link>
-                <span v-else class="data-empty">-</span>
-              </div>
-            </template>
-          </el-table-column>
-          
-          <el-table-column :label="$t('page.dataOverview.annotation')" min-width="150">
-            <template #default="scope">
-              <div class="resource-cell">
-                <router-link
-                  v-if="scope.row.annotation"
-                  :to="{ path: '/annotation-card', query: buildAnnotationQuery(scope.row) }"
-                  class="data-link">
-                  annotation.{{ scope.row.accession }}
-                </router-link>
-                <span v-else class="data-empty">-</span>
-              </div>
-            </template>
-          </el-table-column>
-          
-          <el-table-column label="Transcriptome" min-width="150">
-            <template #default="scope">
-              <router-link 
-                v-if="scope.row.hasTranscriptome" 
-                :to="{ path: '/transcriptome-overview', query: { accession: scope.row.accession } }"
-                class="data-link">
-                Transcriptome.{{ scope.row.accession }}
-              </router-link>
-              <span v-else class="data-empty">-</span>
-            </template>
-          </el-table-column>
-          
-          <el-table-column :label="$t('page.dataOverview.codon')" min-width="150">
-            <template #default="scope">
-              <router-link
-                v-if="scope.row.codon"
-                :to="{ path: '/codon-card', query: { accession: scope.row.accession } }"
-                class="data-link">
-                codon.{{ scope.row.accession }}
-              </router-link>
-              <span v-else class="data-empty">-</span>
-            </template>
-          </el-table-column>
-          
-          <el-table-column label="Centromere" min-width="150">
-            <template #default="scope">
-              <a 
-                v-if="scope.row.centromere" 
-                href="https://www.baidu.com" 
-                target="_blank"
-                class="data-link">
-                centromere.{{ scope.row.accession }}
-              </a>
-              <span v-else class="data-empty">-</span>
-            </template>
-          </el-table-column>
-          
-          <el-table-column label="TEs" min-width="150">
-            <template #default="scope">
-              <a
-                v-if="scope.row.TEs"
-                href="https://www.baidu.com"
-                target="_blank"
-                class="data-link">
-                TEs.{{ scope.row.accession }}
-              </a>
-              <span v-else class="data-empty">-</span>
-            </template>
-          </el-table-column>
+      <label class="filter-item">
+        <span>数据类型</span>
+        <select v-model="selectedCategory" @change="applyFilters">
+          <option value="">全部</option>
+          <option v-for="item in dataCategories" :key="item.key" :value="item.key">{{ item.label }}</option>
+        </select>
+      </label>
 
-          <el-table-column label="CoreBlocks" min-width="150">
-            <template #default="scope">
-              <a
-                v-if="scope.row.coreBlocks"
-                href="https://www.baidu.com"
-                target="_blank"
-                class="data-link">
-                coreblocks.{{ scope.row.accession }}
-              </a>
-              <span v-else class="data-empty">-</span>
-            </template>
-          </el-table-column>
+      <label class="filter-item">
+        <span>文件角色</span>
+        <select v-model="selectedFileRole" @change="applyFilters">
+          <option value="">全部</option>
+          <option v-for="item in filters.file_roles" :key="item.key" :value="item.key">{{ item.label }}</option>
+        </select>
+      </label>
 
-          <el-table-column label="SnoRNA" align="center">
-            <el-table-column label="miRNA" min-width="150">
-              <template #default="scope">
-                <a 
-                  v-if="scope.row.miRNA" 
-                  href="https://www.baidu.com" 
-                  target="_blank"
-                  class="data-link">
-                  miRNA.{{ scope.row.accession }}
-                </a>
-                <span v-else class="data-empty">-</span>
-              </template>
-            </el-table-column>
-            
-            <el-table-column label="tRNA" min-width="150">
-              <template #default="scope">
-                <a 
-                  v-if="scope.row.tRNA" 
-                  href="https://www.baidu.com" 
-                  target="_blank"
-                  class="data-link">
-                  tRNA.{{ scope.row.accession }}
-                </a>
-                <span v-else class="data-empty">-</span>
-              </template>
-            </el-table-column>
-            
-            <el-table-column label="rRNA" min-width="150">
-              <template #default="scope">
-                <a 
-                  v-if="scope.row.rRNA" 
-                  href="https://www.baidu.com" 
-                  target="_blank"
-                  class="data-link">
-                  rRNA.{{ scope.row.accession }}
-                </a>
-                <span v-else class="data-empty">-</span>
-              </template>
-            </el-table-column>
-          </el-table-column>
+      <label class="filter-item">
+        <span>地理位置</span>
+        <select v-model="selectedLocation" @change="applyFilters">
+          <option value="">全部</option>
+          <option v-for="item in filters.locations" :key="item" :value="item">{{ item }}</option>
+        </select>
+      </label>
 
-          <el-table-column :label="$t('page.dataOverview.location')" min-width="150">
-            <template #default="scope">
-              <router-link
-                v-if="scope.row.longitude !== null && scope.row.latitude !== null"
-                :to="{ path: '/accession-map', query: { accession: scope.row.accession } }"
-                class="data-link geographic-link"
-                @click="handleGeographicClick(scope.row.accession)">
-                <el-icon class="geographic-icon"><Location /></el-icon>
-                location.{{ scope.row.accession }}
-              </router-link>
-              <span v-else class="data-empty">-</span>
-            </template>
-          </el-table-column>
-        </el-table>
-        
-        <!-- 鍒嗛〉缁勪欢 -->
-        <div class="pagination-container">
-          <el-pagination
-            :current-page="currentPage"
-            :page-size="pageSize"
-            :total="totalCount"
-            layout="total, prev, pager, next, jumper"
-            background
-            @current-change="handleCurrentChange"
-          />
+      <button class="plain-button" type="button" @click="resetFilters">重置</button>
+      <button class="plain-button more" type="button">更多条件</button>
+    </section>
+
+    <section class="summary-grid">
+      <article v-for="card in summaryCards" :key="card.key" class="summary-card">
+        <div :class="['summary-icon', card.theme]">{{ card.icon }}</div>
+        <div>
+          <p>{{ card.label }}</p>
+          <strong>{{ card.value }}</strong>
+          <span v-if="card.unit">{{ card.unit }}</span>
         </div>
+      </article>
+    </section>
+
+    <section class="view-switcher">
+      <div class="tabs">
+        <button :class="{ active: activeView === 'matrix' }" type="button" @click="activeView = 'matrix'">矩阵视图</button>
+        <button :class="{ active: activeView === 'detail' }" type="button" @click="activeView = 'detail'">明细视图</button>
       </div>
-    </div>
+      <button class="export-button" type="button">导出当前结果</button>
+    </section>
+
+    <section v-if="loading" class="loading-card">正在加载数据一览表...</section>
+
+    <section v-else-if="activeView === 'matrix'" class="table-card">
+      <div class="table-scroll">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th rowspan="2">Accession</th>
+              <th colspan="3">基本信息</th>
+              <th :colspan="dataCategories.length">数据类型（点击单元格查看文件）</th>
+              <th rowspan="2">地理位置</th>
+            </tr>
+            <tr>
+              <th>物种</th>
+              <th>亚群</th>
+              <th>样本数</th>
+              <th v-for="category in dataCategories" :key="category.key">
+                {{ category.label }}<br />
+                <span>{{ category.en_label }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in matrixRows" :key="row.accession_id">
+              <td><router-link class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link></td>
+              <td>{{ row.species_name || '-' }}</td>
+              <td><span class="sub-population">{{ row.sub_population || 'Unknown' }}</span></td>
+              <td>{{ row.sample_count }}</td>
+              <td v-for="category in dataCategories" :key="`${row.accession_id}-${category.key}`">
+                <button
+                  v-if="cellStatus(row, category.key) === 'available'"
+                  class="matrix-cell-button"
+                  type="button"
+                  @click="openFileDrawer(row, category.key)"
+                >
+                  {{ cellDisplay(row, category.key) }}
+                </button>
+                <span v-else-if="cellStatus(row, category.key) === 'coming_soon'" class="building-state">建设中</span>
+                <span v-else class="empty-state">-</span>
+              </td>
+              <td>{{ row.location_display || '-' }}</td>
+            </tr>
+            <tr v-if="!matrixRows.length">
+              <td class="empty-table" :colspan="dataCategories.length + 5">暂无符合条件的数据</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section v-else class="table-card detail-card">
+      <div class="table-scroll">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>物种</th>
+              <th>Accession</th>
+              <th>数据类型</th>
+              <th>数据集 (Dataset)</th>
+              <th>组装版本 (Assembly)</th>
+              <th>注释版本 (Annotation)</th>
+              <th>文件数</th>
+              <th>数据量</th>
+              <th>更新时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in detailRows" :key="`${row.accession_id}-${row.category}-${row.dataset_name}`">
+              <td>{{ row.species_name || '-' }}</td>
+              <td><router-link class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link></td>
+              <td>{{ row.category_display }}</td>
+              <td>{{ row.dataset_name }}</td>
+              <td>{{ row.assembly_name }}</td>
+              <td>{{ row.annotation_name }}</td>
+              <td>{{ row.file_count || '-' }}</td>
+              <td>{{ row.total_size_display || '-' }}</td>
+              <td>{{ shortDate(row.updated_at) }}</td>
+              <td>
+                <button
+                  v-if="row.status === 'available'"
+                  class="file-button"
+                  type="button"
+                  @click="openFileDrawer(row, row.category)"
+                >
+                  查看文件
+                </button>
+                <span v-else class="building-state">建设中</span>
+              </td>
+            </tr>
+            <tr v-if="!detailRows.length">
+              <td class="empty-table" colspan="10">暂无明细数据</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="pagination-bar">
+      <span>共 {{ totalCount }} 条</span>
+      <select v-model.number="pageSize" @change="changePageSize">
+        <option :value="20">20条/页</option>
+        <option :value="50">50条/页</option>
+        <option :value="100">100条/页</option>
+      </select>
+      <button type="button" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">上一页</button>
+      <strong>{{ currentPage }}</strong>
+      <button type="button" :disabled="!hasNextPage" @click="changePage(currentPage + 1)">下一页</button>
+    </footer>
+
+    <div v-if="drawerOpen" class="drawer-mask" @click="closeDrawer"></div>
+    <aside :class="['file-drawer', { open: drawerOpen }]">
+      <header class="drawer-header">
+        <div>
+          <h2>{{ drawerPayload.title || '文件列表' }}</h2>
+          <p>DataFile 下载入口</p>
+        </div>
+        <button type="button" @click="closeDrawer">×</button>
+      </header>
+
+      <section class="relation-overview">
+        <p class="section-kicker">关系概览</p>
+        <div class="relation-flow">
+          <span>Accession {{ drawerPayload.relation_overview?.accession || '-' }}</span>
+          <span>→</span>
+          <span>{{ drawerPayload.relation_overview?.assembly || '-' }}</span>
+          <span>→</span>
+          <span>{{ drawerPayload.relation_overview?.annotation || 'DataFile' }}</span>
+        </div>
+      </section>
+
+      <section class="drawer-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>文件名</th>
+              <th>文件角色</th>
+              <th>类型</th>
+              <th>大小</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="file in drawerPayload.files" :key="file.file_id">
+              <td>{{ file.file_name }}</td>
+              <td>{{ file.file_role_display }}</td>
+              <td>{{ file.file_type || '-' }}</td>
+              <td>{{ file.file_size_display || '-' }}</td>
+              <td><a class="download-link" :href="file.download_url">下载</a></td>
+            </tr>
+            <tr v-if="!drawerPayload.files?.length">
+              <td class="empty-table" colspan="5">暂无文件</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </aside>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import axios from 'axios';
-import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
-import { Search, Refresh, Filter, Location } from '@element-plus/icons-vue';
+import { computed, onMounted, ref } from 'vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+
+const DEFAULT_CATEGORIES = [
+  { key: 'raw_data', label: '原始数据', en_label: 'Raw Data' },
+  { key: 'genome', label: '基因组', en_label: 'Genome' },
+  { key: 'annotation', label: '注释', en_label: 'Annotation' },
+  { key: 'transcriptome', label: '转录组', en_label: 'Transcriptome' },
+  { key: 'population', label: '群体遗传', en_label: 'Population' },
+  { key: 'codon', label: '密码子', en_label: 'Codon' },
+  { key: 'centromere', label: '着丝粒', en_label: 'Centromere' },
+  { key: 'tes', label: '转座子', en_label: 'TEs' },
+  { key: 'coreblocks', label: '核心可变区块', en_label: 'CoreBlocks' },
+  { key: 'ncrna', label: 'ncRNA', en_label: 'ncRNA' }
+]
 
 export default {
   name: 'DataOverviewView',
-  components: {
-    Search,
-    Refresh,
-    Filter,
-    Location
-  },
   setup() {
-    const { t } = useI18n();
-    const route = useRoute();
-    const loading = ref(true);
-    const tableData = ref([]);
-    const selectedOrganism = ref('');
-    const organismOptions = ref([]);
-    const loadingOrganisms = ref(false);
-    const allOrganisms = ref([]);
-    const currentPage = ref(1);
-    const pageSize = ref(20);
-    const totalCount = ref(0);
-    const dataVersion = ref(0);
+    const loading = ref(false)
+    const activeView = ref('matrix')
+    const searchKeyword = ref('')
+    const selectedSpecies = ref('')
+    const selectedSubPopulation = ref('')
+    const selectedCategory = ref('')
+    const selectedFileRole = ref('')
+    const selectedLocation = ref('')
+    const currentPage = ref(1)
+    const pageSize = ref(20)
+    const totalCount = ref(0)
+    const summary = ref({})
+    const filters = ref({ species: [], sub_populations: [], locations: [], data_categories: [], file_roles: [] })
+    const matrixRows = ref([])
+    const detailRows = ref([])
+    const drawerOpen = ref(false)
+    const drawerPayload = ref({ files: [], relation_overview: {} })
 
-    // 浜氱兢绛涢€夌浉鍏?
-    const allSubPopulations = ref([]);
-    const selectedSubPopulations = ref([]);
-    const loadingSubPopulations = ref(false);
-    const showSubPopulationFilter = ref(false);
-    const isAllSelected = ref(true);
-    const tableRef = ref(null);
-    const isFilteringOnly = ref(false);
+    const dataCategories = computed(() => {
+      const categories = filters.value.data_categories?.length ? filters.value.data_categories : DEFAULT_CATEGORIES
+      if (!selectedCategory.value) return categories
+      return categories.filter(category => category.key === selectedCategory.value)
+    })
 
-    const syncRouteFilters = () => {
-      const search = typeof route.query.search === 'string' ? route.query.search : '';
-      selectedOrganism.value = search;
+    const summaryCards = computed(() => [
+      { key: 'accession', label: '材料(Accession)', value: summary.value.accession_count || 0, icon: '苗', theme: 'green' },
+      { key: 'dataset', label: '数据集(Dataset)', value: summary.value.dataset_count || 0, icon: '集', theme: 'purple' },
+      { key: 'datafile', label: '文件(DataFile)', value: summary.value.datafile_count || 0, icon: '文', theme: 'blue' },
+      { key: 'total_size', label: '总数据量', value: summary.value.total_size_display || '-', icon: '量', theme: 'orange' },
+      { key: 'geo', label: '地理位置', value: summary.value.geo_location_count || 0, unit: '个点位', icon: '地', theme: 'cyan' },
+      { key: 'updated', label: '更新时间', value: summary.value.latest_update || '-', icon: '时', theme: 'pink' }
+    ])
 
-      const subPopulationQuery = route.query.sub_population || route.query.sub_populations;
-      if (typeof subPopulationQuery === 'string' && subPopulationQuery.trim()) {
-        const requested = subPopulationQuery
-          .split(',')
-          .map(item => item.trim())
-          .filter(Boolean);
-        selectedSubPopulations.value = requested;
-        isAllSelected.value = requested.length === allSubPopulations.value.length;
-      } else if (allSubPopulations.value.length) {
-        selectedSubPopulations.value = [...allSubPopulations.value];
-        isAllSelected.value = true;
-      }
-    };
-    
-    // 鐩存帴浣跨敤 tableData锛屽洜涓哄垎椤靛湪鍚庣澶勭悊
-    
-    // 澶勭悊椤电爜鍙樺寲
-    const handleCurrentChange = (page) => {
-      currentPage.value = page;
-      fetchFiles(); // 閲嶆柊鑾峰彇褰撳墠椤垫暟鎹?
-    };
-    
-    // 鑾峰彇鎵€鏈夌敓鐗╀綋鍒楄〃
-    const fetchOrganisms = async () => {
+    const hasNextPage = computed(() => currentPage.value * pageSize.value < totalCount.value)
+
+    const requestParams = () => {
+      const params = { page: currentPage.value, page_size: pageSize.value }
+      if (searchKeyword.value.trim()) params.search = searchKeyword.value.trim()
+      if (selectedSpecies.value) params.species = selectedSpecies.value
+      if (selectedSubPopulation.value) params.sub_populations = selectedSubPopulation.value
+      if (selectedCategory.value) params.category = selectedCategory.value
+      if (selectedFileRole.value) params.file_role = selectedFileRole.value
+      if (selectedLocation.value) params.location = selectedLocation.value
+      return params
+    }
+
+    const fetchOverview = async () => {
+      loading.value = true
       try {
-        loadingOrganisms.value = true;
-        const response = await axios.get('/files/query/organisms/');
-        allOrganisms.value = response.data || [];
-        organismOptions.value = allOrganisms.value;
+        const response = await axios.get('/files/query/data-overview/', { params: requestParams() })
+        const payload = response.data || {}
+        summary.value = payload.summary || {}
+        filters.value = payload.filters || filters.value
+        matrixRows.value = payload.matrix_rows || []
+        detailRows.value = payload.detail_rows || []
+        totalCount.value = payload.count || 0
       } catch (error) {
-        console.error('鑾峰彇鐢熺墿浣撳垪琛ㄥけ璐?', error);
-        ElMessage.error(t('messages.getOrganismsFailed'));
+        console.error('获取数据一览表失败:', error)
+        ElMessage.error('获取数据一览表失败')
       } finally {
-        loadingOrganisms.value = false;
+        loading.value = false
       }
-    };
+    }
 
-    // 鑾峰彇鎵€鏈変簹缇ゅ垪琛?
-    const fetchSubPopulations = async () => {
+    const applyFilters = () => {
+      currentPage.value = 1
+      fetchOverview()
+    }
+
+    const resetFilters = () => {
+      searchKeyword.value = ''
+      selectedSpecies.value = ''
+      selectedSubPopulation.value = ''
+      selectedCategory.value = ''
+      selectedFileRole.value = ''
+      selectedLocation.value = ''
+      currentPage.value = 1
+      fetchOverview()
+    }
+
+    const changePage = (page) => {
+      currentPage.value = page
+      fetchOverview()
+    }
+
+    const changePageSize = () => {
+      currentPage.value = 1
+      fetchOverview()
+    }
+
+    const cell = (row, categoryKey) => row.cells?.[categoryKey] || {}
+    const cellStatus = (row, categoryKey) => cell(row, categoryKey).status || 'empty'
+    const cellDisplay = (row, categoryKey) => cell(row, categoryKey).display || '-'
+
+    const openFileDrawer = async (row, category) => {
+      const accession = row.accession
       try {
-        loadingSubPopulations.value = true;
-        const response = await axios.get('/files/query/sub-populations/');
-        allSubPopulations.value = response.data || [];
-        // 榛樿鍏ㄩ€?
-        selectedSubPopulations.value = [...allSubPopulations.value];
-        isAllSelected.value = true;
+        const response = await axios.get('/files/query/data-overview-files/', { params: { accession, category } })
+        drawerPayload.value = response.data || { files: [], relation_overview: {} }
+        drawerOpen.value = true
       } catch (error) {
-        console.error('鑾峰彇浜氱兢鍒楄〃澶辫触:', error);
-        ElMessage.error(t('messages.getSubPopulationsFailed'));
-      } finally {
-        loadingSubPopulations.value = false;
+        console.error('获取文件列表失败:', error)
+        ElMessage.error('获取文件列表失败')
       }
-    };
-    
-    // 鎼滅储鐢熺墿浣?
-    const searchOrganisms = (query) => {
-      if (query) {
-        organismOptions.value = allOrganisms.value.filter(item => 
-          item.toLowerCase().includes(query.toLowerCase())
-        );
-      } else {
-        organismOptions.value = allOrganisms.value;
-      }
-    };
-    
-    // 鐢熺墿浣撻€夋嫨鍙樺寲
-    const handleOrganismChange = (value) => {
-      selectedOrganism.value = value;
-      // 閲嶇疆椤电爜骞堕噸鏂拌幏鍙栨暟鎹?
-      currentPage.value = 1;
-      fetchFiles();
-    };
+    }
 
-    // 鑾峰彇浜氱兢鏍峰紡绫诲悕
-    const getSubPopulationClass = (subPopulation) => {
-      const classMap = {
-        'cA': 'sub-pop-ca',
-        'cB': 'sub-pop-cb',
-        'GJ': 'sub-pop-gj',
-        'XI': 'sub-pop-xi',
-        'WILD': 'sub-pop-wild',
-        'O.glaberrima': 'sub-pop-glaberrima',
-        'Unknown': 'sub-pop-unknown'
-      };
-      return classMap[subPopulation] || 'sub-pop-default';
-    };
+    const closeDrawer = () => {
+      drawerOpen.value = false
+    }
 
-    // 绔嬪嵆鎵ц绛涢€夌殑鍑芥暟
-    const applyFilter = () => {
-      currentPage.value = 1;
-      fetchFiles();
-    };
+    const shortDate = (value) => {
+      if (!value) return '-'
+      return String(value).slice(0, 10)
+    }
 
-    // 浜氱兢绛涢€夌浉鍏冲嚱鏁?
-    const toggleSubPopulationFilter = () => {
-      showSubPopulationFilter.value = !showSubPopulationFilter.value;
-    };
+    onMounted(fetchOverview)
 
-    const handleSelectAllChange = (checked) => {
-      if (checked) {
-        selectedSubPopulations.value = [...allSubPopulations.value];
-      } else {
-        selectedSubPopulations.value = [];
-      }
-      // 闈欓粯绛涢€夛紝涓嶉噸鏂版覆鏌撴暣涓粍浠?
-      applyFilterSilently();
-    };
-
-    const handleSubPopulationSelectionChange = () => {
-      // 鏇存柊鍏ㄩ€夌姸鎬?
-      isAllSelected.value = selectedSubPopulations.value.length === allSubPopulations.value.length;
-
-      // 闈欓粯绛涢€夛紝涓嶉噸鏂版覆鏌撴暣涓粍浠?
-      applyFilterSilently();
-    };
-
-    // 闈欓粯绛涢€夊嚱鏁?
-    const applyFilterSilently = async () => {
-      isFilteringOnly.value = true;
-      currentPage.value = 1;
-
-      try {
-        const params = {
-          page: currentPage.value,
-          page_size: pageSize.value
-        };
-
-        // 濡傛灉鏈夋悳绱㈡潯浠讹紝娣诲姞鍒板弬鏁颁腑
-        if (selectedOrganism.value) {
-          params.search = selectedOrganism.value;
-        }
-
-        // 濡傛灉鏈変簹缇ょ瓫閫夋潯浠讹紝娣诲姞鍒板弬鏁颁腑
-        if (selectedSubPopulations.value.length > 0 && selectedSubPopulations.value.length < allSubPopulations.value.length) {
-          params.sub_populations = selectedSubPopulations.value.join(',');
-        } else if (selectedSubPopulations.value.length === 0) {
-          params.sub_populations = 'NONE';
-        }
-
-        const response = await axios.get('/files/query/paginated-overview/', { params });
-        const data = response.data;
-
-        // 鐩存帴鏇存柊鏁版嵁锛屼笉瑙﹀彂鏁翠釜缁勪欢閲嶆柊娓叉煋
-        tableData.value = data.results || [];
-        totalCount.value = data.count || 0;
-
-      } catch (error) {
-        console.error('鑾峰彇鏂囦欢鍒楄〃澶辫触:', error);
-        ElMessage.error(t('messages.getFileListFailed'));
-      } finally {
-        isFilteringOnly.value = false;
-      }
-    };
-    
-    // 鑾峰彇鏂囦欢鍒楄〃锛堜娇鐢ㄥ垎椤垫帴鍙ｏ級
-    const fetchFiles = async () => {
-      try {
-        // 鍙湁鍦ㄩ潪绛涢€夌姸鎬佷笅鎵嶆樉绀?loading
-        if (!isFilteringOnly.value) {
-          loading.value = true;
-        }
-
-        const params = {
-          page: currentPage.value,
-          page_size: pageSize.value
-        };
-
-        // 濡傛灉鏈夋悳绱㈡潯浠讹紝娣诲姞鍒板弬鏁颁腑
-        if (selectedOrganism.value) {
-          params.search = selectedOrganism.value;
-        }
-
-        // 濡傛灉鏈変簹缇ょ瓫閫夋潯浠讹紝娣诲姞鍒板弬鏁颁腑
-        if (selectedSubPopulations.value.length > 0 && selectedSubPopulations.value.length < allSubPopulations.value.length) {
-          params.sub_populations = selectedSubPopulations.value.join(',');
-        } else if (selectedSubPopulations.value.length === 0) {
-          // 濡傛灉娌℃湁閫夋嫨浠讳綍浜氱兢锛屽彂閫佺┖绛涢€夊弬鏁帮紝鍚庣搴旇繑鍥炵┖缁撴灉
-          params.sub_populations = 'NONE';
-        }
-
-        const response = await axios.get('/files/query/paginated-overview/', { params });
-        const data = response.data;
-
-        tableData.value = data.results || [];
-        totalCount.value = data.count || 0;
-
-      } catch (error) {
-        console.error('鑾峰彇鏂囦欢鍒楄〃澶辫触:', error);
-        ElMessage.error(t('messages.getFileListFailed'));
-      } finally {
-        loading.value = false;
-      }
-    };
-    
-
-    
-    // 鐐瑰嚮澶栭儴鍏抽棴寮瑰嚭妗?
-    const handleClickOutside = (event) => {
-      const popover = document.querySelector('.sub-population-popover');
-      const button = event.target.closest('.filter-button');
-
-      if (showSubPopulationFilter.value && !popover?.contains(event.target) && !button) {
-        showSubPopulationFilter.value = false;
-      }
-    };
-
-    onMounted(async () => {
-      fetchOrganisms();
-      await fetchSubPopulations();
-      syncRouteFilters();
-      fetchFiles();
-
-      // 娣诲姞鍏ㄥ眬鐐瑰嚮浜嬩欢鐩戝惉
-      document.addEventListener('click', handleClickOutside);
-    });
-
-    watch(
-      () => route.query,
-      () => {
-        syncRouteFilters();
-        currentPage.value = 1;
-        fetchFiles();
-      }
-    );
-
-    // 澶勭悊鍦扮悊浣嶇疆鐐瑰嚮浜嬩欢
-    const handleGeographicClick = (accession) => {
-      ElMessage.success(t('messages.jumpingToGeographicMap', { accession }));
-    };
-
-    const buildAccessionQuery = (row) => {
-      const query = { accession: row.accession };
-      if (row.default_assembly_id) {
-        query.assembly = String(row.default_assembly_id);
-      }
-      if (row.default_annotation_id) {
-        query.annotation = String(row.default_annotation_id);
-      }
-      return query;
-    };
-
-    const buildGenomeQuery = (row) => {
-      const query = { accession: row.accession };
-      if (row.default_assembly_id) {
-        query.assembly = String(row.default_assembly_id);
-      }
-      return query;
-    };
-
-    const buildAnnotationQuery = (row) => {
-      const query = buildGenomeQuery(row);
-      if (row.default_annotation_id) {
-        query.annotation = String(row.default_annotation_id);
-      }
-      return query;
-    };
-
-    onUnmounted(() => {
-      // 娓呯悊浜嬩欢鐩戝惉
-      document.removeEventListener('click', handleClickOutside);
-    });
-    
     return {
       loading,
-      tableData,
+      activeView,
+      searchKeyword,
+      selectedSpecies,
+      selectedSubPopulation,
+      selectedCategory,
+      selectedFileRole,
+      selectedLocation,
       currentPage,
       pageSize,
       totalCount,
-      dataVersion,
-      selectedOrganism,
-      organismOptions,
-      loadingOrganisms,
-      allSubPopulations,
-      selectedSubPopulations,
-      loadingSubPopulations,
-      showSubPopulationFilter,
-      isAllSelected,
-      isFilteringOnly,
-      tableRef,
-      searchOrganisms,
-      handleOrganismChange,
-      handleCurrentChange,
-      fetchFiles,
-      getSubPopulationClass,
-      toggleSubPopulationFilter,
-      handleSelectAllChange,
-      handleSubPopulationSelectionChange,
-      applyFilter,
-      applyFilterSilently,
-      handleGeographicClick,
-      buildAccessionQuery,
-      buildGenomeQuery,
-      buildAnnotationQuery
-    };
+      summaryCards,
+      filters,
+      dataCategories,
+      matrixRows,
+      detailRows,
+      drawerOpen,
+      drawerPayload,
+      hasNextPage,
+      fetchOverview,
+      applyFilters,
+      resetFilters,
+      changePage,
+      changePageSize,
+      cellStatus,
+      cellDisplay,
+      openFileDrawer,
+      closeDrawer,
+      shortDate
+    }
   }
 }
 </script>
 
 <style scoped>
-.home-view {
-  padding: 0;
+.data-overview-modern {
+  min-height: 100vh;
+  padding: 18px 22px 36px;
+  background: #f7faff;
+  color: #162844;
 }
 
-.page-header {
+.overview-header {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
-.title {
+.breadcrumb {
+  margin: 0 0 8px;
+  color: #6f7f96;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.overview-header h1 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1a56db;
+  font-size: 30px;
+  letter-spacing: 0.02em;
 }
 
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.search-container {
-  margin-bottom: 24px;
-}
-
-.search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 0 16px;
-  max-width: 500px;
-}
-
-.search-icon {
-  color: #606266;
-  margin-right: 8px;
-}
-
-.search-select {
-  width: 100%;
-}
-
-.data-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  padding: 24px;
-}
-
-.loading {
-  padding: 20px;
-}
-
-.table-container {
-  position: relative;
-}
-
-.pagination-container {
-  margin-top: 24px;
-  display: flex;
-  justify-content: center;
-}
-
-.data-link {
-  color: #409EFF;
-  text-decoration: none;
+.refresh-button,
+.plain-button,
+.export-button,
+.file-button {
+  border: 1px solid #cfe0f5;
+  border-radius: 10px;
+  background: #fff;
+  color: #31516f;
+  font-weight: 800;
   cursor: pointer;
 }
 
-.data-link:hover {
-  text-decoration: underline;
+.refresh-button,
+.export-button {
+  height: 40px;
+  padding: 0 16px;
 }
 
-.data-empty {
-  color: #909399;
+.filter-panel {
+  display: grid;
+  grid-template-columns: minmax(340px, 1.35fr) repeat(5, minmax(126px, .55fr)) 90px 116px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #e1eaf5;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(31, 79, 136, 0.08);
 }
 
-.data-text {
-  color: #303133;
-  font-weight: 500;
+.search-box {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  height: 46px;
+  border: 1px solid #dce7f4;
+  border-radius: 11px;
+  background: #fff;
 }
 
-/* 浜氱兢鏍囩鍩虹鏍峰紡 */
-.sub-population {
-  display: inline-block !important;
-  padding: 3px 10px !important;
-  border-radius: 12px !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  text-align: center !important;
-  white-space: nowrap !important;
-  border: none !important;
-  min-width: auto !important;
-  width: auto !important;
-  height: auto !important;
-  line-height: normal !important;
+.search-icon {
+  padding-left: 14px;
+  color: #7b889b;
+  font-size: 20px;
 }
 
-/* 涓嶅悓浜氱兢鐨勯鑹叉牱寮?- 7绉嶄笉鍚岄鑹?*/
-.sub-pop-ca {
-  background-color: #e0f2fe;
-  color: #0369a1;
+.search-box input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  padding: 0 12px;
+  color: #172944;
 }
 
-.sub-pop-cb {
-  background-color: #fef3c7;
-  color: #d97706;
+.search-box button {
+  width: 88px;
+  height: 100%;
+  border: 0;
+  color: #fff;
+  background: #1f6fee;
+  font-weight: 900;
 }
 
-.sub-pop-gj {
-  background-color: #ecfdf5;
-  color: #059669;
+.filter-item {
+  display: grid;
+  grid-template-columns: auto minmax(86px, 1fr);
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid #dce7f4;
+  border-radius: 11px;
+  background: #fff;
+  color: #384d68;
+  font-size: 13px;
+  font-weight: 800;
 }
 
-.sub-pop-xi {
-  background-color: #f3f0ff;
-  color: #7c3aed;
+.filter-item select,
+.pagination-bar select {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #253a58;
+  font-weight: 700;
 }
 
-.sub-pop-wild {
-  background-color: #fef2f2;
-  color: #dc2626;
+.plain-button {
+  height: 46px;
 }
 
-.sub-pop-glaberrima {
-  background-color: #fdf4ff;
-  color: #c026d3;
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0 20px;
 }
 
-.sub-pop-unknown {
-  background-color: #f3f4f6;
-  color: #6b7280;
+.summary-card {
+  display: flex;
+  min-height: 104px;
+  align-items: center;
+  gap: 15px;
+  padding: 18px;
+  border: 1px solid #e1eaf5;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(31, 79, 136, 0.07);
 }
 
-.sub-pop-default {
-  background-color: #f9fafb;
-  color: #6b7280;
+.summary-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 900;
 }
 
-/* SubPopulation 鍒楀ご鏍峰紡 */
-.sub-population-header {
+.summary-icon.green { background: #4ab95d; }
+.summary-icon.purple { background: #7458ea; }
+.summary-icon.blue { background: #3198df; }
+.summary-icon.orange { background: #f39a32; }
+.summary-icon.cyan { background: #27b7c9; }
+.summary-icon.pink { background: #ef5b8b; }
+
+.summary-card p {
+  margin: 0 0 6px;
+  color: #52637a;
+  font-weight: 900;
+}
+
+.summary-card strong {
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.summary-card span {
+  margin-left: 4px;
+  color: #7a8798;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.view-switcher {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: 10px 0 12px;
+  border-bottom: 1px solid #dce7f4;
+}
+
+.tabs {
+  display: flex;
+  gap: 28px;
+}
+
+.tabs button {
+  padding: 14px 2px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #6e7d91;
+  font-size: 15px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  color: #1f6fee;
+  border-bottom-color: #1f6fee;
+}
+
+.loading-card,
+.table-card {
+  border: 1px solid #dce7f4;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(31, 79, 136, 0.08);
+}
+
+.loading-card {
+  padding: 64px;
+  text-align: center;
+  color: #6e7d91;
+}
+
+.table-scroll {
+  overflow: auto;
+}
+
+table {
   width: 100%;
+  border-collapse: collapse;
 }
 
-.sub-population-filter {
-  margin-left: 8px;
+.matrix-table {
+  min-width: 1480px;
 }
 
-.filter-button {
-  padding: 2px 4px !important;
-  min-height: auto !important;
-  color: #606266;
+.detail-table {
+  min-width: 1120px;
 }
 
-.filter-button:hover {
-  color: #409EFF;
+th,
+td {
+  padding: 13px 12px;
+  border-right: 1px solid #e7eef7;
+  border-bottom: 1px solid #e7eef7;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 13px;
 }
 
-/* 寮瑰嚭妗嗘牱寮?*/
-.sub-population-dropdown {
-  padding: 0;
+th {
+  color: #40536c;
+  background: linear-gradient(180deg, #f8fbff 0%, #edf5ff 100%);
+  font-weight: 950;
 }
 
-.dropdown-header {
-  padding: 12px;
-  border-bottom: 1px solid #e4e7ed;
+th span {
+  color: #68788d;
+  font-size: 11px;
 }
 
-.select-all-checkbox {
-  font-weight: 500;
+.matrix-table td:first-child,
+.matrix-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff;
+  text-align: left;
+  font-weight: 950;
 }
 
-.checkbox-group {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 12px 12px;
-  max-height: 200px;
-  overflow-y: auto;
+.matrix-table th:first-child {
+  background: #f1f7ff;
 }
 
-.checkbox-item {
-  margin: 4px 0;
-  display: flex;
-  align-items: center;
+.accession-link,
+.matrix-cell-button,
+.download-link {
+  color: #1f6fee;
+  font-weight: 950;
+  text-decoration: none;
 }
 
-.checkbox-item .sub-population {
-  margin-left: 8px;
+.matrix-cell-button {
+  border: 0;
+  background: transparent;
+  color: #18a567;
+  cursor: pointer;
 }
 
-/* 绛涢€夊鍣ㄦ牱寮?*/
-.filter-container {
-  display: inline-block;
+.file-button {
+  height: 30px;
+  padding: 0 12px;
+  color: #1f6fee;
 }
 
-.accession-cell {
-  display: flex;
-  align-items: center;
-}
-
-.resource-cell {
+.sub-population {
   display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #167f4d;
+  background: #e8f8ef;
+  font-weight: 900;
+}
+
+.empty-state,
+.empty-table {
+  color: #9aa7b8;
+  font-weight: 800;
+}
+
+.building-state {
+  color: #a86614;
+  font-weight: 900;
+}
+
+.detail-card {
+  min-height: 320px;
+}
+
+.pagination-bar {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  color: #52637a;
+  font-weight: 800;
+}
+
+.pagination-bar button,
+.pagination-bar select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #d6e3f2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.drawer-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(10, 25, 45, 0.18);
+}
+
+.file-drawer {
+  position: fixed;
+  top: 82px;
+  right: 24px;
+  bottom: 30px;
+  z-index: 31;
+  display: none;
+  width: 450px;
+  overflow: hidden;
+  border: 1px solid #dce7f4;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(22, 48, 86, 0.24);
+}
+
+.file-drawer.open {
+  display: block;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #e7eef7;
+  background: linear-gradient(135deg, #f7fbff 0%, #fff 100%);
+}
+
+.drawer-header h2 {
+  margin: 0;
+  color: #123a7a;
+  font-size: 18px;
+}
+
+.drawer-header p {
+  margin: 8px 0 0;
+  color: #6f7f95;
+  font-size: 13px;
+}
+
+.drawer-header button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef4fb;
+  color: #38536f;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.relation-overview {
+  margin: 16px 18px;
+  padding: 14px;
+  border: 1px dashed #bfd3ee;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.section-kicker {
+  margin: 0 0 10px;
+  color: #4d6684;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.relation-flow {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+  color: #24466f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.relation-flow span:nth-child(odd) {
+  padding: 7px 9px;
+  border: 1px solid #d6e4f4;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.drawer-table-wrap {
+  max-height: calc(100% - 178px);
+  overflow: auto;
+  padding: 0 18px 18px;
+}
+
+.drawer-table-wrap table {
   min-width: 0;
 }
 
-.accession-link {
-  color: #1a56db;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
+.drawer-table-wrap th,
+.drawer-table-wrap td {
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 12px;
 }
-
-.accession-link:hover {
-  color: #0d47a1;
-  text-decoration: underline;
-}
-
-
-/* 鍦扮悊浣嶇疆閾炬帴鏍峰紡 - 涓庡叾浠栨暟鎹摼鎺ヤ繚鎸佷竴鑷?*/
-.geographic-link {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.geographic-icon {
-  font-size: 14px;
-  color: inherit; /* 缁ф壙鐖跺厓绱犻鑹诧紝涓巇ata-link淇濇寔涓€鑷?*/
-}
-
-
-
-/* 缇庡寲琛ㄦ牸鏍峰紡 */
-:deep(.el-table) {
-  --el-table-border-color: #e5e7eb;
-  --el-table-header-bg-color: #f0f5ff;
-  --el-table-row-hover-bg-color: #f9fafb;
-}
-
-:deep(.el-table th) {
-  font-weight: 600;
-  padding: 12px 0;
-}
-
-:deep(.el-table td) {
-  padding: 12px 0;
-}
-
-:deep(.el-pagination.is-background .el-pager li:not(.is-disabled).is-active) {
-  background-color: #1a56db;
-}
-
-/* 鍏ㄥ眬寮瑰嚭妗嗘牱寮?*/
-:deep(.sub-population-popover) {
-  padding: 0 !important;
-  z-index: 9999 !important;
-}
-
-:deep(.sub-population-popover .el-popover__content) {
-  padding: 0 !important;
-}
-
-/* 纭繚寮瑰嚭妗嗗湪鏈€椤跺眰 */
-:deep(.el-popper.sub-population-popover) {
-  z-index: 9999 !important;
-}
-</style> 
-
+</style>

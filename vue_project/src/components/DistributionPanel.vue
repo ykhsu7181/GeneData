@@ -6,7 +6,22 @@
         <h3>{{ title }}</h3>
       </div>
 
-      <div class="panel-view-chip">图表视图</div>
+      <div class="panel-view-toggle" aria-label="分布视图切换">
+        <button
+          :class="['view-toggle-button', { 'is-active': viewMode === 'chart' }]"
+          type="button"
+          @click="setViewMode('chart')"
+        >
+          图表视图
+        </button>
+        <button
+          :class="['view-toggle-button', { 'is-active': viewMode === 'list' }]"
+          type="button"
+          @click="setViewMode('list')"
+        >
+          列表视图
+        </button>
+      </div>
     </div>
 
     <div v-if="items.length" class="panel-body">
@@ -17,11 +32,11 @@
         <em>{{ statisticCaption }}</em>
       </aside>
 
-      <div class="chart-shell">
+      <div v-show="viewMode === 'chart'" class="chart-shell">
         <div ref="chartRef" class="chart-box"></div>
       </div>
 
-      <div class="legend-list">
+      <div v-if="viewMode === 'chart'" class="legend-list">
         <div class="legend-head">
           <span>{{ legendLabelTitle }}</span>
           <span>{{ legendValueTitle }}</span>
@@ -42,6 +57,38 @@
           <strong>{{ formatNumber(item[valueKey]) }}</strong>
         </div>
       </div>
+
+      <div v-else class="bar-list">
+        <div class="bar-list-head">
+          <span>{{ legendLabelTitle }}</span>
+          <span>{{ legendValueTitle }}</span>
+        </div>
+        <div
+          v-for="(item, index) in normalizedItems"
+          :key="`${item[labelKey]}-${index}`"
+          class="bar-row"
+        >
+          <div class="bar-row-top">
+            <span class="bar-label">
+              <i
+                class="color-chip"
+                :style="{ backgroundColor: palette[index % palette.length] }"
+              ></i>
+              {{ item[labelKey] }}
+            </span>
+            <strong>{{ formatNumber(item[valueKey]) }}</strong>
+          </div>
+          <div class="bar-track">
+            <span
+              class="bar-fill"
+              :style="{
+                width: getBarWidth(item),
+                backgroundColor: palette[index % palette.length]
+              }"
+            ></span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-else class="panel-empty">
@@ -53,7 +100,6 @@
 </template>
 
 <script>
-import * as echarts from 'echarts'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const palette = ['#1f77ff', '#ff7a18', '#22b573', '#5b6cff', '#f04d4f', '#10b981', '#8c63ff', '#94a3b8']
@@ -89,13 +135,33 @@ export default {
   setup(props) {
     const chartRef = ref(null)
     const chartInstance = ref(null)
+    const viewMode = ref('chart')
+    let chartRuntimePromise = null
+
+    const loadChartRuntime = () => {
+      if (!chartRuntimePromise) {
+        chartRuntimePromise = import('@/utils/dashboardCharts')
+          .then((module) => module.default)
+      }
+      return chartRuntimePromise
+    }
 
     const normalizedItems = computed(() => props.items.slice(0, 8))
     const totalValue = computed(() =>
       props.items.reduce((sum, item) => sum + Number(item[props.valueKey] || 0), 0)
     )
+    const maxValue = computed(() =>
+      normalizedItems.value.reduce((max, item) => Math.max(max, Number(item[props.valueKey] || 0)), 0)
+    )
     const totalValueLabel = computed(() => totalValue.value.toLocaleString())
     const formatNumber = (value) => Number(value || 0).toLocaleString()
+    const getBarWidth = (item) => {
+      const value = Number(item[props.valueKey] || 0)
+      if (!maxValue.value || value <= 0) {
+        return '0%'
+      }
+      return `${Math.max((value / maxValue.value) * 100, 4).toFixed(2)}%`
+    }
 
     const legendLabelTitle = computed(() => {
       if (props.labelKey === 'dataset_type') {
@@ -133,8 +199,13 @@ export default {
       return '对象聚合统计'
     })
 
-    const renderChart = () => {
-      if (!chartRef.value) {
+    const renderChart = async () => {
+      if (!chartRef.value || viewMode.value !== 'chart') {
+        return
+      }
+
+      const echarts = await loadChartRuntime()
+      if (!chartRef.value || viewMode.value !== 'chart') {
         return
       }
 
@@ -178,8 +249,17 @@ export default {
     }
 
     const resizeChart = () => {
-      if (chartInstance.value) {
+      if (chartInstance.value && viewMode.value === 'chart') {
         chartInstance.value.resize()
+      }
+    }
+
+    const setViewMode = (mode) => {
+      viewMode.value = mode
+      if (mode === 'chart') {
+        requestAnimationFrame(() => {
+          renderChart().then(resizeChart)
+        })
       }
     }
 
@@ -203,13 +283,16 @@ export default {
 
     return {
       chartRef,
+      viewMode,
       normalizedItems,
       totalValueLabel,
       statisticCaption,
       legendLabelTitle,
       legendValueTitle,
       palette,
-      formatNumber
+      formatNumber,
+      getBarWidth,
+      setViewMode
     }
   }
 }
@@ -248,18 +331,32 @@ export default {
   line-height: 1.1;
 }
 
-.panel-view-chip {
+.panel-view-toggle {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 16px;
-  border-radius: 12px;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
   background: linear-gradient(180deg, #f8fafc, #eef2f8);
   border: 1px solid rgba(212, 221, 233, 0.9);
+}
+
+.view-toggle-button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
   color: #4f627b;
   font-size: 13px;
   font-weight: 800;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.view-toggle-button.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #2d68e3 0%, #1d4ed8 100%);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
 }
 
 .panel-body {
@@ -388,6 +485,79 @@ export default {
 .legend-row strong {
   color: #15326e;
   font-size: 15px;
+}
+
+.bar-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 320px;
+  padding: 12px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at center, rgba(59, 130, 246, 0.06), transparent 58%),
+    linear-gradient(180deg, #fbfdff, #f6faff);
+  border: 1px solid rgba(220, 228, 240, 0.88);
+  grid-column: span 2;
+}
+
+.bar-list-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 0 4px 2px;
+  color: #5d6d82;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.bar-row {
+  display: grid;
+  gap: 9px;
+  padding: 11px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(217, 225, 235, 0.85);
+}
+
+.bar-row-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.bar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: #334155;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-row-top strong {
+  color: #15326e;
+  font-size: 15px;
+}
+
+.bar-track {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: #e8eef7;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.62) inset;
+  transition: width 0.28s ease;
 }
 
 .panel-empty {

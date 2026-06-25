@@ -28,9 +28,17 @@ test('isTopNavGroupActive only marks the owning group active', () => {
 })
 
 test('topNavGroups keeps agreed secondary navigation structure', () => {
+  assert.equal(topNavGroups.dataOverview.labelKey, 'nav.dataResources')
+  assert.equal(topNavGroups.dataOverview.path, '/data-overview')
   assert.deepEqual(
-    topNavGroups.dataOverview.children.map((item) => item.path),
-    ['/genome-card', '/annotation', '/transcriptome-overview']
+    topNavGroups.dataOverview.children.map((item) => [item.labelKey, item.path]),
+    [
+      ['nav.rawData', '/data-overview'],
+      ['nav.dataOverview', '/data-overview'],
+      ['nav.genome', '/genome-card'],
+      ['nav.annotation', '/annotation'],
+      ['nav.transcriptomeOverview', '/transcriptome-overview']
+    ]
   )
   assert.deepEqual(
     topNavGroups.tools.children.map((item) => item.path),

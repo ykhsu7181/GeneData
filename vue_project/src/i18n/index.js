@@ -32,6 +32,8 @@ const zh = {
   nav: {
     home: '首页',
     dataChart: '数据一览图',
+    dataResources: '数据资源',
+    rawData: '原始数据',
     dataOverview: '数据一览表',
     transcriptomeOverview: '转录组表',
     accessionMap: '地理分布图',
@@ -363,6 +365,8 @@ const en = {
   nav: {
     home: 'Home',
     dataChart: 'Data Chart',
+    dataResources: 'Data Resources',
+    rawData: 'Raw Data',
     dataOverview: 'Data Overview',
     transcriptomeOverview: 'Transcriptome Overview',
     accessionMap: 'Geographic Distribution',

@@ -18,6 +18,10 @@ from files.services.file_relation_service import (
     get_files_for_annotation,
     get_files_for_assembly,
 )
+from files.services.data_overview_service import (
+    build_data_overview_files_payload,
+    build_data_overview_payload,
+)
 from files.views import _adapt_annotation_file_service_result, _adapt_overview_file_service_result, _has_path_traversal
 
 
@@ -512,6 +516,21 @@ def query_paginated_overview(request):
         )
 
     return Response(_paginate_rows(rows, page, page_size))
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def query_data_overview(request):
+    return Response(build_data_overview_payload(_request_params(request)))
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def query_data_overview_files(request):
+    payload = build_data_overview_files_payload(_request_params(request))
+    if payload is None:
+        return Response({"error": "accession not found"}, status=status.HTTP_404_NOT_FOUND)
+    return Response(payload)
 
 
 @api_view(["GET"])
