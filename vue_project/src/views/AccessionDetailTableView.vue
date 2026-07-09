@@ -10,7 +10,10 @@
           <span class="heading-tag population-tag">亚群：{{ accessionDetail.sub_population || '-' }}</span>
         </div>
       </div>
-      <el-tooltip content="刷新" placement="top"><el-button circle class="refresh-button" @click="refreshPage"><el-icon><Refresh /></el-icon></el-button></el-tooltip>
+      <div class="heading-actions">
+        <button type="button" class="back-search-button" @click="goBackToSearch">返回品种信息</button>
+        <el-tooltip content="刷新" placement="top"><el-button circle class="refresh-button" @click="refreshPage"><el-icon><Refresh /></el-icon></el-button></el-tooltip>
+      </div>
     </div>
 
     <div class="page-body">
@@ -41,9 +44,9 @@
 
             <section id="assembly-section" class="detail-section">
               <h2>Assembly / 组装版本</h2>
-              <div class="table-shell"><table class="detail-table"><thead><tr><th>组装版本</th><th>组装编码</th><th>BioProject</th><th>Reference</th><th>文件数</th><th>操作</th></tr></thead><tbody>
-                <tr v-for="entry in assemblyTableRows" :key="entry.id" :ref="(el) => setAssemblyCardRef(entry.id, el)" :class="activeDetailTarget.type === 'assembly' && normalizeEntryId(entry.id) === activeDetailTarget.id ? 'linked-highlight' : ''"><td><strong>{{ entry.displayName }}</strong><span v-if="entry.isDefault" class="default-chip">default</span></td><td>{{ entry.standardId }}</td><td>{{ entry.bioProject }}</td><td>{{ entry.reference }}</td><td>{{ entry.fileCount }}</td><td><button type="button" class="table-action" @click="showRelatedFiles('assembly', entry.id)">查看文件</button></td></tr>
-                <tr v-if="!assemblyTableRows.length"><td colspan="6" class="empty-table-cell">暂无组装版本</td></tr>
+              <div class="table-shell"><table class="detail-table"><thead><tr><th>组装版本</th><th>组装编码</th><th>参考基因组</th><th>BioProject</th><th>Reference</th><th>文件数</th><th>操作</th></tr></thead><tbody>
+                <tr v-for="entry in assemblyTableRows" :key="entry.id" :ref="(el) => setAssemblyCardRef(entry.id, el)" :class="activeDetailTarget.type === 'assembly' && normalizeEntryId(entry.id) === activeDetailTarget.id ? 'linked-highlight' : ''"><td><strong>{{ entry.displayName }}</strong><span v-if="entry.isDefault" class="default-chip">default</span></td><td>{{ entry.standardId }}</td><td>{{ entry.referenceName }}</td><td>{{ entry.bioProject }}</td><td>{{ entry.reference }}</td><td>{{ entry.fileCount }}</td><td><button type="button" class="table-action" @click="showRelatedFiles('assembly', entry.id)">查看文件</button></td></tr>
+                <tr v-if="!assemblyTableRows.length"><td colspan="7" class="empty-table-cell">暂无组装版本</td></tr>
               </tbody></table></div>
             </section>
 
@@ -214,6 +217,7 @@ export default {
       id: assembly.id,
       displayName: assembly.display_name || assembly.name || `Assembly ${assembly.id}`,
       standardId: assembly.standard_id || '-',
+      referenceName: assembly.reference_name || assembly.reference_genome || '-',
       bioProject: assembly.bio_project || '-',
       reference: assembly.reference || '-',
       fileCount: assembly.file_count ?? 0,
@@ -626,6 +630,10 @@ export default {
       await fetchAccessionDetail(routeAccession.value);
     };
 
+    const goBackToSearch = async () => {
+      await router.push({ name: 'accession-card' });
+    };
+
     const openAnnotationDetail = async (entry) => {
       if (!routeAccession.value || !entry?.assemblyId || !entry?.id || entry.id === 'annotation-empty') {
         return;
@@ -669,6 +677,7 @@ export default {
       errorMessage,
       fileScopeFilter,
       formatFileSize,
+      goBackToSearch,
       loading,
       openAnnotationDetail,
       refreshPage,
@@ -700,6 +709,9 @@ export default {
 .page-heading { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
 .page-kicker { color: #1760e8; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
 .page-heading h1 { margin: 4px 0 10px; font-size: 30px; line-height: 1.1; color: #15233d; }
+.heading-actions { display: flex; align-items: center; gap: 10px; }
+.back-search-button { height: 34px; padding: 0 14px; border: 1px solid #d8e3f4; border-radius: 999px; background: #fff; color: #31516f; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 6px 16px rgba(35, 68, 116, .06); }
+.back-search-button:hover { border-color: #9fc0ff; color: #1760e8; background: #f6f9ff; }
 .heading-tags { display: flex; gap: 8px; flex-wrap: wrap; }
 .heading-tag { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .species-tag { color: #1c5bc5; background: #eaf2ff; border: 1px solid #cfe0ff; }

@@ -20,3 +20,13 @@ test('dashboard hero keeps a compact desktop proportion', () => {
   assert.match(source, /\.hero-search\s*:deep\(\.el-input__wrapper\)\s*{[\s\S]*?min-height:\s*56px;/)
   assert.match(source, /\.search-button\s*{[\s\S]*?min-height:\s*54px;/)
 })
+
+test('dashboard hero shows accession search placeholder and clickable examples', () => {
+  assert.doesNotMatch(source, /placeholder="全局搜索（物种、亚群、地理位置、数据类型、Accession 等）"/)
+  assert.match(source, /placeholder="输入品种名搜索，如IR64"/)
+  assert.match(source, /class="search-examples"/)
+  assert.match(source, /示例:/)
+  assert.match(source, /IR64/)
+  assert.match(source, /submitExampleSearch\(example\)/)
+  assert.match(source, /emit\('search', example\)/)
+})

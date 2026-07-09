@@ -176,8 +176,7 @@ def _build_resource_summary(related_datafile_ids, total_size):
             "原始数据",
             raw_file_count,
             "文件数",
-            "/data-overview",
-            query={"dataset_type": "raw_data"},
+            "/raw-data",
             icon="raw",
         ),
         _resource_item(

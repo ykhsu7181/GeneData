@@ -16,7 +16,7 @@
         <div class="hero-search">
           <el-input
             v-model="queryText"
-            placeholder="全局搜索（物种、亚群、地理位置、数据类型、Accession 等）"
+            placeholder="输入品种名搜索，如IR64"
             size="large"
             @keyup.enter="submitSearch"
           >
@@ -32,6 +32,18 @@
           >
             搜索
           </el-button>
+        </div>
+
+        <div class="search-examples" aria-label="搜索示例">
+          <span class="example-label">示例:</span>
+          <button
+            v-for="example in searchExamples"
+            :key="example"
+            class="example-link"
+            @click="submitExampleSearch(example)"
+          >
+            {{ example }}
+          </button>
         </div>
 
         <div class="hot-keywords">
@@ -72,13 +84,21 @@ export default {
   emits: ['search', 'keyword-click'],
   setup(_, { emit }) {
     const queryText = ref('')
+    const searchExamples = ['IR64']
 
     const submitSearch = () => {
       emit('search', queryText.value)
     }
 
+    const submitExampleSearch = (example) => {
+      queryText.value = example
+      emit('search', example)
+    }
+
     return {
       queryText,
+      searchExamples,
+      submitExampleSearch,
       submitSearch
     }
   }
@@ -246,6 +266,37 @@ export default {
 .search-button:focus {
   background: linear-gradient(135deg, #12ae77 0%, #0f8b63 100%);
   color: #ffffff;
+}
+
+.search-examples {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin-top: -2px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.example-label {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.example-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #facc15;
+  font: inherit;
+  cursor: pointer;
+  text-shadow: 0 2px 8px rgba(15, 23, 42, 0.24);
+}
+
+.example-link:hover,
+.example-link:focus {
+  color: #fde68a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .hot-keywords {

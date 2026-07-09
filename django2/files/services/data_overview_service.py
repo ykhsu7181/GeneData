@@ -298,25 +298,6 @@ def _detail_rows(accession, files_by_category):
     rows = []
     for category, zh_label, en_label in DATA_CATEGORIES:
         files = list(files_by_category[category].values())
-        if category == "population" and not files:
-            rows.append(
-                {
-                    "accession_id": accession.id,
-                    "accession": accession.accession,
-                    "species_name": _species_name(accession.species),
-                    "category": category,
-                    "category_display": f"{zh_label} ({en_label})",
-                    "dataset_name": "建设中",
-                    "assembly_name": "-",
-                    "annotation_name": "-",
-                    "file_count": 0,
-                    "total_size": 0,
-                    "total_size_display": "-",
-                    "updated_at": None,
-                    "status": "coming_soon",
-                }
-            )
-            continue
         if not files:
             continue
         total_size = sum((item["file_size"] or 0) for item in files)

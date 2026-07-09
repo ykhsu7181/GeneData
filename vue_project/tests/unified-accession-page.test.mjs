@@ -34,11 +34,17 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /样本数/);
   assert.match(pageSource, /数据集数/);
   assert.match(pageSource, /组装版本/);
+  assert.match(pageSource, /<th>参考基因组<\/th>/);
+  assert.match(pageSource, /entry\.referenceName/);
+  assert.match(pageSource, /assembly\.reference_name\s*\|\|\s*assembly\.reference_genome\s*\|\|\s*'-'/);
+  assert.doesNotMatch(pageSource, /referenceName:\s*assembly\.reference_name\s*\|\|\s*assembly\.reference_genome\s*\|\|\s*assembly\.display_name/);
   assert.match(pageSource, /Annotation\s*\/\s*注释版本/);
   assert.match(pageSource, /相关文件/);
   assert.match(pageSource, /关系概览/);
   assert.match(pageSource, /创建与更新信息/);
   assert.match(pageSource, /描述/);
+  assert.match(pageSource, /返回品种信息/);
+  assert.match(pageSource, /name:\s*'accession-card'/);
   assert.doesNotMatch(pageSource, /Back to Accession Card|返回列表/);
   assert.doesNotMatch(pageSource, /expandedAssemblies|expandedAnnotations/);
   assert.doesNotMatch(pageSource, /assemblyEntries|annotationEntries/);

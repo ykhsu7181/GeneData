@@ -3,8 +3,22 @@
     <div class="page-header">
       <h2 class="title">Genome</h2>
       <div class="header-actions">
+        <el-button-group class="view-switch">
+          <el-button
+            :type="activeView === 'visualization' ? 'primary' : 'default'"
+            @click="switchGenomeView('visualization')"
+          >
+            可视化视图
+          </el-button>
+          <el-button
+            :type="activeView === 'list' ? 'primary' : 'default'"
+            @click="switchGenomeView('list')"
+          >
+            数据列表
+          </el-button>
+        </el-button-group>
         <el-tooltip :content="$t('page.genomeCard.refreshData')" placement="top">
-          <el-button circle size="small" @click="fetchFiles">
+          <el-button v-if="activeView === 'visualization'" circle size="small" @click="fetchFiles">
             <el-icon><Refresh /></el-icon>
           </el-button>
         </el-tooltip>
@@ -12,7 +26,7 @@
     </div>
     
     <!-- 搜索框 -->
-    <div class="search-container">
+    <div v-if="activeView === 'visualization'" class="search-container">
       <div class="search-wrapper">
         <el-icon class="search-icon"><Search /></el-icon>
         <el-select
@@ -57,7 +71,7 @@
       </div>
     </div>
     
-    <div class="data-card">
+    <div v-if="activeView === 'visualization'" class="data-card">
       <div v-if="loading" class="loading">
         <el-skeleton :rows="6" animated />
       </div>
@@ -142,6 +156,160 @@
         </div>
       </div>
     </div>
+
+    <div v-else class="genome-list-view">
+      <div class="genome-list-filters">
+        <div class="filter-item">
+          <span class="filter-label">物种</span>
+          <el-select
+            v-model="genomeListFilters.species_id"
+            placeholder="选择物种"
+            clearable
+            filterable
+            class="filter-select"
+            @change="refreshGenomeList"
+          >
+            <el-option
+              v-for="item in genomeFilterOptions.species"
+              :key="item.id"
+              :label="`${item.label}${item.latin_name && item.latin_name !== '-' ? ' / ' + item.latin_name : ''}`"
+              :value="item.id"
+            />
+          </el-select>
+        </div>
+
+        <div class="filter-item">
+          <span class="filter-label">品种</span>
+          <el-select
+            v-model="genomeListFilters.accession_id"
+            placeholder="选择品种"
+            clearable
+            filterable
+            class="filter-select"
+            @change="refreshGenomeList"
+          >
+            <el-option
+              v-for="item in filteredGenomeAccessions"
+              :key="item.id"
+              :label="item.label"
+              :value="item.id"
+            />
+          </el-select>
+        </div>
+
+        <div class="filter-item">
+          <span class="filter-label">组装级别</span>
+          <el-select
+            v-model="genomeListFilters.assembly_level"
+            placeholder="选择组装级别"
+            clearable
+            class="filter-select"
+            @change="refreshGenomeList"
+          >
+            <el-option
+              v-for="item in genomeFilterOptions.assembly_levels"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+        </div>
+
+        <el-button class="list-refresh" @click="refreshGenomeList">
+          <el-icon><Refresh /></el-icon>
+          刷新
+        </el-button>
+      </div>
+
+      <div class="genome-table-card">
+        <el-table
+          v-loading="genomeListLoading"
+          :data="genomeRows"
+          class="genome-table"
+          row-key="assembly_id"
+          empty-text="暂无基因组数据"
+        >
+          <el-table-column label="物种" min-width="260">
+            <template #default="{ row }">
+              <div class="species-cell">
+                <span class="species-icon">⌘</span>
+                <div>
+                  <div class="species-main">{{ row.species_name || '-' }} {{ row.accession || '' }}</div>
+                  <div class="species-latin">{{ row.latin_name || '-' }}</div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="品种" min-width="170">
+            <template #default="{ row }">
+              <button type="button" class="accession-link" @click="goToAccession(row)">
+                {{ row.accession || '-' }}
+              </button>
+            </template>
+          </el-table-column>
+          <el-table-column label="组装级别" min-width="160">
+            <template #default="{ row }">
+              <span v-if="row.assembly_level && row.assembly_level !== '-'" class="assembly-level-badge">
+                {{ row.assembly_level }}
+              </span>
+              <span v-else>-</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="chromosome_count" label="染色体数" min-width="130" />
+          <el-table-column prop="genome_size_display" label="基因组大小" min-width="160" />
+          <el-table-column label="操作" width="210" fixed="right">
+            <template #default="{ row }">
+              <div class="table-actions">
+                <el-button size="small" @click="openGenomeFiles(row)">查看文件</el-button>
+                <el-button size="small" type="primary" plain @click="downloadGenomeRow(row)">
+                  <el-icon><Download /></el-icon>
+                  下载
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div class="genome-pagination">
+          <span>共 {{ genomePagination.total }} 条</span>
+          <el-pagination
+            background
+            layout="sizes, prev, pager, next, jumper"
+            :total="genomePagination.total"
+            :current-page="genomePagination.page"
+            :page-size="genomePagination.page_size"
+            :page-sizes="[20, 50, 100]"
+            @current-change="handleGenomePageChange"
+            @size-change="handleGenomePageSizeChange"
+          />
+        </div>
+      </div>
+
+      <el-drawer
+        v-model="fileDrawerVisible"
+        :title="fileDrawerTitle"
+        size="440px"
+        class="genome-file-drawer"
+      >
+        <div v-loading="fileDrawerLoading">
+          <div class="drawer-meta">
+            <p>Accession：{{ fileDrawerMeta.accession || '-' }}</p>
+            <p>Assembly：{{ fileDrawerMeta.assembly_name || '-' }}</p>
+            <p>下载入口：DataFile download</p>
+          </div>
+          <el-table :data="fileDrawerFiles" size="small" empty-text="暂无关联文件">
+            <el-table-column prop="file_name" label="文件名" min-width="170" />
+            <el-table-column prop="file_role_display" label="文件角色" min-width="130" />
+            <el-table-column prop="file_size_display" label="大小" width="90" />
+            <el-table-column label="操作" width="78">
+              <template #default="{ row }">
+                <button type="button" class="drawer-download" @click="downloadGenomeFile(row)">下载</button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-drawer>
+    </div>
   </div>
 </template>
 
@@ -160,6 +328,8 @@ const normalizeQueryValue = (value) => {
   return value ? String(value).trim() : '';
 };
 
+const DATAFILE_DOWNLOAD_PREFIX = '/gd/api/files/data-files/';
+
 export default {
   name: 'GenomeCard',
   components: {
@@ -172,6 +342,7 @@ export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
+    const activeView = ref(route.query.view === 'list' ? 'list' : 'visualization');
     const loading = ref(true);
     const selectedOrganism = ref('');
     const organismOptions = ref([]);
@@ -207,6 +378,36 @@ export default {
     // 可视化设置
     const segmentLength = ref(5000000); // 每行显示的长度，默认5Mb
     const showSettings = ref(false);
+    const genomeListLoading = ref(false);
+    const genomeRows = ref([]);
+    const genomeListFilters = ref({
+      species_id: '',
+      accession_id: '',
+      assembly_level: ''
+    });
+    const genomeFilterOptions = ref({
+      species: [],
+      accessions: [],
+      assembly_levels: ['Chromosome', 'Scaffold', 'Contig']
+    });
+    const genomePagination = ref({
+      page: 1,
+      page_size: 20,
+      total: 0
+    });
+    const fileDrawerVisible = ref(false);
+    const fileDrawerLoading = ref(false);
+    const fileDrawerTitle = ref('Genome 文件列表');
+    const fileDrawerMeta = ref({});
+    const fileDrawerFiles = ref([]);
+
+    const filteredGenomeAccessions = computed(() => {
+      const speciesId = genomeListFilters.value.species_id;
+      if (!speciesId) {
+        return genomeFilterOptions.value.accessions;
+      }
+      return genomeFilterOptions.value.accessions.filter(item => String(item.species_id) === String(speciesId));
+    });
 
     // 计算属性：以Mb为单位的分段长度
     const segmentLengthMb = computed({
@@ -269,6 +470,136 @@ export default {
       }
 
       return params;
+    };
+
+    const openUrl = (url) => {
+      if (!url) {
+        ElMessage.warning('暂无可下载文件');
+        return;
+      }
+      if (!String(url).includes(DATAFILE_DOWNLOAD_PREFIX)) {
+        ElMessage.error('下载链接不是 DataFile download');
+        return;
+      }
+      window.open(new URL(url, window.location.origin).toString(), '_blank');
+    };
+
+    const fetchGenomeList = async () => {
+      try {
+        genomeListLoading.value = true;
+        const response = await axios.get('/files/query/genome-list/', {
+          params: {
+            species_id: genomeListFilters.value.species_id || undefined,
+            accession_id: genomeListFilters.value.accession_id || undefined,
+            assembly_level: genomeListFilters.value.assembly_level || undefined,
+            page: genomePagination.value.page,
+            page_size: genomePagination.value.page_size
+          }
+        });
+        genomeRows.value = response.data?.results || [];
+        genomePagination.value = {
+          page: response.data?.pagination?.page || genomePagination.value.page,
+          page_size: response.data?.pagination?.page_size || genomePagination.value.page_size,
+          total: response.data?.pagination?.total || 0
+        };
+        if (response.data?.filters) {
+          genomeFilterOptions.value = {
+            species: response.data.filters.species || [],
+            accessions: response.data.filters.accessions || [],
+            assembly_levels: response.data.filters.assembly_levels || ['Chromosome', 'Scaffold', 'Contig']
+          };
+        }
+      } catch (error) {
+        console.error('获取Genome数据列表失败:', error);
+        ElMessage.error('获取Genome数据列表失败');
+        genomeRows.value = [];
+      } finally {
+        genomeListLoading.value = false;
+      }
+    };
+
+    const refreshGenomeList = () => {
+      genomePagination.value.page = 1;
+      fetchGenomeList();
+    };
+
+    const switchGenomeView = (view) => {
+      activeView.value = view;
+      const nextQuery = { ...route.query };
+      if (view === 'list') {
+        nextQuery.view = 'list';
+        if (!genomeRows.value.length) {
+          fetchGenomeList();
+        }
+      } else {
+        delete nextQuery.view;
+      }
+      router.replace({ path: route.path, query: nextQuery });
+    };
+
+    const goToAccession = (row) => {
+      if (!row?.accession || row.accession === '-') {
+        return;
+      }
+      router.push({
+        path: '/accession-card',
+        query: { accession: row.accession }
+      });
+    };
+
+    const loadGenomeFiles = async (row) => {
+      fileDrawerLoading.value = true;
+      try {
+        const response = await axios.get('/files/query/genome-files/', {
+          params: {
+            assembly_id: row?.assembly_id || undefined,
+            accession_id: row?.accession_id || undefined
+          }
+        });
+        fileDrawerMeta.value = response.data || {};
+        fileDrawerFiles.value = response.data?.files || [];
+        fileDrawerTitle.value = `${response.data?.accession || row?.accession || '-'} / Genome 文件列表`;
+      } catch (error) {
+        console.error('获取Genome文件列表失败:', error);
+        ElMessage.error('获取Genome文件列表失败');
+        fileDrawerFiles.value = [];
+      } finally {
+        fileDrawerLoading.value = false;
+      }
+    };
+
+    const openGenomeFiles = async (row) => {
+      fileDrawerVisible.value = true;
+      fileDrawerTitle.value = `${row?.accession || '-'} / Genome 文件列表`;
+      fileDrawerMeta.value = {
+        accession: row?.accession,
+        assembly_name: row?.assembly_name
+      };
+      fileDrawerFiles.value = [];
+      await loadGenomeFiles(row);
+    };
+
+    const downloadGenomeRow = async (row) => {
+      if (row?.file_count === 1 && row?.download_url) {
+        openUrl(row.download_url);
+        return;
+      }
+      await openGenomeFiles(row);
+    };
+
+    const downloadGenomeFile = (file) => {
+      openUrl(file?.download_url);
+    };
+
+    const handleGenomePageChange = (page) => {
+      genomePagination.value.page = page;
+      fetchGenomeList();
+    };
+
+    const handleGenomePageSizeChange = (pageSize) => {
+      genomePagination.value.page = 1;
+      genomePagination.value.page_size = pageSize || 20;
+      fetchGenomeList();
     };
 
     // 处理分段长度变化
@@ -997,9 +1328,13 @@ export default {
     onMounted(() => {
       fetchOrganisms();
       fetchFiles();
+      if (activeView.value === 'list') {
+        fetchGenomeList();
+      }
     });
 
     return {
+      activeView,
       loading,
       selectedOrganism,
       organismOptions,
@@ -1040,7 +1375,26 @@ export default {
       showSettings,
       handleSegmentLengthChange,
       downloadVisualization,
-      handleRouteParams
+      handleRouteParams,
+      switchGenomeView,
+      genomeListLoading,
+      genomeRows,
+      genomeListFilters,
+      genomeFilterOptions,
+      filteredGenomeAccessions,
+      genomePagination,
+      refreshGenomeList,
+      openGenomeFiles,
+      downloadGenomeRow,
+      downloadGenomeFile,
+      goToAccession,
+      handleGenomePageChange,
+      handleGenomePageSizeChange,
+      fileDrawerVisible,
+      fileDrawerLoading,
+      fileDrawerTitle,
+      fileDrawerMeta,
+      fileDrawerFiles
     };
   }
 }
@@ -1067,7 +1421,13 @@ export default {
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+.view-switch :deep(.el-button) {
+  min-width: 108px;
+  font-weight: 800;
 }
 
 .search-container {
@@ -1295,7 +1655,182 @@ export default {
   white-space: nowrap;
 }
 
+.genome-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.genome-list-filters {
+  display: grid;
+  grid-template-columns: auto minmax(190px, 260px) auto minmax(190px, 260px) auto minmax(190px, 260px) 1fr auto;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 22px 24px;
+  border: 1px solid #dbe7f6;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(34, 71, 120, 0.07);
+}
+
+.filter-item {
+  display: contents;
+}
+
+.filter-label {
+  color: #1a2f4d;
+  font-size: 15px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.filter-select {
+  width: 100%;
+}
+
+.list-refresh {
+  min-width: 96px;
+  height: 40px;
+  font-weight: 900;
+}
+
+.genome-table-card {
+  overflow: hidden;
+  border: 1px solid #dbe7f6;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(34, 71, 120, 0.07);
+}
+
+.genome-table {
+  width: 100%;
+}
+
+.genome-table :deep(th.el-table__cell) {
+  background: #f0f6fd;
+  color: #294561;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.genome-table :deep(td.el-table__cell) {
+  height: 88px;
+  color: #173052;
+  font-weight: 700;
+}
+
+.species-cell {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.species-icon {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8f9ef;
+  color: #08a86f;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.species-main {
+  color: #08264b;
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.species-latin {
+  display: block;
+  margin-top: 5px;
+  color: #53647b;
+  font-size: 15px;
+  line-height: 1.15;
+  font-style: italic;
+  font-weight: 800;
+}
+
+.accession-link {
+  border: 0;
+  background: transparent;
+  color: #1768f2;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.assembly-level-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #eaf6ff;
+  color: #0e5ad7;
+  font-weight: 900;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.genome-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid #dbe7f6;
+  color: #5d6f89;
+  font-weight: 800;
+}
+
+.drawer-meta {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f2f7ff;
+  color: #536781;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.drawer-meta p {
+  margin: 4px 0;
+}
+
+.drawer-download {
+  border: 0;
+  background: transparent;
+  color: #1768f2;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .genome-list-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   .control-panel {
     flex-wrap: wrap;
   }

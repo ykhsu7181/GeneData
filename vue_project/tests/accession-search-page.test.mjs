@@ -11,10 +11,12 @@ const source = fs.readFileSync(
 );
 
 test('accession card is a searchable landing page', () => {
+  assert.match(source, /首页\s*\/\s*品种信息/);
   assert.match(source, /v-model="selectedAccession"/);
   assert.match(source, /page\.accessionCard\.searchPlaceholder/);
   assert.match(source, /\/files\/query\/organisms\//);
   assert.match(source, /<el-empty[^>]+description=/);
+  assert.doesNotMatch(source, /page-kicker">\s*ACCESSION\s*</);
   assert.doesNotMatch(source, /\/files\/accessions\//);
   assert.doesNotMatch(source, /accessionDetail/);
 });

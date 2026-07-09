@@ -1,0 +1,598 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raw Data Layout Sketch</title>
+  <style>
+    :root {
+      --bg: #f3f7fc;
+      --panel: #ffffff;
+      --line: #dbe7f5;
+      --line-strong: #c7d9ef;
+      --text: #0c2347;
+      --muted: #60738e;
+      --blue: #1f6fe5;
+      --blue-weak: #eaf3ff;
+      --green: #16b978;
+      --orange: #f6a126;
+      --red: #ef4d5a;
+      --gray: #94a3b8;
+      --shadow: 0 18px 45px rgba(36, 68, 111, 0.10);
+      --radius: 18px;
+      --drawer: 392px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 1440px;
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      background:
+        radial-gradient(circle at 8% 0%, rgba(31, 111, 229, 0.08), transparent 34%),
+        linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
+    }
+
+    .page {
+      padding: 26px 26px 34px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      color: #5d6f88;
+      font-size: 14px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-weight: 700;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 22px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .title p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .filter-panel,
+    .stat-card,
+    .table-card,
+    .drawer {
+      background: rgba(255, 255, 255, 0.93);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .filter-panel {
+      display: grid;
+      grid-template-columns: minmax(300px, 1.35fr) repeat(5, minmax(140px, 0.7fr)) 94px 126px;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      margin-bottom: 18px;
+    }
+
+    .search-box,
+    .select-box,
+    .button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      color: #5a6d86;
+      font-weight: 700;
+      padding: 0 13px;
+      white-space: nowrap;
+    }
+
+    .search-box {
+      gap: 10px;
+      color: #8a9bb0;
+      font-weight: 600;
+    }
+
+    .search-icon { font-size: 18px; color: #71839c; }
+
+    .select-box {
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .select-label { color: #233c61; }
+    .select-value { color: #72839a; }
+
+    .button {
+      justify-content: center;
+      cursor: default;
+      font-weight: 800;
+    }
+
+    .button.primary {
+      color: #fff;
+      background: linear-gradient(135deg, #1f7cff, #145bd2);
+      border-color: transparent;
+    }
+
+    .button.light {
+      color: #1c5ec4;
+      background: #f5f9ff;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      min-height: 104px;
+      border-radius: 14px;
+      padding: 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .green { background: #45c05b; }
+    .blue { background: #3399e6; }
+    .purple { background: #8060e8; }
+    .orange { background: #ff9f2a; }
+    .cyan { background: #2fc1c8; }
+    .pink { background: #ef5a90; }
+
+    .stat-meta span {
+      display: block;
+      color: #52677f;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .stat-meta strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 28px;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-meta small {
+      display: block;
+      margin-top: 6px;
+      color: #7a8da3;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--drawer);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .table-card {
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .table-header {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .table-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 900;
+      font-size: 17px;
+    }
+
+    .info-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid #9eb2cb;
+      color: #6b7d95;
+      font-size: 11px;
+    }
+
+    .table-tools { display: flex; gap: 10px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+    }
+
+    thead th {
+      height: 48px;
+      background: #f0f6fd;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      color: #244263;
+      font-weight: 900;
+      text-align: center;
+      padding: 0 8px;
+    }
+
+    tbody td {
+      height: 58px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      text-align: center;
+      padding: 0 8px;
+      color: #203b5d;
+      vertical-align: middle;
+      background: #fff;
+    }
+
+    tbody tr.selected td { background: #f6fbff; }
+
+    .link {
+      color: var(--blue);
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .species-cell { line-height: 1.35; }
+    .species-cell small { display: block; color: #6f8198; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 58px;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 8px;
+      background: var(--blue-weak);
+      color: #1f67d2;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .tag.orange { background: #fff1dc; color: #c06800; }
+    .tag.green { background: #e7f8ef; color: #0d8b56; }
+    .tag.purple { background: #f0ebff; color: #6e4bdc; }
+
+    .path-text, .md5-text {
+      display: inline-block;
+      max-width: 178px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #1d65c8;
+      font-weight: 800;
+      vertical-align: middle;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .status::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .verified { background: #e8f8ef; color: #0d9b60; }
+    .pending { background: #fff2df; color: #cf7b00; }
+    .unchecked { background: #eef2f7; color: #64748b; }
+
+    .op-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .mini-btn {
+      height: 28px;
+      padding: 0 9px;
+      border-radius: 7px;
+      border: 1px solid #bdd1ee;
+      color: #1d65c8;
+      background: #f7fbff;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .pager {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 18px;
+      color: #5f728b;
+      font-weight: 700;
+    }
+
+    .page-chip {
+      min-width: 34px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: #244263;
+    }
+
+    .page-chip.active {
+      background: #1f6fe5;
+      color: #fff;
+      border-color: #1f6fe5;
+    }
+
+    .drawer {
+      position: sticky;
+      top: 18px;
+      min-height: 660px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .drawer-header {
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfdff;
+    }
+
+    .drawer-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .drawer-close {
+      border: 0;
+      background: transparent;
+      color: #5a6d86;
+      font-size: 22px;
+    }
+
+    .drawer-body {
+      padding: 18px;
+    }
+
+    .drawer-section {
+      margin-bottom: 18px;
+    }
+
+    .drawer-section h3 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      color: #173a69;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 9px 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .kv span:nth-child(odd) { color: #5f728b; font-weight: 900; }
+    .kv span:nth-child(even) { color: #16375e; font-weight: 700; }
+
+    .copy-box {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #f8fbff;
+      color: #173a69;
+      font-size: 13px;
+      line-height: 1.55;
+      word-break: break-all;
+    }
+
+    .copy-actions { margin-top: 10px; display: flex; gap: 8px; }
+
+    .tip {
+      padding: 12px;
+      border-radius: 10px;
+      background: #edf5ff;
+      color: #4f6680;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px solid #d5e6fa;
+    }
+
+    .col-accession { width: 78px; }
+    .col-sample { width: 110px; }
+    .col-species { width: 126px; }
+    .col-type { width: 92px; }
+    .col-platform { width: 88px; }
+    .col-name { width: 152px; }
+    .col-role { width: 88px; }
+    .col-cluster { width: 82px; }
+    .col-path { width: 186px; }
+    .col-size { width: 82px; }
+    .col-md5 { width: 118px; }
+    .col-status { width: 86px; }
+    .col-time { width: 108px; }
+    .col-action { width: 122px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div>首页 / 数据资源 / 原始数据</div>
+      <div class="top-actions"><span>🌐 中文⌄</span><span>● root⌄</span></div>
+    </div>
+
+    <section class="title-row">
+      <div class="title">
+        <h1>原始数据&nbsp; Raw Data</h1>
+        <p>集中展示原始测序数据在各集群中的存放路径、文件信息与校验状态。</p>
+      </div>
+    </section>
+
+    <section class="filter-panel">
+      <div class="search-box"><span class="search-icon">⌕</span><span>搜索 Accession / Sample / 文件名 / 路径 / MD5</span></div>
+      <div class="button primary">搜索</div>
+      <div class="select-box"><span class="select-label">物种</span><span class="select-value">全部⌄</span></div>
+      <div class="select-box"><span class="select-label">数据类型</span><span class="select-value">全部⌄</span></div>
+      <div class="select-box"><span class="select-label">测序平台</span><span class="select-value">全部⌄</span></div>
+      <div class="select-box"><span class="select-label">所在集群</span><span class="select-value">全部⌄</span></div>
+      <div class="select-box"><span class="select-label">文件状态</span><span class="select-value">全部⌄</span></div>
+      <div class="button light">重置</div>
+      <div class="button light">更多条件 ⌁</div>
+    </section>
+
+    <section class="stats">
+      <article class="stat-card"><div class="stat-icon green">苗</div><div class="stat-meta"><span>材料数</span><strong>486</strong><small>有效 Accession</small></div></article>
+      <article class="stat-card"><div class="stat-icon blue">样</div><div class="stat-meta"><span>样本数</span><strong>1,248</strong><small>样本登记</small></div></article>
+      <article class="stat-card"><div class="stat-icon purple">文</div><div class="stat-meta"><span>原始文件数</span><strong>18,765</strong><small>DataFile 去重</small></div></article>
+      <article class="stat-card"><div class="stat-icon orange">量</div><div class="stat-meta"><span>总数据量</span><strong>12.87</strong><small>TB</small></div></article>
+      <article class="stat-card"><div class="stat-icon cyan">集</div><div class="stat-meta"><span>集群数</span><strong>3</strong><small>cluster01/02/03</small></div></article>
+      <article class="stat-card"><div class="stat-icon pink">时</div><div class="stat-meta"><span>最近更新</span><strong>2026-06-16</strong><small>数据更新时间</small></div></article>
+    </section>
+
+    <section class="content-grid">
+      <article class="table-card">
+        <div class="table-header">
+          <div class="table-title">原始数据文件列表 <span class="info-dot">i</span></div>
+          <div class="table-tools"><button class="mini-btn">⇩ 导出当前结果</button><button class="mini-btn">⚙</button></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="col-accession">Accession</th>
+              <th class="col-sample">Sample ID</th>
+              <th class="col-species">物种</th>
+              <th class="col-type">数据类型</th>
+              <th class="col-platform">测序平台</th>
+              <th class="col-name">文件名</th>
+              <th class="col-role">文件角色</th>
+              <th class="col-cluster">所在集群</th>
+              <th class="col-path">文件路径</th>
+              <th class="col-size">文件大小</th>
+              <th class="col-md5">MD5</th>
+              <th class="col-status">校验状态</th>
+              <th class="col-time">更新时间</th>
+              <th class="col-action">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="selected">
+              <td><a class="link">IR64</a></td><td>IR64_leaf_01</td><td class="species-cell">水稻<small>Oryza sativa</small></td><td><span class="tag">RNA-seq</span></td><td>Illumina</td><td>IR64_leaf_01_R1.fastq.gz</td><td>R1</td><td>cluster01</td><td><span class="path-text">/data/project/rice/.../IR64_leaf_01_R1.fastq.gz</span></td><td>8.20 GB</td><td><span class="md5-text">a83f21cc...91de42</span></td><td><span class="status verified">已校验</span></td><td>2026-06-16 10:30</td><td><div class="op-buttons"><button class="mini-btn">路径</button><button class="mini-btn">详情</button></div></td>
+            </tr>
+            <tr>
+              <td><a class="link">IR64</a></td><td>IR64_leaf_01</td><td class="species-cell">水稻<small>Oryza sativa</small></td><td><span class="tag">RNA-seq</span></td><td>Illumina</td><td>IR64_leaf_01_R2.fastq.gz</td><td>R2</td><td>cluster01</td><td><span class="path-text">/data/project/rice/.../IR64_leaf_01_R2.fastq.gz</span></td><td>8.02 GB</td><td><span class="md5-text">b91c7e10...1a88f3</span></td><td><span class="status verified">已校验</span></td><td>2026-06-16 10:30</td><td><div class="op-buttons"><button class="mini-btn">路径</button><button class="mini-btn">详情</button></div></td>
+            </tr>
+            <tr>
+              <td><a class="link">C7</a></td><td>C7_hifi_01</td><td class="species-cell">褐飞虱<small>N. lugens</small></td><td><span class="tag green">HiFi</span></td><td>PacBio</td><td>C7.hifi.fastq.gz</td><td>HiFi reads</td><td>cluster02</td><td><span class="path-text">/share/raw/hifi/C7.hifi.fastq.gz</span></td><td>36.40 GB</td><td><span class="md5-text">9f2a65bd...ac0c12</span></td><td><span class="status verified">已校验</span></td><td>2026-06-15 16:22</td><td><div class="op-buttons"><button class="mini-btn">路径</button><button class="mini-btn">详情</button></div></td>
+            </tr>
+            <tr>
+              <td><a class="link">02428</a></td><td>02428_wgs_01</td><td class="species-cell">水稻<small>Oryza sativa</small></td><td><span class="tag orange">WGS</span></td><td>Illumina</td><td>02428_R1.fastq.gz</td><td>R1</td><td>cluster01</td><td><span class="path-text">/data/project/rice/.../02428_R1.fastq.gz</span></td><td>12.10 GB</td><td><span class="md5-text">d82c10ef...a120bc</span></td><td><span class="status pending">待确认</span></td><td>2026-06-14 09:18</td><td><div class="op-buttons"><button class="mini-btn">路径</button><button class="mini-btn">详情</button></div></td>
+            </tr>
+            <tr>
+              <td><a class="link">125619</a></td><td>125619_rnaseq_01</td><td class="species-cell">玉米<small>Zea mays</small></td><td><span class="tag">RNA-seq</span></td><td>Illumina</td><td>125619_R1.fastq.gz</td><td>R1</td><td>cluster03</td><td><span class="path-text">/data/project/maize/.../125619_R1.fastq.gz</span></td><td>6.32 GB</td><td><span class="md5-text">fa92d10c...1bdc33</span></td><td><span class="status unchecked">未校验</span></td><td>2026-06-13 14:55</td><td><div class="op-buttons"><button class="mini-btn">路径</button><button class="mini-btn">详情</button></div></td>
+            </tr>
+            <tr>
+              <td><a class="link">117425</a></td><td>117425_wgs_01</td><td class="species-cell">水稻<small>Oryza sativa</small></td><td><span class="tag orange">WGS</span></td><td>Illumina</td><td>117425_R1.fastq.gz</td><td>R1</td><td>cluster01</td><td><span class="path-text">/data/project/rice/.../117425_R1.fastq.gz</span></td><td>15.33 GB</td><td><span class="md5-text">6d44f33e...7f1a88</span></td><td><span class="status verified">已校验</span></td><td>2026-06-12 11:08</td><td><div class="op-buttons"><button class="mini-btn">路径</button><button class="mini-btn">详情</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pager"><span>共 18,765 条</span><span class="page-chip">20条/页</span><span class="page-chip">‹</span><span class="page-chip active">1</span><span class="page-chip">2</span><span class="page-chip">3</span><span class="page-chip">4</span><span class="page-chip">5</span><span>...</span><span class="page-chip">939</span><span class="page-chip">›</span><span>前往</span><span class="page-chip">1</span><span>页</span></div>
+      </article>
+
+      <aside class="drawer">
+        <header class="drawer-header"><h2>原始数据详情</h2><button class="drawer-close">×</button></header>
+        <div class="drawer-body">
+          <section class="drawer-section">
+            <h3>基本信息</h3>
+            <div class="kv">
+              <span>Accession</span><span>IR64</span>
+              <span>Sample ID</span><span>IR64_leaf_01</span>
+              <span>物种</span><span>水稻（Oryza sativa）</span>
+              <span>数据类型</span><span>RNA-seq 原始数据</span>
+              <span>测序平台</span><span>Illumina NovaSeq 6000</span>
+              <span>文件角色</span><span>raw_reads_R1</span>
+              <span>所在集群</span><span>cluster01</span>
+              <span>文件大小</span><span>8.20 GB</span>
+              <span>校验状态</span><span><span class="status verified">已校验</span></span>
+              <span>登记时间</span><span>2026-06-16 10:30:45</span>
+              <span>备注</span><span>叶片样本，三叶期，RNA-seq paired-end reads</span>
+            </div>
+          </section>
+
+          <section class="drawer-section">
+            <h3>文件路径</h3>
+            <div class="copy-box">/data/project/rice/raw/rnaseq/IR64/IR64_leaf_01_R1.fastq.gz</div>
+            <div class="copy-actions"><button class="mini-btn">复制路径</button></div>
+          </section>
+
+          <section class="drawer-section">
+            <h3>MD5 校验值</h3>
+            <div class="copy-box">a83f21cc91de42b88a0e8e3d17d91de42</div>
+            <div class="copy-actions"><button class="mini-btn">复制 MD5</button></div>
+          </section>
+
+          <section class="drawer-section">
+            <div class="tip">提示：原始数据文件体积较大，请在对应集群环境中使用。本页不提供 Web 下载入口。</div>
+          </section>
+        </div>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

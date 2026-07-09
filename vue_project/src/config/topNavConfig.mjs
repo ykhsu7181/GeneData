@@ -14,7 +14,7 @@ export const topNavGroups = {
     labelKey: 'nav.dataResources',
     path: '/data-overview',
     children: [
-      { labelKey: 'nav.rawData', path: '/data-overview' },
+      { labelKey: 'nav.rawData', path: '/raw-data' },
       { labelKey: 'nav.dataOverview', path: '/data-overview' },
       { labelKey: 'nav.genome', path: '/genome-card' },
       { labelKey: 'nav.annotation', path: '/annotation' },
@@ -42,7 +42,7 @@ const pathAliasMap = {
 const groupMatchers = {
   home: ['/dashboard'],
   accession: ['/accession-card', '/accession-detail', '/accession-map'],
-  dataOverview: ['/data-overview', '/genome-card', '/annotation', '/annotation-card', '/transcriptome-overview'],
+  dataOverview: ['/raw-data', '/data-overview', '/genome-card', '/annotation', '/annotation-card', '/transcriptome-overview'],
   tools: ['/core-variable-blocks', '/core-variable-blocks-card', '/codon-card', '/tools/codonw']
 }
 

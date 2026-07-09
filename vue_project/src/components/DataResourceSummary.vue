@@ -41,7 +41,7 @@ const props = defineProps({
 const emit = defineEmits(['navigate'])
 
 const fallbackItems = [
-  { key: 'raw_data', title: '原始数据', count_display: '0', unit: '文件数', route: '/data-overview', query: { dataset_type: 'raw_data' }, icon: 'raw' },
+  { key: 'raw_data', title: '原始数据', count_display: '0', unit: '文件数', route: '/raw-data', icon: 'raw' },
   { key: 'genome', title: '基因组', count_display: '0', unit: '组装数', route: '/genome-card', icon: 'genome' },
   { key: 'annotation', title: '注释', count_display: '0', unit: '记录数', route: '/annotation', icon: 'annotation' },
   { key: 'transcriptome', title: '转录组', count_display: '0', unit: '数据集', route: '/transcriptome-overview', icon: 'transcriptome' },

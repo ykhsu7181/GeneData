@@ -1,0 +1,465 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Genome 数据列表视图草图</title>
+  <style>
+    :root {
+      --bg: #f4f8ff;
+      --panel: #ffffff;
+      --line: #dbe7f6;
+      --line-strong: #c7daf2;
+      --text: #0e2242;
+      --muted: #667996;
+      --blue: #1768f2;
+      --blue-deep: #0f55d6;
+      --blue-soft: #eef5ff;
+      --green: #13a06f;
+      --shadow: 0 18px 45px rgba(34, 71, 120, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f6faff 0%, #edf4ff 100%);
+      color: var(--text);
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 30px 28px 36px;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+
+    h1 {
+      margin: 0;
+      color: #1257d8;
+      font-size: 42px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .view-switch {
+      display: inline-flex;
+      gap: 0;
+      padding: 4px;
+      border: 1px solid var(--line-strong);
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(23, 104, 242, 0.08);
+    }
+
+    .view-switch button {
+      min-width: 116px;
+      height: 42px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: #49617f;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: default;
+    }
+
+    .view-switch button.active {
+      background: linear-gradient(135deg, var(--blue), var(--blue-deep));
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(23, 104, 242, 0.25);
+    }
+
+    .filter-panel {
+      display: grid;
+      grid-template-columns: auto 260px auto 260px auto 260px 1fr auto;
+      align-items: center;
+      gap: 14px 18px;
+      padding: 24px 26px;
+      margin-bottom: 22px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .filter-label {
+      font-size: 16px;
+      font-weight: 900;
+      color: #1c2d48;
+      white-space: nowrap;
+    }
+
+    .select-box {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      color: #9aa7b8;
+      background: #fff;
+      font-weight: 700;
+    }
+
+    .refresh-btn {
+      height: 48px;
+      padding: 0 22px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: #fff;
+      color: #1f324d;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 8px 18px rgba(34, 71, 120, 0.06);
+    }
+
+    .table-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    thead th {
+      height: 64px;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #f7fbff, #eef5ff);
+      color: #1d334f;
+      text-align: left;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    tbody td {
+      height: 96px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      color: #162944;
+      font-size: 15px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .species-cell {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .plant-icon {
+      flex: 0 0 auto;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #e8f9ef;
+      color: #08a86f;
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .species-main {
+      color: #08264b;
+      font-size: 21px;
+      line-height: 1.18;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .species-latin {
+      display: block;
+      margin-top: 5px;
+      color: #53647b;
+      font-size: 16px;
+      line-height: 1.15;
+      font-style: italic;
+      font-weight: 800;
+    }
+
+    .link {
+      color: #1768f2;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: #eaf6ff;
+      color: #0e5ad7;
+      font-weight: 900;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .ghost-btn, .download-btn {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 900;
+      background: #fff;
+    }
+
+    .ghost-btn {
+      color: #1768f2;
+      border: 1px solid #b9d1ff;
+    }
+
+    .download-btn {
+      color: #1768f2;
+      border: 1px solid #cdddf6;
+    }
+
+    .download-btn::before { content: "↓ "; font-weight: 900; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+      color: #5d6f89;
+      font-weight: 700;
+    }
+
+    .pager-controls { display: flex; align-items: center; gap: 8px; }
+    .pager-controls span, .pager-controls button {
+      min-width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: #39506d;
+      font-weight: 800;
+    }
+    .pager-controls .current {
+      display: grid;
+      place-items: center;
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .drawer-preview {
+      position: fixed;
+      top: 122px;
+      right: 28px;
+      width: 430px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(18, 38, 77, 0.18);
+      overflow: hidden;
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fbff;
+    }
+
+    .drawer-title { font-size: 18px; font-weight: 900; color: #15315a; }
+    .drawer-sub { margin-top: 4px; color: #60738f; font-size: 13px; font-weight: 700; }
+    .drawer-close { color: #6b7c95; font-size: 24px; line-height: 1; }
+
+    .drawer-body { padding: 16px 18px 20px; }
+    .relation-line {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 14px;
+      color: #6b7c95;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .relation-line b {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: #145edc;
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+    .file-name { color: #172a45; font-weight: 900; }
+    .file-meta { margin-top: 4px; color: #667996; font-size: 12px; font-weight: 700; }
+    .file-row a { color: #1768f2; font-weight: 900; text-decoration: none; }
+
+    .note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #f2f7ff;
+      color: #5b6f8d;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1320px) {
+      .drawer-preview { position: static; width: auto; margin-top: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="top-row">
+      <div class="title-wrap">
+        <span class="eyebrow">Genome</span>
+        <h1>Genome</h1>
+      </div>
+      <div class="view-switch" aria-label="视图切换">
+        <button>可视化视图</button>
+        <button class="active">数据列表</button>
+      </div>
+    </section>
+
+    <section class="filter-panel" aria-label="Genome 数据列表筛选区">
+      <span class="filter-label">物种</span>
+      <div class="select-box">选择物种 <span>⌄</span></div>
+      <span class="filter-label">品种</span>
+      <div class="select-box">选择品种 <span>⌄</span></div>
+      <span class="filter-label">组装级别</span>
+      <div class="select-box">选择组装级别 <span>⌄</span></div>
+      <span></span>
+      <button class="refresh-btn">⟳ 刷新</button>
+    </section>
+
+    <section class="table-card" aria-label="Genome 基因组数据表格">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 25%;">物种</th>
+            <th style="width: 18%;">品种</th>
+            <th style="width: 17%;">组装级别</th>
+            <th style="width: 13%;">染色体数</th>
+            <th style="width: 15%;">基因组大小</th>
+            <th style="width: 17%;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="species-cell"><span class="plant-icon">⌘</span><div><div class="species-main">水稻 IR64</div><div class="species-latin">Oryza sativa</div></div></div></td>
+            <td><a class="link" href="#">IR64</a></td>
+            <td><span class="badge">Chromosome</span></td>
+            <td>12</td>
+            <td>521.17 MB</td>
+            <td><div class="actions"><button class="ghost-btn">查看文件</button><button class="download-btn">下载</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="species-cell"><span class="plant-icon">⌘</span><div><div class="species-main">水稻 02428</div><div class="species-latin">Oryza sativa</div></div></div></td>
+            <td><a class="link" href="#">02428</a></td>
+            <td><span class="badge">Chromosome</span></td>
+            <td>12</td>
+            <td>389.5 MB</td>
+            <td><div class="actions"><button class="ghost-btn">查看文件</button><button class="download-btn">下载</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="species-cell"><span class="plant-icon">⌬</span><div><div class="species-main">玉米 B73</div><div class="species-latin">Zea mays</div></div></div></td>
+            <td><a class="link" href="#">B73</a></td>
+            <td><span class="badge">Chromosome</span></td>
+            <td>10</td>
+            <td>2.30 GB</td>
+            <td><div class="actions"><button class="ghost-btn">查看文件</button><button class="download-btn">下载</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="species-cell"><span class="plant-icon">◆</span><div><div class="species-main">大豆 Williams 82</div><div class="species-latin">Glycine max</div></div></div></td>
+            <td><a class="link" href="#">Williams 82</a></td>
+            <td><span class="badge">Chromosome</span></td>
+            <td>20</td>
+            <td>1.11 GB</td>
+            <td><div class="actions"><button class="ghost-btn">查看文件</button><button class="download-btn">下载</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="species-cell"><span class="plant-icon">✣</span><div><div class="species-main">拟南芥 Col-0</div><div class="species-latin">Arabidopsis thaliana</div></div></div></td>
+            <td><a class="link" href="#">Col-0</a></td>
+            <td><span class="badge">Chromosome</span></td>
+            <td>5</td>
+            <td>119.4 MB</td>
+            <td><div class="actions"><button class="ghost-btn">查看文件</button><button class="download-btn">下载</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="species-cell"><span class="plant-icon">⌘</span><div><div class="species-main">烟草 K326</div><div class="species-latin">Nicotiana tabacum</div></div></div></td>
+            <td><a class="link" href="#">K326</a></td>
+            <td><span class="badge">Scaffold</span></td>
+            <td>-</td>
+            <td>4.50 GB</td>
+            <td><div class="actions"><button class="ghost-btn">查看文件</button><button class="download-btn">下载</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span>共 128 条　20条/页</span>
+        <div class="pager-controls"><button>‹</button><span class="current">1</span><button>2</button><button>3</button><button>…</button><button>›</button></div>
+      </div>
+    </section>
+
+    <aside class="drawer-preview" aria-label="点击查看文件后的抽屉示例">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-title">IR64 / Genome 文件列表</div>
+          <div class="drawer-sub">只展示 DataFile + FileRelation 关联文件</div>
+        </div>
+        <span class="drawer-close">×</span>
+      </div>
+      <div class="drawer-body">
+        <div class="relation-line"><b>Accession IR64</b><span>→</span><b>Assembly default</b><span>→</span><b>DataFile</b></div>
+        <div class="file-row"><div><div class="file-name">genome.IR64.fasta</div><div class="file-meta">参考基因组序列 · FASTA · 521.17 MB</div></div><a href="/gd/api/files/data-files/14/download/">下载</a></div>
+        <div class="file-row"><div><div class="file-name">genome.IR64.fasta.fai</div><div class="file-meta">基因组索引 · FAI · 12 KB</div></div><a href="/gd/api/files/data-files/15/download/">下载</a></div>
+        <div class="file-row"><div><div class="file-name">genome.IR64.chrom.sizes</div><div class="file-meta">染色体长度 · TXT · 2 KB</div></div><a href="/gd/api/files/data-files/16/download/">下载</a></div>
+        <div class="note">草图说明：正式实现时抽屉默认隐藏，点击“查看文件”或多文件“下载”时打开。</div>
+      </div>
+    </aside>
+  </main>
+</body>
+</html>

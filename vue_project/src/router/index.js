@@ -55,6 +55,14 @@ const routes = [
     }
   },
   {
+    path: '/raw-data',
+    name: 'raw-data',
+    component: () => import('../views/RawDataView.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/transcriptome-overview',
     name: 'transcriptome-overview',
     component: () => import('../views/TranscriptomeOverviewView.vue'),

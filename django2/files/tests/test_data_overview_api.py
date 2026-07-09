@@ -119,7 +119,7 @@ class DataOverviewApiTestCase(TestCase):
         self.assertIn("genome", detail_types)
         self.assertIn("annotation", detail_types)
         self.assertIn("transcriptome", detail_types)
-        self.assertIn("population", detail_types)
+        self.assertNotIn("population", detail_types)
 
     def test_data_overview_summary_follows_filters(self):
         self.seed_files()

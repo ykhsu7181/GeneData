@@ -2,7 +2,7 @@
   <div class="accession-search-page">
     <div class="page-heading">
       <div>
-        <div class="page-kicker">ACCESSION</div>
+        <div class="accession-breadcrumb">首页 / 品种信息</div>
         <h1>{{ $t('page.accessionCard.title') }}</h1>
       </div>
       <el-tooltip :content="$t('common.refresh')" placement="top">
@@ -167,15 +167,14 @@ export default {
   margin-bottom: 18px;
 }
 
-.page-kicker {
-  color: #1760e8;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+.accession-breadcrumb {
+  color: #76849a;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .page-heading h1 {
-  margin: 5px 0 0;
+  margin: 6px 0 0;
   color: #1453d1;
   font-size: 25px;
   line-height: 1.2;

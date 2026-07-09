@@ -68,9 +68,8 @@
       <article v-for="card in summaryCards" :key="card.key" class="summary-card">
         <div :class="['summary-icon', card.theme]">{{ card.icon }}</div>
         <div>
-          <p>{{ card.label }}</p>
-          <strong>{{ card.value }}</strong>
-          <span v-if="card.unit">{{ card.unit }}</span>
+          <div class="summary-label">{{ card.label }}</div>
+          <div class="summary-value">{{ card.value }}<span v-if="card.unit" class="summary-unit">{{ card.unit }}</span></div>
         </div>
       </article>
     </section>
@@ -92,7 +91,7 @@
             <tr>
               <th rowspan="2">Accession</th>
               <th colspan="3">基本信息</th>
-              <th :colspan="dataCategories.length">数据类型（点击单元格查看文件）</th>
+              <th :colspan="dataCategories.length">文件统计（点击数量查看文件）</th>
               <th rowspan="2">地理位置</th>
             </tr>
             <tr>
@@ -541,54 +540,61 @@ export default {
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px;
-  margin: 18px 0 20px;
+  gap: 12px;
+  margin: 18px 0 14px;
 }
 
 .summary-card {
   display: flex;
-  min-height: 104px;
   align-items: center;
-  gap: 15px;
-  padding: 18px;
-  border: 1px solid #e1eaf5;
-  border-radius: 15px;
+  gap: 12px;
+  min-height: 78px;
+  padding: 13px 14px;
+  border: 1px solid #e1e8f3;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 12px 30px rgba(31, 79, 136, 0.07);
+  box-shadow: 0 6px 18px rgba(35, 68, 116, .06);
 }
 
 .summary-icon {
   display: grid;
-  width: 52px;
-  height: 52px;
   place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  font-weight: 900;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: #edf4ff;
+  color: #1760e8;
+  font-size: 20px;
+  font-weight: 800;
 }
 
-.summary-icon.green { background: #4ab95d; }
-.summary-icon.purple { background: #7458ea; }
-.summary-icon.blue { background: #3198df; }
-.summary-icon.orange { background: #f39a32; }
-.summary-icon.cyan { background: #27b7c9; }
-.summary-icon.pink { background: #ef5b8b; }
-
-.summary-card p {
-  margin: 0 0 6px;
-  color: #52637a;
-  font-weight: 900;
+.summary-icon.green,
+.summary-icon.purple,
+.summary-icon.blue,
+.summary-icon.orange,
+.summary-icon.cyan,
+.summary-icon.pink {
+  background: #edf4ff;
+  color: #1760e8;
 }
 
-.summary-card strong {
-  font-size: 28px;
-  font-weight: 950;
+.summary-label {
+  color: #718096;
+  font-size: 12px;
 }
 
-.summary-card span {
+.summary-value {
+  margin-top: 4px;
+  color: #153a7a;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.summary-unit {
   margin-left: 4px;
   color: #7a8798;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
 }
 
