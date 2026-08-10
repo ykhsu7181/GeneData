@@ -1,7 +1,7 @@
 from collections import defaultdict
 from decimal import Decimal
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 
 from files.models import Accession, Annotation, Assembly, DataFile, Dataset, FileRelation, Sample, Species
 
@@ -52,10 +52,8 @@ def _get_species_display_name(species):
 def _sum_file_size(file_ids):
     if not file_ids:
         return 0
-    total = 0
-    for file_size in DataFile.objects.filter(id__in=file_ids).values_list("file_size", flat=True):
-        total += int(file_size or 0)
-    return total
+    total = DataFile.objects.filter(id__in=file_ids).aggregate(total=Sum("file_size"))["total"]
+    return int(total or 0)
 
 
 def _file_ids_for_roles(roles):
@@ -365,52 +363,56 @@ def _build_xi_distribution():
 
 
 def _build_dataset_type_summary():
-    rows = []
-    dataset_groups = (
-        Dataset.objects.values("dataset_type")
-        .annotate(dataset_count=Count("id"))
-        .order_by("dataset_type")
-    )
+    dataset_counts = {
+        (group["dataset_type"] or "other"): group["dataset_count"]
+        for group in Dataset.objects.values("dataset_type").annotate(dataset_count=Count("id"))
+    }
+    file_groups = defaultdict(lambda: {"file_ids": set(), "total_size": 0})
+    for data_file in DataFile.objects.filter(dataset__isnull=False).values(
+        "id", "file_size", "dataset__dataset_type"
+    ):
+        dataset_type = data_file["dataset__dataset_type"] or "other"
+        bucket = file_groups[dataset_type]
+        bucket["file_ids"].add(data_file["id"])
+        bucket["total_size"] += int(data_file["file_size"] or 0)
 
-    for group in dataset_groups:
-        dataset_type = group["dataset_type"] or "other"
-        data_files = DataFile.objects.filter(dataset__dataset_type=dataset_type)
-        file_ids = list(data_files.values_list("id", flat=True))
-        total_size = _sum_file_size(file_ids)
+    rows = []
+    for dataset_type, dataset_count in sorted(dataset_counts.items()):
+        bucket = file_groups.get(dataset_type, {"file_ids": set(), "total_size": 0})
         rows.append(
             {
                 "dataset_type": dataset_type,
-                "dataset_count": group["dataset_count"],
-                "datafile_count": len(file_ids),
-                "total_size": total_size,
-                "total_size_display": _format_bytes(total_size),
+                "dataset_count": dataset_count,
+                "datafile_count": len(bucket["file_ids"]),
+                "total_size": bucket["total_size"],
+                "total_size_display": _format_bytes(bucket["total_size"]),
             }
         )
     return rows
 
 
 def _build_file_role_summary():
+    grouped = defaultdict(lambda: {"file_ids": set(), "total_size": 0})
+    seen_role_files = set()
+    for relation in FileRelation.objects.select_related("file").filter(file__isnull=False).only(
+        "file_role", "file_id", "file__file_size"
+    ):
+        file_role = relation.file_role or "other"
+        dedupe_key = (file_role, relation.file_id)
+        if dedupe_key in seen_role_files:
+            continue
+        seen_role_files.add(dedupe_key)
+        grouped[file_role]["file_ids"].add(relation.file_id)
+        grouped[file_role]["total_size"] += int(relation.file.file_size or 0)
+
     rows = []
-    grouped = (
-        FileRelation.objects.values("file_role")
-        .annotate(datafile_count=Count("file_id", distinct=True))
-        .order_by("file_role")
-    )
-    for group in grouped:
-        file_role = group["file_role"] or "other"
-        file_ids = list(
-            FileRelation.objects.filter(file_role=file_role)
-            .order_by()
-            .values_list("file_id", flat=True)
-            .distinct()
-        )
-        total_size = _sum_file_size(file_ids)
+    for file_role, bucket in grouped.items():
         rows.append(
             {
                 "file_role": file_role,
-                "datafile_count": len(file_ids),
-                "total_size": total_size,
-                "total_size_display": _format_bytes(total_size),
+                "datafile_count": len(bucket["file_ids"]),
+                "total_size": bucket["total_size"],
+                "total_size_display": _format_bytes(bucket["total_size"]),
             }
         )
     rows.sort(key=lambda item: (-item["datafile_count"], item["file_role"]))
@@ -422,7 +424,20 @@ def _build_geo_distribution():
     accession_queryset = Accession.objects.filter(
         longitude__isnull=False,
         latitude__isnull=False,
-    ).order_by("accession")
+    ).select_related("species").order_by("accession")
+    accession_ids = list(accession_queryset.values_list("id", flat=True))
+    species_ids = {
+        species_id
+        for species_id in accession_queryset.values_list("species_id", flat=True)
+        if species_id
+    }
+    sample_ids_by_accession = defaultdict(set)
+    for sample in Sample.objects.filter(accession_id__in=accession_ids).values("id", "accession_id"):
+        sample_ids_by_accession[sample["accession_id"]].add(sample["id"])
+
+    dataset_ids_by_species = defaultdict(set)
+    for dataset in Dataset.objects.filter(species_id__in=species_ids).values("id", "species_id"):
+        dataset_ids_by_species[dataset["species_id"]].add(dataset["id"])
 
     for accession in accession_queryset:
         key = (
@@ -444,12 +459,10 @@ def _build_geo_distribution():
         bucket = grouped[key]
         bucket["accession_ids"].add(accession.id)
         bucket["accession_names"].add(accession.accession)
-        bucket["sample_ids"].update(accession.samples.values_list("id", flat=True))
+        bucket["sample_ids"].update(sample_ids_by_accession.get(accession.id, set()))
         if accession.species_id:
             bucket["species_names"].add(_get_species_display_name(accession.species))
-            bucket["dataset_ids"].update(
-                Dataset.objects.filter(species_id=accession.species_id).values_list("id", flat=True)
-            )
+            bucket["dataset_ids"].update(dataset_ids_by_species.get(accession.species_id, set()))
 
     rows = []
     for bucket in grouped.values():

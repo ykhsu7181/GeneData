@@ -2,6 +2,8 @@ import os
 import tempfile
 import uuid
 
+from django.core.cache import cache
+from django.core.management import call_command
 from django.test import TestCase
 
 from files.models import (
@@ -19,6 +21,7 @@ from files.models import (
 
 class DashboardApiTestCase(TestCase):
     def setUp(self):
+        cache.clear()
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.suffix = uuid.uuid4().hex[:8].upper()
@@ -109,6 +112,10 @@ class DashboardApiTestCase(TestCase):
             name="default-annotation",
             is_default=True,
         )
+
+    def tearDown(self):
+        cache.clear()
+        super().tearDown()
 
     def create_data_file(self, code_suffix, filename, *, dataset=None, size=128):
         file_path = os.path.join(self.temp_dir.name, filename)
@@ -308,3 +315,18 @@ class DashboardApiTestCase(TestCase):
         self.assertEqual(fallback_card["accession_count"], 5)
         self.assertEqual(fallback_card["datafile_count"], 1)
         self.assertEqual(fallback_card["total_size"], 64)
+
+    def test_refresh_dashboard_cache_command_rebuilds_payload(self):
+        genome_file = self.create_data_file(
+            "I",
+            f"genome.cache.{self.accession_rice_1.accession}.fasta",
+            dataset=self.dataset_genome,
+            size=64,
+        )
+        self.add_relation(genome_file, "accession", self.accession_rice_1.id, "genome", self.accession_rice_1.accession)
+
+        call_command("refresh_dashboard_cache")
+        response = self.client.get("/gd/api/warehouse/dashboard/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["summary"]["datafile_count"], 1)

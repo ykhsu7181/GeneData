@@ -29,7 +29,11 @@
             <span>{{ bucket.label }}</span>
           </div>
         </div>
-        <div ref="mapRef" class="geo-map"></div>
+        <div ref="mapRef" class="geo-map">
+          <div v-if="!hasEnteredViewport" class="geo-map-lazy">
+            地图将在滚动到此区域后加载
+          </div>
+        </div>
       </div>
 
     </div>
@@ -97,7 +101,9 @@ export default {
   setup(props) {
     const mapRef = ref(null)
     const mapInstance = ref(null)
+    const hasEnteredViewport = ref(false)
     const resizeTimer = ref(null)
+    const observer = ref(null)
     let mapRuntimePromise = null
 
     const legendBuckets = GEO_BUCKETS
@@ -138,7 +144,7 @@ export default {
       })
 
     const renderMap = async () => {
-      if (!mapRef.value) {
+      if (!mapRef.value || !hasEnteredViewport.value) {
         return
       }
 
@@ -245,9 +251,37 @@ export default {
       }, 80)
     }
 
+    const setupLazyObserver = () => {
+      if (!mapRef.value || observer.value || hasEnteredViewport.value) {
+        return
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        hasEnteredViewport.value = true
+        renderMap()
+        return
+      }
+
+      observer.value = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            hasEnteredViewport.value = true
+            observer.value.disconnect()
+            observer.value = null
+            nextTick().then(renderMap)
+          }
+        },
+        {
+          rootMargin: '160px 0px',
+          threshold: 0.08
+        }
+      )
+      observer.value.observe(mapRef.value)
+    }
+
     onMounted(async () => {
       await nextTick()
-      renderMap()
+      setupLazyObserver()
       window.addEventListener('resize', scheduleResize)
     })
 
@@ -255,6 +289,7 @@ export default {
       () => props.points,
       async () => {
         await nextTick()
+        setupLazyObserver()
         renderMap()
       },
       { deep: true }
@@ -263,6 +298,9 @@ export default {
     onBeforeUnmount(() => {
       window.removeEventListener('resize', scheduleResize)
       window.clearTimeout(resizeTimer.value)
+      if (observer.value) {
+        observer.value.disconnect()
+      }
       if (mapInstance.value) {
         mapInstance.value.dispose()
       }
@@ -270,6 +308,7 @@ export default {
 
     return {
       mapRef,
+      hasEnteredViewport,
       legendBuckets,
       getRegionDisplayName,
       formatCoordinate
@@ -367,11 +406,22 @@ export default {
 }
 
 .geo-map {
+  position: relative;
   height: var(--geo-map-height);
   border-radius: 22px;
   background:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(231, 241, 255, 0.55) 38%, transparent 64%),
     linear-gradient(180deg, #e0edff, #f4f8ff);
+}
+
+.geo-map-lazy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #607085;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .geo-empty {
