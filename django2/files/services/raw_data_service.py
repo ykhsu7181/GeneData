@@ -2,13 +2,8 @@ import json
 import os
 from collections import OrderedDict
 
-from django.db.models import Q
-
 from files.models import Accession, DataFile, FileRelation, Sample, Species
 from files.services.data_overview_service import format_size
-
-
-RAW_ROLE_TOKENS = ("raw", "reads", "fastq", "fq", "hifi", "ont", "hic")
 
 
 def _params_get(params, key, default=""):
@@ -39,10 +34,9 @@ def _raw_meta(data_file):
 
 
 def _is_raw_relation(relation):
-    role = (relation.file_role or "").lower()
-    name = (relation.file.file_name or "").lower()
-    path = (relation.file.file_path or "").lower()
-    return any(token in role or token in name or token in path for token in RAW_ROLE_TOKENS)
+    # Raw Data is manually registered through import_raw_data_manifest.
+    # Do not infer from names/paths: e.g. "Lemont" contains "ont" but is not ONT data.
+    return bool(_raw_meta(relation.file))
 
 
 def _short_md5(md5):
@@ -65,47 +59,16 @@ def _latin_name(species):
     return species.scientific_name or species.common_name or species.species_code or "-"
 
 
-def _infer_raw_data_type(data_file, meta, file_role):
-    explicit = meta.get("raw_data_type")
-    if explicit:
-        return explicit
-    value = " ".join([file_role or "", data_file.file_name or "", data_file.file_path or ""]).lower()
-    if "rna" in value:
-        return "RNA-seq"
-    if "hifi" in value:
-        return "HiFi"
-    if "ont" in value:
-        return "ONT"
-    if "hic" in value or "hi-c" in value:
-        return "Hi-C"
-    if "wgs" in value or "resequencing" in value or "re-sequencing" in value:
-        return "WGS"
-    return "-"
+def _raw_data_type(meta):
+    return meta.get("raw_data_type") or "-"
 
 
-def _infer_platform(meta, data_file):
-    explicit = meta.get("sequencing_platform")
-    if explicit:
-        return explicit
-    value = " ".join([data_file.file_name or "", data_file.file_path or ""]).lower()
-    if "pacbio" in value or "hifi" in value:
-        return "PacBio"
-    if "nanopore" in value or "ont" in value:
-        return "Nanopore"
-    if "illumina" in value or "r1" in value or "r2" in value:
-        return "Illumina"
-    return "-"
+def _sequencing_platform(meta):
+    return meta.get("sequencing_platform") or "-"
 
 
-def _infer_cluster(meta, file_path):
-    explicit = meta.get("cluster_name")
-    if explicit:
-        return explicit
-    lowered = (file_path or "").lower()
-    for cluster in ("cluster01", "cluster02", "cluster03"):
-        if cluster in lowered:
-            return cluster
-    return "-"
+def _cluster_name(meta):
+    return meta.get("cluster_name") or "-"
 
 
 def _check_status(meta, data_file):
@@ -127,9 +90,9 @@ def _row_from_bucket(file_id, bucket):
     accession = bucket.get("accession") or (bucket.get("sample").accession if bucket.get("sample") else None)
     sample = bucket.get("sample")
     file_role = bucket.get("file_role") or "-"
-    raw_data_type = _infer_raw_data_type(data_file, meta, file_role)
-    sequencing_platform = _infer_platform(meta, data_file)
-    cluster_name = _infer_cluster(meta, data_file.file_path)
+    raw_data_type = _raw_data_type(meta)
+    sequencing_platform = _sequencing_platform(meta)
+    cluster_name = _cluster_name(meta)
     check_status = _check_status(meta, data_file)
     sample_code = meta.get("sample_code") or (sample.sample_code if sample else "-")
     species = accession.species if accession and accession.species else (sample.species if sample else None)

@@ -1,6 +1,7 @@
 import os
 import tempfile
 import uuid
+import json
 
 from django.core.management import call_command
 from django.test import TestCase
@@ -104,6 +105,26 @@ class ImportRawDataManifestTestCase(TestCase):
             ).count(),
             1,
         )
+
+    def test_import_marks_existing_datafile_with_raw_data_metadata(self):
+        raw_path = "/data/project/rice/raw/IR64_leaf_01_R1.fastq.gz"
+        DataFile.objects.create(
+            file_code=f"EXIST{self.suffix}",
+            file_name="IR64_leaf_01_R1.fastq.gz",
+            file_path=raw_path,
+            description=json.dumps({"note": "existing metadata"}, ensure_ascii=False),
+        )
+        self.write_manifest(raw_path)
+
+        call_command("import_raw_data_manifest", "--input", self.manifest_path)
+
+        self.assertEqual(DataFile.objects.count(), 1)
+        data_file = DataFile.objects.get()
+        payload = json.loads(data_file.description)
+        self.assertEqual(payload["note"], "existing metadata")
+        self.assertEqual(payload["raw_data"]["raw_data_type"], "RNA-seq")
+        self.assertEqual(payload["raw_data"]["sequencing_platform"], "Illumina")
+        self.assertEqual(payload["raw_data"]["cluster_name"], "cluster01")
         self.assertEqual(
             FileRelation.objects.filter(
                 file=data_file,

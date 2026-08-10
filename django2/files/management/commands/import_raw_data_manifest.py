@@ -37,6 +37,22 @@ def _int_or_none(value):
         return None
 
 
+def _safe_json(raw):
+    if not raw:
+        return {}
+    try:
+        payload = json.loads(raw)
+    except (TypeError, ValueError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _merge_raw_data_description(existing_description, raw_data_description):
+    payload = _safe_json(existing_description)
+    payload["raw_data"] = raw_data_description["raw_data"]
+    return json.dumps(payload, ensure_ascii=False)
+
+
 class Command(BaseCommand):
     help = "Import raw sequencing data manifest into DataFile and FileRelation."
 
@@ -168,8 +184,9 @@ class Command(BaseCommand):
             if row.get("md5") and not data_file.md5:
                 data_file.md5 = _clean(row.get("md5"))
                 update_fields.append("md5")
-            if not data_file.description:
-                data_file.description = json.dumps(description, ensure_ascii=False)
+            merged_description = _merge_raw_data_description(data_file.description, description)
+            if data_file.description != merged_description:
+                data_file.description = merged_description
                 update_fields.append("description")
             if update_fields:
                 update_fields.append("updated_at")

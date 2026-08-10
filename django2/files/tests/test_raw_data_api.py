@@ -113,3 +113,27 @@ class RawDataApiTestCase(TestCase):
         )
         self.assertEqual(wrong_species_response.status_code, 200)
         self.assertEqual(wrong_species_response.json()["pagination"]["total"], 0)
+
+    def test_raw_data_api_does_not_infer_from_file_name_or_path(self):
+        false_positive = DataFile.objects.create(
+            file_code=f"NOTRAW{self.suffix}",
+            file_name="annotation.Lemont.gff",
+            file_path="/home/labuser/rd/Lemont/annotation.Lemont.gff",
+            file_size=2048,
+        )
+        FileRelation.objects.create(
+            file=false_positive,
+            related_type="accession",
+            related_id=str(self.accession.id),
+            related_code=self.accession.accession,
+            file_role="annotation",
+        )
+
+        response = self.client.get("/gd/api/files/query/raw-data/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["total"], 1)
+        file_names = {row["file_name"] for row in payload["results"]}
+        self.assertIn(self.data_file.file_name, file_names)
+        self.assertNotIn("annotation.Lemont.gff", file_names)
