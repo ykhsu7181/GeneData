@@ -1,0 +1,211 @@
+import csv
+import os
+from datetime import datetime
+
+from django.core.management.base import BaseCommand, CommandError
+
+from files.models import Accession, Sample, Species
+
+
+REQUIRED_COLUMNS = {"sample_code", "species_code", "accession_code"}
+
+
+def _clean(value):
+    return (value or "").strip()
+
+
+class Command(BaseCommand):
+    help = "Import sample metadata from a TSV manifest."
+
+    def add_arguments(self, parser):
+        parser.add_argument("--input", dest="input_path", required=True)
+        parser.add_argument("--dry-run", action="store_true")
+        parser.add_argument("--limit", type=int, default=None)
+
+    def handle(self, *args, **options):
+        input_path = options["input_path"]
+        dry_run = options["dry_run"]
+        limit = options["limit"]
+
+        if not os.path.exists(input_path):
+            raise CommandError(f"Input file does not exist: {input_path}")
+
+        scanned = 0
+        created_count = 0
+        reused_count = 0
+        updated_count = 0
+        skipped_count = 0
+        unmapped = []
+
+        with open(input_path, newline="", encoding="utf-8-sig") as handle:
+            reader = csv.DictReader(handle, delimiter="\t")
+            missing_columns = REQUIRED_COLUMNS - set(reader.fieldnames or [])
+            if missing_columns:
+                raise CommandError(
+                    f"Missing required columns: {', '.join(sorted(missing_columns))}"
+                )
+
+            for line_number, row in enumerate(reader, start=2):
+                if limit is not None and scanned >= limit:
+                    break
+                scanned += 1
+                result = self.import_row(row, dry_run=dry_run, line_number=line_number)
+                created_count += int(result["created"])
+                reused_count += int(result["reused"])
+                updated_count += int(result["updated"])
+                skipped_count += int(result["skipped"])
+                unmapped.extend(result["unmapped"])
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_path = f"import_sample_manifest_log_{timestamp}.txt"
+        unmapped_path = f"import_sample_manifest_unmapped_{timestamp}.tsv"
+        stats = {
+            "dry_run": dry_run,
+            "scanned_count": scanned,
+            "created_sample_count": created_count,
+            "reused_sample_count": reused_count,
+            "updated_sample_count": updated_count,
+            "skipped_count": skipped_count,
+            "unmapped_count": len(unmapped),
+        }
+        self.write_reports(log_path, unmapped_path, stats, unmapped)
+
+        for key, value in stats.items():
+            self.stdout.write(f"{key}={value}")
+        self.stdout.write(f"log={log_path}")
+        self.stdout.write(f"unmapped={unmapped_path}")
+
+    def import_row(self, row, dry_run=False, line_number=None):
+        sample_code = _clean(row.get("sample_code"))
+        species_code = _clean(row.get("species_code"))
+        accession_code = _clean(row.get("accession_code"))
+        unmapped = []
+
+        if not sample_code:
+            return self._skipped(line_number, sample_code, species_code, accession_code, "missing sample_code")
+
+        species = Species.objects.filter(species_code=species_code).first()
+        if not species:
+            unmapped.append(
+                {
+                    "line_number": line_number,
+                    "sample_code": sample_code,
+                    "species_code": species_code,
+                    "accession_code": accession_code,
+                    "reason": f"species not found: {species_code}",
+                }
+            )
+
+        accession = Accession.objects.filter(accession=accession_code).first()
+        if not accession:
+            unmapped.append(
+                {
+                    "line_number": line_number,
+                    "sample_code": sample_code,
+                    "species_code": species_code,
+                    "accession_code": accession_code,
+                    "reason": f"accession not found: {accession_code}",
+                }
+            )
+
+        if unmapped:
+            return {
+                "created": False,
+                "reused": False,
+                "updated": False,
+                "skipped": True,
+                "unmapped": unmapped,
+            }
+
+        sample = Sample.objects.filter(sample_code=sample_code).first()
+        defaults = {
+            "sample_name": _clean(row.get("sample_name")) or sample_code,
+            "species": species,
+            "accession": accession,
+            "tissue": _clean(row.get("tissue")) or None,
+            "treatment": _clean(row.get("treatment")) or None,
+            "replicate": _clean(row.get("replicate")) or None,
+            "data_type": _clean(row.get("data_type")) or None,
+            "description": _clean(row.get("description")) or None,
+        }
+
+        if not sample:
+            if not dry_run:
+                Sample.objects.create(sample_code=sample_code, **defaults)
+            return {
+                "created": True,
+                "reused": False,
+                "updated": False,
+                "skipped": False,
+                "unmapped": [],
+            }
+
+        update_fields = []
+        for field, value in defaults.items():
+            current = getattr(sample, field)
+            if field in {"species", "accession"}:
+                current_id = getattr(sample, f"{field}_id")
+                value_id = value.id if value else None
+                if current_id is None and value_id is not None:
+                    setattr(sample, field, value)
+                    update_fields.append(field)
+            elif current in (None, "") and value not in (None, ""):
+                setattr(sample, field, value)
+                update_fields.append(field)
+
+        if update_fields:
+            if not dry_run:
+                update_fields.append("updated_at")
+                sample.save(update_fields=update_fields)
+            return {
+                "created": False,
+                "reused": False,
+                "updated": True,
+                "skipped": False,
+                "unmapped": [],
+            }
+
+        return {
+            "created": False,
+            "reused": True,
+            "updated": False,
+            "skipped": False,
+            "unmapped": [],
+        }
+
+    def _skipped(self, line_number, sample_code, species_code, accession_code, reason):
+        return {
+            "created": False,
+            "reused": False,
+            "updated": False,
+            "skipped": True,
+            "unmapped": [
+                {
+                    "line_number": line_number,
+                    "sample_code": sample_code,
+                    "species_code": species_code,
+                    "accession_code": accession_code,
+                    "reason": reason,
+                }
+            ],
+        }
+
+    def write_reports(self, log_path, unmapped_path, stats, unmapped):
+        with open(log_path, "w", encoding="utf-8") as handle:
+            for key, value in stats.items():
+                handle.write(f"{key}: {value}\n")
+
+        with open(unmapped_path, "w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=[
+                    "line_number",
+                    "sample_code",
+                    "species_code",
+                    "accession_code",
+                    "reason",
+                ],
+                delimiter="\t",
+            )
+            writer.writeheader()
+            writer.writerows(unmapped)
