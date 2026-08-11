@@ -1,0 +1,112 @@
+﻿accession_code	sample_code	species_code	raw_data_type	sequencing_platform	file_role	cluster_name	file_path	file_size	md5	check_status	remark
+QY22		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/group/rice/raw/HiFi/QY22/m84104_260327_100529_s1.hifi_reads.bc2066.bam	141733920768	ebe7a2eaf641bb0cedd22b685005fdb5	verified	项目: QY22组装；负责人: 张三；是否压缩: 否
+fx1		ORYZA_SATIVA	HiFi	DNBSEQ	hifi_reads		/share/group/rice/raw/HiFi/QY22/m84104_260327_100529_s1.hifi_reads.bc2066.bam	26843545600	ebe7a2eaf641bb0cedd22b685005fdb5	verified	项目: fx1号注释；负责人: 李四；是否压缩: 是
+南梗9108		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/public/home/siyli/NG9108/m84104_240311_131835_s3.hifi_reads.fasta.gz	39728447488		unchecked	项目: NG9108水稻组装；负责人: 李思远；是否压缩: 是
+南梗9108（T1）		ORYZA_SATIVA	WGS	DNBSEQ-T7	raw_reads_R1		/public/home/siyli/NG9108/T1RAWdata/24_15_1CK_R1.fastq.gz		86d76a2c7b62387aed4cd642d1483e73	verified	项目: 基因编辑水稻安全评估流程构建；负责人: 李思远；是否压缩: 是；原始记录数据大小: 23.1GB
+南梗9108（T1）		ORYZA_SATIVA	WGS	DNBSEQ-T7	raw_reads_R2		/public/home/siyli/NG9108/T1RAWdata/24_15_1CK_R2.fastq.gz		105a853166e609713fb60dc604e1de5c	verified	项目: 基因编辑水稻安全评估流程构建；负责人: 李思远；是否压缩: 是；原始记录数据大小: 23.1GB
+南梗9108（T1）		ORYZA_SATIVA	WGS	DNBSEQ-T7	raw_reads_R1		/public/home/siyli/NG9108/T1RAWdata/PTG267_5_1_R1.fastq.gz		fafb7e652b789d01e6c0ab9e00026d0c	verified	项目: 基因编辑水稻安全评估流程构建；负责人: 李思远；是否压缩: 是；原始记录数据大小: 23.1GB
+南梗9108（T1）		ORYZA_SATIVA	WGS	DNBSEQ-T7	raw_reads_R2		/public/home/siyli/NG9108/T1RAWdata/PTG267_5_1_R2.fastq.gz		56a2af3adb82907514a7d96f8e08e9ae	verified	项目: 基因编辑水稻安全评估流程构建；负责人: 李思远；是否压缩: 是；原始记录数据大小: 23.1GB
+赣皖籼37		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/ykxu25/02.Assembly/fuxian1hao_ganwanxian37hao_926/ganwanxian37hao_926/m84104_260327_100529_s1.hifi_reads.bc2066.bam	148477019422	c3a1c3a381eb9f7c5f6636ac71e5f6eb	verified	项目: 赣皖籼37号组装；负责人: 徐杨珂；是否压缩: 是
+浮香1		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/ykxu25/02.Assembly/fuxian1hao_ganwanxian37hao_926/fuxiang1hao_fault/m84104_260324_040227_s3.hifi_reads.bc2063.bam	132982924902	66b534dc197425ba33b61e742a30b5cc	verified	项目: 赣皖籼37号组装；负责人: 徐杨珂；是否压缩: 是
+赣皖籼38		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/yyzhu25/zuzhuang/ganwanxian38hao_waiyin7hao_/m84104_260327_100529_s1.hifi_reads.bc2060.bam	163853002342	3feb55dd567c252c492e2b68a3431d53	verified	项目: 赣皖籼38号组装；负责人: 朱祎垚；是否压缩: 是
+赣皖籼39		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/yyzhu25/zuzhuang/ganwanxian39hao_lianxiangzao_/m84104_260324_033014_s2.hifi_reads.bc2057.bam	16975858237	952412b88728b83edfa8c3f459001ba1	verified	项目: 赣皖籼39号组装；负责人: 朱祎垚；是否压缩: 是
+慧晶		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/jwlu24/03.huijing/00.data/m84310_241216_130120_s3.hifi_reads.bc2072.bam	15612206120		unchecked	项目: 水稻慧晶；负责人: 路佳雯；是否压缩: 否
+慧晶		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/share/home/jwlu24/03.huijing/00.data/01.rnaseq_data/Y2422130Gen_1.fq.gz		dd8d413864905e8231b34c955a05a4a0	verified	项目: 水稻慧晶；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 12GB
+慧晶		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/share/home/jwlu24/03.huijing/00.data/01.rnaseq_data/Y2422130Gen_2.fq.gz		76024b6c1b50262c77013c43d443b8ec	verified	项目: 水稻慧晶；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 12GB
+慧晶		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/share/home/jwlu24/03.huijing/00.data/01.rnaseq_data/Y2422130Jing_1.fq.gz		4bd91ea8d8f7aae7467ec02db1b5f853	verified	项目: 水稻慧晶；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 12GB
+慧晶		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/share/home/jwlu24/03.huijing/00.data/01.rnaseq_data/Y2422130Jing_2.fq.gz		734b22d3804bd91b24ff57902a5013b9	verified	项目: 水稻慧晶；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 12GB
+慧晶		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/share/home/jwlu24/03.huijing/00.data/01.rnaseq_data/Y2422130Ye_1.fq.gz		eb5f16f8326170303e50fad8a871f4dd	verified	项目: 水稻慧晶；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 12GB
+慧晶		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/share/home/jwlu24/03.huijing/00.data/01.rnaseq_data/Y2422130Ye_2.fq.gz		d49f1ad000cce4f317120cbed6f1842e	verified	项目: 水稻慧晶；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 12GB
+褐飞虱		NILAPARVATA_LUGENS	HiFi		hifi_reads		/share/home/jwlu24/01_wuda/00.data/PB_CCS_raw_data_WHXWZKY-202205087B-01/CCS/BT1/m64173_220628_193443/m64173_220628_193443.ccs.bam	108447924224	e6795530e13892b8a3c09a02430bc741	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R1		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/Y185-F2-979/140.43G/HIC950_R1.fq.gz		d3066e73273b0079298b5cd83273771f	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R1		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/A349-2-777/155.78G/HIC951_R1.fq.gz		6982e8e3dfac47c73ab1cad95829544c	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R1		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/T85-F2-1232/139.54G/HIC973_R1.fq.gz		7a0b43ab44592a4b02cd401e469f30f8	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R1		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/M636-F2-630/143.24G/HIC975_R1.fq.gz		ab62f754ce28e4da46671c4c18cdc19e	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R2		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/Y185-F2-979/140.43G/HIC950_R2.fq.gz		7809cc67a41335decbee6135dc1707c9	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R2		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/A349-2-777/155.78G/HIC951_R2.fq.gz		3d6cc0b65ec11a06d03c77198f2500e9	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R2		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/T85-F2-1232/139.54G/HIC973_R2.fq.gz		e579b959fb80805b8250474fa7d8fc9b	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+褐飞虱		NILAPARVATA_LUGENS	Hi-C		raw_reads_R2		/share/home/jwlu24/01_wuda/00.data/HiC_MGI_raw_data_WHXWZKY-202205087B-01/M636-F2-630/143.24G/HIC975_R2.fq.gz		84a87e3c55015265cd214dfd5779b26e	verified	项目: 褐飞虱；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 433GB
+箴9311S		ORYZA_SATIVA	HiFi		hifi_reads		/share/home/jwlu24/02.9311_QY22/9311S/m64284e_220728_004715.hifi_reads.bam	15504831938		unchecked	项目: 箴9311S组装；负责人: 路佳雯；是否压缩: 是
+QY22		ORYZA_SATIVA	WGS		raw_reads_R1		/share/home/jwlu24/02.9311_QY22/QY22/QY22_clean_1.fq.gz			unchecked	项目: QY22组装；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 8.85GB
+QY22		ORYZA_SATIVA	WGS		raw_reads_R2		/share/home/jwlu24/02.9311_QY22/QY22/QY22_clean_2.fq.gz			unchecked	项目: QY22组装；负责人: 路佳雯；是否压缩: 是；原始记录数据大小: 8.85GB
+洪香占		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/ehma25/5_6/raw_data/hongxiangzhan/m84104_260324_033014_s2.hifi_reads.bc2058.bam	14334453350	f7aaf7068ddef9c645c666bae8e5e4af	verified	项目: 洪香占组装；负责人: 马恩慧；是否压缩: 是
+洪香占		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/share/home/ehma25/annotation/1.rawdata/hongxiangzhan_T260304_0005-hongxiangzhan_T260304_0005/hongxiangzhan_T260304_0005_1.fq.gz	3339337072	e408d728130b6bc686cb3dd6dd04a7e0	verified	项目: 洪香占组装；负责人: 马恩慧；是否压缩: 是
+洪香占		ORYZA_SATIVA	RNA-seq	PacBio Revio	raw_reads_R2		/share/home/ehma25/annotation/1.rawdata/hongxiangzhan_T260304_0005-hongxiangzhan_T260304_0005/hongxiangzhan_T260304_0005_2.fq.gz	3682934456	b2644b1716cf5bf45d5f30c70c3612fe	verified	项目: 洪香占组装；负责人: 马恩慧；是否压缩: 是
+赣香占1号		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/ehma25/5_6/raw_data/ganxiangzhan1hao/m84104_260324_040227_s3.hifi_reads.bc2064.bam	129783174266	d6838738349a4abbb64361c1968ee27b	verified	项目: 赣香占1号组装；负责人: 马恩慧；是否压缩: 是
+赣香占1号		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/share/home/ehma25/annotation/1.rawdata/ganxiangzhan1hao_T260304_0012-ganxiangzhan1hao_T260304_0012/ganxiangzhan1hao_T260304_0012_1.fq.gz	3146063544	2248a218ea803f4ca144a17ff58e9fe8	verified	项目: 赣香占1号组装；负责人: 马恩慧；是否压缩: 是
+赣香占1号		ORYZA_SATIVA	RNA-seq	PacBio Revio	raw_reads_R2		/share/home/ehma25/annotation/1.rawdata/ganxiangzhan1hao_T260304_0012-ganxiangzhan1hao_T260304_0012/ganxiangzhan1hao_T260304_0012_2.fq.gz	3489660928	fdd8362a7b5e1740aeb7d1dc6cfe9bf1	verified	项目: 赣香占1号组装；负责人: 马恩慧；是否压缩: 是
+井冈香占		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/mcui25/GenomeAssembly/jinggangxiangzhan/rawdata/m84104_260324_033014_s2.hifi_reads.bc2059.bam	14377403023	eff9446a49dc252af56304eac517867b	verified	项目: 井冈香占组装；负责人: 崔萌；是否压缩: 是
+井冈香占		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/share/home/mcui25/transcription/jinggangxiangzhan/rawdata/jinggangxiangzhan_T260304_0006_1.fq.gz	3103113871	b2644b1716cf5bf45d5f30c70c3612fe	verified	项目: 井冈香占组装；负责人: 崔萌；是否压缩: 是
+井冈香占		ORYZA_SATIVA	RNA-seq	PacBio Revio	raw_reads_R2		/share/home/mcui25/transcription/jinggangxiangzhan/rawdata/jinggangxiangzhan_T260304_0006_2.fq.gz	3393024163	343f5c421e1383beca57ae4d99ced71c	verified	项目: 井冈香占组装；负责人: 崔萌；是否压缩: 是
+九香占		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/mcui25/GenomeAssembly/jiuxiangzhan_929_/rawdata/m84104_260327_100529_s1.hifi_reads.bc2065.bam	131458211512	ebe7a2eaf641bb0cedd22b685005fdb5	verified	项目: 九香占组装；负责人: 崔萌；是否压缩: 是
+九香占		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/share/home/mcui25/transcription/jiuxiangzhan_929/rawdata/jiuxiangzhan_929_T260304_0008_1.fq.gz	3264175144	cc76aa13c5af0c3cbd24cf9125a3f42a	verified	项目: 九香占组装；负责人: 崔萌；是否压缩: 是
+九香占		ORYZA_SATIVA	RNA-seq	PacBio Revio	raw_reads_R2		/share/home/mcui25/transcription/jiuxiangzhan_929/rawdata/jiuxiangzhan_929_T260304_0008_2.fq.gz	3650722201	a984f8b783f2bd162b78cfa6dc1f4c55	verified	项目: 九香占组装；负责人: 崔萌；是否压缩: 是
+粮发香丝		ORYZA_SATIVA	HiFi		hifi_reads		/share/home/yyli25/liangfaxiangsi/m84104_260324_033014_s2.hifi_reads.bc2061.bam	20701742366	3927326a466771b11ed3804d2622c71f	verified	项目: 粮发香丝组装；负责人: 李永烨；是否压缩: 是
+粮发香丝		ORYZA_SATIVA	RNA-seq		rnaseq_raw		/share/home/yyli26/liangfaxiangsi/liangfaxiangsi_T260331_0002-liangfaxiangsi_T260331_0002.zip	9792525434	5358ab191e96a113f277ec1714c060be	verified	项目: 粮发香丝组装；负责人: 李永烨；是否压缩: 是
+千香丝		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/share/home/yyli25/qianxiangsi/m84104_260324_040227_s3.hifi_reads.bc2062.bam	168309030912	921b4de0d7ae73386119d0dd4aa15e7b	verified	项目: 千香丝组装；负责人: 李永烨；是否压缩: 是
+千香丝		ORYZA_SATIVA	RNA-seq		rnaseq_raw		/share/home/yyli26/qianxiangsi/qianxiangsi_T260304_0010-qianxiangsi_T260304_0010.zip	6474663198	095ad5d4fce2d74e48f3bc6c73fda355	verified	项目: 千香丝组装；负责人: 李永烨；是否压缩: 是
+赣皖籼38		ORYZA_SATIVA	RNA-seq		rnaseq_raw		/share/home/yyzhu25/annotation/1.rawdata/ganwanxian38hao_waiyin7hao_T260304_0007-ganwanxian38hao_waiyin7hao_T260304_0007/ganwanxian39hao_lianxiangzao_T260304_0003-ganwanxian39hao_lianxiangzao_T260304_0003.zip	6624987054	4cc1f27c2d2ca610dc390033b8cf55bd	verified	项目: 赣皖籼38号组装；负责人: 朱祎垚；是否压缩: 是
+赣皖籼39		ORYZA_SATIVA	RNA-seq		rnaseq_raw		/share/home/yyzhu25/annotation/1.rawdata/ganwanxian39hao_lianxiangzao_T260304_0003-ganwanxian39hao_lianxiangzao_T260304_0003/ganwanxian38hao_waiyin7hao_T260304_0007-ganwanxian38hao_waiyin7hao_T260304_0007.zip	6431713525	f370f73c79073caeacbe623ae6659099	verified	项目: 赣皖籼39号组装；负责人: 朱祎垚；是否压缩: 是
+33S		ORYZA_SATIVA	PacBio CLR		hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64083_191017_090551.subreads.bam	261993005056		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+66S		ORYZA_SATIVA			hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64033_191018_100943.subreads.bam	281320357888		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+17S		ORYZA_SATIVA			hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64033_191018_100943.subreads.bam	215822106624		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+201B		ORYZA_SATIVA			hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64083_200121_060126.subreads.bam	195421011968		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+P64S（培矮64）		ORYZA_SATIVA			hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64083_200722_213500.subreads.bam	210453397504		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+Y4B（岳4B）		ORYZA_SATIVA			hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64083_200724_233839.subreads.bam	211527139328		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+923（923选）		ORYZA_SATIVA			hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64083_200121_212535.subreads.bam	122406567936		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+GWX30(赣皖籼30)		ORYZA_SATIVA			hifi_reads		/home/DATA/whzhang_backup/8Rice/8rice-raw-data/m64083_200122_130355.subreads.bam	187904819200		unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+33S		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample33SG_FRAS192305784-1a_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 12.8GB
+33S		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample33SJ_FRAS192305785-1a_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 12.8GB
+33S		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample33SJ_FRAS192305785-1a_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 12.8GB
+33S		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample33SY_FRAS192305786-1a_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 12.8GB
+66S		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample66SY_FRAS192305789-1a_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.8GB
+66S		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample66SY_FRAS192305789-1a_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.8GB
+66S		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample66SJ_FRAS192305788-1b_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.8GB
+66S		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample66SJ_FRAS192305788-1b_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.8GB
+66S		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample66SG_FRAS192305787-1a_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.8GB
+66S		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/sample66SG_FRAS192305787-1a_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.8GB
+17S		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/17S-R_FRAS202339856-1r_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 5GB
+17S		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/17S-R_FRAS202339856-1r_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 5GB
+201B		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/201B-R_FRAS202339854-1r_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 6.4GB
+201B		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/201B-R_FRAS202339854-1r_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 6.4GB
+P64S（培矮64）		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/P64-R_FRAS202339858-1r_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 4.9GB
+P64S（培矮64）		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/P64-R_FRAS202339858-1r_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 4.9GB
+Y4B（岳4B）		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/Y4B-R_FRAS202339857-1r_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 4.9GB
+Y4B（岳4B）		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/Y4B-R_FRAS202339857-1r_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 4.9GB
+923（923选）		ORYZA_SATIVA	RNA-seq		rnaseq_raw		/home/DATA/whzhang_backup/8Rice/00.Fraser-data			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是
+GWX30(赣皖籼30)		ORYZA_SATIVA	RNA-seq		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/GWX30-R_FRAS202339858-1r_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 4.9GB
+GWX30(赣皖籼30)		ORYZA_SATIVA	RNA-seq		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/GWX30-R_FRAS202339858-1r_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 4.9GB
+33S		ORYZA_SATIVA	WGS		wgs_reads		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/Oryza_sativa_1P.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.9GB
+33S		ORYZA_SATIVA	WGS		wgs_reads		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/Oryza_sativa_2P.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 17.9GB
+66S		ORYZA_SATIVA	WGS		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/V300034584_L03_102_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 22GB
+66S		ORYZA_SATIVA	WGS		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/V300034584_L03_102_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 22GB
+17S		ORYZA_SATIVA	WGS		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/5quan_clean_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 10.7GB
+17S		ORYZA_SATIVA	WGS		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/5quan_clean_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 10.7GB
+201B		ORYZA_SATIVA	WGS		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/B201B_L3_153153.R1.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 23GB
+201B		ORYZA_SATIVA	WGS		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/B201B_L3_153153.R2.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 23GB
+P64S（培矮64）		ORYZA_SATIVA	WGS		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/4quan_clean_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 10.6GB
+P64S（培矮64）		ORYZA_SATIVA	WGS		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/4quan_clean_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 10.6GB
+Y4B（岳4B）		ORYZA_SATIVA	WGS		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/7quan_clean_1.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 10.3GB
+Y4B（岳4B）		ORYZA_SATIVA	WGS		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/7quan_clean_2.fq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 10.3GB
+923（923选）		ORYZA_SATIVA	WGS		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/B923_L3_154154.R1.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 23GB
+923（923选）		ORYZA_SATIVA	WGS		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/B923_L3_154154.R2.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 23GB
+GWX30(赣皖籼30)		ORYZA_SATIVA	WGS		raw_reads_R1		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/GWX30_L3_155155.R1.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 25GB
+GWX30(赣皖籼30)		ORYZA_SATIVA	WGS		raw_reads_R2		/home/DATA/whzhang_backup/8Rice/00.Fraser-data/GWX30_L3_155155.R2.fastq.gz			unchecked	项目: 8Rice；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 25GB
+HMX3		ORYZA_SATIVA	PacBio CLR		hifi_reads		/home/DATA/whzhang_backup/HMX3/2.pacbio_seq2/CLR/m64083_201230_093848.subreads.bam	142807662592	8e4eb35b0983cbf39739398d132393fc	verified	项目: 华墨香3号；负责人: 张文慧；是否压缩: 是
+HMX3		ORYZA_SATIVA	HiFi	PacBio Revio	raw_reads_R2		/home/DATA/whzhang_backup/HMX3/1.Illumina/1.raw-data/JZ_2_1.fq.gz			unchecked	项目: 华墨香3号；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 35GB
+HMX3		ORYZA_SATIVA	HiFi	PacBio Revio	raw_reads_R2		/home/DATA/whzhang_backup/HMX3/1.Illumina/1.raw-data/JZ_2_2.fq.gz			unchecked	项目: 华墨香3号；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 35GB
+HHZ		ORYZA_SATIVA	HiFi		hifi_reads		/home/DATA/whzhang_backup/2022-HHZ/1.raw-data/m64033_220517_090708.ccs.bam	20401094656	f8b1ac97cad5dee2e453959048301ac6	verified	项目: 黄华占；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	HiFi		hifi_reads		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/0.Raw-Hifi/FPAC230003891-1A/m64269e_230424_133914.hifi_reads.bam	28991029248		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	HiFi	PacBio Revio	hifi_reads		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/0.Raw-Hifi/FPAC230003891-1A-1/m64269e_230427_140010.hifi_reads.bam	28991029248		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	Hi-C	PacBio Revio	raw_reads_R1		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/0.Raw-Hifi/0.Raw-Hic/raw_data/FDHC230003891-1a_L2_1.fq.gz	12884901888		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	Hi-C	PacBio Revio	raw_reads_R2		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/0.Raw-Hifi/0.Raw-Hic/raw_data/FDHC230003891-1a_L2_2.fq.gz	12884901888		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	Hi-C	PacBio Revio	raw_reads_R1		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/0.Raw-Hifi/0.Raw-Hic/raw_data/FDHC230003891-1a_L1_1.fq.gz	651165696		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	Hi-C	PacBio Revio	raw_reads_R2		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/0.Raw-Hifi/0.Raw-Hic/raw_data/FDHC230003891-1a_L1_2.fq.gz	667942912		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	RNA-seq	PacBio Revio	rnaseq_raw		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/4.Annotation/RNA-Seq-annotation/d23DSS1.bam	2254857830		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	RNA-seq	PacBio Revio	rnaseq_raw		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/4.Annotation/RNA-Seq-annotation/d23DSR1.bam	1717986918		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	RNA-seq	PacBio Revio	rnaseq_raw		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/4.Annotation/RNA-Seq-annotation/d23DSL1.bam	2362232012		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	RNA-seq	PacBio Revio	rnaseq_raw		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/4.Annotation/RNA-Seq-annotation/d23CKS1.bam	2362232012		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	RNA-seq	PacBio Revio	rnaseq_raw		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/4.Annotation/RNA-Seq-annotation/d23CKR1.bam	1395864371		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	RNA-seq	PacBio Revio	rnaseq_raw		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/4.Annotation/RNA-Seq-annotation/d23CKL1.bam	2147483648		unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是
+Ruf23		ORYZA_SATIVA	HiFi	PacBio Revio	raw_reads_R1		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/6.Re_Seq-2024.03/0.Merge_Seq/d23_001_R1.fastq.gz			unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 1.1T
+Ruf23		ORYZA_SATIVA	HiFi	PacBio Revio	raw_reads_R2		/public/home/whzhang/2020-allRice/2023.09-Rice.Nivara/6.Re_Seq-2024.03/0.Merge_Seq/... d23_331_R2.fastq.gz			unchecked	项目: 野生稻抗旱；负责人: 张文慧；是否压缩: 是；原始记录数据大小: 1.1T

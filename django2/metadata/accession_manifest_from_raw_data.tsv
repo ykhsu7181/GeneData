@@ -1,0 +1,21 @@
+accession	species_code	sub_population	country	region	longitude	latitude	description	source_raw_accession	note
+GWX30	ORYZA_SATIVA						赣皖籼30	GWX30(赣皖籼30)	建议用短编码 GWX30，中文名放 description。
+HMX3	ORYZA_SATIVA						HMX3	HMX3	生产库未找到，按新材料候选处理。
+P64S	ORYZA_SATIVA						培矮64	P64S（培矮64）	建议用 P64S 作为正式 Accession。
+QY22	ORYZA_SATIVA						QY22	QY22	生产库未找到，按新材料候选处理。
+Ruf23	ORYZA_SATIVA						Ruf23	Ruf23	生产库未找到，按新材料候选处理。
+Y4B	ORYZA_SATIVA						岳4B	Y4B（岳4B）	建议用 Y4B 作为正式 Accession。
+JXZ	ORYZA_SATIVA						九香占	九香占	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+JGXZ	ORYZA_SATIVA						井冈香占	井冈香占	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+QXS	ORYZA_SATIVA						千香丝	千香丝	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+NG9108	ORYZA_SATIVA						南梗9108	南梗9108	建议用 NG9108 作为正式 Accession。
+HuiJing	ORYZA_SATIVA						慧晶	慧晶	建议用 HuiJing，中文名放 description。
+HXZ	ORYZA_SATIVA						洪香占	洪香占	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+FX1	ORYZA_SATIVA						浮香1	浮香1	保留浮香1材料，正式 Accession 使用 FX1。
+Z9311S	ORYZA_SATIVA						箴9311S	箴9311S	建议用 Z9311S，需确认是否应映射到已有 9311 系列。
+LFXS	ORYZA_SATIVA						粮发香丝	粮发香丝	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+NL001	NILAPARVATA_LUGENS						褐飞虱临时材料	褐飞虱	当前仅有课题组原始数据表中的褐飞虱数据，临时命名为 NL001，后续确认具体品系/材料名后可更新 Accession 或增加别名。
+GWX37	ORYZA_SATIVA						赣皖籼37	赣皖籼37	建议用 GWX37 作为正式 Accession。
+GWX38	ORYZA_SATIVA						赣皖籼38	赣皖籼38	建议用 GWX38 作为正式 Accession。
+GWX39	ORYZA_SATIVA						赣皖籼39	赣皖籼39	建议用 GWX39 作为正式 Accession。
+GXZ1	ORYZA_SATIVA						赣香占1号	赣香占1号	建议用 GXZ1 作为正式 Accession。

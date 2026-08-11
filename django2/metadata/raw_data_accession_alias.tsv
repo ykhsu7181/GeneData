@@ -1,0 +1,24 @@
+raw_accession_code	target_accession	action	species_code	sample_code	description	note
+923（923选）	923	alias	ORYZA_SATIVA		923选	生产库已有 923，建议映射到已有 Accession。
+GWX30(赣皖籼30)	GWX30	create_accession	ORYZA_SATIVA		赣皖籼30	建议用短编码 GWX30，中文名放 description。
+HMX3	HMX3	create_accession	ORYZA_SATIVA		HMX3	生产库未找到，按新材料候选处理。
+P64S（培矮64）	P64S	create_accession	ORYZA_SATIVA		培矮64	建议用 P64S 作为正式 Accession。
+QY22	QY22	create_accession	ORYZA_SATIVA		QY22	生产库未找到，按新材料候选处理。
+Ruf23	Ruf23	create_accession	ORYZA_SATIVA		Ruf23	生产库未找到，按新材料候选处理。
+Y4B（岳4B）	Y4B	create_accession	ORYZA_SATIVA		岳4B	建议用 Y4B 作为正式 Accession。
+fx1	FX1	alias	ORYZA_SATIVA		浮香1	fx1 与 浮香1 为同一材料，统一映射到正式 Accession FX1。
+九香占	JXZ	create_accession	ORYZA_SATIVA		九香占	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+井冈香占	JGXZ	create_accession	ORYZA_SATIVA		井冈香占	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+千香丝	QXS	create_accession	ORYZA_SATIVA		千香丝	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+南梗9108	NG9108	create_accession	ORYZA_SATIVA		南梗9108	建议用 NG9108 作为正式 Accession。
+南梗9108（T1）	NG9108	sample	ORYZA_SATIVA	NG9108_T1	南梗9108 T1	更像南梗9108的处理/样本，建议挂到 NG9108，并写 sample_code。
+慧晶	HuiJing	create_accession	ORYZA_SATIVA		慧晶	建议用 HuiJing，中文名放 description。
+洪香占	HXZ	create_accession	ORYZA_SATIVA		洪香占	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+浮香1	FX1	create_accession	ORYZA_SATIVA		浮香1	保留浮香1材料，正式 Accession 使用 FX1。
+箴9311S	Z9311S	create_accession	ORYZA_SATIVA		箴9311S	建议用 Z9311S，需确认是否应映射到已有 9311 系列。
+粮发香丝	LFXS	create_accession	ORYZA_SATIVA		粮发香丝	建议用拼音首字母短编码，需人工确认是否已有英文/编号。
+褐飞虱	NL001	create_accession	NILAPARVATA_LUGENS		褐飞虱临时材料	当前仅有课题组原始数据表中的褐飞虱数据，临时命名为 NL001，后续确认具体品系/材料名后可更新 Accession 或增加别名。
+赣皖籼37	GWX37	create_accession	ORYZA_SATIVA		赣皖籼37	建议用 GWX37 作为正式 Accession。
+赣皖籼38	GWX38	create_accession	ORYZA_SATIVA		赣皖籼38	建议用 GWX38 作为正式 Accession。
+赣皖籼39	GWX39	create_accession	ORYZA_SATIVA		赣皖籼39	建议用 GWX39 作为正式 Accession。
+赣香占1号	GXZ1	create_accession	ORYZA_SATIVA		赣香占1号	建议用 GXZ1 作为正式 Accession。
