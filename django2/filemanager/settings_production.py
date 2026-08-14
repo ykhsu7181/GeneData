@@ -16,10 +16,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'gene_manage',
-        'USER': 'root',
-        'PASSWORD': 'PassWord123@',  # Use production password
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'USER': 'gene_user',
+        'PASSWORD': 'GeneManage123@',  # Use production password
+        'HOST': '127.0.0.1',
+        'PORT': '3307',
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
@@ -47,7 +47,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django/filemanager.log',
+            'filename': '/home/labuser/rdcheng/gd/django2/filemanager.log',
             'formatter': 'verbose',
         },
         'console': {
