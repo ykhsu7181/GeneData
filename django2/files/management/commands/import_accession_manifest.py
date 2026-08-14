@@ -5,6 +5,11 @@ from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
 from files.models import Accession, Species
+from files.services.import_log_service import (
+    build_import_stats,
+    import_timestamp,
+    write_key_value_report,
+)
 
 
 REQUIRED_COLUMNS = {"accession", "species_code"}
@@ -36,6 +41,7 @@ class Command(BaseCommand):
         input_path = options["input_path"]
         dry_run = options["dry_run"]
         limit = options["limit"]
+        started_at = datetime.now().isoformat(timespec="seconds")
 
         if not os.path.exists(input_path):
             raise CommandError(f"Input file does not exist: {input_path}")
@@ -66,18 +72,28 @@ class Command(BaseCommand):
                 skipped_count += int(result["skipped"])
                 unmapped.extend(result["unmapped"])
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        finished_at = datetime.now().isoformat(timespec="seconds")
+        timestamp = import_timestamp()
         log_path = f"import_accession_manifest_log_{timestamp}.txt"
         unmapped_path = f"import_accession_manifest_unmapped_{timestamp}.tsv"
-        stats = {
-            "dry_run": dry_run,
-            "scanned_count": scanned,
-            "created_accession_count": created_count,
-            "reused_accession_count": reused_count,
-            "updated_accession_count": updated_count,
-            "skipped_count": skipped_count,
-            "unmapped_count": len(unmapped),
-        }
+        stats = build_import_stats(
+            command="import_accession_manifest",
+            input_path=input_path,
+            dry_run=dry_run,
+            started_at=started_at,
+            finished_at=finished_at,
+            scanned_count=scanned,
+            created_count=created_count,
+            reused_count=reused_count,
+            updated_count=updated_count,
+            skipped_count=skipped_count,
+            unmapped_count=len(unmapped),
+            extra={
+                "created_accession_count": created_count,
+                "reused_accession_count": reused_count,
+                "updated_accession_count": updated_count,
+            },
+        )
         self.write_reports(log_path, unmapped_path, stats, unmapped)
 
         for key, value in stats.items():
@@ -192,9 +208,7 @@ class Command(BaseCommand):
         }
 
     def write_reports(self, log_path, unmapped_path, stats, unmapped):
-        with open(log_path, "w", encoding="utf-8") as handle:
-            for key, value in stats.items():
-                handle.write(f"{key}: {value}\n")
+        write_key_value_report(log_path, stats)
 
         with open(unmapped_path, "w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(

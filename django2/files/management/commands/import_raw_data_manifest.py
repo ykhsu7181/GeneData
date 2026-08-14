@@ -7,6 +7,11 @@ from django.core.management.base import BaseCommand, CommandError
 
 from files.models import Accession, DataFile, FileRelation, Sample, Species
 from files.services.file_write_service import make_next_file_code
+from files.services.import_log_service import (
+    build_import_stats,
+    import_timestamp,
+    write_key_value_report,
+)
 
 
 REQUIRED_COLUMNS = {"file_path", "file_role"}
@@ -65,11 +70,13 @@ class Command(BaseCommand):
         input_path = options["input_path"]
         dry_run = options["dry_run"]
         limit = options["limit"]
+        started_at = datetime.now().isoformat(timespec="seconds")
         if not os.path.exists(input_path):
             raise CommandError(f"Input file does not exist: {input_path}")
 
         created_datafile = 0
         reused_datafile = 0
+        updated_datafile = 0
         created_relation = 0
         reused_relation = 0
         unmapped = []
@@ -88,25 +95,39 @@ class Command(BaseCommand):
                 result = self.import_row(row, dry_run=dry_run)
                 created_datafile += int(result["created_datafile"])
                 reused_datafile += int(result["reused_datafile"])
+                updated_datafile += int(result["updated_datafile"])
                 created_relation += result["created_relation"]
                 reused_relation += result["reused_relation"]
                 unmapped.extend(result["unmapped"])
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        finished_at = datetime.now().isoformat(timespec="seconds")
+        timestamp = import_timestamp()
         log_path = f"import_raw_data_log_{timestamp}.txt"
         unmapped_path = f"import_raw_data_unmapped_{timestamp}.tsv"
+        stats = build_import_stats(
+            command="import_raw_data_manifest",
+            input_path=input_path,
+            dry_run=dry_run,
+            started_at=started_at,
+            finished_at=finished_at,
+            scanned_count=scanned,
+            created_count=created_datafile + created_relation,
+            reused_count=reused_datafile + reused_relation,
+            updated_count=updated_datafile,
+            skipped_count=0,
+            unmapped_count=len(unmapped),
+            extra={
+                "created_datafile_count": created_datafile,
+                "reused_datafile_count": reused_datafile,
+                "updated_datafile_count": updated_datafile,
+                "created_filerelation_count": created_relation,
+                "reused_filerelation_count": reused_relation,
+            },
+        )
         self.write_reports(
             log_path,
             unmapped_path,
-            {
-                "dry_run": dry_run,
-                "scanned_count": scanned,
-                "created_datafile_count": created_datafile,
-                "reused_datafile_count": reused_datafile,
-                "created_filerelation_count": created_relation,
-                "reused_filerelation_count": reused_relation,
-                "unmapped_count": len(unmapped),
-            },
+            stats,
             unmapped,
         )
         self.stdout.write(f"scanned_count={scanned}")
@@ -127,6 +148,7 @@ class Command(BaseCommand):
             return {
                 "created_datafile": False,
                 "reused_datafile": False,
+                "updated_datafile": False,
                 "created_relation": 0,
                 "reused_relation": 0,
                 "unmapped": [{"file_path": file_path, "reason": "missing file_path or file_role"}],
@@ -163,6 +185,7 @@ class Command(BaseCommand):
         data_file = DataFile.objects.filter(file_path=file_path).first()
         created_datafile = False
         reused_datafile = bool(data_file)
+        updated_datafile = False
         if not data_file:
             data_file = DataFile(
                 file_code=make_next_file_code(),
@@ -191,6 +214,7 @@ class Command(BaseCommand):
             if update_fields:
                 update_fields.append("updated_at")
                 data_file.save(update_fields=update_fields)
+                updated_datafile = True
 
         created_relation = 0
         reused_relation = 0
@@ -225,15 +249,14 @@ class Command(BaseCommand):
         return {
             "created_datafile": created_datafile,
             "reused_datafile": reused_datafile,
+            "updated_datafile": updated_datafile,
             "created_relation": created_relation,
             "reused_relation": reused_relation,
             "unmapped": unmapped,
         }
 
     def write_reports(self, log_path, unmapped_path, stats, unmapped):
-        with open(log_path, "w", encoding="utf-8") as handle:
-            for key, value in stats.items():
-                handle.write(f"{key}: {value}\n")
+        write_key_value_report(log_path, stats)
 
         with open(unmapped_path, "w", encoding="utf-8") as handle:
             handle.write("file_path\treason\n")

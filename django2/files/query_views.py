@@ -18,15 +18,14 @@ from files.services.file_relation_service import (
     get_files_for_annotation,
     get_files_for_assembly,
 )
-from files.services.data_overview_service import (
-    build_data_overview_files_payload,
-    build_data_overview_payload,
-)
-from files.services.genome_list_service import build_genome_files_payload, build_genome_list_payload
-from files.services.raw_data_service import build_raw_data_payload
-from files.services.transcriptome_list_service import (
-    build_transcriptome_files_payload,
-    build_transcriptome_list_payload,
+from files.services.query_service import (
+    get_data_overview_files_payload,
+    get_data_overview_payload,
+    get_genome_files_payload,
+    get_genome_list_payload,
+    get_raw_data_payload,
+    get_transcriptome_files_payload,
+    get_transcriptome_list_payload,
 )
 from files.views import _adapt_annotation_file_service_result, _adapt_overview_file_service_result, _has_path_traversal
 
@@ -527,13 +526,13 @@ def query_paginated_overview(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def query_data_overview(request):
-    return Response(build_data_overview_payload(_request_params(request)))
+    return Response(get_data_overview_payload(_request_params(request)))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def query_data_overview_files(request):
-    payload = build_data_overview_files_payload(_request_params(request))
+    payload = get_data_overview_files_payload(_request_params(request))
     if payload is None:
         return Response({"error": "accession not found"}, status=status.HTTP_404_NOT_FOUND)
     return Response(payload)
@@ -542,31 +541,31 @@ def query_data_overview_files(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def query_raw_data(request):
-    return Response(build_raw_data_payload(_request_params(request)))
+    return Response(get_raw_data_payload(_request_params(request)))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def query_genome_list(request):
-    return Response(build_genome_list_payload(_request_params(request)))
+    return Response(get_genome_list_payload(_request_params(request)))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def query_genome_files(request):
-    return Response(build_genome_files_payload(_request_params(request)))
+    return Response(get_genome_files_payload(_request_params(request)))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def query_transcriptome_list(request):
-    return Response(build_transcriptome_list_payload(_request_params(request)))
+    return Response(get_transcriptome_list_payload(_request_params(request)))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def query_transcriptome_files(request):
-    return Response(build_transcriptome_files_payload(_request_params(request)))
+    return Response(get_transcriptome_files_payload(_request_params(request)))
 
 
 @api_view(["GET"])
