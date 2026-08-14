@@ -130,24 +130,6 @@ const routes = [
     path: '/accession-card',
     name: 'accession-card',
     component: () => import('../views/AccessionCard.vue'),
-    beforeEnter: (to) => {
-      const rawAccession = to.query.accession || to.query.organism
-      const accession = Array.isArray(rawAccession) ? rawAccession[0] : rawAccession
-
-      if (!accession) {
-        return true
-      }
-
-      const query = { ...to.query }
-      delete query.organism
-      return {
-        name: 'accession-detail',
-        query: {
-          ...query,
-          accession
-        }
-      }
-    },
     meta: {
       requiresAuth: true
     }

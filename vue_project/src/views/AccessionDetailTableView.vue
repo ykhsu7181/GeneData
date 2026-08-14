@@ -1,5 +1,5 @@
 <template>
-  <div class="accession-page">
+  <div :class="['accession-page', embedded ? 'is-embedded' : '']">
     <div class="accession-breadcrumb">首页 / 品种信息 / {{ routeAccession || '-' }}</div>
     <div class="page-heading">
       <div>
@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="heading-actions">
-        <button type="button" class="back-search-button" @click="goBackToSearch">返回品种信息</button>
+        <button v-if="!embedded" type="button" class="back-search-button" @click="goBackToSearch">返回品种信息</button>
         <el-tooltip content="刷新" placement="top"><el-button circle class="refresh-button" @click="refreshPage"><el-icon><Refresh /></el-icon></el-button></el-tooltip>
       </div>
     </div>
@@ -139,7 +139,13 @@ export default {
   components: {
     Refresh
   },
-  setup() {
+  props: {
+    embedded: {
+      type: Boolean,
+      default: false
+    }
+  },
+  setup(props) {
     const route = useRoute();
     const router = useRouter();
 
@@ -664,6 +670,7 @@ export default {
     return {
       activeDetailTarget,
       activeStructureNode,
+      embedded: computed(() => props.embedded),
       accessionDetail,
       accessionSummaryRef,
       annotationTableRows,

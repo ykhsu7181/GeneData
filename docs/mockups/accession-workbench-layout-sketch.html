@@ -1,0 +1,617 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accession 合并页草图</title>
+  <style>
+    :root {
+      --nav: #0f2f63;
+      --nav-2: #0b2755;
+      --blue: #1f6feb;
+      --blue-2: #0d57d8;
+      --bg: #eef5fd;
+      --card: #ffffff;
+      --line: #d8e6f7;
+      --text: #0d2242;
+      --muted: #657895;
+      --green: #14a66a;
+      --soft-blue: #edf5ff;
+      --shadow: 0 16px 36px rgba(28, 67, 123, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
+      color: var(--text);
+    }
+
+    .topbar {
+      height: 72px;
+      background: linear-gradient(90deg, var(--nav-2), var(--nav));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 36px;
+      box-shadow: 0 8px 24px rgba(9, 31, 65, 0.22);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 260px;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #3e7bff, #1f5ed9);
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      letter-spacing: 1px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.28);
+    }
+
+    .brand strong { display: block; font-size: 16px; line-height: 1.2; }
+    .brand span { color: #c9d9ef; font-size: 12px; }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .nav a {
+      color: #d9e7fb;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 12px 16px;
+      border-radius: 14px;
+    }
+
+    .nav a.active {
+      color: #fff;
+      background: linear-gradient(135deg, #2c73ff, #1d5ce4);
+      box-shadow: 0 10px 26px rgba(21, 91, 220, .32);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-weight: 700;
+      color: #f2f7ff;
+      font-size: 13px;
+    }
+
+    .top-pill {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .page {
+      max-width: 1700px;
+      margin: 0 auto;
+      padding: 34px 36px 56px;
+    }
+
+    .breadcrumb {
+      color: #71819b;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .search-card {
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(360px, 1.4fr) 130px 170px 170px 170px 120px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .field, .select, .button, .ghost-button {
+      height: 54px;
+      border-radius: 14px;
+      border: 1px solid #cfe0f5;
+      background: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      color: #193052;
+      padding: 0 16px;
+    }
+
+    .field {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: #91a0b5;
+    }
+
+    .button {
+      border: none;
+      background: linear-gradient(135deg, #2879f3, #155fe0);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(31, 111, 235, .22);
+    }
+
+    .ghost-button {
+      background: #f8fbff;
+      cursor: pointer;
+    }
+
+    .quick-examples {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: #62748f;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .example {
+      color: var(--blue);
+      background: #edf5ff;
+      border: 1px solid #c9ddff;
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+
+    .header-panel {
+      position: relative;
+      padding: 24px 0 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .eyebrow {
+      color: #145cff;
+      letter-spacing: 5px;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 46px;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-weight: 800;
+      border: 1px solid #cfe0f8;
+      background: #edf5ff;
+      color: #0f60df;
+    }
+
+    .badge.green {
+      background: #e9faef;
+      color: #12844d;
+      border-color: #c5ecd2;
+    }
+
+    .return-btn {
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid #cfe0f5;
+      background: #fff;
+      color: #17325c;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(26, 71, 130, .08);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+      margin: 18px 0 22px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      min-height: 106px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: #edf5ff;
+      color: var(--blue);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .stat-label { color: #667996; font-weight: 800; margin-bottom: 6px; }
+    .stat-value { font-size: 28px; font-weight: 950; color: #0c326f; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .main-card, .side-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 28px;
+      padding: 0 24px;
+      border-bottom: 1px solid #e2edf9;
+      height: 58px;
+      align-items: center;
+    }
+
+    .tab {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      border-bottom: 4px solid transparent;
+      color: #51637f;
+      font-size: 16px;
+      font-weight: 850;
+    }
+
+    .tab.active {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+
+    .section {
+      padding: 24px 28px 10px;
+      border-bottom: 1px solid #edf3fb;
+    }
+
+    .section:last-child { border-bottom: none; padding-bottom: 28px; }
+    .section h3 { margin: 0 0 16px; color: #0d5fd7; font-size: 20px; }
+
+    .info-grid {
+      border: 1px solid #d8e6f7;
+      border-radius: 14px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 170px 1fr 170px 1fr;
+    }
+
+    .info-grid div {
+      padding: 13px 16px;
+      border-bottom: 1px solid #e5eef9;
+      min-height: 46px;
+    }
+
+    .info-grid div:nth-child(4n+1), .info-grid div:nth-child(4n+3) {
+      color: #60738e;
+      font-weight: 800;
+      background: #fbfdff;
+    }
+
+    .info-grid div:nth-last-child(-n+4) { border-bottom: none; }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid #d8e6f7;
+      border-radius: 14px;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 13px 14px;
+      border-bottom: 1px solid #e5eef9;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f0f6ff;
+      color: #41546f;
+      font-weight: 900;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    .link { color: #1469ef; font-weight: 900; text-decoration: none; }
+    .mini-pill { display: inline-block; padding: 4px 9px; border-radius: 999px; background: #eaf1ff; color: #2864d8; font-weight: 850; }
+    .file-pill { display: inline-block; padding: 4px 9px; border-radius: 999px; background: #efe8ff; color: #734ad6; font-weight: 850; }
+    .download { border: 1px solid #9bc1ff; color: #0f63e6; background: #fff; border-radius: 8px; padding: 7px 12px; font-weight: 850; }
+
+    .sidebar {
+      display: grid;
+      gap: 14px;
+    }
+
+    .side-card {
+      padding: 18px;
+    }
+
+    .side-card h3 {
+      margin: 0 0 12px;
+      color: #0d5fd7;
+      font-size: 18px;
+    }
+
+    .tree-box {
+      height: 250px;
+      background: linear-gradient(180deg, #fbfdff, #f4f8ff);
+      border: 1px solid #e0ebfa;
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .node {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #fff4e9;
+      border: 3px solid #78a8f5;
+      box-shadow: 0 0 0 7px rgba(31,111,235,.12);
+    }
+
+    .node-label {
+      position: absolute;
+      color: #1262e5;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .line {
+      position: absolute;
+      height: 2px;
+      background: #c7dcfa;
+      transform-origin: left center;
+    }
+
+    .status-row, .quick-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #edf3fb;
+      padding: 9px 0;
+      font-weight: 750;
+    }
+
+    .status-row:last-child, .quick-row:last-child { border-bottom: none; }
+    .ok { color: #0d9b61; background: #e9f8ef; padding: 3px 8px; border-radius: 999px; font-size: 12px; }
+    .muted { color: var(--muted); }
+
+    .empty-preview {
+      margin-top: 22px;
+      border: 1px dashed #bfd3ef;
+      border-radius: 18px;
+      background: rgba(255,255,255,.6);
+      padding: 18px 22px;
+      color: #667996;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 750;
+    }
+
+    @media (max-width: 1280px) {
+      .search-row { grid-template-columns: 1fr 120px 150px 150px; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .workspace { grid-template-columns: 1fr; }
+      .sidebar { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">GD</div>
+      <div>
+        <strong>基因数据仓库系统</strong>
+        <span>Gene Data Warehouse</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#">首页</a>
+      <a class="active" href="#">品种信息</a>
+      <a href="#">数据资源</a>
+      <a href="#">工具</a>
+    </nav>
+    <div class="top-actions">
+      <div class="top-pill">中文</div>
+      <div class="top-pill">当前用户: root</div>
+      <div class="top-pill">退出</div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">首页 / 品种信息 / IR64</div>
+
+    <section class="search-card" aria-label="Accession 搜索筛选区">
+      <div class="search-row">
+        <div class="field">⌕ 搜索 Accession / 品种 / 亚群，例如 IR64</div>
+        <button class="button">搜索</button>
+        <button class="select">物种　全部⌄</button>
+        <button class="select">亚群　全部⌄</button>
+        <button class="select">地理位置　全部⌄</button>
+        <button class="ghost-button">刷新</button>
+      </div>
+      <div class="quick-examples">
+        示例：
+        <span class="example">IR64</span>
+        <span class="example">C7</span>
+        <span class="example">02428</span>
+        <span class="muted">未输入时保留当前空状态；命中 Accession 后在同一页展开详情。</span>
+      </div>
+    </section>
+
+    <section class="header-panel">
+      <div>
+        <div class="eyebrow">ACCESSION</div>
+        <h1 class="title">Accession · IR64</h1>
+        <div class="badges">
+          <span class="badge">物种：水稻 (Oryza sativa)</span>
+          <span class="badge green">亚群：XI</span>
+        </div>
+      </div>
+      <button class="return-btn">返回品种信息</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat-card"><div class="stat-icon">样</div><div><div class="stat-label">样本数</div><div class="stat-value">0</div></div></div>
+      <div class="stat-card"><div class="stat-icon">集</div><div><div class="stat-label">数据集数</div><div class="stat-value">0</div></div></div>
+      <div class="stat-card"><div class="stat-icon">文</div><div><div class="stat-label">文件数</div><div class="stat-value">11</div></div></div>
+      <div class="stat-card"><div class="stat-icon">量</div><div><div class="stat-label">总数据量</div><div class="stat-value">10.40 GB</div></div></div>
+      <div class="stat-card"><div class="stat-icon">⌬</div><div><div class="stat-label">Assembly 数</div><div class="stat-value">0</div></div></div>
+      <div class="stat-card"><div class="stat-icon">✎</div><div><div class="stat-label">Annotation 数</div><div class="stat-value">0</div></div></div>
+    </section>
+
+    <section class="workspace">
+      <div class="main-card">
+        <div class="tabs">
+          <div class="tab active">基本信息</div>
+          <div class="tab">Assembly / 组装版本</div>
+          <div class="tab">Annotation / 注释版本</div>
+          <div class="tab">相关文件</div>
+        </div>
+
+        <div class="section">
+          <h3>基本信息</h3>
+          <div class="info-grid">
+            <div>Accession 编号</div><div>IR64</div><div>经纬度</div><div>12.88, 121.77</div>
+            <div>物种</div><div>水稻 (Oryza sativa)</div><div>Project</div><div>-</div>
+            <div>亚群 / 分组</div><div>XI</div><div>Dataset</div><div>-</div>
+            <div>国家 / 地区</div><div>-</div><div>外部链接</div><div><a class="link" href="#">https://www.ncbi.nlm.nih.gov/sra/SRP227298</a></div>
+            <div>描述</div><div style="grid-column: span 3;">用于组装、注释和群体分析的代表性水稻材料。</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Assembly / 组装版本</h3>
+          <table>
+            <thead><tr><th>组装版本</th><th>组装编码</th><th>参考基因组</th><th>BioProject</th><th>Reference</th><th>文件数</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>default <span class="mini-pill">default</span></td><td>-</td><td>default</td><td>-</td><td>-</td><td>10</td><td><button class="download">查看文件</button></td></tr>
+              <tr><td>haplotype-demo</td><td>-</td><td>haplotype-demo</td><td>-</td><td>-</td><td>10</td><td><button class="download">查看文件</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <h3>Annotation / 注释版本</h3>
+          <table>
+            <thead><tr><th>注释版本</th><th>注释编码</th><th>来源 / 方法</th><th>关联 Assembly</th><th>文件数</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>functional-demo</td><td>-</td><td>Maker + PASA</td><td>default</td><td>3</td><td><button class="download">查看文件</button></td></tr>
+              <tr><td>gene-v2</td><td>-</td><td>-</td><td>haplotype-demo</td><td>2</td><td><button class="download">查看文件</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <h3>相关文件（DataFile + FileRelation）</h3>
+          <table>
+            <thead><tr><th>文件名</th><th>文件角色</th><th>关联类型</th><th>关联对象</th><th>文件类型</th><th>大小</th><th>下载</th></tr></thead>
+            <tbody>
+              <tr><td>TEs.IR64.tar.gz</td><td><span class="file-pill">TEs</span></td><td>accession</td><td>IR64</td><td>TAR.GZ</td><td>8.43 MB</td><td><button class="download">DataFile 下载</button></td></tr>
+              <tr><td>annotation.IR64.gff</td><td><span class="file-pill">annotation</span></td><td>accession</td><td>IR64</td><td>GFF</td><td>137.35 MB</td><td><button class="download">DataFile 下载</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="side-card">
+          <h3>关系概览</h3>
+          <div class="tree-box">
+            <div class="line" style="left:156px; top:78px; width:84px; transform:rotate(28deg)"></div>
+            <div class="line" style="left:156px; top:78px; width:84px; transform:rotate(152deg)"></div>
+            <div class="line" style="left:156px; top:78px; width:82px; transform:rotate(90deg)"></div>
+            <div class="node" style="left:145px; top:54px;"></div><div class="node-label" style="left:187px; top:63px;">IR64</div>
+            <div class="node" style="left:67px; top:118px;"></div><div class="node-label" style="left:18px; top:158px;">default</div>
+            <div class="node" style="left:145px; top:152px;"></div><div class="node-label" style="left:187px; top:161px;">functional-demo</div>
+            <div class="node" style="left:226px; top:118px;"></div><div class="node-label" style="left:224px; top:158px;">gene-v2</div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <h3>快捷导航</h3>
+          <div class="quick-row"><span>基本信息</span><span>›</span></div>
+          <div class="quick-row"><span>组装版本</span><span>›</span></div>
+          <div class="quick-row"><span>注释版本</span><span>›</span></div>
+          <div class="quick-row"><span>相关文件</span><span>›</span></div>
+        </div>
+
+        <div class="side-card">
+          <h3>数据状态</h3>
+          <div class="status-row"><span>Genome</span><span class="ok">已就绪</span></div>
+          <div class="status-row"><span>Annotation</span><span class="ok">已就绪</span></div>
+          <div class="status-row"><span>Transcriptome</span><span class="ok">已就绪</span></div>
+          <div class="status-row"><span>Population</span><span class="muted">建设中</span></div>
+        </div>
+
+        <div class="side-card">
+          <h3>创建与更新信息</h3>
+          <div class="status-row"><span>创建日期</span><span>2026-06-03</span></div>
+          <div class="status-row"><span>更新日期</span><span>2026-08-11</span></div>
+          <div class="status-row"><span>创建者</span><span>admin</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="empty-preview">
+      <span>未选择 Accession 时：显示搜索框 + 空状态提示；选择或搜索后，同一页面切换为上方详情布局。</span>
+      <span>避免“列表页”和“详情页”割裂，也保留原入口体验。</span>
+    </div>
+  </main>
+</body>
+</html>
