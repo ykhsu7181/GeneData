@@ -36,20 +36,36 @@
             @navigate="navigateToRoute"
           />
 
-          <DistributionPanel
-            title="亚群分布"
-            kicker="Subpopulation"
-            :items="dashboard.sub_population_distribution"
-            value-key="accession_count"
-            empty-text="暂无分布数据"
-          />
+          <div ref="distributionLazyRef" class="distribution-lazy-slot">
+            <DistributionPanel
+              v-if="shouldRenderDistribution"
+              title="亚群分布"
+              kicker="Subpopulation"
+              :items="dashboard.sub_population_distribution"
+              value-key="accession_count"
+              empty-text="暂无分布数据"
+            />
+            <section v-else class="dashboard-lazy-placeholder">
+              <span class="lazy-dot"></span>
+              <strong>亚群分布将在滚动到此区域后加载</strong>
+              <p>先展示首页主内容，降低首屏 ECharts 初始化压力。</p>
+            </section>
+          </div>
         </section>
 
         <section class="dashboard-map-section">
-          <GeoMapPanel
-            :points="dashboard.geo_distribution"
-            @select="handleGeoSelect"
-          />
+          <div ref="geoLazyRef">
+            <GeoMapPanel
+              v-if="shouldRenderGeoMap"
+              :points="dashboard.geo_distribution"
+              @select="handleGeoSelect"
+            />
+            <section v-else class="dashboard-lazy-placeholder dashboard-map-placeholder">
+              <span class="lazy-dot"></span>
+              <strong>地理分布地图将在滚动到此区域后加载</strong>
+              <p>地图 GeoJSON 与 ECharts 地图模块会延后请求，避免拖慢首页首屏。</p>
+            </section>
+          </div>
           <RecentUpdatesBar
             :items="dashboard.recent_updates"
             @navigate="navigateToRoute"
@@ -61,18 +77,39 @@
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import DataResourceSummary from '@/components/DataResourceSummary.vue'
 import DashboardHero from '@/components/DashboardHero.vue'
-import DistributionPanel from '@/components/DistributionPanel.vue'
-import GeoMapPanel from '@/components/GeoMapPanel.vue'
 import RecentUpdatesBar from '@/components/RecentUpdatesBar.vue'
 import SpeciesCardGrid from '@/components/SpeciesCardGrid.vue'
 import { keywordToRoute, resolveDashboardSearch } from '@/config/dashboardSearch'
 import { emptyDashboardPayload, fetchDashboardData } from '@/services/dashboard'
+
+const AsyncLoadingBlock = {
+  name: 'DashboardAsyncLoadingBlock',
+  render() {
+    return h('section', { class: 'dashboard-lazy-placeholder' }, [
+      h('span', { class: 'lazy-dot' }),
+      h('strong', '模块加载中'),
+      h('p', '正在按需加载图表资源。')
+    ])
+  }
+}
+
+const DistributionPanel = defineAsyncComponent({
+  loader: () => import('@/components/DistributionPanel.vue'),
+  loadingComponent: AsyncLoadingBlock,
+  delay: 120
+})
+
+const GeoMapPanel = defineAsyncComponent({
+  loader: () => import('@/components/GeoMapPanel.vue'),
+  loadingComponent: AsyncLoadingBlock,
+  delay: 120
+})
 
 export default {
   name: 'DashboardHomeView',
@@ -89,9 +126,54 @@ export default {
     const dashboard = ref(emptyDashboardPayload())
     const isLoading = ref(true)
     const loadError = ref('')
+    const distributionLazyRef = ref(null)
+    const geoLazyRef = ref(null)
+    const shouldRenderDistribution = ref(false)
+    const shouldRenderGeoMap = ref(false)
+    const lazyObservers = []
 
     const featuredSpeciesCards = computed(() => dashboard.value.species_cards.slice(0, 4))
     const hasFeaturedSpeciesCards = computed(() => featuredSpeciesCards.value.length > 0)
+
+    const stopLazyObservers = () => {
+      while (lazyObservers.length) {
+        const observer = lazyObservers.pop()
+        observer.disconnect()
+      }
+    }
+
+    const observeLazySection = (targetRef, renderFlag) => {
+      if (renderFlag.value || !targetRef.value) {
+        return
+      }
+
+      if (!('IntersectionObserver' in window)) {
+        renderFlag.value = true
+        return
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            renderFlag.value = true
+            observer.disconnect()
+          }
+        },
+        {
+          rootMargin: '280px 0px',
+          threshold: 0.01
+        }
+      )
+
+      observer.observe(targetRef.value)
+      lazyObservers.push(observer)
+    }
+
+    const setupLazySections = async () => {
+      await nextTick()
+      observeLazySection(distributionLazyRef, shouldRenderDistribution)
+      observeLazySection(geoLazyRef, shouldRenderGeoMap)
+    }
 
     const loadDashboard = async () => {
       isLoading.value = true
@@ -104,6 +186,7 @@ export default {
         ElMessage.error(loadError.value)
       } finally {
         isLoading.value = false
+        setupLazySections()
       }
     }
 
@@ -149,10 +232,18 @@ export default {
       loadDashboard()
     })
 
+    onBeforeUnmount(() => {
+      stopLazyObservers()
+    })
+
     return {
       dashboard,
       isLoading,
       loadError,
+      distributionLazyRef,
+      geoLazyRef,
+      shouldRenderDistribution,
+      shouldRenderGeoMap,
       featuredSpeciesCards,
       hasFeaturedSpeciesCards,
       navigateToRoute,
@@ -226,6 +317,58 @@ export default {
 .dashboard-map-section {
   display: grid;
   gap: 16px;
+}
+
+.distribution-lazy-slot {
+  min-width: 0;
+}
+
+.dashboard-lazy-placeholder {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(210, 221, 236, 0.9);
+  background:
+    radial-gradient(circle at 50% 36%, rgba(37, 99, 235, 0.08), transparent 42%),
+    linear-gradient(180deg, #ffffff, #f7fbff);
+  color: #607085;
+  text-align: center;
+  box-shadow: 0 18px 40px rgba(14, 30, 66, 0.06);
+}
+
+.dashboard-map-placeholder {
+  min-height: 540px;
+}
+
+.dashboard-lazy-placeholder strong {
+  color: #18315f;
+  font-size: 16px;
+}
+
+.dashboard-lazy-placeholder p {
+  max-width: 420px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.lazy-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 3px solid rgba(37, 99, 235, 0.18);
+  border-top-color: #2563eb;
+  animation: lazySpin 0.8s linear infinite;
+}
+
+@keyframes lazySpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes dashboardShimmer {
@@ -302,7 +445,8 @@ export default {
 
 @media (prefers-reduced-motion: reduce) {
   .dashboard-skeleton-card,
-  .panel-skeleton {
+  .panel-skeleton,
+  .lazy-dot {
     animation: none;
     background-position: 50% 0;
   }

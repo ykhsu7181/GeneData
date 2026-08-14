@@ -111,7 +111,7 @@ export default {
     const loadMapRuntime = () => {
       if (!mapRuntimePromise) {
         mapRuntimePromise = Promise.all([
-          import('@/utils/dashboardCharts'),
+          import('@/utils/dashboardMapCharts'),
           import('@/data/worldMapData.js')
         ]).then(([chartModule, mapModule]) => ({
           echarts: chartModule.default,

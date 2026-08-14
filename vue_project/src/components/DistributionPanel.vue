@@ -140,7 +140,7 @@ export default {
 
     const loadChartRuntime = () => {
       if (!chartRuntimePromise) {
-        chartRuntimePromise = import('@/utils/dashboardCharts')
+        chartRuntimePromise = import('@/utils/dashboardPieCharts')
           .then((module) => module.default)
       }
       return chartRuntimePromise

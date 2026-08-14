@@ -86,6 +86,19 @@
 
         <div class="table-wrap">
           <table>
+            <colgroup>
+              <col class="col-accession" />
+              <col class="col-sample" />
+              <col class="col-species" />
+              <col class="col-type" />
+              <col class="col-platform" />
+              <col class="col-file-name" />
+              <col class="col-role" />
+              <col class="col-size" />
+              <col class="col-status" />
+              <col class="col-date" />
+              <col class="col-action" />
+            </colgroup>
             <thead>
               <tr>
                 <th>Accession</th>
@@ -95,10 +108,7 @@
                 <th>测序平台</th>
                 <th>文件名</th>
                 <th>文件角色</th>
-                <th>所在集群</th>
-                <th>文件路径</th>
                 <th>文件大小</th>
-                <th>MD5</th>
                 <th>校验状态</th>
                 <th>更新时间</th>
                 <th>操作</th>
@@ -112,38 +122,29 @@
                 @click="openDrawer(row)"
               >
                 <td><span class="link-text">{{ row.accession || '-' }}</span></td>
-                <td>{{ row.sample_id || '-' }}</td>
+                <td><span class="text-ellipsis" :title="row.sample_id">{{ row.sample_id || '-' }}</span></td>
                 <td class="species-cell">
                   {{ row.species_name || '-' }}
                   <small>{{ row.latin_name || '-' }}</small>
                 </td>
                 <td><span class="type-tag">{{ row.raw_data_type || '-' }}</span></td>
-                <td>{{ row.sequencing_platform || '-' }}</td>
-                <td>{{ row.file_name || '-' }}</td>
-                <td>{{ row.file_role || '-' }}</td>
-                <td>{{ row.cluster_name || '-' }}</td>
-                <td>
-                  <button type="button" class="path-button" :title="row.file_path" @click.stop="copyText(row.file_path, '路径')">
-                    {{ middleEllipsis(row.file_path) }}
-                  </button>
+                <td><span class="text-ellipsis" :title="row.sequencing_platform">{{ row.sequencing_platform || '-' }}</span></td>
+                <td class="file-name-cell">
+                  <span class="text-ellipsis" :title="row.file_name">{{ row.file_name || '-' }}</span>
+                  <small :title="row.file_path">{{ middleEllipsis(row.file_path, 30) }}</small>
                 </td>
+                <td><span class="role-tag" :title="row.file_role">{{ fileRoleLabel(row.file_role) }}</span></td>
                 <td>{{ row.file_size_display || '-' }}</td>
-                <td>
-                  <button type="button" class="path-button" :title="row.md5" @click.stop="copyText(row.md5, 'MD5')">
-                    {{ row.md5_display || '-' }}
-                  </button>
-                </td>
                 <td><span :class="['status-pill', statusClass(row.check_status)]">{{ statusLabel(row.check_status) }}</span></td>
                 <td>{{ row.updated_at || '-' }}</td>
                 <td>
                   <div class="row-actions">
-                    <button type="button" @click.stop="copyText(row.file_path, '路径')">路径</button>
                     <button type="button" @click.stop="openDrawer(row)">详情</button>
                   </div>
                 </td>
               </tr>
               <tr v-if="!loading && !rows.length">
-                <td colspan="14" class="empty-cell">暂无原始数据文件登记</td>
+                <td colspan="11" class="empty-cell">暂无原始数据文件登记</td>
               </tr>
             </tbody>
           </table>
@@ -176,7 +177,7 @@
               <dt>物种</dt><dd>{{ selectedRow.species_name || '-' }}（{{ selectedRow.latin_name || '-' }}）</dd>
               <dt>数据类型</dt><dd>{{ selectedRow.raw_data_type || '-' }}</dd>
               <dt>测序平台</dt><dd>{{ selectedRow.sequencing_platform || '-' }}</dd>
-              <dt>文件角色</dt><dd>{{ selectedRow.file_role || '-' }}</dd>
+              <dt>文件角色</dt><dd>{{ fileRoleLabel(selectedRow.file_role) }}</dd>
               <dt>所在集群</dt><dd>{{ selectedRow.cluster_name || '-' }}</dd>
               <dt>文件大小</dt><dd>{{ selectedRow.file_size_display || '-' }}</dd>
               <dt>校验状态</dt><dd><span :class="['status-pill', statusClass(selectedRow.check_status)]">{{ statusLabel(selectedRow.check_status) }}</span></dd>
@@ -219,6 +220,27 @@ const statusMap = {
   待确认: { label: '待确认', className: 'pending' },
   未校验: { label: '未校验', className: 'unchecked' },
   文件缺失: { label: '文件缺失', className: 'missing' }
+}
+
+const fileRoleMap = {
+  raw_reads_R1: '原始测序 R1',
+  raw_reads_R2: '原始测序 R2',
+  rnaseq_raw_R1: 'RNA-seq 原始 R1',
+  rnaseq_raw_R2: 'RNA-seq 原始 R2',
+  hifi_reads: 'HiFi 原始 reads',
+  ont_reads: 'ONT 原始 reads',
+  pacbio_reads: 'PacBio 原始 reads',
+  illumina_reads: 'Illumina 原始 reads',
+  fastq: 'FASTQ 原始文件',
+  bam: '比对 BAM 文件',
+  cram: '压缩比对 CRAM',
+  vcf: '变异 VCF 文件',
+  genome_fasta: '参考基因组序列',
+  genome_index: '基因组索引',
+  annotation_gff3: '基因注释 GFF3',
+  annotation_gtf: '基因注释 GTF',
+  TEs: '转座子数据',
+  annotation: '注释文件'
 }
 
 export default {
@@ -330,15 +352,20 @@ export default {
       }
     }
 
-    const middleEllipsis = (value) => {
+    const middleEllipsis = (value, maxLength = 34) => {
       if (!value || value === '-') return '-'
       const text = String(value)
-      if (text.length <= 34) return text
-      return `${text.slice(0, 16)}...${text.slice(-16)}`
+      if (text.length <= maxLength) return text
+      const edge = Math.max(6, Math.floor((maxLength - 3) / 2))
+      return `${text.slice(0, edge)}...${text.slice(-edge)}`
     }
 
     const statusLabel = (status) => statusMap[status]?.label || status || '-'
     const statusClass = (status) => statusMap[status]?.className || 'unchecked'
+    const fileRoleLabel = (role) => {
+      if (!role || role === '-') return '-'
+      return fileRoleMap[role] || role
+    }
 
     onMounted(fetchRawData)
 
@@ -369,6 +396,7 @@ export default {
       middleEllipsis,
       statusLabel,
       statusClass,
+      fileRoleLabel,
       statusMap
     }
   }
@@ -585,10 +613,22 @@ export default {
 
 table {
   width: 100%;
-  min-width: 1460px;
+  min-width: 1160px;
   border-collapse: collapse;
   table-layout: fixed;
 }
+
+.col-accession { width: 9%; }
+.col-sample { width: 10%; }
+.col-species { width: 11%; }
+.col-type { width: 8%; }
+.col-platform { width: 9%; }
+.col-file-name { width: 18%; }
+.col-role { width: 11%; }
+.col-size { width: 8%; }
+.col-status { width: 8%; }
+.col-date { width: 10%; }
+.col-action { width: 7%; }
 
 th,
 td {
@@ -626,6 +666,31 @@ tbody tr:hover td {
   color: #687c95;
 }
 
+.text-ellipsis,
+.file-name-cell small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-name-cell {
+  text-align: left;
+}
+
+.file-name-cell .text-ellipsis {
+  color: #173052;
+  font-weight: 900;
+}
+
+.file-name-cell small {
+  margin-top: 4px;
+  color: #6f8198;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .type-tag {
   display: inline-flex;
   padding: 4px 8px;
@@ -633,6 +698,19 @@ tbody tr:hover td {
   color: #1e63c8;
   background: #eaf3ff;
   font-weight: 900;
+}
+
+.role-tag {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: #174c9b;
+  background: #f0f6ff;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .path-button {
