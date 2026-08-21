@@ -100,9 +100,41 @@ class Accession(models.Model):
         return self.assemblies.filter(is_default=True).first()
 
 
+class AccessionExternalMapping(models.Model):
+    """External study and sequencing identifiers associated with an accession."""
+
+    accession = models.ForeignKey(
+        'Accession',
+        on_delete=models.CASCADE,
+        related_name='external_mappings',
+    )
+    external_database = models.CharField(max_length=50)
+    external_study_accession = models.CharField(max_length=100, db_index=True)
+    biosample_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    experiment_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    run_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    scientific_name = models.CharField(max_length=255, blank=True, null=True)
+    library_strategy = models.CharField(max_length=100, blank=True, null=True)
+    instrument_platform = models.CharField(max_length=100, blank=True, null=True)
+    instrument_model = models.CharField(max_length=255, blank=True, null=True)
+    fastq_url = models.TextField(blank=True, null=True)
+    fastq_md5 = models.CharField(max_length=64, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'accession_external_mapping'
+        ordering = ['external_study_accession', 'run_accession', 'id']
+
+    def __str__(self):
+        return self.run_accession or self.experiment_accession or self.external_study_accession
+
+
 class Sample(models.Model):
     sample_code = models.CharField(max_length=100, unique=True, db_index=True)
     sample_name = models.CharField(max_length=255, blank=True, null=True)
+    biosample_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    experiment_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     species = models.ForeignKey(
         'Species',
         on_delete=models.PROTECT,
@@ -155,6 +187,7 @@ class Dataset(models.Model):
         ('genome', 'Genome'),
         ('annotation', 'Annotation'),
         ('transcriptome', 'Transcriptome'),
+        ('hic', 'Hi-C'),
         ('population_genetics', 'Population genetics'),
         ('variant', 'Variant'),
         ('phenotype', 'Phenotype'),
@@ -175,6 +208,7 @@ class Dataset(models.Model):
 
     dataset_code = models.CharField(max_length=100, unique=True, db_index=True)
     dataset_name = models.CharField(max_length=255, blank=True, null=True)
+    bioproject_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     dataset_type = models.CharField(
         max_length=50,
         choices=DATASET_TYPE_CHOICES,
