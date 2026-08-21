@@ -117,7 +117,7 @@ class NewQueryEntrypointsTestCase(TestCase):
 class FrontendUsesNewQueryEntrypointsTestCase(TestCase):
     def test_business_views_no_longer_reference_legacy_genomefile_query_urls(self):
         repo_root = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..")
+            os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
         )
         views_dir = os.path.join(repo_root, "vue_project", "src", "views")
         legacy_hits = []

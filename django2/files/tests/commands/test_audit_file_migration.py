@@ -192,7 +192,8 @@ class AuditFileMigrationCommandTestCase(TestCase):
 
         output = stdout.getvalue()
         self.assertIn("accession_source_new_relation\t1", output)
-        self.assertIn("accession_source_legacy_genomefile\t1", output)
+        self.assertIn("accession_source_no_files\t2", output)
+        self.assertIn("overview_source_legacy_genomefile\t1", output)
         self.assertIn("overview_source_organism_fallback\t1", output)
         reports = [
             name for name in os.listdir(self.output_dir.name)

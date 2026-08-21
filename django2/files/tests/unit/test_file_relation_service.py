@@ -116,6 +116,20 @@ class FileRelationServiceTestCase(TestCase):
 
         self.assertEqual(files, [])
 
+    def test_returns_empty_when_only_organism_matches_legacy_file(self):
+        GenomeFile.objects.create(
+            name="organism.IR64.fasta",
+            organism=self.accession.accession,
+            category="genome",
+            file_path="/tmp/organism.IR64.fasta",
+            file_type=self.file_type,
+            size=5678,
+        )
+
+        files = get_files_for_accession(self.accession.id)
+
+        self.assertEqual(files, [])
+
     def test_get_primary_file_prefers_primary_relation(self):
         self.add_relation("accession", self.accession.id, file_role="genome", is_primary=False)
         primary_file = DataFile.objects.create(
