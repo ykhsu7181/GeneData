@@ -36,11 +36,25 @@ from .query_views import (
     query_tes,
     query_variableblocks,
 )
+from .accession_api_views import (
+    accession_annotations,
+    accession_assemblies,
+    accession_datasets,
+    accession_files,
+    accession_samples,
+    accession_summary,
+)
 
 
 # 先定义自定义路径，避免与router冲突
 urlpatterns = [
     path('accessions/<str:accession>/', accession_detail, name='accession-detail'),
+    path('accessions/<str:accession>/summary/', accession_summary, name='accession-summary'),
+    path('accessions/<str:accession>/datasets/', accession_datasets, name='accession-datasets'),
+    path('accessions/<str:accession>/samples/', accession_samples, name='accession-samples'),
+    path('accessions/<str:accession>/assemblies/', accession_assemblies, name='accession-assemblies'),
+    path('accessions/<str:accession>/annotations/', accession_annotations, name='accession-annotations'),
+    path('accessions/<str:accession>/files/', accession_files, name='accession-files'),
     path('data-files/<int:file_id>/download/', download_datafile, name='datafile-download'),
     path('query/organisms/', query_organisms, name='query-organisms'),
     path('query/annotation-organisms/', query_annotation_organisms, name='query-annotation-organisms'),
