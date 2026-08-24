@@ -259,6 +259,17 @@ class Assembly(models.Model):
         verbose_name='Accession',
     )
     name = models.CharField(max_length=255, default='default')
+    # Manifest-facing fields. ``name`` remains the legacy display key used by
+    # existing pages, while these retain the external assembly metadata.
+    assembly_code = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    assembly_name = models.CharField(max_length=255, blank=True, null=True)
+    assembly_accession = models.CharField(max_length=255, blank=True, null=True)
+    species_code = models.CharField(max_length=100, blank=True, null=True)
+    assembly_level = models.CharField(max_length=100, blank=True, null=True)
+    source_database = models.CharField(max_length=100, blank=True, null=True)
+    external_project = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    file_name = models.CharField(max_length=500, blank=True, null=True)
+    file_type = models.CharField(max_length=100, blank=True, null=True)
     display_name = models.CharField(max_length=255, blank=True, null=True)
     standard_id = models.CharField(max_length=255, blank=True, null=True)
     bio_project = models.CharField(max_length=255, blank=True, null=True)
@@ -298,7 +309,25 @@ class Annotation(models.Model):
         related_name='annotations',
         verbose_name='Assembly',
     )
+    # Stored explicitly for manifest imports and fast Accession-level queries.
+    # The importer always keeps it aligned with ``assembly.accession``.
+    accession = models.ForeignKey(
+        'Accession',
+        on_delete=models.CASCADE,
+        related_name='direct_annotations',
+        blank=True,
+        null=True,
+        verbose_name='Accession',
+    )
     name = models.CharField(max_length=255, default='default-annotation')
+    annotation_code = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    annotation_name = models.CharField(max_length=255, blank=True, null=True)
+    annotation_version = models.CharField(max_length=100, blank=True, null=True)
+    species_code = models.CharField(max_length=100, blank=True, null=True)
+    source_database = models.CharField(max_length=100, blank=True, null=True)
+    external_project = models.CharField(max_length=100, blank=True, null=True)
+    file_name = models.CharField(max_length=500, blank=True, null=True)
+    file_type = models.CharField(max_length=100, blank=True, null=True)
     display_name = models.CharField(max_length=255, blank=True, null=True)
     standard_id = models.CharField(max_length=255, blank=True, null=True)
     source_name = models.CharField(max_length=255, blank=True, null=True)

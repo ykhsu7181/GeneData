@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from files.models import Accession, Sample, Species
 
 
-REQUIRED_COLUMNS = {"sample_code", "species_code", "accession_code"}
+REQUIRED_COLUMNS = {"sample_code", "species_code"}
 
 
 def _clean(value):
@@ -44,6 +44,9 @@ class Command(BaseCommand):
                 raise CommandError(
                     f"Missing required columns: {', '.join(sorted(missing_columns))}"
                 )
+            fieldnames = set(reader.fieldnames or [])
+            if not ({"accession", "accession_code"} & fieldnames):
+                raise CommandError("Missing required column: accession or accession_code")
 
             for line_number, row in enumerate(reader, start=2):
                 if limit is not None and scanned >= limit:
@@ -78,7 +81,7 @@ class Command(BaseCommand):
     def import_row(self, row, dry_run=False, line_number=None):
         sample_code = _clean(row.get("sample_code"))
         species_code = _clean(row.get("species_code"))
-        accession_code = _clean(row.get("accession_code"))
+        accession_code = _clean(row.get("accession") or row.get("accession_code"))
         unmapped = []
 
         if not sample_code:
@@ -127,6 +130,8 @@ class Command(BaseCommand):
             "replicate": _clean(row.get("replicate")) or None,
             "data_type": _clean(row.get("data_type")) or None,
             "description": _clean(row.get("description")) or None,
+            "biosample_accession": _clean(row.get("biosample_accession")) or None,
+            "experiment_accession": _clean(row.get("experiment_accession")) or None,
         }
 
         if not sample:
