@@ -48,11 +48,12 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const GEO_BUCKETS = [
-  { label: '1 - 10', min: 1, max: 10, size: 10, color: '#22c55e' },
-  { label: '11 - 50', min: 11, max: 50, size: 14, color: '#84cc16' },
-  { label: '51 - 100', min: 51, max: 100, size: 18, color: '#facc15' },
-  { label: '101 - 500', min: 101, max: 500, size: 23, color: '#f97316' },
-  { label: '>500', min: 501, max: Number.POSITIVE_INFINITY, size: 29, color: '#ef4444' }
+  { label: '1', min: 1, max: 1, size: 9, color: '#22c55e' },
+  { label: '2 - 4', min: 2, max: 4, size: 12, color: '#84cc16' },
+  { label: '5 - 7', min: 5, max: 7, size: 15, color: '#d9c915' },
+  { label: '8 - 10', min: 8, max: 10, size: 18, color: '#facc15' },
+  { label: '11 - 20', min: 11, max: 20, size: 22, color: '#f97316' },
+  { label: '>20', min: 21, max: Number.POSITIVE_INFINITY, size: 27, color: '#ef4444' }
 ]
 
 const MAX_TOOLTIP_ITEMS = 4

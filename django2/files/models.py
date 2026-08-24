@@ -251,6 +251,48 @@ class Dataset(models.Model):
         return self.dataset_name or self.dataset_code
 
 
+class DatasetAccession(models.Model):
+    """Explicit ownership link between a dataset and one or more accessions."""
+
+    RELATION_ROLE_CHOICES = [
+        ("primary", "Primary"),
+        ("derived", "Derived"),
+        ("reference", "Reference"),
+    ]
+
+    dataset = models.ForeignKey(
+        "Dataset",
+        on_delete=models.CASCADE,
+        related_name="accession_links",
+    )
+    accession = models.ForeignKey(
+        "Accession",
+        on_delete=models.CASCADE,
+        related_name="dataset_links",
+    )
+    relation_role = models.CharField(
+        max_length=50,
+        choices=RELATION_ROLE_CHOICES,
+        default="primary",
+    )
+    source = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "dataset_accession"
+        ordering = ["dataset__dataset_code", "accession__accession"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["dataset", "accession"],
+                name="uniq_dataset_accession",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.dataset.dataset_code}:{self.accession.accession}"
+
+
 class Assembly(models.Model):
     accession = models.ForeignKey(
         'Accession',

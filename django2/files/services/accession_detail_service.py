@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from django.db.models import Q
 
-from files.models import Accession, DataFile, FileRelation
+from files.models import Accession, DataFile, DatasetAccession, FileRelation
 
 
 def _display_size(value):
@@ -144,11 +144,38 @@ def _annotation_rows(accession):
     return rows
 
 
+def _accession_dataset_links(accession):
+    """Return explicit DatasetAccession links, supplemented by file-owned datasets."""
+    rows = {}
+    links = (
+        DatasetAccession.objects.filter(accession=accession)
+        .select_related("dataset")
+        .order_by("dataset__dataset_code", "id")
+    )
+    for link in links:
+        rows[link.dataset_id] = {
+            "dataset": link.dataset,
+            "relation_role": link.relation_role,
+            "relation_source": link.source or "-",
+        }
+
+    # Preserve pre-existing Dataset assignments on files while manifests are
+    # progressively migrated to the explicit DatasetAccession relationship.
+    for file_obj in _related_file_queryset(accession):
+        if file_obj.dataset_id:
+            rows.setdefault(file_obj.dataset_id, {
+                "dataset": file_obj.dataset,
+                "relation_role": "-",
+                "relation_source": "DataFile.dataset",
+            })
+    return sorted(rows.values(), key=lambda item: item["dataset"].dataset_code)
+
+
 def get_accession_summary(accession):
     files = _file_rows(accession)
     assemblies = _assembly_rows(accession)
     annotations = _annotation_rows(accession)
-    datasets = {item["dataset_id"]: item for item in files if item["dataset_id"]}
+    datasets = _accession_dataset_links(accession)
     mappings = list(accession.external_mappings.all())
     roles = {item["file_role"].lower() for item in files}
 
@@ -209,15 +236,13 @@ def get_accession_summary(accession):
 
 
 def get_accession_datasets(accession, page=1, page_size=20):
-    rows = {}
     mappings = list(accession.external_mappings.all())
     external_databases = sorted({item.external_database for item in mappings if item.external_database})
     run_count = len({item.run_accession for item in mappings if item.run_accession})
-    for file_obj in _related_file_queryset(accession):
-        dataset = file_obj.dataset
-        if not dataset:
-            continue
-        row = rows.setdefault(dataset.id, {
+    rows = []
+    for link in _accession_dataset_links(accession):
+        dataset = link["dataset"]
+        rows.append({
             "id": dataset.id,
             "dataset_code": dataset.dataset_code,
             "dataset_name": dataset.dataset_name,
@@ -227,8 +252,10 @@ def get_accession_datasets(accession, page=1, page_size=20):
             "status": dataset.status,
             "external_database": ", ".join(external_databases) or "-",
             "run_count": run_count,
+            "relation_role": link["relation_role"],
+            "relation_source": link["relation_source"],
         })
-    return _paginate(sorted(rows.values(), key=lambda item: item["dataset_code"]), page, page_size)
+    return _paginate(rows, page, page_size)
 
 
 def get_accession_samples(accession, page=1, page_size=20):
