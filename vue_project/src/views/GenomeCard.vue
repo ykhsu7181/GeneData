@@ -29,24 +29,26 @@
     <div v-if="activeView === 'visualization'" class="search-container">
       <div class="search-wrapper">
         <el-icon class="search-icon"><Search /></el-icon>
-        <el-select
+        <el-autocomplete
           v-model="selectedOrganism"
-          filterable
-          remote
           :placeholder="$t('page.genomeCard.searchPlaceholder')"
-          :remote-method="searchOrganisms"
-          :loading="loadingOrganisms"
+          :fetch-suggestions="queryAccessionSuggestions"
+          :trigger-on-focus="false"
           clearable
-          @change="handleOrganismChange"
+          @select="handleAccessionSelect"
+          @keyup.enter="handleAccessionSearch"
+          @clear="handleOrganismChange('')"
           class="search-select"
-        >
-          <el-option
-            v-for="item in organismOptions"
-            :key="item"
-            :label="item"
-            :value="item"
-          />
-        </el-select>
+        />
+        <el-tooltip content="Search exact Accession" placement="top">
+          <el-button
+            class="accession-search-button"
+            :loading="loadingOrganisms"
+            @click="handleAccessionSearch"
+          >
+            <el-icon><Search /></el-icon>
+          </el-button>
+        </el-tooltip>
         
         <div class="divider"></div>
         
@@ -1188,15 +1190,38 @@ export default {
       }
     };
     
-    // 搜索生物体
-    const searchOrganisms = (query) => {
-      if (query) {
-        organismOptions.value = allOrganisms.value.filter(item => 
-          item.toLowerCase().includes(query.toLowerCase())
-        );
-      } else {
-        organismOptions.value = allOrganisms.value;
+    const normalizeAccession = (value) => String(value || '').trim().toLowerCase();
+
+    const queryAccessionSuggestions = (query, callback) => {
+      const normalizedQuery = normalizeAccession(query);
+      const matches = normalizedQuery
+        ? allOrganisms.value.filter(item => normalizeAccession(item).includes(normalizedQuery))
+        : allOrganisms.value;
+
+      organismOptions.value = matches;
+      callback(matches.slice(0, 50).map(value => ({ value })));
+    };
+
+    const handleAccessionSearch = async () => {
+      const keyword = String(selectedOrganism.value || '').trim();
+      if (!keyword) {
+        ElMessage.warning('Please enter an Accession.');
+        return;
       }
+
+      const accession = allOrganisms.value.find(
+        item => normalizeAccession(item) === normalizeAccession(keyword)
+      );
+      if (!accession) {
+        ElMessage.warning(`No exact Accession match: ${keyword}`);
+        return;
+      }
+
+      await handleOrganismChange(accession);
+    };
+
+    const handleAccessionSelect = async (item) => {
+      await handleOrganismChange(item?.value || '');
     };
 
     const fetchChromosomesForCurrentContext = async () => {
@@ -1339,7 +1364,9 @@ export default {
       selectedOrganism,
       organismOptions,
       loadingOrganisms,
-      searchOrganisms,
+      queryAccessionSuggestions,
+      handleAccessionSearch,
+      handleAccessionSelect,
       handleOrganismChange,
       fetchFiles,
       selectedChromosome,
@@ -1482,6 +1509,10 @@ export default {
 .search-select {
   flex-grow: 1;
   min-width: 200px;
+}
+
+.accession-search-button {
+  margin-left: 8px;
 }
 
 .data-card {
