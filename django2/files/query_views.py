@@ -101,6 +101,64 @@ def _open_text_handle(file_path):
     return open(file_path, "r", encoding="utf-8")
 
 
+def _parse_fasta_sequence_id(header_line):
+    """Return the canonical sequence ID stored in a FASTA header."""
+    header = (header_line or "").strip()
+    if header.startswith(">"):
+        header = header[1:].strip()
+    if not header:
+        return None
+
+    tokens = header.split()
+    for token in tokens:
+        if token.startswith("OriSeqID="):
+            sequence_id = token.split("=", 1)[1].strip()
+            if sequence_id:
+                return sequence_id
+    return tokens[0]
+
+
+def _build_fasta_sequence_aliases(file_path):
+    """Map raw FASTA IDs and canonical IDs to the same canonical value."""
+    aliases = {}
+    if not file_path or not os.path.exists(file_path):
+        return aliases
+
+    with _open_text_handle(file_path) as handle:
+        for line in handle:
+            header = line.strip()
+            if not header.startswith(">"):
+                continue
+            raw_header = header[1:].strip()
+            if not raw_header:
+                continue
+            raw_sequence_id = raw_header.split()[0]
+            canonical_sequence_id = _parse_fasta_sequence_id(header)
+            if not canonical_sequence_id:
+                continue
+            aliases[raw_sequence_id] = canonical_sequence_id
+            aliases[canonical_sequence_id] = canonical_sequence_id
+    return aliases
+
+
+def _resolve_chromosome_alias(chromosome, aliases):
+    chromosome = (chromosome or "").strip()
+    if not chromosome:
+        return None
+    return (aliases or {}).get(chromosome, chromosome)
+
+
+def _build_context_chromosome_aliases(accession_obj=None, assembly=None, organism=None):
+    """Build aliases from the exact genome file selected for this request context."""
+    accession = accession_obj.accession if accession_obj else organism
+    _, _, genome_file = get_context_genome_file(
+        assembly_id=assembly.id if assembly else None,
+        accession=accession,
+        organism=organism,
+    )
+    return _build_fasta_sequence_aliases(genome_file.file_path) if genome_file else {}
+
+
 def _parse_attributes(raw_attributes):
     attributes = {}
     for item in (raw_attributes or "").split(";"):
@@ -116,8 +174,9 @@ def _parse_attributes(raw_attributes):
     return attributes
 
 
-def _parse_gff_lines(lines, chromosome=None, feature_type=None):
+def _parse_gff_lines(lines, chromosome=None, feature_type=None, chromosome_aliases=None):
     results = []
+    resolved_chromosome = _resolve_chromosome_alias(chromosome, chromosome_aliases)
     for line_number, line in enumerate(lines, 1):
         line = line.strip()
         if not line or line.startswith("#"):
@@ -125,9 +184,9 @@ def _parse_gff_lines(lines, chromosome=None, feature_type=None):
         parts = line.split("\t")
         if len(parts) < 9:
             continue
-        seqid = parts[0]
+        seqid = _resolve_chromosome_alias(parts[0], chromosome_aliases)
         feature = parts[2]
-        if chromosome and seqid != chromosome:
+        if resolved_chromosome and seqid != resolved_chromosome:
             continue
         if feature_type and feature != feature_type:
             continue
@@ -153,8 +212,9 @@ def _parse_gff_lines(lines, chromosome=None, feature_type=None):
     return results
 
 
-def _parse_bed_lines(lines, chromosome=None):
+def _parse_bed_lines(lines, chromosome=None, chromosome_aliases=None):
     results = []
+    resolved_chromosome = _resolve_chromosome_alias(chromosome, chromosome_aliases)
     for index, line in enumerate(lines, 1):
         line = line.strip()
         if not line or line.startswith("#"):
@@ -162,8 +222,8 @@ def _parse_bed_lines(lines, chromosome=None):
         parts = line.split("\t")
         if len(parts) < 3:
             continue
-        seqid = parts[0]
-        if chromosome and seqid != chromosome:
+        seqid = _resolve_chromosome_alias(parts[0], chromosome_aliases)
+        if resolved_chromosome and seqid != resolved_chromosome:
             continue
         start = int(parts[1])
         end = int(parts[2])
@@ -187,15 +247,20 @@ def _parse_bed_lines(lines, chromosome=None):
     return results
 
 
-def _parse_feature_file(file_path, chromosome=None, feature_type=None):
+def _parse_feature_file(file_path, chromosome=None, feature_type=None, chromosome_aliases=None):
     lower_path = file_path.lower()
     if lower_path.endswith((".gff", ".gff3", ".gff.gz", ".gff3.gz")):
         with _open_text_handle(file_path) as handle:
-            return _parse_gff_lines(handle, chromosome=chromosome, feature_type=feature_type)
+            return _parse_gff_lines(
+                handle,
+                chromosome=chromosome,
+                feature_type=feature_type,
+                chromosome_aliases=chromosome_aliases,
+            )
 
     if lower_path.endswith((".bed", ".bed.gz", ".txt", ".tsv")):
         with _open_text_handle(file_path) as handle:
-            return _parse_bed_lines(handle, chromosome=chromosome)
+            return _parse_bed_lines(handle, chromosome=chromosome, chromosome_aliases=chromosome_aliases)
 
     if lower_path.endswith((".tar.gz", ".tgz")):
         with tarfile.open(file_path, "r:gz") as archive:
@@ -211,6 +276,7 @@ def _parse_feature_file(file_path, chromosome=None, feature_type=None):
                         TextIOWrapper(extracted, encoding="utf-8"),
                         chromosome=chromosome,
                         feature_type=feature_type,
+                        chromosome_aliases=chromosome_aliases,
                     )
                 if member_name.endswith((".bed", ".txt", ".tsv")):
                     extracted = archive.extractfile(member)
@@ -219,6 +285,7 @@ def _parse_feature_file(file_path, chromosome=None, feature_type=None):
                     return _parse_bed_lines(
                         TextIOWrapper(extracted, encoding="utf-8"),
                         chromosome=chromosome,
+                        chromosome_aliases=chromosome_aliases,
                     )
     return []
 
@@ -385,12 +452,22 @@ def _interval_response_for_role(request, file_role):
     params = _request_params(request)
     chromosome = params.get("chromosome")
     feature_type = params.get("feature_type")
-    organism, _, _, _, service_file = _resolve_service_file(request, file_role)
+    organism, accession_obj, assembly, _, service_file = _resolve_service_file(request, file_role)
     if not organism:
         return Response({"error": "缺少必要的参数: organism"}, status=status.HTTP_400_BAD_REQUEST)
     if not service_file:
         return Response({"error": f"未找到 {organism} 的 {file_role} 文件"}, status=status.HTTP_404_NOT_FOUND)
-    rows = _parse_feature_file(service_file["file_path"], chromosome=chromosome, feature_type=feature_type)
+    chromosome_aliases = _build_context_chromosome_aliases(
+        accession_obj=accession_obj,
+        assembly=assembly,
+        organism=organism,
+    )
+    rows = _parse_feature_file(
+        service_file["file_path"],
+        chromosome=chromosome,
+        feature_type=feature_type,
+        chromosome_aliases=chromosome_aliases,
+    )
     return Response(rows)
 
 
@@ -638,7 +715,7 @@ def query_download_transcriptome(request):
 @permission_classes([AllowAny])
 def query_annotation_data(request):
     params = _request_params(request)
-    organism, _, _, annotation = get_context_organism(
+    organism, accession_obj, assembly, annotation = get_context_organism(
         annotation_id=params.get("annotation_id"),
         assembly_id=params.get("assembly_id"),
         accession=params.get("accession"),
@@ -655,10 +732,16 @@ def query_annotation_data(request):
     if not service_file:
         return Response({"error": f"未找到 {organism} 的注释文件"}, status=status.HTTP_404_NOT_FOUND)
 
+    chromosome_aliases = _build_context_chromosome_aliases(
+        accession_obj=accession_obj,
+        assembly=assembly,
+        organism=organism,
+    )
     all_rows = _parse_feature_file(
         service_file["file_path"],
         chromosome=chromosome,
         feature_type=None if feature_type == "all" else feature_type,
+        chromosome_aliases=chromosome_aliases,
     )
     chromosomes = sorted({row["seqid"] for row in all_rows})
     feature_types = sorted({row["feature"] for row in all_rows if row.get("feature")})
@@ -702,7 +785,9 @@ def query_chromosomes(request):
         for line in handle:
             line = line.strip()
             if line.startswith(">"):
-                chromosomes.append(line[1:].split()[0])
+                chromosome = _parse_fasta_sequence_id(line)
+                if chromosome:
+                    chromosomes.append(chromosome)
     return Response(chromosomes)
 
 
@@ -727,19 +812,21 @@ def query_chromosome_length(request):
     if not genome_file:
         return Response({"error": f"未找到 {organism or accession or assembly_id} 的基因组文件"}, status=status.HTTP_404_NOT_FOUND)
 
+    chromosome_aliases = _build_fasta_sequence_aliases(genome_file.file_path)
+    requested_chromosome = _resolve_chromosome_alias(chromosome, chromosome_aliases)
     current_id = None
     current_length = 0
     with _open_text_handle(genome_file.file_path) as handle:
         for line in handle:
             line = line.strip()
             if line.startswith(">"):
-                if current_id == chromosome:
+                if current_id == requested_chromosome:
                     return Response({"length": current_length})
-                current_id = line[1:].split()[0]
+                current_id = _parse_fasta_sequence_id(line)
                 current_length = 0
             elif current_id:
                 current_length += len(line)
-    if current_id == chromosome:
+    if current_id == requested_chromosome:
         return Response({"length": current_length})
     return Response({"error": f"在基因组文件中未找到染色体 {chromosome}"}, status=status.HTTP_404_NOT_FOUND)
 

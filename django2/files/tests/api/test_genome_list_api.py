@@ -137,3 +137,20 @@ class GenomeListApiTestCase(TestCase):
         self.assertEqual(unmatched.status_code, 200)
         self.assertEqual(matched.json()["pagination"]["total"], 1)
         self.assertEqual(unmatched.json()["pagination"]["total"], 0)
+
+    def test_genome_list_excludes_assembly_without_assembly_genome_relation(self):
+        Assembly.objects.create(
+            accession=self.accession,
+            name="placeholder-default",
+            display_name="Placeholder assembly",
+            is_default=False,
+        )
+        genome_file = self.create_data_file("GENOME", "genome.IR64.fasta", 2048)
+        self.add_assembly_file(genome_file)
+
+        response = self.client.get("/gd/api/files/query/genome-list/", {"page_size": 20})
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["total"], 1)
+        self.assertEqual(payload["results"][0]["assembly_id"], self.assembly.id)

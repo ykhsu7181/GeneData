@@ -316,7 +316,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue';
 import * as d3 from 'd3';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
@@ -402,6 +402,10 @@ export default {
     const fileDrawerTitle = ref('Genome 文件列表');
     const fileDrawerMeta = ref({});
     const fileDrawerFiles = ref([]);
+    let chromosomeRequestId = 0;
+    let chromosomeAbortController = null;
+    let visualizationRequestId = 0;
+    let visualizationAbortController = null;
 
     const filteredGenomeAccessions = computed(() => {
       const speciesId = genomeListFilters.value.species_id;
@@ -472,6 +476,18 @@ export default {
       }
 
       return params;
+    };
+
+    const buildVisualizationContextKey = (chromosome = selectedChromosome.value) => [
+      selectedOrganism.value || '',
+      contextAssemblyId.value || '',
+      chromosome || ''
+    ].join('|');
+
+    const cancelVisualizationRequest = () => {
+      visualizationRequestId += 1;
+      visualizationAbortController?.abort();
+      visualizationAbortController = null;
     };
 
     const openUrl = (url) => {
@@ -644,99 +660,144 @@ export default {
     };
 
     // 获取TEs数据
-    const fetchTEsData = async (organism, chromosome) => {
+    const fetchTEsData = async (organism, chromosome, signal) => {
       try {
         const response = await axios.get('/files/query/tes/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome
-          }
+          },
+          signal
         });
-        tesData.value = response.data || [];
+        return response.data || [];
       } catch (error) {
+        if (axios.isCancel(error)) return [];
         console.error('获取TEs数据失败:', error);
-        tesData.value = [];
+        return [];
       }
     };
 
     // 获取centromere数据
-    const fetchCentromereData = async (organism, chromosome) => {
+    const fetchCentromereData = async (organism, chromosome, signal) => {
       try {
         const response = await axios.get('/files/query/centromere/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome
-          }
+          },
+          signal
         });
-        centromereData.value = response.data || [];
+        return response.data || [];
       } catch (error) {
+        if (axios.isCancel(error)) return [];
         console.error('获取centromere数据失败:', error);
-        centromereData.value = [];
+        return [];
       }
     };
 
     // 获取RNA数据的通用函数
-    const fetchRNAData = async (organism, chromosome, rnaType) => {
+    const fetchRNAData = async (organism, chromosome, rnaType, signal) => {
       try {
         const response = await axios.get('/files/query/rna-data/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome,
             type: rnaType
-          }
+          },
+          signal
         });
         return response.data || [];
       } catch (error) {
+        if (axios.isCancel(error)) return [];
         console.error(`获取${rnaType}数据失败:`, error);
         return [];
       }
     };
 
     // 获取rRNA数据
-    const fetchRRNAData = async (organism, chromosome) => {
-      rRNAData.value = await fetchRNAData(organism, chromosome, 'rRNA');
-    };
+    const fetchRRNAData = (organism, chromosome, signal) => fetchRNAData(organism, chromosome, 'rRNA', signal);
 
     // 获取miRNA数据
-    const fetchMiRNAData = async (organism, chromosome) => {
-      miRNAData.value = await fetchRNAData(organism, chromosome, 'miRNA');
-    };
+    const fetchMiRNAData = (organism, chromosome, signal) => fetchRNAData(organism, chromosome, 'miRNA', signal);
 
     // 获取tRNA数据
-    const fetchTRNAData = async (organism, chromosome) => {
-      tRNAData.value = await fetchRNAData(organism, chromosome, 'tRNA');
-    };
+    const fetchTRNAData = (organism, chromosome, signal) => fetchRNAData(organism, chromosome, 'tRNA', signal);
 
     // 获取coreBlocks数据
-    const fetchCoreBlocksData = async (organism, chromosome) => {
+    const fetchCoreBlocksData = async (organism, chromosome, signal) => {
       try {
         const response = await axios.get('/files/query/core-blocks/', {
           params: {
             ...buildGenomeContextParams({ includeOrganismFallback: true }),
             chromosome
-          }
+          },
+          signal
         });
-        coreBlocksData.value = response.data || [];
+        return response.data || [];
       } catch (error) {
+        if (axios.isCancel(error)) return [];
         console.error('获取coreBlocks数据失败:', error);
-        coreBlocksData.value = [];
+        return [];
       }
     };
 
     // 获取染色体长度
-    const getChromosomeLength = async (organism, chromosome) => {
+    const getChromosomeLength = async (organism, chromosome, signal) => {
       try {
         const response = await axios.get('/files/query/chromosome-length/', {
           params: {
             ...buildGenomeContextParams(),
             chromosome
-          }
+          },
+          signal
         });
-        chromosomeLength.value = Number(response.data?.length) || 50000000;
+        return Number(response.data?.length) || null;
       } catch (error) {
+        if (axios.isCancel(error)) return null;
         console.error('获取染色体长度失败:', error);
-        chromosomeLength.value = 50000000;
+        return null;
       }
+    };
+
+    const showVisualizationEmptyState = (message) => {
+      if (!chromosomeContainer.value) {
+        return;
+      }
+
+      d3.select(chromosomeContainer.value)
+        .selectAll('*')
+        .remove();
+
+      d3.select(chromosomeContainer.value)
+        .append('div')
+        .attr('class', 'genome-visualization-empty')
+        .style('min-height', '360px')
+        .style('display', 'grid')
+        .style('place-items', 'center')
+        .style('color', '#8b9bb4')
+        .style('font-size', '16px')
+        .text(message);
+    };
+
+    const getSettledValue = (result, fallback, label) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      }
+
+      if (!axios.isCancel(result.reason)) {
+        console.warn(`Genome ${label} 轨道加载失败，已显示为空数据`, result.reason);
+      }
+      return fallback;
+    };
+
+    const commitVisualizationResults = (results) => {
+      tesData.value = getSettledValue(results[0], [], 'TE');
+      centromereData.value = getSettledValue(results[1], [], 'Centromere');
+      rRNAData.value = getSettledValue(results[2], [], 'rRNA');
+      miRNAData.value = getSettledValue(results[3], [], 'miRNA');
+      tRNAData.value = getSettledValue(results[4], [], 'tRNA');
+      coreBlocksData.value = getSettledValue(results[5], [], 'CoreBlocks');
+      chromosomeLength.value = getSettledValue(results[6], null, '染色体长度');
     };
 
     // 绘制染色体可视化
@@ -1148,30 +1209,74 @@ export default {
         return;
       }
 
-      console.log(`开始加载可视化数据: ${selectedOrganism.value} - ${selectedChromosome.value}`);
+      let requestId = 0;
+      let contextKey = '';
+      let controller = null;
+      cancelVisualizationRequest();
+      requestId = visualizationRequestId;
+      contextKey = buildVisualizationContextKey();
+      const accession = selectedOrganism.value;
+      const chromosome = selectedChromosome.value;
+      controller = new AbortController();
+      visualizationAbortController = controller;
+
+      console.log(`开始加载可视化数据: ${accession} - ${chromosome}`);
       loadingVisualization.value = true;
       try {
-        await Promise.all([
-          fetchTEsData(selectedOrganism.value, selectedChromosome.value),
-          fetchCentromereData(selectedOrganism.value, selectedChromosome.value),
-          fetchRRNAData(selectedOrganism.value, selectedChromosome.value),
-          fetchMiRNAData(selectedOrganism.value, selectedChromosome.value),
-          fetchTRNAData(selectedOrganism.value, selectedChromosome.value),
-          fetchCoreBlocksData(selectedOrganism.value, selectedChromosome.value),
-          getChromosomeLength(selectedOrganism.value, selectedChromosome.value)
+        const results = await Promise.allSettled([
+          fetchTEsData(accession, chromosome, controller.signal),
+          fetchCentromereData(accession, chromosome, controller.signal),
+          fetchRRNAData(accession, chromosome, controller.signal),
+          fetchMiRNAData(accession, chromosome, controller.signal),
+          fetchTRNAData(accession, chromosome, controller.signal),
+          fetchCoreBlocksData(accession, chromosome, controller.signal),
+          getChromosomeLength(accession, chromosome, controller.signal)
         ]);
+
+        if (requestId !== visualizationRequestId || contextKey !== buildVisualizationContextKey()) {
+          return;
+        }
+
+        commitVisualizationResults(results);
 
         console.log(`数据加载完成 - TEs: ${tesData.value.length}, Centromere: ${centromereData.value.length}, rRNA: ${rRNAData.value.length}, miRNA: ${miRNAData.value.length}, tRNA: ${tRNAData.value.length}, CoreBlocks: ${coreBlocksData.value.length}, Length: ${chromosomeLength.value}`);
 
-        // 数据加载完成后绘制可视化
-        setTimeout(() => {
-          drawChromosomeVisualization();
-        }, 100);
+        // v-if 会在加载时卸载绘图容器，先结束加载态再等待真实容器挂载。
+        loadingVisualization.value = false;
+        await nextTick();
+        if (requestId !== visualizationRequestId || contextKey !== buildVisualizationContextKey()) {
+          return;
+        }
+
+        if (!Number.isFinite(chromosomeLength.value) || chromosomeLength.value <= 0) {
+          showVisualizationEmptyState('未获取到当前染色体长度');
+          return;
+        }
+
+        console.debug('Genome visualization draw context', {
+          requestId,
+          contextKey,
+          accession,
+          assemblyId: contextAssemblyId.value,
+          chromosome,
+          containerReady: Boolean(chromosomeContainer.value),
+          chromosomeLength: chromosomeLength.value,
+          tesCount: tesData.value.length,
+          centromereCount: centromereData.value.length,
+          rRNA: rRNAData.value.length,
+          miRNA: miRNAData.value.length,
+          tRNA: tRNAData.value.length,
+          coreBlocks: coreBlocksData.value.length
+        });
+        drawChromosomeVisualization();
       } catch (error) {
+        if (axios.isCancel(error)) return;
         console.error('加载可视化数据失败:', error);
         ElMessage.error('加载可视化数据失败');
       } finally {
-        loadingVisualization.value = false;
+        if (requestId === visualizationRequestId) {
+          loadingVisualization.value = false;
+        }
       }
     };
 
@@ -1231,11 +1336,24 @@ export default {
         return;
       }
 
+      let requestId = 0;
+      let contextKey = '';
+      let controller = null;
       try {
+        chromosomeRequestId += 1;
+        requestId = chromosomeRequestId;
+        contextKey = buildVisualizationContextKey('');
+        chromosomeAbortController?.abort();
+        controller = new AbortController();
+        chromosomeAbortController = controller;
         loadingChromosomes.value = true;
         const response = await axios.get('/files/query/chromosomes/', {
-          params: buildGenomeContextParams()
+          params: buildGenomeContextParams(),
+          signal: controller.signal
         });
+        if (requestId !== chromosomeRequestId || contextKey !== buildVisualizationContextKey('')) {
+          return;
+        }
         const nextChromosomes = response.data || [];
         chromosomeOptions.value = nextChromosomes;
 
@@ -1248,12 +1366,15 @@ export default {
           selectedChromosome.value = nextChromosomes[0];
         }
       } catch (error) {
+        if (axios.isCancel(error)) return;
         console.error('获取染色体列表失败:', error);
         ElMessage.error('获取染色体列表失败');
         chromosomeOptions.value = [];
         selectedChromosome.value = '';
       } finally {
-        loadingChromosomes.value = false;
+        if (requestId === chromosomeRequestId) {
+          loadingChromosomes.value = false;
+        }
       }
     };
 
@@ -1291,6 +1412,7 @@ export default {
       contextAssemblyId.value = '';
       chromosomeOptions.value = [];
       selectedChromosome.value = '';
+      cancelVisualizationRequest();
 
       if (!accession) {
         await replaceRouteQuery({});
@@ -1300,10 +1422,11 @@ export default {
       await replaceRouteQuery(buildNormalizedQuery({
         accession
       }));
+      await fetchChromosomesForCurrentContext();
     };
 
     // 监听选择变化
-    watch([selectedOrganism, selectedChromosome, contextAssemblyId], () => {
+    watch([selectedChromosome, contextAssemblyId], () => {
       if (selectedOrganism.value && selectedChromosome.value) {
         loadVisualizationData();
       }
@@ -1358,6 +1481,13 @@ export default {
       }
     });
 
+    onBeforeUnmount(() => {
+      chromosomeRequestId += 1;
+      chromosomeAbortController?.abort();
+      chromosomeAbortController = null;
+      cancelVisualizationRequest();
+    });
+
     return {
       activeView,
       loading,
@@ -1395,6 +1525,8 @@ export default {
       fetchTRNAData,
       fetchCoreBlocksData,
       getChromosomeLength,
+      showVisualizationEmptyState,
+      commitVisualizationResults,
       drawChromosomeVisualization,
       loadVisualizationData,
       segmentLength,

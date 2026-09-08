@@ -84,11 +84,11 @@ def _file_type_display(data_file):
     return file_type.name or file_type.format or file_type.extension or "-"
 
 
-def _genome_relation_queryset(*, assembly=None, accession=None):
+def _genome_relation_queryset(*, assembly=None, accession=None, include_accession=False):
     related_filters = []
     if assembly:
         related_filters.append(("assembly", str(assembly.id)))
-    if accession:
+    if include_accession and accession:
         related_filters.append(("accession", str(accession.id)))
 
     if not related_filters:
@@ -148,7 +148,9 @@ def _file_payload(relation):
 def _assembly_row(assembly):
     accession = assembly.accession
     species = accession.species if accession else None
-    relations = _dedupe_relations(_genome_relation_queryset(assembly=assembly, accession=accession))
+    # The Genome list is an Assembly view.  Do not expose placeholder/default
+    # assemblies unless they have their own assembly-level genome relation.
+    relations = _dedupe_relations(_genome_relation_queryset(assembly=assembly))
     primary = _primary_relation(relations)
     primary_file = primary.file if primary else None
     return {
@@ -181,7 +183,11 @@ def build_genome_list_payload(params):
     if accession_id:
         assemblies = assemblies.filter(accession_id=accession_id)
 
-    rows = [_assembly_row(assembly) for assembly in assemblies]
+    rows = [
+        row
+        for row in (_assembly_row(assembly) for assembly in assemblies)
+        if row["primary_file_id"] is not None
+    ]
     if assembly_level:
         rows = [row for row in rows if row["assembly_level"] == assembly_level]
 
