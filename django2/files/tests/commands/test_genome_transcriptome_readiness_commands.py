@@ -76,16 +76,33 @@ class GenomeTranscriptomeReadinessCommandTestCase(TestCase):
         log_file = self._single_report(output_dir, "backfill_assembly_from_genome_relations_log_", ".txt")
         with open(log_file, encoding="utf-8") as handle:
             content = handle.read()
-        self.assertIn("created_assembly_count: 1", content)
-        self.assertIn("created_filerelation_count: 1", content)
+        self.assertIn("created_assembly_count: 0", content)
+        self.assertIn("created_filerelation_count: 0", content)
+        self.assertIn("metadata_pending_count: 1", content)
 
-    def test_backfill_creates_default_assembly_and_assembly_relation(self):
+    def test_backfill_default_does_not_create_placeholder(self):
+        output_dir = tempfile.mkdtemp(dir=self.temp_dir.name)
+
+        call_command("backfill_assembly_from_genome_relations", output_dir=output_dir)
+
+        self.assertFalse(Assembly.objects.filter(accession=self.accession).exists())
+        self.assertFalse(FileRelation.objects.filter(related_type="assembly").exists())
+        report = self._single_report(
+            output_dir,
+            "backfill_assembly_from_genome_relations_unmapped_",
+            ".tsv",
+        )
+        with open(report, encoding="utf-8") as handle:
+            self.assertIn("metadata_pending", handle.read())
+
+    def test_allow_placeholder_creates_default_assembly_and_assembly_relation(self):
         output_dir = tempfile.mkdtemp(dir=self.temp_dir.name)
 
         call_command(
             "backfill_assembly_from_genome_relations",
             output_dir=output_dir,
             assembly_level="Chromosome",
+            allow_placeholder=True,
         )
 
         assembly = Assembly.objects.get(accession=self.accession, name="default")
@@ -104,9 +121,17 @@ class GenomeTranscriptomeReadinessCommandTestCase(TestCase):
     def test_backfill_is_idempotent(self):
         output_dir = tempfile.mkdtemp(dir=self.temp_dir.name)
 
-        call_command("backfill_assembly_from_genome_relations", output_dir=output_dir)
+        call_command(
+            "backfill_assembly_from_genome_relations",
+            output_dir=output_dir,
+            allow_placeholder=True,
+        )
         first_counts = self._counts()
-        call_command("backfill_assembly_from_genome_relations", output_dir=output_dir)
+        call_command(
+            "backfill_assembly_from_genome_relations",
+            output_dir=output_dir,
+            allow_placeholder=True,
+        )
 
         self.assertEqual(first_counts, self._counts())
         self.assertEqual(Assembly.objects.filter(accession=self.accession).count(), 1)

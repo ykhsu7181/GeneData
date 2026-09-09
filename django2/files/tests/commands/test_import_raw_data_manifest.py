@@ -2,11 +2,13 @@ import os
 import tempfile
 import uuid
 import json
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase
 
 from files.models import Accession, DataFile, FileRelation, Sample, Species
+from files.management.commands.import_raw_data_manifest import Command
 
 
 class ImportRawDataManifestTestCase(TestCase):
@@ -32,7 +34,7 @@ class ImportRawDataManifestTestCase(TestCase):
         self.addCleanup(self.temp_dir.cleanup)
         self.manifest_path = os.path.join(self.temp_dir.name, "raw_data.tsv")
 
-    def write_manifest(self, file_path):
+    def write_manifest(self, file_path, *, accession_code=None, sample_code=None, file_role="raw_reads_R1"):
         with open(self.manifest_path, "w", encoding="utf-8") as handle:
             handle.write(
                 "\t".join(
@@ -56,12 +58,12 @@ class ImportRawDataManifestTestCase(TestCase):
             handle.write(
                 "\t".join(
                     [
-                        self.accession.accession,
-                        self.sample.sample_code,
+                        self.accession.accession if accession_code is None else accession_code,
+                        self.sample.sample_code if sample_code is None else sample_code,
                         self.species.species_code,
                         "RNA-seq",
                         "Illumina",
-                        "raw_reads_R1",
+                        file_role,
                         "cluster01",
                         file_path,
                         "128",
@@ -134,3 +136,43 @@ class ImportRawDataManifestTestCase(TestCase):
             ).count(),
             1,
         )
+
+    def test_unknown_accession_does_not_create_datafile(self):
+        self.write_manifest("/raw/unknown-accession.fastq.gz", accession_code="UNKNOWN")
+        call_command("import_raw_data_manifest", "--input", self.manifest_path)
+        self.assertEqual(DataFile.objects.count(), 0)
+        self.assertEqual(FileRelation.objects.count(), 0)
+
+    def test_unknown_sample_does_not_create_datafile(self):
+        self.write_manifest("/raw/unknown-sample.fastq.gz", sample_code="UNKNOWN")
+        call_command("import_raw_data_manifest", "--input", self.manifest_path)
+        self.assertEqual(DataFile.objects.count(), 0)
+        self.assertEqual(FileRelation.objects.count(), 0)
+
+    def test_no_relation_target_does_not_create_datafile(self):
+        self.write_manifest("/raw/no-target.fastq.gz", accession_code="", sample_code="")
+        call_command("import_raw_data_manifest", "--input", self.manifest_path)
+        self.assertEqual(DataFile.objects.count(), 0)
+        self.assertEqual(FileRelation.objects.count(), 0)
+
+    def test_invalid_role_does_not_create_datafile(self):
+        self.write_manifest("/raw/invalid-role.fastq.gz", file_role="not_canonical")
+        call_command("import_raw_data_manifest", "--input", self.manifest_path)
+        self.assertEqual(DataFile.objects.count(), 0)
+        self.assertEqual(FileRelation.objects.count(), 0)
+
+    def test_relation_failure_rolls_back_new_datafile(self):
+        row = {
+            "file_path": "/raw/relation-failure.fastq.gz",
+            "file_role": "raw_reads_R1",
+            "accession_code": self.accession.accession,
+        }
+
+        with patch(
+            "files.services.file_write_service.FileRelation.objects.get_or_create",
+            side_effect=RuntimeError("failed"),
+        ):
+            with self.assertRaises(RuntimeError):
+                Command().import_row(row)
+
+        self.assertFalse(DataFile.objects.filter(file_path=row["file_path"]).exists())

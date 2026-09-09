@@ -10,28 +10,8 @@ from files.services.file_write_service import (
     create_or_get_file_relation,
     normalize_file_path,
 )
-
-SCAN_FILE_CATEGORIES = {
-    "variableBlocks",
-    "genome",
-    "transcriptome.all",
-    "transcriptome.root",
-    "transcriptome.stem",
-    "transcriptome.leaf",
-    "transcriptome.panicles",
-    "transcriptome.shoot",
-    "miRNA",
-    "tRNA",
-    "rRNA",
-    "codon",
-    "centromere",
-    "TEs",
-    "annotation",
-    "coreBlocks",
-    "other",
-}
-
-TISSUE_TYPES = {"all", "root", "stem", "leaf", "panicles", "shoot"}
+from files.services.ingestion.file_parser import parse_ingestion_filename
+from files.services.ingestion.roles import validate_file_role
 
 
 class Command(BaseCommand):
@@ -124,12 +104,17 @@ class Command(BaseCommand):
 
             category = parsed["category"]
             accession_code = parsed["accession_code"]
-            file_type = self.get_file_type(filename, extension_map, dry_run=dry_run)
             context = self.resolve_context(accession_code, category)
 
-            if not context["accession"]:
+            if context["error"]:
                 stats["unmapped_count"] += 1
-                unmapped_rows.append([file_path, filename, category, accession_code, "no_related_object"])
+                stats["warnings"] += 1
+                unmapped_rows.append(
+                    [file_path, filename, category, accession_code, context["error"]]
+                )
+                continue
+
+            file_type = self.get_file_type(filename, extension_map, dry_run=dry_run)
 
             self.write_new_records(
                 file_path=file_path,
@@ -181,20 +166,7 @@ class Command(BaseCommand):
         return existing_files
 
     def parse_file(self, filename):
-        parts = filename.split('.')
-        if len(parts) < 3:
-            return None
-
-        if parts[0] == 'transcriptome' and parts[1] in TISSUE_TYPES and len(parts) >= 4:
-            category = f"transcriptome.{parts[1]}"
-            accession_code = parts[2]
-        else:
-            category = parts[0]
-            accession_code = parts[1]
-
-        if category not in SCAN_FILE_CATEGORIES or not accession_code:
-            return None
-        return {"category": category, "accession_code": accession_code}
+        return parse_ingestion_filename(filename)
 
     def get_file_type(self, filename, extension_map, *, dry_run):
         parts = filename.split('.')
@@ -219,14 +191,26 @@ class Command(BaseCommand):
         accession = Accession.objects.filter(accession=accession_code).first()
         assembly = None
         annotation = None
-        if accession:
-            assembly = accession.default_assembly or accession.assemblies.first()
-            if assembly and category == "annotation":
-                annotation = assembly.default_annotation or assembly.annotations.first()
+        error = None
+        if not accession:
+            error = "unknown_accession"
+        else:
+            assemblies = list(accession.assemblies.all()[:2])
+            if len(assemblies) > 1:
+                error = "ambiguous_assembly"
+            elif assemblies:
+                assembly = assemblies[0]
+                if category == "annotation":
+                    annotations = list(assembly.annotations.all()[:2])
+                    if len(annotations) > 1:
+                        error = "ambiguous_annotation"
+                    elif annotations:
+                        annotation = annotations[0]
         return {
             "accession": accession,
             "assembly": assembly,
             "annotation": annotation,
+            "error": error,
         }
 
     def write_new_records(
@@ -240,6 +224,7 @@ class Command(BaseCommand):
         dry_run,
         stats,
     ):
+        validate_file_role(category)
         data_file, created, reused, _ = create_or_get_datafile_from_path(
             file_path=file_path,
             file_name=filename,

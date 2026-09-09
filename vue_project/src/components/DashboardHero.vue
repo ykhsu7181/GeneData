@@ -170,7 +170,7 @@ export default {
   z-index: 1;
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 32px 0 30px;
+  padding: 32px 0 56px;
   display: grid;
   gap: 14px;
   justify-items: center;
@@ -351,7 +351,7 @@ export default {
 @media (max-width: 860px) {
   .hero-shell {
     width: min(100%, calc(100% - 24px));
-    padding: 30px 0 30px;
+    padding: 30px 0 36px;
   }
 
   .hero-search {

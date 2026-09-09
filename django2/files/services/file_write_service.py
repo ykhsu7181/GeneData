@@ -4,6 +4,7 @@ import re
 from django.db import transaction
 
 from files.models import DataFile, FileRelation
+from files.services.ingestion.roles import validate_file_role
 
 
 FILE_CODE_PATTERN = re.compile(r"^FILE(\d+)$")
@@ -66,6 +67,7 @@ def create_or_get_file_relation(
     related_code="",
     dry_run=False,
 ):
+    validate_file_role(file_role)
     related_id = str(related_id)
     if data_file.pk:
         existing = FileRelation.objects.filter(

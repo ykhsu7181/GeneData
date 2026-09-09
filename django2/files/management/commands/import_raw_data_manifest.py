@@ -4,9 +4,11 @@ import os
 from datetime import datetime
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
-from files.models import Accession, DataFile, FileRelation, Sample, Species
-from files.services.file_write_service import make_next_file_code
+from files.models import Accession, DataFile, Sample, Species
+from files.services.file_write_service import create_or_get_file_relation, make_next_file_code
+from files.services.ingestion.roles import validate_file_role
 from files.services.import_log_service import (
     build_import_stats,
     import_timestamp,
@@ -81,6 +83,7 @@ class Command(BaseCommand):
         reused_relation = 0
         unmapped = []
         scanned = 0
+        skipped = 0
 
         with open(input_path, newline="", encoding="utf-8-sig") as handle:
             reader = csv.DictReader(handle, delimiter="\t")
@@ -99,6 +102,7 @@ class Command(BaseCommand):
                 created_relation += result["created_relation"]
                 reused_relation += result["reused_relation"]
                 unmapped.extend(result["unmapped"])
+                skipped += int(result["skipped"])
 
         finished_at = datetime.now().isoformat(timespec="seconds")
         timestamp = import_timestamp()
@@ -114,7 +118,7 @@ class Command(BaseCommand):
             created_count=created_datafile + created_relation,
             reused_count=reused_datafile + reused_relation,
             updated_count=updated_datafile,
-            skipped_count=0,
+            skipped_count=skipped,
             unmapped_count=len(unmapped),
             extra={
                 "created_datafile_count": created_datafile,
@@ -136,6 +140,7 @@ class Command(BaseCommand):
         self.stdout.write(f"log={log_path}")
         self.stdout.write(f"unmapped={unmapped_path}")
 
+    @transaction.atomic
     def import_row(self, row, dry_run=False):
         file_path = _normalize_manifest_path(row.get("file_path"))
         file_role = _clean(row.get("file_role"))
@@ -152,7 +157,13 @@ class Command(BaseCommand):
                 "created_relation": 0,
                 "reused_relation": 0,
                 "unmapped": [{"file_path": file_path, "reason": "missing file_path or file_role"}],
+                "skipped": True,
             }
+
+        try:
+            validate_file_role(file_role)
+        except ValueError:
+            return self._rejected_row(file_path, f"invalid file_role: {file_role}")
 
         species = None
         if species_code:
@@ -169,6 +180,11 @@ class Command(BaseCommand):
             sample = Sample.objects.filter(sample_code=sample_code).first()
             if not sample:
                 unmapped.append({"file_path": file_path, "reason": f"sample not found: {sample_code}"})
+
+        if unmapped:
+            return self._rejected_row(file_path, unmapped)
+        if not accession and not sample:
+            return self._rejected_row(file_path, "no valid relation target")
 
         description = {
             "raw_data": {
@@ -224,27 +240,18 @@ class Command(BaseCommand):
         ):
             if not related_obj:
                 continue
-            relation_exists = data_file.pk and FileRelation.objects.filter(
-                file=data_file,
+            _, relation_created, relation_reused = create_or_get_file_relation(
+                data_file=data_file,
                 related_type=related_type,
-                related_id=str(related_obj.id),
+                related_id=related_obj.id,
+                related_code=related_code,
                 file_role=file_role,
-            ).exists()
-            if relation_exists:
+                dry_run=dry_run,
+            )
+            if relation_created:
+                created_relation += 1
+            elif relation_reused:
                 reused_relation += 1
-                continue
-            created_relation += 1
-            if not dry_run:
-                FileRelation.objects.get_or_create(
-                    file=data_file,
-                    related_type=related_type,
-                    related_id=str(related_obj.id),
-                    file_role=file_role,
-                    defaults={
-                        "related_code": related_code,
-                        "is_primary": False,
-                    },
-                )
 
         return {
             "created_datafile": created_datafile,
@@ -253,6 +260,20 @@ class Command(BaseCommand):
             "created_relation": created_relation,
             "reused_relation": reused_relation,
             "unmapped": unmapped,
+            "skipped": False,
+        }
+
+    def _rejected_row(self, file_path, reasons):
+        if isinstance(reasons, str):
+            reasons = [{"file_path": file_path, "reason": reasons}]
+        return {
+            "created_datafile": False,
+            "reused_datafile": False,
+            "updated_datafile": False,
+            "created_relation": 0,
+            "reused_relation": 0,
+            "unmapped": reasons,
+            "skipped": True,
         }
 
     def write_reports(self, log_path, unmapped_path, stats, unmapped):

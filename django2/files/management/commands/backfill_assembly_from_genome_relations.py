@@ -29,7 +29,11 @@ def _write_unmapped_report(path, rows):
 
 
 class Command(BaseCommand):
-    help = "Create Assembly rows and assembly-level FileRelation rows from accession-level genome files."
+    help = (
+        "Legacy repair only: backfill assembly-level FileRelation rows from "
+        "accession-level genome files. Placeholder Assembly creation requires "
+        "--allow-placeholder."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument("--dry-run", action="store_true")
@@ -37,6 +41,14 @@ class Command(BaseCommand):
         parser.add_argument("--output-dir", default=".")
         parser.add_argument("--assembly-name", default="default")
         parser.add_argument("--assembly-level", default="")
+        parser.add_argument(
+            "--allow-placeholder",
+            action="store_true",
+            help=(
+                "Legacy repair only: allow creation of a placeholder Assembly "
+                "when no real Assembly metadata exists."
+            ),
+        )
 
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
@@ -44,6 +56,7 @@ class Command(BaseCommand):
         output_dir = options["output_dir"]
         assembly_name = options["assembly_name"]
         assembly_level = (options["assembly_level"] or "").strip()
+        allow_placeholder = options["allow_placeholder"]
         os.makedirs(output_dir, exist_ok=True)
 
         stats = {
@@ -56,6 +69,7 @@ class Command(BaseCommand):
             "created_filerelation_count": 0,
             "reused_filerelation_count": 0,
             "unmapped_count": 0,
+            "metadata_pending_count": 0,
         }
         unmapped = []
 
@@ -89,6 +103,20 @@ class Command(BaseCommand):
             stats["scanned_accession_count"] += 1
             stats["scanned_relation_count"] += len(relations)
             if not relations:
+                continue
+
+            if not accession.assemblies.exists() and not allow_placeholder:
+                stats["metadata_pending_count"] += 1
+                for relation in relations:
+                    unmapped.append(
+                        {
+                            "file_relation_id": relation.id,
+                            "related_id": relation.related_id,
+                            "related_code": relation.related_code or accession.accession,
+                            "file_role": relation.file_role,
+                            "reason": "metadata_pending: no real Assembly; placeholder creation disabled",
+                        }
+                    )
                 continue
 
             assembly, assembly_result = self._get_or_create_assembly(

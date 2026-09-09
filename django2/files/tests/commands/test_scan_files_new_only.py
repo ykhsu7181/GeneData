@@ -131,7 +131,7 @@ class ScanFilesNewOnlyTestCase(TransactionTestCase):
 
         self.run_scan()
 
-        self.assertEqual(DataFile.objects.count(), 1)
+        self.assertEqual(DataFile.objects.count(), 0)
         self.assertEqual(FileRelation.objects.count(), 0)
         self.assertEqual(GenomeFile.objects.count(), 0)
         report_files = [
@@ -142,7 +142,68 @@ class ScanFilesNewOnlyTestCase(TransactionTestCase):
         with open(os.path.join(self.output_dir.name, report_files[0]), "r", encoding="utf-8") as handle:
             report = handle.read()
         self.assertIn("UNKNOWN_ACCESSION", report)
-        self.assertIn("no_related_object", report)
+        self.assertIn("unknown_accession", report)
+
+    def test_unknown_role_does_not_write_file_records(self):
+        self.write_scan_file(f"unsupported.{self.accession_code}.fasta")
+
+        self.run_scan()
+
+        self.assertEqual(DataFile.objects.count(), 0)
+        self.assertEqual(FileRelation.objects.count(), 0)
+
+    def test_accession_with_dots_is_parsed_without_truncation(self):
+        dotted = Accession.objects.create(accession="Nanoay P.A")
+        Assembly.objects.create(accession=dotted, name="default", is_default=True)
+        path = self.write_scan_file("genome.Nanoay P.A.fasta")
+
+        self.run_scan()
+
+        data_file = DataFile.objects.get(file_path=path)
+        self.assertTrue(
+            FileRelation.objects.filter(
+                file=data_file,
+                related_type="accession",
+                related_id=str(dotted.id),
+                file_role="genome",
+            ).exists()
+        )
+
+    def test_transcriptome_tissue_roles_parse_accession(self):
+        root_path = self.write_scan_file(f"transcriptome.root.{self.accession_code}.fasta")
+        leaf_path = self.write_scan_file(f"transcriptome.leaf.{self.accession_code}.fasta")
+
+        self.run_scan()
+
+        self.assertTrue(
+            FileRelation.objects.filter(
+                file__file_path=root_path,
+                related_id=str(self.accession.id),
+                file_role="transcriptome.root",
+            ).exists()
+        )
+        self.assertTrue(
+            FileRelation.objects.filter(
+                file__file_path=leaf_path,
+                related_id=str(self.accession.id),
+                file_role="transcriptome.leaf",
+            ).exists()
+        )
+
+    def test_multiple_assemblies_are_unmapped_without_guessing(self):
+        Assembly.objects.create(accession=self.accession, name="second")
+        self.write_scan_file(f"genome.{self.accession_code}.fasta")
+
+        self.run_scan()
+
+        self.assertEqual(DataFile.objects.count(), 0)
+        self.assertEqual(FileRelation.objects.count(), 0)
+        report_name = next(
+            name for name in os.listdir(self.output_dir.name)
+            if name.startswith("scan_files_unmapped_")
+        )
+        with open(os.path.join(self.output_dir.name, report_name), encoding="utf-8") as handle:
+            self.assertIn("ambiguous_assembly", handle.read())
 
     def test_scanned_datafile_can_be_downloaded(self):
         genome_path = self.write_scan_file(f"genome.{self.accession_code}.fasta")

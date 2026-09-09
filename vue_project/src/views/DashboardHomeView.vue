@@ -273,7 +273,7 @@ export default {
 }
 
 .dashboard-overlap {
-  margin-top: -78px;
+  margin-top: -28px;
   position: relative;
   z-index: 2;
 }
@@ -433,7 +433,7 @@ export default {
   }
 
   .dashboard-overlap {
-    margin-top: -48px;
+    margin-top: 0;
   }
 
   .dashboard-skeleton-grid,
