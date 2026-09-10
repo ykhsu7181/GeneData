@@ -117,13 +117,15 @@ def _resolve_service_file(request, file_role):
 
     service_files = []
     scope = classify_file_scope(file_role)
-    if scope == "annotation" and annotation:
-        service_files = get_files_for_annotation(annotation.id, file_role=file_role)
-    else:
-        if assembly:
-            service_files = get_files_for_assembly(assembly.id, file_role=file_role)
-        if not service_files and accession_obj:
+    if scope == "annotation":
+        if annotation:
+            service_files = get_files_for_annotation(annotation.id, file_role=file_role)
+    elif assembly:
+        service_files = get_files_for_assembly(assembly.id, file_role=file_role)
+        if not service_files and scope == "compatibility_assembly" and accession_obj:
             service_files = get_files_for_accession(accession_obj.id, file_role=file_role)
+    elif accession_obj:
+        service_files = get_files_for_accession(accession_obj.id, file_role=file_role)
 
     return organism, accession_obj, assembly, annotation, _existing_service_file(service_files)
 

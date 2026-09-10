@@ -174,8 +174,7 @@ def get_context_genome_file(*, assembly_id=None, accession=None, organism=None):
         genome_file = _service_file_to_context_file(
             get_primary_file('assembly', assembly.id, file_role='genome')
         )
-        if genome_file:
-            return accession_obj, assembly, genome_file
+        return accession_obj, assembly, genome_file
 
     if not accession_obj:
         return accession_obj, assembly, None

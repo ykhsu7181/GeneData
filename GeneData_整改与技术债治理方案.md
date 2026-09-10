@@ -361,7 +361,7 @@ services/      -> genome、annotation、feature track、列表查询
 - **PASS**：View 不再包含 active query 所需的复杂 FASTA/GFF/BED/archive parser。
 - **PASS**：Query context 不使用 arbitrary `first()`，多 default 和 multi-Assembly/Annotation 明确报 ambiguous。
 - **PASS**：关键 API success response schema 和 DataFile download URL 保持不变。
-- **PASS**：Stage B 所属 API、command、unit、regression 显式测试集共 214 个测试通过。
+- **PASS**：Stage B 所属 API、command、unit、regression 显式测试集共 217 个测试通过。
 - **PASS**：旧 GenomeFile API 保持 archived/410 行为并记录调用。
 - **PASS**：active business query/write/download 无 `GenomeFile.objects`。
 - **PASS**：`python manage.py makemigrations --check --dry-run files` 无迁移变化，`python manage.py check` 无问题。

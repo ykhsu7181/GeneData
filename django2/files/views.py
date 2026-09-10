@@ -4154,7 +4154,6 @@ def accession_detail(request, accession):
         context_error = None
         try:
             default_assembly = resolve_preferred_assembly(accession_obj)
-            default_annotation = resolve_preferred_annotation(default_assembly)
         except AmbiguousContextError as exc:
             default_assembly = None
             default_annotation = None
@@ -4164,6 +4163,17 @@ def accession_detail(request, accession):
                 'parent': exc.parent_code,
                 'message': str(exc),
             }
+        else:
+            try:
+                default_annotation = resolve_preferred_annotation(default_assembly)
+            except AmbiguousContextError as exc:
+                default_annotation = None
+                context_error = {
+                    'code': exc.code,
+                    'related_type': exc.related_type,
+                    'parent': exc.parent_code,
+                    'message': str(exc),
+                }
 
         files_data, hierarchy_relations = _build_accession_file_inventory(
             accession_obj,
