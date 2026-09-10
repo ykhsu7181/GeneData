@@ -1,8 +1,6 @@
-import gzip
 import mimetypes
 import os
-import tarfile
-from io import TextIOWrapper
+from functools import wraps
 
 from django.http import FileResponse
 from django.db.models import Q
@@ -11,12 +9,31 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from files.models import Accession, Annotation, Assembly, DataFile, FileRelation
-from files.services.accession_context import classify_file_scope, get_context_genome_file, get_context_organism
+from files.models import Accession, FileRelation
+from files.parsers.archive import parse_feature_file as _parse_feature_file
+from files.parsers.codon import load_payload as _load_codon_payload
+from files.parsers.fasta import (
+    build_sequence_aliases as _build_fasta_sequence_aliases,
+    list_sequence_ids,
+    sequence_length,
+)
+from files.services.accession_context import (
+    AmbiguousContextError,
+    classify_file_scope,
+    get_context_genome_file,
+    get_context_organism,
+    resolve_preferred_annotation,
+    resolve_preferred_assembly,
+)
 from files.services.file_relation_service import (
     get_files_for_accession,
     get_files_for_annotation,
     get_files_for_assembly,
+)
+from files.services.query_view_helpers import (
+    adapt_annotation_file as _adapt_annotation_file_service_result,
+    adapt_overview_file as _adapt_overview_file_service_result,
+    has_path_traversal as _has_path_traversal,
 )
 from files.services.query_service import (
     get_data_overview_files_payload,
@@ -27,10 +44,26 @@ from files.services.query_service import (
     get_transcriptome_files_payload,
     get_transcriptome_list_payload,
 )
-from files.views import _adapt_annotation_file_service_result, _adapt_overview_file_service_result, _has_path_traversal
-
-
 TRANSCRIPTOME_SUFFIXES = ("all", "leaf", "panicles", "shoot", "stem", "root")
+
+
+def reject_ambiguous_context(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        try:
+            return view_func(*args, **kwargs)
+        except AmbiguousContextError as exc:
+            return Response(
+                {
+                    "error": str(exc),
+                    "code": exc.code,
+                    "related_type": exc.related_type,
+                    "parent": exc.parent_code,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+    return wrapped
 
 
 def _request_params(request):
@@ -95,59 +128,6 @@ def _resolve_service_file(request, file_role):
     return organism, accession_obj, assembly, annotation, _existing_service_file(service_files)
 
 
-def _open_text_handle(file_path):
-    if file_path.endswith(".gz"):
-        return gzip.open(file_path, "rt", encoding="utf-8")
-    return open(file_path, "r", encoding="utf-8")
-
-
-def _parse_fasta_sequence_id(header_line):
-    """Return the canonical sequence ID stored in a FASTA header."""
-    header = (header_line or "").strip()
-    if header.startswith(">"):
-        header = header[1:].strip()
-    if not header:
-        return None
-
-    tokens = header.split()
-    for token in tokens:
-        if token.startswith("OriSeqID="):
-            sequence_id = token.split("=", 1)[1].strip()
-            if sequence_id:
-                return sequence_id
-    return tokens[0]
-
-
-def _build_fasta_sequence_aliases(file_path):
-    """Map raw FASTA IDs and canonical IDs to the same canonical value."""
-    aliases = {}
-    if not file_path or not os.path.exists(file_path):
-        return aliases
-
-    with _open_text_handle(file_path) as handle:
-        for line in handle:
-            header = line.strip()
-            if not header.startswith(">"):
-                continue
-            raw_header = header[1:].strip()
-            if not raw_header:
-                continue
-            raw_sequence_id = raw_header.split()[0]
-            canonical_sequence_id = _parse_fasta_sequence_id(header)
-            if not canonical_sequence_id:
-                continue
-            aliases[raw_sequence_id] = canonical_sequence_id
-            aliases[canonical_sequence_id] = canonical_sequence_id
-    return aliases
-
-
-def _resolve_chromosome_alias(chromosome, aliases):
-    chromosome = (chromosome or "").strip()
-    if not chromosome:
-        return None
-    return (aliases or {}).get(chromosome, chromosome)
-
-
 def _build_context_chromosome_aliases(accession_obj=None, assembly=None, organism=None):
     """Build aliases from the exact genome file selected for this request context."""
     accession = accession_obj.accession if accession_obj else organism
@@ -159,290 +139,13 @@ def _build_context_chromosome_aliases(accession_obj=None, assembly=None, organis
     return _build_fasta_sequence_aliases(genome_file.file_path) if genome_file else {}
 
 
-def _parse_attributes(raw_attributes):
-    attributes = {}
-    for item in (raw_attributes or "").split(";"):
-        item = item.strip()
-        if not item:
-            continue
-        if "=" in item:
-            key, value = item.split("=", 1)
-            attributes[key.strip()] = value.strip()
-        elif " " in item:
-            key, value = item.split(" ", 1)
-            attributes[key.strip()] = value.strip().strip('"')
-    return attributes
-
-
-def _parse_gff_lines(lines, chromosome=None, feature_type=None, chromosome_aliases=None):
-    results = []
-    resolved_chromosome = _resolve_chromosome_alias(chromosome, chromosome_aliases)
-    for line_number, line in enumerate(lines, 1):
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split("\t")
-        if len(parts) < 9:
-            continue
-        seqid = _resolve_chromosome_alias(parts[0], chromosome_aliases)
-        feature = parts[2]
-        if resolved_chromosome and seqid != resolved_chromosome:
-            continue
-        if feature_type and feature != feature_type:
-            continue
-        start = int(parts[3])
-        end = int(parts[4])
-        results.append(
-            {
-                "seqid": seqid,
-                "source": parts[1],
-                "feature": feature,
-                "start": start,
-                "end": end,
-                "length": end - start + 1,
-                "score": None if parts[5] == "." else parts[5],
-                "strand": parts[6],
-                "phase": None if parts[7] == "." else parts[7],
-                "attributes": _parse_attributes(parts[8]),
-                "line_number": line_number,
-                "sequence_ontology": feature,
-                "name": _parse_attributes(parts[8]).get("Name") or _parse_attributes(parts[8]).get("ID"),
-            }
-        )
-    return results
-
-
-def _parse_bed_lines(lines, chromosome=None, chromosome_aliases=None):
-    results = []
-    resolved_chromosome = _resolve_chromosome_alias(chromosome, chromosome_aliases)
-    for index, line in enumerate(lines, 1):
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split("\t")
-        if len(parts) < 3:
-            continue
-        seqid = _resolve_chromosome_alias(parts[0], chromosome_aliases)
-        if resolved_chromosome and seqid != resolved_chromosome:
-            continue
-        start = int(parts[1])
-        end = int(parts[2])
-        name = parts[3] if len(parts) > 3 else None
-        score = parts[4] if len(parts) > 4 else None
-        strand = parts[5] if len(parts) > 5 else None
-        results.append(
-            {
-                "id": f"{seqid}:{start}-{end}:{index}",
-                "seqid": seqid,
-                "start": start,
-                "end": end,
-                "length": max(end - start, 0),
-                "name": name,
-                "score": score,
-                "strand": strand,
-                "phase": None,
-                "attributes": {},
-            }
-        )
-    return results
-
-
-def _parse_feature_file(file_path, chromosome=None, feature_type=None, chromosome_aliases=None):
-    lower_path = file_path.lower()
-    if lower_path.endswith((".gff", ".gff3", ".gff.gz", ".gff3.gz")):
-        with _open_text_handle(file_path) as handle:
-            return _parse_gff_lines(
-                handle,
-                chromosome=chromosome,
-                feature_type=feature_type,
-                chromosome_aliases=chromosome_aliases,
-            )
-
-    if lower_path.endswith((".bed", ".bed.gz", ".txt", ".tsv")):
-        with _open_text_handle(file_path) as handle:
-            return _parse_bed_lines(handle, chromosome=chromosome, chromosome_aliases=chromosome_aliases)
-
-    if lower_path.endswith((".tar.gz", ".tgz")):
-        with tarfile.open(file_path, "r:gz") as archive:
-            for member in archive.getmembers():
-                if not member.isfile():
-                    continue
-                member_name = member.name.lower()
-                if member_name.endswith((".gff", ".gff3")):
-                    extracted = archive.extractfile(member)
-                    if not extracted:
-                        continue
-                    return _parse_gff_lines(
-                        TextIOWrapper(extracted, encoding="utf-8"),
-                        chromosome=chromosome,
-                        feature_type=feature_type,
-                        chromosome_aliases=chromosome_aliases,
-                    )
-                if member_name.endswith((".bed", ".txt", ".tsv")):
-                    extracted = archive.extractfile(member)
-                    if not extracted:
-                        continue
-                    return _parse_bed_lines(
-                        TextIOWrapper(extracted, encoding="utf-8"),
-                        chromosome=chromosome,
-                        chromosome_aliases=chromosome_aliases,
-                    )
-    return []
-
-
-def _format_codon_usage_data(codon_usage):
-    codon_to_amino_acid = {
-        "GCU": "Ala", "GCC": "Ala", "GCA": "Ala", "GCG": "Ala",
-        "CGU": "Arg", "CGC": "Arg", "CGA": "Arg", "CGG": "Arg", "AGA": "Arg", "AGG": "Arg",
-        "AAU": "Asn", "AAC": "Asn",
-        "GAU": "Asp", "GAC": "Asp",
-        "UGU": "Cys", "UGC": "Cys",
-        "GAA": "Glu", "GAG": "Glu",
-        "CAA": "Gln", "CAG": "Gln",
-        "GGU": "Gly", "GGC": "Gly", "GGA": "Gly", "GGG": "Gly",
-        "CAU": "His", "CAC": "His",
-        "AUU": "Ile", "AUC": "Ile", "AUA": "Ile",
-        "UUA": "Leu", "UUG": "Leu", "CUU": "Leu", "CUC": "Leu", "CUA": "Leu", "CUG": "Leu",
-        "AAA": "Lys", "AAG": "Lys",
-        "AUG": "Met",
-        "UUU": "Phe", "UUC": "Phe",
-        "CCU": "Pro", "CCC": "Pro", "CCA": "Pro", "CCG": "Pro",
-        "UCU": "Ser", "UCC": "Ser", "UCA": "Ser", "UCG": "Ser", "AGU": "Ser", "AGC": "Ser",
-        "ACU": "Thr", "ACC": "Thr", "ACA": "Thr", "ACG": "Thr",
-        "UGG": "Trp",
-        "UAU": "Tyr", "UAC": "Tyr",
-        "GUU": "Val", "GUC": "Val", "GUA": "Val", "GUG": "Val",
-        "UAA": "TER", "UAG": "TER", "UGA": "TER",
-    }
-    total_codons = sum(item["count"] for item in codon_usage.values())
-    formatted = {}
-    for codon, item in codon_usage.items():
-        count = item["count"]
-        formatted[codon] = {
-            "amino_acid": codon_to_amino_acid.get(codon, "Unknown"),
-            "codon": codon,
-            "count": count,
-            "frequency": item["rscu"],
-            "global_frequency": count / total_codons if total_codons else 0,
-            "relative_frequency": item["rscu"],
-        }
-    return formatted
-
-
-def _group_by_amino_acid(codon_usage):
-    amino_acids = {}
-    for codon, data in codon_usage.items():
-        name = data["amino_acid"]
-        bucket = amino_acids.setdefault(name, {"name": name, "codons": [], "total_count": 0})
-        bucket["codons"].append(data)
-        bucket["total_count"] += data["count"]
-    for bucket in amino_acids.values():
-        total = bucket["total_count"]
-        for codon in bucket["codons"]:
-            codon["relative_frequency"] = codon["count"] / total if total else 0
-    return amino_acids
-
-
-def _calculate_nucleotide_composition(codon_usage):
-    counts = {"A": 0, "T": 0, "G": 0, "C": 0}
-    total = 0
-    for codon, item in codon_usage.items():
-        count = item["count"]
-        dna_codon = codon.replace("U", "T")
-        for nucleotide in dna_codon:
-            if nucleotide in counts:
-                counts[nucleotide] += count
-                total += count
-    if not total:
-        return counts
-    return {key: (value / total) * 100 for key, value in counts.items()}
-
-
-def _parse_blk_content(content):
-    import re
-
-    matches = re.findall(r"([AUGC]{3})(\d+)\s+([\d.]+)", content)
-    codon_usage = {}
-    for codon, count_str, rscu_str in matches:
-        codon_usage[codon] = {
-            "count": int(count_str),
-            "rscu": float(rscu_str),
-        }
-    return codon_usage
-
-
-def _parse_codon_statistics_content(content):
-    lines = [line.strip() for line in content.splitlines() if line.strip()]
-    if len(lines) < 2:
-        return None
-    headers = lines[0].split("\t")
-    values = lines[1].split("\t")
-    if len(headers) != len(values):
-        return None
-    result = {}
-    for index, header in enumerate(headers):
-        value = values[index]
-        try:
-            result[header] = float(value) if "." in value else int(value)
-        except ValueError:
-            result[header] = value
-    return result
-
-
-def _load_codon_payload(file_path, organism_name):
-    blk_content = None
-    stats_content = None
-    lower_path = file_path.lower()
-
-    if lower_path.endswith(".blk"):
-        with open(file_path, "r", encoding="utf-8") as handle:
-            blk_content = handle.read()
-    elif lower_path.endswith((".txt", ".out")):
-        with open(file_path, "r", encoding="utf-8") as handle:
-            stats_content = handle.read()
-    elif lower_path.endswith((".tar.gz", ".tgz")):
-        with tarfile.open(file_path, "r:gz") as archive:
-            for member in archive.getmembers():
-                if not member.isfile():
-                    continue
-                extracted = archive.extractfile(member)
-                if not extracted:
-                    continue
-                content = extracted.read().decode("utf-8", errors="ignore")
-                member_name = member.name.lower()
-                if blk_content is None and member_name.endswith(".blk"):
-                    blk_content = content
-                elif stats_content is None and member_name.endswith((".txt", ".out")):
-                    stats_content = content
-
-    if not blk_content:
-        return None
-
-    codon_usage = _parse_blk_content(blk_content)
-    if not codon_usage:
-        return None
-
-    formatted = _format_codon_usage_data(codon_usage)
-    payload = {
-        "organism": organism_name,
-        "codon_usage": formatted,
-        "amino_acids": _group_by_amino_acid(formatted),
-        "total_codons": sum(item["count"] for item in codon_usage.values()),
-        "nucleotide_composition": _calculate_nucleotide_composition(codon_usage),
-    }
-    statistics = _parse_codon_statistics_content(stats_content) if stats_content else None
-    if statistics:
-        payload["statistics"] = statistics
-    return payload
-
-
 def _transcriptome_service_file(accession_obj, transcriptome_type):
     file_role = f"transcriptome.{transcriptome_type}"
     service_files = get_files_for_accession(accession_obj.id, file_role=file_role)
     if service_files:
         return _existing_service_file(service_files)
 
-    assembly = accession_obj.default_assembly or accession_obj.assemblies.first()
+    assembly = resolve_preferred_assembly(accession_obj)
     if assembly:
         return _existing_service_file(get_files_for_assembly(assembly.id, file_role=file_role))
     return None
@@ -532,6 +235,7 @@ def query_supplementary_data(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_paginated_overview(request):
     params = _request_params(request)
     page, page_size = _get_page_params(params)
@@ -559,9 +263,8 @@ def query_paginated_overview(request):
                 continue
 
         assemblies = list(accession_obj.assemblies.all())
-        default_assembly = next((assembly for assembly in assemblies if assembly.is_default), None) or (assemblies[0] if assemblies else None)
-        default_annotations = list(default_assembly.annotations.all()) if default_assembly else []
-        default_annotation = next((annotation for annotation in default_annotations if annotation.is_default), None) or (default_annotations[0] if default_annotations else None)
+        default_assembly = resolve_preferred_assembly(accession_obj)
+        default_annotation = resolve_preferred_annotation(default_assembly)
 
         overview_files = [_adapt_overview_file_service_result(item) for item in get_files_for_accession(accession_obj.id)]
         assembly_files = [item for item in overview_files if item.get("category") != "annotation"]
@@ -602,12 +305,14 @@ def query_paginated_overview(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_data_overview(request):
     return Response(get_data_overview_payload(_request_params(request)))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_data_overview_files(request):
     payload = get_data_overview_files_payload(_request_params(request))
     if payload is None:
@@ -635,12 +340,14 @@ def query_genome_files(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_transcriptome_list(request):
     return Response(get_transcriptome_list_payload(_request_params(request)))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_transcriptome_files(request):
     return Response(get_transcriptome_files_payload(_request_params(request)))
 
@@ -680,6 +387,7 @@ def query_paginated_transcriptome_overview(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_download_transcriptome(request):
     params = _request_params(request)
     accession_code = (params.get("accession") or params.get("organism") or "").strip()
@@ -713,6 +421,7 @@ def query_download_transcriptome(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_annotation_data(request):
     params = _request_params(request)
     organism, accession_obj, assembly, annotation = get_context_organism(
@@ -764,6 +473,7 @@ def query_annotation_data(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_chromosomes(request):
     params = _request_params(request)
     organism = params.get("organism")
@@ -780,19 +490,12 @@ def query_chromosomes(request):
     if not genome_file:
         return Response({"error": f"未找到 {organism or accession or assembly_id} 的基因组文件"}, status=status.HTTP_404_NOT_FOUND)
 
-    chromosomes = []
-    with _open_text_handle(genome_file.file_path) as handle:
-        for line in handle:
-            line = line.strip()
-            if line.startswith(">"):
-                chromosome = _parse_fasta_sequence_id(line)
-                if chromosome:
-                    chromosomes.append(chromosome)
-    return Response(chromosomes)
+    return Response(list_sequence_ids(genome_file.file_path))
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_chromosome_length(request):
     params = _request_params(request)
     organism = params.get("organism")
@@ -812,51 +515,43 @@ def query_chromosome_length(request):
     if not genome_file:
         return Response({"error": f"未找到 {organism or accession or assembly_id} 的基因组文件"}, status=status.HTTP_404_NOT_FOUND)
 
-    chromosome_aliases = _build_fasta_sequence_aliases(genome_file.file_path)
-    requested_chromosome = _resolve_chromosome_alias(chromosome, chromosome_aliases)
-    current_id = None
-    current_length = 0
-    with _open_text_handle(genome_file.file_path) as handle:
-        for line in handle:
-            line = line.strip()
-            if line.startswith(">"):
-                if current_id == requested_chromosome:
-                    return Response({"length": current_length})
-                current_id = _parse_fasta_sequence_id(line)
-                current_length = 0
-            elif current_id:
-                current_length += len(line)
-    if current_id == requested_chromosome:
-        return Response({"length": current_length})
+    length = sequence_length(genome_file.file_path, chromosome)
+    if length is not None:
+        return Response({"length": length})
     return Response({"error": f"在基因组文件中未找到染色体 {chromosome}"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_tes(request):
     return _interval_response_for_role(request, "TEs")
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_centromere(request):
     return _interval_response_for_role(request, "centromere")
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_coreblocks(request):
     return _interval_response_for_role(request, "coreBlocks")
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_variableblocks(request):
     return _interval_response_for_role(request, "variableBlocks")
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_rna_data(request):
     params = _request_params(request)
     rna_type = params.get("type")
@@ -867,6 +562,7 @@ def query_rna_data(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_codon_data(request):
     organism, _, _, _, service_file = _resolve_service_file(request, "codon")
     if not organism:

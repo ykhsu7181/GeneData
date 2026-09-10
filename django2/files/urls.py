@@ -1,5 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .archive_views import ArchivedGenomeFileViewSet
+from .download_views import download_datafile
 from .views import (
     FileTypeViewSet, GenomeFileViewSet,
     OrganismViewSet, FileCategoryViewSet,
@@ -9,7 +11,7 @@ from .views import (
     admin_delete_accession, admin_data_management_list,
     admin_upload_data_file, admin_download_data_file, admin_delete_data_file,
     admin_batch_delete_accessions, admin_subpopulation_stats,
-    accession_detail, download_datafile
+    accession_detail
 )
 from .query_views import (
     query_annotation_data,
@@ -86,21 +88,21 @@ urlpatterns = [
     path('codonw/delete/<str:task_id>/', GenomeFileViewSet.as_view({'delete': 'codonw_delete'}), name='codonw-delete'),
     path('codonw/results/<str:task_id>/', GenomeFileViewSet.as_view({'get': 'codonw_results'}), name='codonw-results'),
     path('codonw/result-upload/', GenomeFileViewSet.as_view({'post': 'codonw_result_upload'}), name='codonw-result-upload'),
-    path('download-transcriptome/', GenomeFileViewSet.as_view({'get': 'download_transcriptome'}), name='download-transcriptome'),
-    path('transcriptome-types/', GenomeFileViewSet.as_view({'get': 'transcriptome_types'}), name='transcriptome-types'),
-    path('genome-files/get_chromosomes/', GenomeFileViewSet.as_view({'get': 'get_chromosomes'}), name='get-chromosomes'),
-    path('genome-files/get_tes/', GenomeFileViewSet.as_view({'get': 'get_tes'}), name='get-tes'),
-    path('genome-files/get_centromere/', GenomeFileViewSet.as_view({'get': 'get_centromere'}), name='get-centromere'),
-    path('genome-files/get_coreblocks/', GenomeFileViewSet.as_view({'get': 'get_coreblocks'}), name='get-coreblocks'),
-    path('genome-files/get_variableblocks/', GenomeFileViewSet.as_view({'get': 'get_variableblocks'}), name='get-variableblocks'),
-    path('genome-files/get_rna_data/', GenomeFileViewSet.as_view({'get': 'get_rna_data'}), name='get-rna-data'),
-    path('genome-files/paginated_transcriptome_overview/', GenomeFileViewSet.as_view({'get': 'paginated_transcriptome_overview'}), name='paginated-transcriptome-overview'),
-    path('genome-files/get_codon_data/', GenomeFileViewSet.as_view({'get': 'get_codon_data'}), name='get-codon-data'),
-    path('genome-files/get_annotation_data/', GenomeFileViewSet.as_view({'get': 'get_annotation_data'}), name='get-annotation-data'),
-    path('genome-files/supplementary_data/', GenomeFileViewSet.as_view({'get': 'supplementary_data'}), name='supplementary-data'),
-    path('genome-files/paginated_overview/', GenomeFileViewSet.as_view({'get': 'paginated_overview'}), name='paginated-overview'),
-    path('genome-files/all_files/', GenomeFileViewSet.as_view({'get': 'all_files'}), name='all-files'),
-    path('genome-files/sub_populations/', GenomeFileViewSet.as_view({'get': 'sub_populations'}), name='sub-populations'),
+    path('download-transcriptome/', ArchivedGenomeFileViewSet.as_view({'get': 'download_transcriptome'}), name='download-transcriptome'),
+    path('transcriptome-types/', ArchivedGenomeFileViewSet.as_view({'get': 'transcriptome_types'}), name='transcriptome-types'),
+    path('genome-files/get_chromosomes/', ArchivedGenomeFileViewSet.as_view({'get': 'get_chromosomes'}), name='get-chromosomes'),
+    path('genome-files/get_tes/', ArchivedGenomeFileViewSet.as_view({'get': 'get_tes'}), name='get-tes'),
+    path('genome-files/get_centromere/', ArchivedGenomeFileViewSet.as_view({'get': 'get_centromere'}), name='get-centromere'),
+    path('genome-files/get_coreblocks/', ArchivedGenomeFileViewSet.as_view({'get': 'get_coreblocks'}), name='get-coreblocks'),
+    path('genome-files/get_variableblocks/', ArchivedGenomeFileViewSet.as_view({'get': 'get_variableblocks'}), name='get-variableblocks'),
+    path('genome-files/get_rna_data/', ArchivedGenomeFileViewSet.as_view({'get': 'get_rna_data'}), name='get-rna-data'),
+    path('genome-files/paginated_transcriptome_overview/', ArchivedGenomeFileViewSet.as_view({'get': 'paginated_transcriptome_overview'}), name='paginated-transcriptome-overview'),
+    path('genome-files/get_codon_data/', ArchivedGenomeFileViewSet.as_view({'get': 'get_codon_data'}), name='get-codon-data'),
+    path('genome-files/get_annotation_data/', ArchivedGenomeFileViewSet.as_view({'get': 'get_annotation_data'}), name='get-annotation-data'),
+    path('genome-files/supplementary_data/', ArchivedGenomeFileViewSet.as_view({'get': 'supplementary_data'}), name='supplementary-data'),
+    path('genome-files/paginated_overview/', ArchivedGenomeFileViewSet.as_view({'get': 'paginated_overview'}), name='paginated-overview'),
+    path('genome-files/all_files/', ArchivedGenomeFileViewSet.as_view({'get': 'all_files'}), name='all-files'),
+    path('genome-files/sub_populations/', ArchivedGenomeFileViewSet.as_view({'get': 'sub_populations'}), name='sub-populations'),
 
     # 管理后台API路由
     path('login/', admin_login, name='admin-login'),
@@ -128,7 +130,7 @@ urlpatterns = [
 
 router = DefaultRouter()
 router.register('file-types', FileTypeViewSet)
-router.register('genome-files', GenomeFileViewSet)
+router.register('genome-files', ArchivedGenomeFileViewSet, basename='genomefile-archive')
 router.register('organisms', OrganismViewSet)
 router.register('file-categories', FileCategoryViewSet)
 

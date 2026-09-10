@@ -1,6 +1,7 @@
 from django.db.models import Q
 
 from files.models import Accession, Assembly, FileRelation, Sample, Species
+from files.services.accession_context import resolve_preferred_assembly
 from files.services.data_overview_service import datafile_download_url, file_role_display, format_size
 
 
@@ -158,7 +159,7 @@ def _resolve_context(file_relations, samples, assemblies, accessions):
             break
 
     if accession and not assembly:
-        assembly = accession.default_assembly
+        assembly = resolve_preferred_assembly(accession)
     if assembly and not accession:
         accession = assembly.accession
     if not sample_type:

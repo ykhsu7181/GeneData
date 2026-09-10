@@ -11,9 +11,9 @@ from django.test import TransactionTestCase
 
 from files.admin import GenomeFileAdmin
 import files.views as file_views
+from files.archive_views import ArchivedGenomeFileViewSet
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
 from files.services.file_relation_service import get_files_for_accession
-from files.views import GenomeFileViewSet
 
 
 class Stage12BArchiveGenomeFileTestCase(TransactionTestCase):
@@ -122,10 +122,10 @@ class Stage12BArchiveGenomeFileTestCase(TransactionTestCase):
 
         accession_response = self.client.get(f"/gd/api/files/accessions/{self.accession_code}/")
         annotation_response = self.client.get(
-            f"/gd/api/files/genome-files/get_annotation_data/?annotation_id={self.annotation.id}"
+            f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
         )
         overview_response = self.client.get(
-            "/gd/api/files/genome-files/paginated_overview/",
+            "/gd/api/files/query/paginated-overview/",
             {"search": self.accession_code},
         )
 
@@ -195,6 +195,8 @@ class Stage12BArchiveGenomeFileTestCase(TransactionTestCase):
             "/gd/api/files/genome-files/all_files/",
             "/gd/api/files/genome-files/paginated_transcriptome_overview/",
             "/gd/api/files/genome-files/get_codon_data/",
+            "/gd/api/files/genome-files/get_annotation_data/",
+            "/gd/api/files/genome-files/paginated_overview/",
             "/gd/api/files/genome-files/categories/",
             "/gd/api/files/genome-files/sub_populations/",
         ]
@@ -232,20 +234,20 @@ class Stage12BArchiveGenomeFileTestCase(TransactionTestCase):
 
     def test_active_archived_views_no_longer_query_genomefile_objects(self):
         checked_callables = {
-            "download": GenomeFileViewSet.download,
-            "download_transcriptome": GenomeFileViewSet.download_transcriptome,
-            "get_tes": GenomeFileViewSet.get_tes,
-            "get_centromere": GenomeFileViewSet.get_centromere,
-            "get_coreblocks": GenomeFileViewSet.get_coreblocks,
-            "get_variableblocks": GenomeFileViewSet.get_variableblocks,
-            "get_rna_data": GenomeFileViewSet.get_rna_data,
-            "organisms": GenomeFileViewSet.organisms,
-            "organisms_with_annotation": GenomeFileViewSet.organisms_with_annotation,
-            "all_files": GenomeFileViewSet.all_files,
-            "transcriptome_types": GenomeFileViewSet.transcriptome_types,
-            "paginated_transcriptome_overview": GenomeFileViewSet.paginated_transcriptome_overview,
-            "categories": GenomeFileViewSet.categories,
-            "scan_directory": GenomeFileViewSet.scan_directory,
+            "download": ArchivedGenomeFileViewSet.download,
+            "download_transcriptome": ArchivedGenomeFileViewSet.download_transcriptome,
+            "get_tes": ArchivedGenomeFileViewSet.get_tes,
+            "get_centromere": ArchivedGenomeFileViewSet.get_centromere,
+            "get_coreblocks": ArchivedGenomeFileViewSet.get_coreblocks,
+            "get_variableblocks": ArchivedGenomeFileViewSet.get_variableblocks,
+            "get_rna_data": ArchivedGenomeFileViewSet.get_rna_data,
+            "organisms": ArchivedGenomeFileViewSet.organisms,
+            "organisms_with_annotation": ArchivedGenomeFileViewSet.organisms_with_annotation,
+            "all_files": ArchivedGenomeFileViewSet.all_files,
+            "transcriptome_types": ArchivedGenomeFileViewSet.transcriptome_types,
+            "paginated_transcriptome_overview": ArchivedGenomeFileViewSet.paginated_transcriptome_overview,
+            "categories": ArchivedGenomeFileViewSet.categories,
+            "scan_directory": ArchivedGenomeFileViewSet.scan_directory,
             "admin_files_list": file_views.admin_files_list.__wrapped__,
             "admin_delete_file": file_views.admin_delete_file.__wrapped__,
             "admin_batch_delete": file_views.admin_batch_delete.__wrapped__,

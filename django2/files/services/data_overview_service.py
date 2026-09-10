@@ -3,6 +3,7 @@ from collections import OrderedDict
 from django.db.models import Q
 
 from files.models import Accession, DataFile, FileRelation, Species
+from files.services.accession_context import resolve_preferred_annotation, resolve_preferred_assembly
 
 
 DATA_CATEGORIES = [
@@ -166,13 +167,11 @@ def _accessions_queryset(params):
 
 
 def _default_assembly(accession):
-    assemblies = list(accession.assemblies.all())
-    return next((assembly for assembly in assemblies if assembly.is_default), None) or (assemblies[0] if assemblies else None)
+    return resolve_preferred_assembly(accession)
 
 
 def _default_annotation(assembly):
-    annotations = list(assembly.annotations.all()) if assembly else []
-    return next((annotation for annotation in annotations if annotation.is_default), None) or (annotations[0] if annotations else None)
+    return resolve_preferred_annotation(assembly)
 
 
 def _relation_filter_for_accession(accession):

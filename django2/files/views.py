@@ -38,8 +38,16 @@ from .serializers import (
     OrganismSerializer, FileCategorySerializer,
     AccessionSerializer, AccessionDetailSerializer, AccessionGenomeFileSerializer
 )
-from .services.accession_context import classify_file_scope, get_context_genome_file, get_context_organism
+from .services.accession_context import (
+    AmbiguousContextError,
+    classify_file_scope,
+    get_context_genome_file,
+    get_context_organism,
+    resolve_preferred_annotation,
+    resolve_preferred_assembly,
+)
 from .services.file_relation_service import get_files_for_accession, get_files_for_annotation
+from .parsers.archive import safe_extract_zip
 
 import logging
 
@@ -2042,8 +2050,7 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
                 os.makedirs(extract_dir, exist_ok=True)
 
                 try:
-                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                        zip_ref.extractall(extract_dir)
+                    safe_extract_zip(zip_path, extract_dir)
                     logger.info(f"ZIP文件已解压到: {extract_dir}")
 
                     # 列出解压后的文件
@@ -2053,7 +2060,7 @@ class GenomeFileViewSet(viewsets.ModelViewSet):
                             extracted_files.append(os.path.join(root, file))
                     logger.info(f"解压后的文件: {extracted_files}")
 
-                except zipfile.BadZipFile:
+                except (zipfile.BadZipFile, ValueError):
                     return Response(
                         {"success": False, "message": "无效的ZIP文件"},
                         status=status.HTTP_400_BAD_REQUEST
@@ -4144,13 +4151,19 @@ def accession_detail(request, accession):
                 annotation_map[annotation.id] = annotation
 
         assembly_map = {assembly.id: assembly for assembly in assemblies}
-        default_assembly = next((assembly for assembly in assemblies if assembly.is_default), None)
-        default_annotation = None
-        if default_assembly:
-            default_annotation = next(
-                (annotation for annotation in default_assembly.prefetched_annotations if annotation.is_default),
-                None,
-            )
+        context_error = None
+        try:
+            default_assembly = resolve_preferred_assembly(accession_obj)
+            default_annotation = resolve_preferred_annotation(default_assembly)
+        except AmbiguousContextError as exc:
+            default_assembly = None
+            default_annotation = None
+            context_error = {
+                'code': exc.code,
+                'related_type': exc.related_type,
+                'parent': exc.parent_code,
+                'message': str(exc),
+            }
 
         files_data, hierarchy_relations = _build_accession_file_inventory(
             accession_obj,
@@ -4263,6 +4276,8 @@ def accession_detail(request, accession):
                     'total_size_display': _format_file_size(total_size),
                     'default_assembly_id': default_assembly.id if default_assembly else None,
                     'default_annotation_id': default_annotation.id if default_annotation else None,
+                    'context_status': 'ambiguous' if context_error else ('resolved' if default_assembly else 'unavailable'),
+                    'context_error': context_error,
                 },
                 'projects': projects,
                 'datasets': datasets,

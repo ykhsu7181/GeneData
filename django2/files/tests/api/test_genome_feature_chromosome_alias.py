@@ -3,7 +3,8 @@ import tempfile
 
 from django.test import SimpleTestCase
 
-from files.query_views import _build_fasta_sequence_aliases, _parse_feature_file
+from files.parsers.archive import parse_feature_file
+from files.parsers.fasta import build_sequence_aliases
 
 
 class GenomeFeatureChromosomeAliasTests(SimpleTestCase):
@@ -28,10 +29,10 @@ class GenomeFeatureChromosomeAliasTests(SimpleTestCase):
         return path
 
     def test_gff_and_bed_tracks_match_canonical_chromosome_id(self):
-        aliases = _build_fasta_sequence_aliases(self.fasta_path)
+        aliases = build_sequence_aliases(self.fasta_path)
 
-        gff_rows = _parse_feature_file(self.gff_path, chromosome="Chr01", chromosome_aliases=aliases)
-        bed_rows = _parse_feature_file(self.bed_path, chromosome="Chr01", chromosome_aliases=aliases)
+        gff_rows = parse_feature_file(self.gff_path, chromosome="Chr01", chromosome_aliases=aliases)
+        bed_rows = parse_feature_file(self.bed_path, chromosome="Chr01", chromosome_aliases=aliases)
 
         self.assertEqual([row["seqid"] for row in gff_rows], ["Chr01"])
         self.assertEqual([row["seqid"] for row in bed_rows], ["Chr01"])

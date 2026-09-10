@@ -344,20 +344,8 @@ class PaginatedOverviewApiTestCase(APITestCase):
             size=7890,
         )
 
-    def test_paginated_overview_includes_default_context_counts(self):
+    def test_legacy_paginated_overview_is_archived(self):
         response = self.client.get('/gd/api/files/genome-files/paginated_overview/')
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['count'], 1)
-
-        row = response.data['results'][0]
-        self.assertEqual(row['accession'], 'IR64')
-        self.assertEqual(row['assembly_count'], 2)
-        self.assertEqual(row['annotation_count'], 2)
-        self.assertEqual(row['default_assembly_id'], self.default_assembly.id)
-        self.assertEqual(row['default_annotation_id'], self.default_annotation.id)
-        self.assertIsNotNone(row['genome'])
-        self.assertEqual(row['genome']['name'], 'genome.IR64.fasta')
-        self.assertIsNotNone(row['annotation'])
-        self.assertEqual(row['annotation']['name'], 'annotation.IR64.gff')
-        self.assertTrue(row['hasTranscriptome'])
+        self.assertEqual(response.status_code, 410)
+        self.assertTrue(response.data['archived'])

@@ -104,10 +104,10 @@ class DataFileDownloadTestCase(TransactionTestCase):
 
         accession_response = self.client.get(f"/gd/api/files/accessions/{self.accession_code}/")
         annotation_response = self.client.get(
-            f"/gd/api/files/genome-files/get_annotation_data/?annotation_id={self.annotation.id}"
+            f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
         )
         overview_response = self.client.get(
-            "/gd/api/files/genome-files/paginated_overview/",
+            "/gd/api/files/query/paginated-overview/",
             {"search": self.accession_code},
         )
 
