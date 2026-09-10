@@ -51,6 +51,25 @@
         </el-tooltip>
         
         <div class="divider"></div>
+        <div class="assembly-select">
+          <span class="select-label">Assembly</span>
+          <el-select
+            v-model="contextAssemblyId"
+            placeholder="Select assembly"
+            class="assembly-dropdown"
+            :disabled="!selectedOrganism"
+            clearable
+            @change="handleAssemblyChange"
+          >
+            <el-option
+              v-for="item in assemblyOptions"
+              :key="item.id"
+              :label="item.display_name || item.name"
+              :value="String(item.id)"
+            />
+          </el-select>
+        </div>
+        <div class="divider"></div>
         
         <!-- 染色体选择框 -->
         <div class="chromosome-select">
@@ -149,8 +168,8 @@
                 <span>正在加载可视化数据...</span>
               </div>
             </div>
-            <div v-else-if="!selectedOrganism || !selectedChromosome" class="empty-state">
-              <el-empty description="请选择生物体和染色体以查看可视化" />
+            <div v-else-if="!selectedOrganism || !contextAssemblyId || !selectedChromosome" class="empty-state">
+              <el-empty description="请选择有效的 Accession、Assembly 和染色体以查看可视化" />
             </div>
             <div v-else ref="chromosomeContainer" class="chromosome-container"></div>
 
@@ -159,159 +178,32 @@
       </div>
     </div>
 
-    <div v-else class="genome-list-view">
-      <div class="genome-list-filters">
-        <div class="filter-item">
-          <span class="filter-label">物种</span>
-          <el-select
-            v-model="genomeListFilters.species_id"
-            placeholder="选择物种"
-            clearable
-            filterable
-            class="filter-select"
-            @change="refreshGenomeList"
-          >
-            <el-option
-              v-for="item in genomeFilterOptions.species"
-              :key="item.id"
-              :label="`${item.label}${item.latin_name && item.latin_name !== '-' ? ' / ' + item.latin_name : ''}`"
-              :value="item.id"
-            />
-          </el-select>
-        </div>
+    <GenomeListPanel
+      v-else
+      class="genome-list-view"
+      :loading="genomeListLoading"
+      :rows="genomeRows"
+      :filters="genomeListFilters"
+      :filter-options="genomeFilterOptions"
+      :filtered-accessions="filteredGenomeAccessions"
+      :pagination="genomePagination"
+      @update-filter="updateGenomeListFilter"
+      @refresh="refreshGenomeList"
+      @open-files="openGenomeFiles"
+      @download-row="downloadGenomeRow"
+      @go-accession="goToAccession"
+      @page-change="handleGenomePageChange"
+      @page-size-change="handleGenomePageSizeChange"
+    />
 
-        <div class="filter-item">
-          <span class="filter-label">品种</span>
-          <el-select
-            v-model="genomeListFilters.accession_id"
-            placeholder="选择品种"
-            clearable
-            filterable
-            class="filter-select"
-            @change="refreshGenomeList"
-          >
-            <el-option
-              v-for="item in filteredGenomeAccessions"
-              :key="item.id"
-              :label="item.label"
-              :value="item.id"
-            />
-          </el-select>
-        </div>
-
-        <div class="filter-item">
-          <span class="filter-label">组装级别</span>
-          <el-select
-            v-model="genomeListFilters.assembly_level"
-            placeholder="选择组装级别"
-            clearable
-            class="filter-select"
-            @change="refreshGenomeList"
-          >
-            <el-option
-              v-for="item in genomeFilterOptions.assembly_levels"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </div>
-
-        <el-button class="list-refresh" @click="refreshGenomeList">
-          <el-icon><Refresh /></el-icon>
-          刷新
-        </el-button>
-      </div>
-
-      <div class="genome-table-card">
-        <el-table
-          v-loading="genomeListLoading"
-          :data="genomeRows"
-          class="genome-table"
-          row-key="assembly_id"
-          empty-text="暂无基因组数据"
-        >
-          <el-table-column label="物种" min-width="260">
-            <template #default="{ row }">
-              <div class="species-cell">
-                <span class="species-icon">⌘</span>
-                <div>
-                  <div class="species-main">{{ row.species_name || '-' }} {{ row.accession || '' }}</div>
-                  <div class="species-latin">{{ row.latin_name || '-' }}</div>
-                </div>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="品种" min-width="170">
-            <template #default="{ row }">
-              <button type="button" class="accession-link" @click="goToAccession(row)">
-                {{ row.accession || '-' }}
-              </button>
-            </template>
-          </el-table-column>
-          <el-table-column label="组装级别" min-width="160">
-            <template #default="{ row }">
-              <span v-if="row.assembly_level && row.assembly_level !== '-'" class="assembly-level-badge">
-                {{ row.assembly_level }}
-              </span>
-              <span v-else>-</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="chromosome_count" label="染色体数" min-width="130" />
-          <el-table-column prop="genome_size_display" label="基因组大小" min-width="160" />
-          <el-table-column label="操作" width="210" fixed="right">
-            <template #default="{ row }">
-              <div class="table-actions">
-                <el-button size="small" @click="openGenomeFiles(row)">查看文件</el-button>
-                <el-button size="small" type="primary" plain @click="downloadGenomeRow(row)">
-                  <el-icon><Download /></el-icon>
-                  下载
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <div class="genome-pagination">
-          <span>共 {{ genomePagination.total }} 条</span>
-          <el-pagination
-            background
-            layout="sizes, prev, pager, next, jumper"
-            :total="genomePagination.total"
-            :current-page="genomePagination.page"
-            :page-size="genomePagination.page_size"
-            :page-sizes="[20, 50, 100]"
-            @current-change="handleGenomePageChange"
-            @size-change="handleGenomePageSizeChange"
-          />
-        </div>
-      </div>
-
-      <el-drawer
-        v-model="fileDrawerVisible"
-        :title="fileDrawerTitle"
-        size="440px"
-        class="genome-file-drawer"
-      >
-        <div v-loading="fileDrawerLoading">
-          <div class="drawer-meta">
-            <p>Accession：{{ fileDrawerMeta.accession || '-' }}</p>
-            <p>Assembly：{{ fileDrawerMeta.assembly_name || '-' }}</p>
-            <p>下载入口：DataFile download</p>
-          </div>
-          <el-table :data="fileDrawerFiles" size="small" empty-text="暂无关联文件">
-            <el-table-column prop="file_name" label="文件名" min-width="170" />
-            <el-table-column prop="file_role_display" label="文件角色" min-width="130" />
-            <el-table-column prop="file_size_display" label="大小" width="90" />
-            <el-table-column label="操作" width="78">
-              <template #default="{ row }">
-                <button type="button" class="drawer-download" @click="downloadGenomeFile(row)">下载</button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </el-drawer>
-    </div>
+    <GenomeFileDrawer
+      v-model="fileDrawerVisible"
+      :title="fileDrawerTitle"
+      :loading="fileDrawerLoading"
+      :meta="fileDrawerMeta"
+      :files="fileDrawerFiles"
+      @download="downloadGenomeFile"
+    />
   </div>
 </template>
 
@@ -322,6 +214,8 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import { Search, Refresh, Loading, Setting, Download } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
+import GenomeFileDrawer from '@/components/genome/GenomeFileDrawer.vue';
+import GenomeListPanel from '@/components/genome/GenomeListPanel.vue';
 
 const normalizeQueryValue = (value) => {
   if (Array.isArray(value)) {
@@ -339,7 +233,9 @@ export default {
     Refresh,
     Loading,
     Setting,
-    Download
+    Download,
+    GenomeFileDrawer,
+    GenomeListPanel
   },
   setup() {
     const route = useRoute();
@@ -352,6 +248,7 @@ export default {
     const allOrganisms = ref([]);
     const contextAccession = ref('');
     const contextAssemblyId = ref('');
+    const assemblyOptions = ref([]);
     const routeSyncInProgress = ref(false);
     
     // 染色体相关数据
@@ -539,6 +436,21 @@ export default {
     const refreshGenomeList = () => {
       genomePagination.value.page = 1;
       fetchGenomeList();
+    };
+
+    const updateGenomeListFilter = ({ key, value }) => {
+      if (!Object.prototype.hasOwnProperty.call(genomeListFilters.value, key)) {
+        return;
+      }
+      genomeListFilters.value[key] = value;
+      if (key === 'species_id') {
+        const selectedAccession = genomeFilterOptions.value.accessions.find(
+          (item) => item.id === genomeListFilters.value.accession_id
+        );
+        if (selectedAccession && selectedAccession.species_id !== value) {
+          genomeListFilters.value.accession_id = '';
+        }
+      }
     };
 
     const switchGenomeView = (view) => {
@@ -1204,8 +1116,8 @@ export default {
 
     // 加载可视化数据
     const loadVisualizationData = async () => {
-      if (!selectedOrganism.value || !selectedChromosome.value) {
-        console.log('缺少生物体或染色体信息，跳过加载');
+      if (!selectedOrganism.value || !contextAssemblyId.value || !selectedChromosome.value) {
+        console.log('缺少 Accession、Assembly 或染色体信息，跳过加载');
         return;
       }
 
@@ -1329,8 +1241,47 @@ export default {
       await handleOrganismChange(item?.value || '');
     };
 
+    const selectUnambiguousAssembly = (assemblies, requestedId = '') => {
+      if (requestedId && assemblies.some(item => String(item.id) === String(requestedId))) {
+        return String(requestedId);
+      }
+      if (assemblies.length === 1) {
+        return String(assemblies[0].id);
+      }
+      const defaults = assemblies.filter(item => item.is_default);
+      return defaults.length === 1 ? String(defaults[0].id) : '';
+    };
+
+    const fetchAssemblyOptions = async (accession, requestedId = '') => {
+      assemblyOptions.value = [];
+      contextAssemblyId.value = '';
+      if (!accession) return;
+      try {
+        const response = await axios.get(`/files/accessions/${encodeURIComponent(accession)}/`);
+        const assemblies = response.data?.data?.assemblies || [];
+        assemblyOptions.value = assemblies;
+        contextAssemblyId.value = selectUnambiguousAssembly(assemblies, requestedId);
+      } catch (error) {
+        console.error('获取 Assembly 列表失败:', error);
+        ElMessage.error('获取 Assembly 列表失败');
+      }
+    };
+
+    const handleAssemblyChange = async () => {
+      selectedChromosome.value = '';
+      chromosomeOptions.value = [];
+      cancelVisualizationRequest();
+      await replaceRouteQuery(buildNormalizedQuery({
+        accession: contextAccession.value,
+        assembly: contextAssemblyId.value
+      }));
+      if (contextAssemblyId.value) {
+        await fetchChromosomesForCurrentContext();
+      }
+    };
+
     const fetchChromosomesForCurrentContext = async () => {
-      if (!selectedOrganism.value) {
+      if (!selectedOrganism.value || !contextAssemblyId.value) {
         chromosomeOptions.value = [];
         selectedChromosome.value = '';
         return;
@@ -1384,9 +1335,10 @@ export default {
 
       selectedOrganism.value = accession;
       contextAccession.value = accession;
-      contextAssemblyId.value = assembly;
 
       if (!accession) {
+        assemblyOptions.value = [];
+        contextAssemblyId.value = '';
         chromosomeOptions.value = [];
         selectedChromosome.value = '';
         return;
@@ -1396,12 +1348,16 @@ export default {
         organismOptions.value = Array.from(new Set([accession, ...allOrganisms.value]));
       }
 
+      await fetchAssemblyOptions(accession, assembly);
+
       await replaceRouteQuery(buildNormalizedQuery({
         accession,
-        assembly
+        assembly: contextAssemblyId.value
       }));
 
-      await fetchChromosomesForCurrentContext();
+      if (contextAssemblyId.value) {
+        await fetchChromosomesForCurrentContext();
+      }
     };
     
     // 生物体选择变化
@@ -1410,6 +1366,7 @@ export default {
       selectedOrganism.value = accession;
       contextAccession.value = accession;
       contextAssemblyId.value = '';
+      assemblyOptions.value = [];
       chromosomeOptions.value = [];
       selectedChromosome.value = '';
       cancelVisualizationRequest();
@@ -1419,15 +1376,19 @@ export default {
         return;
       }
 
+      await fetchAssemblyOptions(accession);
       await replaceRouteQuery(buildNormalizedQuery({
-        accession
+        accession,
+        assembly: contextAssemblyId.value
       }));
-      await fetchChromosomesForCurrentContext();
+      if (contextAssemblyId.value) {
+        await fetchChromosomesForCurrentContext();
+      }
     };
 
     // 监听选择变化
     watch([selectedChromosome, contextAssemblyId], () => {
-      if (selectedOrganism.value && selectedChromosome.value) {
+      if (selectedOrganism.value && contextAssemblyId.value && selectedChromosome.value) {
         loadVisualizationData();
       }
     });
@@ -1441,16 +1402,8 @@ export default {
     
     // 获取文件列表
     const fetchFiles = async () => {
-      try {
-        loading.value = true;
-        // 模拟数据加载
-        setTimeout(() => {
-          loading.value = false;
-        }, 1000);
-      } catch (error) {
-        console.error('获取数据失败:', error);
-        ElMessage.error('获取数据失败');
-      }
+      // Page data is loaded by the context-specific query calls below.
+      loading.value = false;
     };
     
     const handleRouteParams = async () => {
@@ -1492,6 +1445,9 @@ export default {
       activeView,
       loading,
       selectedOrganism,
+      contextAssemblyId,
+      assemblyOptions,
+      handleAssemblyChange,
       organismOptions,
       loadingOrganisms,
       queryAccessionSuggestions,
@@ -1542,6 +1498,7 @@ export default {
       genomeFilterOptions,
       filteredGenomeAccessions,
       genomePagination,
+      updateGenomeListFilter,
       refreshGenomeList,
       openGenomeFiles,
       downloadGenomeRow,
@@ -1601,10 +1558,11 @@ export default {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 0 16px;
-  max-width: 700px;
+  max-width: 980px;
 }
 
-/* 染色体选择框样式 */
+/* Assembly 与染色体选择框样式 */
+.assembly-select,
 .chromosome-select {
   display: flex;
   align-items: center;
@@ -1620,6 +1578,7 @@ export default {
   white-space: nowrap;
 }
 
+.assembly-dropdown,
 .chromosome-dropdown {
   width: 140px;
 }
@@ -1818,180 +1777,11 @@ export default {
   white-space: nowrap;
 }
 
-.genome-list-view {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.genome-list-filters {
-  display: grid;
-  grid-template-columns: auto minmax(190px, 260px) auto minmax(190px, 260px) auto minmax(190px, 260px) 1fr auto;
-  align-items: center;
-  gap: 14px 18px;
-  padding: 22px 24px;
-  border: 1px solid #dbe7f6;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 14px 32px rgba(34, 71, 120, 0.07);
-}
-
-.filter-item {
-  display: contents;
-}
-
-.filter-label {
-  color: #1a2f4d;
-  font-size: 15px;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.filter-select {
-  width: 100%;
-}
-
-.list-refresh {
-  min-width: 96px;
-  height: 40px;
-  font-weight: 900;
-}
-
-.genome-table-card {
-  overflow: hidden;
-  border: 1px solid #dbe7f6;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 14px 32px rgba(34, 71, 120, 0.07);
-}
-
-.genome-table {
-  width: 100%;
-}
-
-.genome-table :deep(th.el-table__cell) {
-  background: #f0f6fd;
-  color: #294561;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.genome-table :deep(td.el-table__cell) {
-  height: 88px;
-  color: #173052;
-  font-weight: 700;
-}
-
-.species-cell {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.species-icon {
-  flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #e8f9ef;
-  color: #08a86f;
-  font-size: 25px;
-  font-weight: 900;
-}
-
-.species-main {
-  color: #08264b;
-  font-size: 19px;
-  line-height: 1.2;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-}
-
-.species-latin {
-  display: block;
-  margin-top: 5px;
-  color: #53647b;
-  font-size: 15px;
-  line-height: 1.15;
-  font-style: italic;
-  font-weight: 800;
-}
-
-.accession-link {
-  border: 0;
-  background: transparent;
-  color: #1768f2;
-  font-size: 15px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.assembly-level-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #eaf6ff;
-  color: #0e5ad7;
-  font-weight: 900;
-}
-
-.table-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.genome-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-top: 1px solid #dbe7f6;
-  color: #5d6f89;
-  font-weight: 800;
-}
-
-.drawer-meta {
-  margin-bottom: 14px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: #f2f7ff;
-  color: #536781;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.drawer-meta p {
-  margin: 4px 0;
-}
-
-.drawer-download {
-  border: 0;
-  background: transparent;
-  color: #1768f2;
-  font-weight: 900;
-  cursor: pointer;
-}
-
 @media (max-width: 768px) {
   .page-header {
     align-items: flex-start;
     flex-direction: column;
     gap: 12px;
-  }
-
-  .genome-list-filters {
-    grid-template-columns: 1fr;
-  }
-
-  .filter-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
   }
 
   .control-panel {

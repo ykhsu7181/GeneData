@@ -175,7 +175,7 @@ class ImportDataBatchTestCase(TestCase):
 
     def test_post_apply_runner_calls_all_three_audits(self):
         outputs = {
-            "audit_file_relations": "broken_relation_count\t0\nduplicate_relation_count\t0\n",
+            "audit_file_relations": "broken_relation_count\t0\nduplicate_relation_count\t0\nduplicate_primary_count\t0\n",
             "validate_new_file_structure": "result\tPASS\n",
             "audit_genome_transcriptome_readiness": "status=PASS\n",
         }

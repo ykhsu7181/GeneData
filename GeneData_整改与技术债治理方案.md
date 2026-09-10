@@ -414,6 +414,18 @@ Stage B 的开发门禁通过不解除 Stage A：Security Gate 仍为 `FAIL / OP
 
 先审计同一业务对象和文件角色下是否存在多个 primary，并确认是否存在并发设置 primary 的真实场景。低并发后台不预先引入复杂锁；仅当审计和并发场景证明必要时，再增加事务、行锁或数据库约束。
 
+### 7.6 当前实施状态（2026-09-10）
+
+- **PASS（首个页面拆分批次）**：`GenomeCard.vue` 的数据列表和文件抽屉已拆为独立展示组件，查询、下载、路由和状态仍由页面层管理，API schema 未改变。
+- **PASS**：Genome 精确 Accession 搜索同时支持按钮和 Enter；可视化现在要求有效 Accession、明确 Assembly 和 Chromosome。多 Assembly 仅在唯一 Assembly 或唯一 default 时自动选择，不再猜测第一条记录。
+- **PASS**：FASTA 查询优先读取与本次 Assembly/Accession 上下文明确定义关系、文件名匹配且不陈旧的 `.fai` DataFile；无可用索引时按 512 MiB/5 秒预算受控扫描并记录 warning，超限返回可识别的 `fasta_scan_limit_exceeded`。
+- **PASS**：`audit_file_relations` 新增同一 `(related_type, related_id, file_role)` 多个 `is_primary=True` 的只读审计与报告；本阶段未增加锁或数据库约束。
+- **PASS（构建基线）**：生产构建成功；当前 app 入口约 1.53 MiB，vendor JavaScript 约 1.17 MiB，构建工具仍报告体积告警。该结果作为后续浏览器性能验收的拆包候选证据，不直接触发缓存变更。
+- **DEFERRED**：遵循“每次只拆一个页面”，`AnnotationView.vue`、`DataChartView.vue` 及 Genome 筛选/可视化子组件继续按独立批次拆分。
+- **DEFERRED**：首屏时间、dashboard API P95、ECharts 初始化及 GeoJSON 请求/解析耗时必须在可重复的浏览器与部署环境中采集；未取得数据前不宣称 Stage C 性能验收完成。
+- **DEFERRED**：生产数据上的 multiple-primary 报告和并发写入场景确认仍需在 Stage A 安全门禁关闭后由人工执行；当前只完成无生产写入的审计能力与自动测试。
+- **OPEN**：全量 Node 静态测试为 39 项中 34 项通过，5 项为进入 Stage C 前已存在的路由/测试期望不一致；本批次新增 Genome 边界测试通过。后续应在独立前端测试治理批次确认产品路由后修正，避免混入组件拆分。
+
 ## 8. Stage D：仓库清理与历史命令退役
 
 ### 8.1 Repository Cleanup

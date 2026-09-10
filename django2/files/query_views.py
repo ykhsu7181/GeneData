@@ -1,7 +1,9 @@
 import mimetypes
 import os
+import logging
 from functools import wraps
 
+from django.conf import settings
 from django.http import FileResponse
 from django.db.models import Q
 from rest_framework import status
@@ -13,10 +15,12 @@ from files.models import Accession, FileRelation
 from files.parsers.archive import parse_feature_file as _parse_feature_file
 from files.parsers.codon import load_payload as _load_codon_payload
 from files.parsers.fasta import (
+    FastaScanLimitExceeded,
     build_sequence_aliases as _build_fasta_sequence_aliases,
     list_sequence_ids,
     sequence_length,
 )
+from files.services.fasta_index_service import find_current_fasta_index
 from files.services.accession_context import (
     AmbiguousContextError,
     classify_file_scope,
@@ -44,6 +48,30 @@ from files.services.query_service import (
     get_transcriptome_files_payload,
     get_transcriptome_list_payload,
 )
+
+
+logger = logging.getLogger(__name__)
+
+
+def _fasta_read_options(genome_file, accession_obj, assembly):
+    index_path = None
+    if assembly or accession_obj:
+        related_type = "assembly" if assembly else "accession"
+        related_id = assembly.id if assembly else accession_obj.id
+        index_path = find_current_fasta_index(
+            genome_file=genome_file,
+            related_type=related_type,
+            related_id=related_id,
+        )
+    if not index_path:
+        logger.warning("No usable related FASTA index; using bounded scan: %s", genome_file.file_path)
+    return {
+        "index_path": index_path,
+        "max_bytes": getattr(settings, "FASTA_FALLBACK_MAX_BYTES", 512 * 1024 * 1024),
+        "timeout_seconds": getattr(settings, "FASTA_FALLBACK_TIMEOUT_SECONDS", 5),
+    }
+
+
 TRANSCRIPTOME_SUFFIXES = ("all", "leaf", "panicles", "shoot", "stem", "root")
 
 
@@ -61,6 +89,11 @@ def reject_ambiguous_context(view_func):
                     "parent": exc.parent_code,
                 },
                 status=status.HTTP_409_CONFLICT,
+            )
+        except FastaScanLimitExceeded as exc:
+            return Response(
+                {"error": str(exc), "code": "fasta_scan_limit_exceeded"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
     return wrapped
@@ -133,12 +166,17 @@ def _resolve_service_file(request, file_role):
 def _build_context_chromosome_aliases(accession_obj=None, assembly=None, organism=None):
     """Build aliases from the exact genome file selected for this request context."""
     accession = accession_obj.accession if accession_obj else organism
-    _, _, genome_file = get_context_genome_file(
+    resolved_accession, resolved_assembly, genome_file = get_context_genome_file(
         assembly_id=assembly.id if assembly else None,
         accession=accession,
         organism=organism,
     )
-    return _build_fasta_sequence_aliases(genome_file.file_path) if genome_file else {}
+    if not genome_file:
+        return {}
+    return _build_fasta_sequence_aliases(
+        genome_file.file_path,
+        **_fasta_read_options(genome_file, resolved_accession, resolved_assembly),
+    )
 
 
 def _transcriptome_service_file(accession_obj, transcriptome_type):
@@ -484,7 +522,7 @@ def query_chromosomes(request):
     if not organism and not accession and not assembly_id:
         return Response({"error": "缺少必要的参数: organism"}, status=status.HTTP_400_BAD_REQUEST)
 
-    _, _, genome_file = get_context_genome_file(
+    resolved_accession, resolved_assembly, genome_file = get_context_genome_file(
         assembly_id=assembly_id,
         accession=accession,
         organism=organism,
@@ -492,7 +530,12 @@ def query_chromosomes(request):
     if not genome_file:
         return Response({"error": f"未找到 {organism or accession or assembly_id} 的基因组文件"}, status=status.HTTP_404_NOT_FOUND)
 
-    return Response(list_sequence_ids(genome_file.file_path))
+    return Response(
+        list_sequence_ids(
+            genome_file.file_path,
+            **_fasta_read_options(genome_file, resolved_accession, resolved_assembly),
+        )
+    )
 
 
 @api_view(["GET"])
@@ -509,7 +552,7 @@ def query_chromosome_length(request):
     if not chromosome:
         return Response({"error": "缺少必要的参数: chromosome"}, status=status.HTTP_400_BAD_REQUEST)
 
-    _, _, genome_file = get_context_genome_file(
+    resolved_accession, resolved_assembly, genome_file = get_context_genome_file(
         assembly_id=assembly_id,
         accession=accession,
         organism=organism,
@@ -517,7 +560,11 @@ def query_chromosome_length(request):
     if not genome_file:
         return Response({"error": f"未找到 {organism or accession or assembly_id} 的基因组文件"}, status=status.HTTP_404_NOT_FOUND)
 
-    length = sequence_length(genome_file.file_path, chromosome)
+    length = sequence_length(
+        genome_file.file_path,
+        chromosome,
+        **_fasta_read_options(genome_file, resolved_accession, resolved_assembly),
+    )
     if length is not None:
         return Response({"length": length})
     return Response({"error": f"在基因组文件中未找到染色体 {chromosome}"}, status=status.HTTP_404_NOT_FOUND)

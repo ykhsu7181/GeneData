@@ -149,6 +149,7 @@ class AuditFileMigrationCommandTestCase(TestCase):
         output = stdout.getvalue()
         self.assertIn("broken_relation_count\t1", output)
         self.assertIn("duplicate_relation_count\t0", output)
+        self.assertIn("duplicate_primary_count\t0", output)
         reports = [
             name for name in os.listdir(self.output_dir.name)
             if name.startswith("broken_file_relations_") and name.endswith(".tsv")
@@ -157,6 +158,32 @@ class AuditFileMigrationCommandTestCase(TestCase):
         with open(os.path.join(self.output_dir.name, reports[0]), "r", encoding="utf-8") as handle:
             report = handle.read()
         self.assertIn("missing_related_object", report)
+
+    def test_audit_file_relations_reports_multiple_primary_files(self):
+        first = self.make_data_file("P1", f"/tmp/audit/{self.suffix}/primary-1.fasta")
+        second = self.make_data_file("P2", f"/tmp/audit/{self.suffix}/primary-2.fasta")
+        for data_file in (first, second):
+            FileRelation.objects.create(
+                file=data_file,
+                related_type="assembly",
+                related_id=str(self.assembly.id),
+                related_code=self.assembly.name,
+                file_role="genome",
+                is_primary=True,
+            )
+        stdout = StringIO()
+
+        call_command("audit_file_relations", output_dir=self.output_dir.name, stdout=stdout)
+
+        self.assertIn("duplicate_primary_count\t1", stdout.getvalue())
+        report_name = next(
+            name for name in os.listdir(self.output_dir.name)
+            if name.startswith("broken_file_relations_") and name.endswith(".tsv")
+        )
+        with open(os.path.join(self.output_dir.name, report_name), "r", encoding="utf-8") as handle:
+            report = handle.read()
+        self.assertIn("duplicate_primary", report)
+        self.assertIn("count=2", report)
 
     def test_audit_legacy_fallback_reports_legacy_and_organism_dependencies(self):
         relation_file = self.make_data_file("E", f"/tmp/audit/{self.suffix}/new.fasta")
