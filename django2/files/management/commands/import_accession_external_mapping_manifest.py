@@ -5,7 +5,13 @@ from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
 from files.models import Accession, AccessionExternalMapping
-from files.services.import_log_service import build_import_stats, import_timestamp, write_key_value_report
+from files.services.import_log_service import (
+    add_provenance_arguments,
+    build_import_stats,
+    import_timestamp,
+    provenance_options,
+    write_key_value_report,
+)
 
 
 REQUIRED_COLUMNS = {"accession", "ena_study"}
@@ -26,6 +32,7 @@ class Command(BaseCommand):
         parser.add_argument("--input", dest="input_path", required=True)
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--limit", type=int, default=None)
+        add_provenance_arguments(parser)
 
     def handle(self, *args, **options):
         input_path = options["input_path"]
@@ -55,6 +62,7 @@ class Command(BaseCommand):
             started_at=started_at, finished_at=datetime.now().isoformat(timespec="seconds"),
             scanned_count=counts["scanned"], created_count=counts["created"], reused_count=counts["reused"],
             updated_count=counts["updated"], skipped_count=counts["skipped"], unmapped_count=len(unmapped),
+            **provenance_options(options),
         )
         log_path = f"import_accession_external_mapping_log_{timestamp}.txt"
         unmapped_path = f"import_accession_external_mapping_unmapped_{timestamp}.tsv"

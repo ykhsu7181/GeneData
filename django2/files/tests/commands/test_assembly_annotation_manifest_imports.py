@@ -52,6 +52,31 @@ class AssemblyAnnotationManifestImportTests(TestCase):
         call_command(*self.command_args("import_assembly_manifest", self.assembly_manifest(), dry_run=True))
         self.assertFalse(Assembly.objects.exists())
 
+    def test_assembly_report_contains_provenance(self):
+        manifest = self.assembly_manifest()
+        call_command(
+            "import_assembly_manifest",
+            "--file",
+            str(manifest),
+            "--output-dir",
+            self.temp_dir.name,
+            "--dry-run",
+            "--batch-id",
+            "batch-1",
+            "--source",
+            "lab",
+            "--source-version",
+            "v2",
+        )
+
+        report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_log_*.txt"))
+        content = report.read_text(encoding="utf-8")
+        self.assertIn("batch_id: batch-1", content)
+        self.assertIn("source: lab", content)
+        self.assertIn("source_version: v2", content)
+        self.assertIn("manifest_sha256:", content)
+        self.assertIn("code_commit:", content)
+
     def test_assembly_and_annotation_import_are_idempotent_and_exposed_by_api_service(self):
         assembly_path = self.assembly_manifest()
         annotation_path = self.annotation_manifest()
@@ -95,3 +120,87 @@ class AssemblyAnnotationManifestImportTests(TestCase):
     def test_annotation_import_reports_missing_assembly_without_writing(self):
         call_command(*self.command_args("import_annotation_manifest", self.annotation_manifest()))
         self.assertFalse(Annotation.objects.exists())
+
+    def test_assembly_import_fills_blanks_and_preserves_curated_metadata(self):
+        assembly = Assembly.objects.create(
+            assembly_code="ASM_IR64",
+            accession=self.accession,
+            name="Curated assembly name",
+            source_database="CuratedDB",
+            file_name=None,
+        )
+
+        call_command(*self.command_args("import_assembly_manifest", self.assembly_manifest()))
+
+        assembly.refresh_from_db()
+        self.assertEqual(assembly.name, "Curated assembly name")
+        self.assertEqual(assembly.source_database, "CuratedDB")
+        self.assertEqual(assembly.file_name, "genome.IR64.fasta")
+        error_report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_errors_*.tsv"))
+        self.assertIn("metadata conflict", error_report.read_text(encoding="utf-8"))
+
+    def test_annotation_import_fills_blanks_and_preserves_curated_metadata(self):
+        assembly = Assembly.objects.create(
+            assembly_code="ASM_IR64",
+            accession=self.accession,
+            name="IR64 assembly",
+        )
+        annotation = Annotation.objects.create(
+            annotation_code="ANN_IR64",
+            accession=None,
+            assembly=assembly,
+            name="Curated annotation name",
+            source_database="CuratedDB",
+            file_name=None,
+        )
+
+        call_command(*self.command_args("import_annotation_manifest", self.annotation_manifest()))
+
+        annotation.refresh_from_db()
+        self.assertEqual(annotation.accession, self.accession)
+        self.assertEqual(annotation.name, "Curated annotation name")
+        self.assertEqual(annotation.source_database, "CuratedDB")
+        self.assertEqual(annotation.file_name, "annotation.IR64.gff")
+        error_report = next(Path(self.temp_dir.name).glob("import_annotation_manifest_errors_*.tsv"))
+        self.assertIn("metadata conflict", error_report.read_text(encoding="utf-8"))
+
+    def test_assembly_identity_conflict_does_not_move_existing_record(self):
+        other = Accession.objects.create(accession="OTHER", species=self.species)
+        assembly = Assembly.objects.create(
+            assembly_code="ASM_IR64",
+            accession=other,
+            name="Other assembly",
+        )
+
+        call_command(*self.command_args("import_assembly_manifest", self.assembly_manifest()))
+
+        assembly.refresh_from_db()
+        self.assertEqual(assembly.accession, other)
+        error_report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_errors_*.tsv"))
+        self.assertIn("identity conflict", error_report.read_text(encoding="utf-8"))
+
+    def test_annotation_identity_conflict_does_not_move_existing_record(self):
+        target_assembly = Assembly.objects.create(
+            assembly_code="ASM_IR64",
+            accession=self.accession,
+            name="Target assembly",
+        )
+        other_assembly = Assembly.objects.create(
+            assembly_code="ASM_OTHER",
+            accession=self.accession,
+            name="Other assembly",
+        )
+        annotation = Annotation.objects.create(
+            annotation_code="ANN_IR64",
+            accession=self.accession,
+            assembly=other_assembly,
+            name="Other annotation",
+        )
+
+        call_command(*self.command_args("import_annotation_manifest", self.annotation_manifest()))
+
+        annotation.refresh_from_db()
+        self.assertEqual(annotation.assembly, other_assembly)
+        self.assertNotEqual(annotation.assembly, target_assembly)
+        error_report = next(Path(self.temp_dir.name).glob("import_annotation_manifest_errors_*.tsv"))
+        self.assertIn("identity conflict", error_report.read_text(encoding="utf-8"))

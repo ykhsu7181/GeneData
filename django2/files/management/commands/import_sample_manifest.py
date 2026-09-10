@@ -5,6 +5,12 @@ from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
 from files.models import Accession, Sample, Species
+from files.services.import_log_service import (
+    add_provenance_arguments,
+    build_import_stats,
+    provenance_options,
+    write_key_value_report,
+)
 
 
 REQUIRED_COLUMNS = {"sample_code", "species_code"}
@@ -21,6 +27,7 @@ class Command(BaseCommand):
         parser.add_argument("--input", dest="input_path", required=True)
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--limit", type=int, default=None)
+        add_provenance_arguments(parser)
 
     def handle(self, *args, **options):
         input_path = options["input_path"]
@@ -36,6 +43,7 @@ class Command(BaseCommand):
         updated_count = 0
         skipped_count = 0
         unmapped = []
+        started_at = datetime.now().isoformat(timespec="seconds")
 
         with open(input_path, newline="", encoding="utf-8-sig") as handle:
             reader = csv.DictReader(handle, delimiter="\t")
@@ -62,15 +70,25 @@ class Command(BaseCommand):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_path = f"import_sample_manifest_log_{timestamp}.txt"
         unmapped_path = f"import_sample_manifest_unmapped_{timestamp}.tsv"
-        stats = {
-            "dry_run": dry_run,
-            "scanned_count": scanned,
-            "created_sample_count": created_count,
-            "reused_sample_count": reused_count,
-            "updated_sample_count": updated_count,
-            "skipped_count": skipped_count,
-            "unmapped_count": len(unmapped),
-        }
+        stats = build_import_stats(
+            command="import_sample_manifest",
+            input_path=input_path,
+            dry_run=dry_run,
+            started_at=started_at,
+            finished_at=datetime.now().isoformat(timespec="seconds"),
+            scanned_count=scanned,
+            created_count=created_count,
+            reused_count=reused_count,
+            updated_count=updated_count,
+            skipped_count=skipped_count,
+            unmapped_count=len(unmapped),
+            **provenance_options(options),
+            extra={
+                "created_sample_count": created_count,
+                "reused_sample_count": reused_count,
+                "updated_sample_count": updated_count,
+            },
+        )
         self.write_reports(log_path, unmapped_path, stats, unmapped)
 
         for key, value in stats.items():
@@ -196,9 +214,7 @@ class Command(BaseCommand):
         }
 
     def write_reports(self, log_path, unmapped_path, stats, unmapped):
-        with open(log_path, "w", encoding="utf-8") as handle:
-            for key, value in stats.items():
-                handle.write(f"{key}: {value}\n")
+        write_key_value_report(log_path, stats)
 
         with open(unmapped_path, "w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(

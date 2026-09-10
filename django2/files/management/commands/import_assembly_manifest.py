@@ -6,6 +6,13 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from files.models import Accession, Assembly
+from files.services.ingestion.metadata_policy import plan_fill_blank_metadata
+from files.services.import_log_service import (
+    add_provenance_arguments,
+    build_import_stats,
+    provenance_options,
+    write_key_value_report,
+)
 
 
 class Command(BaseCommand):
@@ -21,6 +28,7 @@ class Command(BaseCommand):
         parser.add_argument("--file", required=True, help="Assembly manifest TSV path.")
         parser.add_argument("--dry-run", action="store_true", help="Validate without writing database records.")
         parser.add_argument("--output-dir", default=".", help="Directory for import logs.")
+        add_provenance_arguments(parser)
 
     def handle(self, *args, **options):
         manifest_path = Path(options["file"])
@@ -32,9 +40,11 @@ class Command(BaseCommand):
         output_dir.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         errors = []
+        started_at = datetime.now().isoformat(timespec="seconds")
         stats = {
             "total_rows": len(rows), "matched_accession": 0, "missing_accession": 0,
-            "created_assembly": 0, "updated_assembly": 0, "duplicate_assembly": 0,
+            "created_assembly": 0, "updated_assembly": 0, "reused_assembly": 0,
+            "duplicate_assembly": 0, "conflict_count": 0,
         }
 
         with transaction.atomic():
@@ -52,22 +62,66 @@ class Command(BaseCommand):
                     continue
                 stats["matched_accession"] += 1
 
-                if Assembly.objects.filter(assembly_code=assembly_code).exists():
+                assembly = Assembly.objects.filter(assembly_code=assembly_code).first()
+                if assembly:
                     stats["duplicate_assembly"] += 1
-                if options["dry_run"]:
+                    if assembly.accession_id != accession.id:
+                        stats["conflict_count"] += 1
+                        errors.append(self._error(
+                            line_number,
+                            assembly_code,
+                            accession_code,
+                            "identity conflict: assembly_code belongs to another accession",
+                        ))
+                        continue
+
+                    updates, conflicts = plan_fill_blank_metadata(
+                        assembly,
+                        self._metadata_values(row),
+                    )
+                    if conflicts:
+                        stats["conflict_count"] += len(conflicts)
+                        errors.append(self._error(
+                            line_number,
+                            assembly_code,
+                            accession_code,
+                            self._conflict_reason(conflicts),
+                        ))
+                    if updates:
+                        stats["updated_assembly"] += 1
+                        if not options["dry_run"]:
+                            for field, value in updates.items():
+                                setattr(assembly, field, value)
+                            assembly.save(update_fields=[*updates, "updated_at"])
+                    else:
+                        stats["reused_assembly"] += 1
                     continue
 
-                defaults = self._defaults(row, accession)
-                _, created = Assembly.objects.update_or_create(
-                    assembly_code=assembly_code,
-                    defaults=defaults,
-                )
-                stats["created_assembly" if created else "updated_assembly"] += 1
+                if not options["dry_run"]:
+                    Assembly.objects.create(
+                        assembly_code=assembly_code,
+                        **self._defaults(row, accession),
+                    )
+                    stats["created_assembly"] += 1
 
             if options["dry_run"]:
                 transaction.set_rollback(True)
 
-        log_path, error_path = self._write_reports(output_dir, timestamp, options["dry_run"], stats, errors)
+        report_stats = build_import_stats(
+            command="import_assembly_manifest",
+            input_path=str(manifest_path),
+            dry_run=options["dry_run"],
+            started_at=started_at,
+            finished_at=datetime.now().isoformat(timespec="seconds"),
+            scanned_count=stats["total_rows"],
+            created_count=stats["created_assembly"],
+            reused_count=stats["reused_assembly"],
+            updated_count=stats["updated_assembly"],
+            error_count=len(errors),
+            **provenance_options(options),
+            extra=stats,
+        )
+        log_path, error_path = self._write_reports(output_dir, timestamp, report_stats, errors)
         for key, value in stats.items():
             self.stdout.write(f"{key}={value}")
         self.stdout.write(f"dry_run={options['dry_run']}")
@@ -106,17 +160,40 @@ class Command(BaseCommand):
         }
 
     @staticmethod
+    def _metadata_values(row):
+        assembly_name = row["assembly_name"]
+        assembly_accession = row.get("assembly_accession", "")
+        return {
+            "name": assembly_name or None,
+            "assembly_name": assembly_name or None,
+            "display_name": assembly_name or None,
+            "assembly_accession": assembly_accession or None,
+            "standard_id": assembly_accession or None,
+            "species_code": row.get("species_code") or None,
+            "assembly_level": row.get("assembly_level") or None,
+            "reference": row.get("reference") or None,
+            "source_database": row.get("source_database") or None,
+            "external_project": row.get("external_project") or None,
+            "bio_project": row.get("external_project") or None,
+            "file_name": row.get("file_name") or None,
+            "file_type": row.get("file_type") or None,
+            "description": row.get("description") or None,
+        }
+
+    @staticmethod
+    def _conflict_reason(conflicts):
+        fields = ", ".join(item["field"] for item in conflicts)
+        return f"metadata conflict (preserved existing values): {fields}"
+
+    @staticmethod
     def _error(line_number, assembly_code, accession, reason):
         return {"line_number": line_number, "assembly_code": assembly_code, "accession": accession, "reason": reason}
 
     @staticmethod
-    def _write_reports(output_dir, timestamp, dry_run, stats, errors):
+    def _write_reports(output_dir, timestamp, stats, errors):
         log_path = output_dir / f"import_assembly_manifest_log_{timestamp}.txt"
         error_path = output_dir / f"import_assembly_manifest_errors_{timestamp}.tsv"
-        log_path.write_text(
-            "\n".join([f"dry_run: {dry_run}"] + [f"{key}: {value}" for key, value in stats.items()]) + "\n",
-            encoding="utf-8",
-        )
+        write_key_value_report(log_path, stats)
         with error_path.open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=["line_number", "assembly_code", "accession", "reason"], delimiter="\t")
             writer.writeheader()

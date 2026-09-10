@@ -6,12 +6,17 @@ from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from files.models import Accession, DataFile, Sample, Species
-from files.services.file_write_service import create_or_get_file_relation, make_next_file_code
+from files.models import Accession, Sample, Species
+from files.services.file_write_service import (
+    create_or_get_datafile_from_path,
+    create_or_get_file_relation,
+)
 from files.services.ingestion.roles import validate_file_role
 from files.services.import_log_service import (
     build_import_stats,
+    add_provenance_arguments,
     import_timestamp,
+    provenance_options,
     write_key_value_report,
 )
 
@@ -27,6 +32,9 @@ def _normalize_manifest_path(file_path):
     value = _clean(file_path).replace("\\", "/")
     while "//" in value:
         value = value.replace("//", "/")
+    drive, _ = os.path.splitdrive(value)
+    if drive:
+        return os.path.abspath(os.path.normpath(value))
     return value
 
 
@@ -67,6 +75,7 @@ class Command(BaseCommand):
         parser.add_argument("--input", dest="input_path", required=True)
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--limit", type=int, default=None)
+        add_provenance_arguments(parser)
 
     def handle(self, *args, **options):
         input_path = options["input_path"]
@@ -120,6 +129,7 @@ class Command(BaseCommand):
             updated_count=updated_datafile,
             skipped_count=skipped,
             unmapped_count=len(unmapped),
+            **provenance_options(options),
             extra={
                 "created_datafile_count": created_datafile,
                 "reused_datafile_count": reused_datafile,
@@ -198,39 +208,24 @@ class Command(BaseCommand):
             }
         }
 
-        data_file = DataFile.objects.filter(file_path=file_path).first()
-        created_datafile = False
-        reused_datafile = bool(data_file)
-        updated_datafile = False
-        if not data_file:
-            data_file = DataFile(
-                file_code=make_next_file_code(),
-                file_name=_file_name_from_path(file_path),
-                original_name=_file_name_from_path(file_path),
+        data_file, created_datafile, reused_datafile, updated_datafile = (
+            create_or_get_datafile_from_path(
                 file_path=file_path,
+                file_name=_file_name_from_path(file_path),
                 file_size=_int_or_none(row.get("file_size")),
                 md5=_clean(row.get("md5")) or None,
                 description=json.dumps(description, ensure_ascii=False),
+                normalize_path=False,
+                dry_run=dry_run,
             )
-            created_datafile = True
-            if not dry_run:
-                data_file.save()
-        elif not dry_run:
-            update_fields = []
-            if row.get("file_size") and data_file.file_size is None:
-                data_file.file_size = _int_or_none(row.get("file_size"))
-                update_fields.append("file_size")
-            if row.get("md5") and not data_file.md5:
-                data_file.md5 = _clean(row.get("md5"))
-                update_fields.append("md5")
+        )
+        if reused_datafile:
             merged_description = _merge_raw_data_description(data_file.description, description)
             if data_file.description != merged_description:
-                data_file.description = merged_description
-                update_fields.append("description")
-            if update_fields:
-                update_fields.append("updated_at")
-                data_file.save(update_fields=update_fields)
                 updated_datafile = True
+                if not dry_run:
+                    data_file.description = merged_description
+                    data_file.save(update_fields=["description", "updated_at"])
 
         created_relation = 0
         reused_relation = 0

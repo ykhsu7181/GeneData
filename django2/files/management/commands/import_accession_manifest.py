@@ -7,7 +7,9 @@ from django.core.management.base import BaseCommand, CommandError
 from files.models import Accession, Species
 from files.services.import_log_service import (
     build_import_stats,
+    add_provenance_arguments,
     import_timestamp,
+    provenance_options,
     write_key_value_report,
 )
 
@@ -36,6 +38,7 @@ class Command(BaseCommand):
         parser.add_argument("--input", dest="input_path", required=True)
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument("--limit", type=int, default=None)
+        add_provenance_arguments(parser)
 
     def handle(self, *args, **options):
         input_path = options["input_path"]
@@ -88,6 +91,7 @@ class Command(BaseCommand):
             updated_count=updated_count,
             skipped_count=skipped_count,
             unmapped_count=len(unmapped),
+            **provenance_options(options),
             extra={
                 "created_accession_count": created_count,
                 "reused_accession_count": reused_count,
