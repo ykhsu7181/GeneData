@@ -5,6 +5,7 @@ from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
 from files.models import Accession, Sample, Species
+from files.services.ingestion.metadata_policy import plan_fill_blank_metadata
 from files.services.import_log_service import (
     add_provenance_arguments,
     build_import_stats,
@@ -43,6 +44,7 @@ class Command(BaseCommand):
         updated_count = 0
         skipped_count = 0
         unmapped = []
+        conflicts = []
         started_at = datetime.now().isoformat(timespec="seconds")
 
         with open(input_path, newline="", encoding="utf-8-sig") as handle:
@@ -66,10 +68,12 @@ class Command(BaseCommand):
                 updated_count += int(result["updated"])
                 skipped_count += int(result["skipped"])
                 unmapped.extend(result["unmapped"])
+                conflicts.extend(result.get("conflicts", []))
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_path = f"import_sample_manifest_log_{timestamp}.txt"
         unmapped_path = f"import_sample_manifest_unmapped_{timestamp}.tsv"
+        conflict_path = f"import_sample_manifest_conflicts_{timestamp}.tsv"
         stats = build_import_stats(
             command="import_sample_manifest",
             input_path=input_path,
@@ -87,14 +91,17 @@ class Command(BaseCommand):
                 "created_sample_count": created_count,
                 "reused_sample_count": reused_count,
                 "updated_sample_count": updated_count,
+                "conflict_count": len(conflicts),
             },
         )
         self.write_reports(log_path, unmapped_path, stats, unmapped)
+        self.write_conflicts(conflict_path, conflicts)
 
         for key, value in stats.items():
             self.stdout.write(f"{key}={value}")
         self.stdout.write(f"log={log_path}")
         self.stdout.write(f"unmapped={unmapped_path}")
+        self.stdout.write(f"conflicts={conflict_path}")
 
     def import_row(self, row, dry_run=False, line_number=None):
         sample_code = _clean(row.get("sample_code"))
@@ -163,29 +170,21 @@ class Command(BaseCommand):
                 "unmapped": [],
             }
 
-        update_fields = []
-        for field, value in defaults.items():
-            current = getattr(sample, field)
-            if field in {"species", "accession"}:
-                current_id = getattr(sample, f"{field}_id")
-                value_id = value.id if value else None
-                if current_id is None and value_id is not None:
-                    setattr(sample, field, value)
-                    update_fields.append(field)
-            elif current in (None, "") and value not in (None, ""):
-                setattr(sample, field, value)
-                update_fields.append(field)
+        updates, metadata_conflicts = plan_fill_blank_metadata(sample, defaults)
+        conflicts = self._conflict_rows(line_number, sample_code, metadata_conflicts)
 
-        if update_fields:
+        if updates:
             if not dry_run:
-                update_fields.append("updated_at")
-                sample.save(update_fields=update_fields)
+                for field, value in updates.items():
+                    setattr(sample, field, value)
+                sample.save(update_fields=[*updates, "updated_at"])
             return {
                 "created": False,
                 "reused": False,
                 "updated": True,
                 "skipped": False,
                 "unmapped": [],
+                "conflicts": conflicts,
             }
 
         return {
@@ -194,7 +193,33 @@ class Command(BaseCommand):
             "updated": False,
             "skipped": False,
             "unmapped": [],
+            "conflicts": conflicts,
         }
+
+    @staticmethod
+    def _conflict_rows(line_number, sample_code, conflicts):
+        return [
+            {
+                "line_number": line_number,
+                "identity": sample_code,
+                "field": item["field"],
+                "existing": item["existing"],
+                "incoming": item["incoming"],
+                "reason": "metadata conflict; preserved existing value",
+            }
+            for item in conflicts
+        ]
+
+    @staticmethod
+    def write_conflicts(path, conflicts):
+        with open(path, "w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=["line_number", "identity", "field", "existing", "incoming", "reason"],
+                delimiter="\t",
+            )
+            writer.writeheader()
+            writer.writerows(conflicts)
 
     def _skipped(self, line_number, sample_code, species_code, accession_code, reason):
         return {

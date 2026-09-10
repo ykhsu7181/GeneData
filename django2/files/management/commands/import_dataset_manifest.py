@@ -5,6 +5,7 @@ from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
 from files.models import Accession, Dataset, Project
+from files.services.ingestion.metadata_policy import plan_fill_blank_metadata
 from files.services.import_log_service import (
     add_provenance_arguments,
     build_import_stats,
@@ -40,6 +41,7 @@ class Command(BaseCommand):
 
         counts = {"scanned": 0, "created": 0, "reused": 0, "updated": 0, "skipped": 0}
         unmapped = []
+        conflicts = []
         started_at = datetime.now().isoformat(timespec="seconds")
         with open(input_path, newline="", encoding="utf-8-sig") as handle:
             reader = csv.DictReader(handle, delimiter="\t")
@@ -54,6 +56,7 @@ class Command(BaseCommand):
                 for key in ("created", "reused", "updated", "skipped"):
                     counts[key] += int(result[key])
                 unmapped.extend(result["unmapped"])
+                conflicts.extend(result.get("conflicts", []))
 
         timestamp = import_timestamp()
         stats = build_import_stats(
@@ -69,15 +72,19 @@ class Command(BaseCommand):
             skipped_count=counts["skipped"],
             unmapped_count=len(unmapped),
             **provenance_options(options),
+            extra={"conflict_count": len(conflicts)},
         )
         log_path = f"import_dataset_manifest_log_{timestamp}.txt"
         unmapped_path = f"import_dataset_manifest_unmapped_{timestamp}.tsv"
+        conflict_path = f"import_dataset_manifest_conflicts_{timestamp}.tsv"
         write_key_value_report(log_path, stats)
         self.write_unmapped(unmapped_path, unmapped)
+        self.write_conflicts(conflict_path, conflicts)
         for key, value in stats.items():
             self.stdout.write(f"{key}={value}")
         self.stdout.write(f"log={log_path}")
         self.stdout.write(f"unmapped={unmapped_path}")
+        self.stdout.write(f"conflicts={conflict_path}")
 
     def import_row(self, row, dry_run, line_number):
         accession_code = _clean(row.get("accession"))
@@ -97,15 +104,17 @@ class Command(BaseCommand):
             "description": _clean(row.get("description")) or None,
         }
         project = Project.objects.filter(project_code=project_code).first()
+        conflicts = []
         if not project:
             if not dry_run:
                 project = Project.objects.create(project_code=project_code, **project_defaults)
         else:
-            update_fields = [field for field, value in project_defaults.items() if getattr(project, field) in (None, "") and value]
-            if update_fields and not dry_run:
-                for field in update_fields:
-                    setattr(project, field, project_defaults[field])
-                project.save(update_fields=update_fields + ["updated_at"])
+            project_updates, project_conflicts = plan_fill_blank_metadata(project, project_defaults)
+            conflicts.extend(self.conflict_rows(line_number, project_code, project_conflicts, "project"))
+            if project_updates and not dry_run:
+                for field, value in project_updates.items():
+                    setattr(project, field, value)
+                project.save(update_fields=[*project_updates, "updated_at"])
 
         defaults = {
             "dataset_name": _clean(row.get("dataset_name")) or dataset_code,
@@ -119,27 +128,43 @@ class Command(BaseCommand):
         if not dataset:
             if not dry_run:
                 Dataset.objects.create(dataset_code=dataset_code, **defaults)
-            return self.result(created=True)
+            return self.result(created=True, conflicts=conflicts)
 
-        update_fields = []
-        for field, value in defaults.items():
-            current = getattr(dataset, field)
-            if field in {"species", "project"}:
-                if current is None and value is not None:
-                    setattr(dataset, field, value)
-                    update_fields.append(field)
-            elif current in (None, "") and value not in (None, ""):
-                setattr(dataset, field, value)
-                update_fields.append(field)
-        if update_fields:
+        updates, dataset_conflicts = plan_fill_blank_metadata(dataset, defaults)
+        conflicts.extend(self.conflict_rows(line_number, dataset_code, dataset_conflicts, "dataset"))
+        if updates:
             if not dry_run:
-                dataset.save(update_fields=update_fields + ["updated_at"])
-            return self.result(updated=True)
-        return self.result(reused=True)
+                for field, value in updates.items():
+                    setattr(dataset, field, value)
+                dataset.save(update_fields=[*updates, "updated_at"])
+            return self.result(updated=True, conflicts=conflicts)
+        return self.result(reused=True, conflicts=conflicts)
 
     @staticmethod
-    def result(created=False, reused=False, updated=False):
-        return {"created": created, "reused": reused, "updated": updated, "skipped": False, "unmapped": []}
+    def result(created=False, reused=False, updated=False, conflicts=None):
+        return {
+            "created": created,
+            "reused": reused,
+            "updated": updated,
+            "skipped": False,
+            "unmapped": [],
+            "conflicts": conflicts or [],
+        }
+
+    @staticmethod
+    def conflict_rows(line_number, identity, conflicts, object_type):
+        return [
+            {
+                "line_number": line_number,
+                "identity": identity,
+                "object_type": object_type,
+                "field": item["field"],
+                "existing": item["existing"],
+                "incoming": item["incoming"],
+                "reason": "metadata conflict; preserved existing value",
+            }
+            for item in conflicts
+        ]
 
     @staticmethod
     def skipped(line_number, accession, dataset_code, reason):
@@ -152,5 +177,19 @@ class Command(BaseCommand):
     def write_unmapped(path, rows):
         with open(path, "w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=["line_number", "accession", "dataset_code", "reason"], delimiter="\t")
+            writer.writeheader()
+            writer.writerows(rows)
+
+    @staticmethod
+    def write_conflicts(path, rows):
+        with open(path, "w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=[
+                    "line_number", "identity", "object_type", "field",
+                    "existing", "incoming", "reason",
+                ],
+                delimiter="\t",
+            )
             writer.writeheader()
             writer.writerows(rows)

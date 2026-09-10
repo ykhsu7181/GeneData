@@ -5,6 +5,7 @@ from datetime import datetime
 from django.core.management.base import BaseCommand, CommandError
 
 from files.models import Accession, AccessionExternalMapping
+from files.services.ingestion.metadata_policy import plan_fill_blank_metadata
 from files.services.import_log_service import (
     add_provenance_arguments,
     build_import_stats,
@@ -42,6 +43,7 @@ class Command(BaseCommand):
             raise CommandError(f"Input file does not exist: {input_path}")
         counts = {"scanned": 0, "created": 0, "reused": 0, "updated": 0, "skipped": 0}
         unmapped = []
+        conflicts = []
         started_at = datetime.now().isoformat(timespec="seconds")
         with open(input_path, newline="", encoding="utf-8-sig") as handle:
             reader = csv.DictReader(handle, delimiter="\t")
@@ -56,6 +58,7 @@ class Command(BaseCommand):
                 for key in ("created", "reused", "updated", "skipped"):
                     counts[key] += int(result[key])
                 unmapped.extend(result["unmapped"])
+                conflicts.extend(result.get("conflicts", []))
         timestamp = import_timestamp()
         stats = build_import_stats(
             command="import_accession_external_mapping_manifest", input_path=input_path, dry_run=dry_run,
@@ -63,15 +66,19 @@ class Command(BaseCommand):
             scanned_count=counts["scanned"], created_count=counts["created"], reused_count=counts["reused"],
             updated_count=counts["updated"], skipped_count=counts["skipped"], unmapped_count=len(unmapped),
             **provenance_options(options),
+            extra={"conflict_count": len(conflicts)},
         )
         log_path = f"import_accession_external_mapping_log_{timestamp}.txt"
         unmapped_path = f"import_accession_external_mapping_unmapped_{timestamp}.tsv"
+        conflict_path = f"import_accession_external_mapping_conflicts_{timestamp}.tsv"
         write_key_value_report(log_path, stats)
         self.write_unmapped(unmapped_path, unmapped)
+        self.write_conflicts(conflict_path, conflicts)
         for key, value in stats.items():
             self.stdout.write(f"{key}={value}")
         self.stdout.write(f"log={log_path}")
         self.stdout.write(f"unmapped={unmapped_path}")
+        self.stdout.write(f"conflicts={conflict_path}")
 
     def import_row(self, row, dry_run, line_number):
         accession_code = _clean(row.get("accession"))
@@ -95,6 +102,7 @@ class Command(BaseCommand):
         checksums = _split_values(row.get("fastq_md5") or row.get("submitted_md5"))
         entry_count = max(len(urls), len(checksums), 1)
         totals = {"created": 0, "reused": 0, "updated": 0}
+        conflicts = []
 
         for index in range(entry_count):
             defaults = {
@@ -102,9 +110,14 @@ class Command(BaseCommand):
                 "fastq_url": urls[index] if index < len(urls) else (urls[0] if len(urls) == 1 else None),
                 "fastq_md5": checksums[index] if index < len(checksums) else (checksums[0] if len(checksums) == 1 else None),
             }
-            result = self.import_mapping(accession, study, defaults, dry_run)
+            result, metadata_conflicts = self.import_mapping(accession, study, defaults, dry_run)
             totals[result] += 1
-        return {**totals, "skipped": False, "unmapped": []}
+            conflicts.extend(self.conflict_rows(
+                line_number,
+                f"{accession_code}:{study}:{index + 1}",
+                metadata_conflicts,
+            ))
+        return {**totals, "skipped": False, "unmapped": [], "conflicts": conflicts}
 
     @staticmethod
     def import_mapping(accession, study, defaults, dry_run):
@@ -120,17 +133,29 @@ class Command(BaseCommand):
         if not mapping:
             if not dry_run:
                 AccessionExternalMapping.objects.create(accession=accession, external_study_accession=study, **defaults)
-            return "created"
-        update_fields = []
-        for field, value in defaults.items():
-            if getattr(mapping, field) in (None, "") and value not in (None, ""):
-                setattr(mapping, field, value)
-                update_fields.append(field)
-        if update_fields:
+            return "created", []
+        updates, conflicts = plan_fill_blank_metadata(mapping, defaults)
+        if updates:
             if not dry_run:
-                mapping.save(update_fields=update_fields + ["updated_at"])
-            return "updated"
-        return "reused"
+                for field, value in updates.items():
+                    setattr(mapping, field, value)
+                mapping.save(update_fields=[*updates, "updated_at"])
+            return "updated", conflicts
+        return "reused", conflicts
+
+    @staticmethod
+    def conflict_rows(line_number, identity, conflicts):
+        return [
+            {
+                "line_number": line_number,
+                "identity": identity,
+                "field": item["field"],
+                "existing": item["existing"],
+                "incoming": item["incoming"],
+                "reason": "metadata conflict; preserved existing value",
+            }
+            for item in conflicts
+        ]
 
     @staticmethod
     def result(created=False, reused=False, updated=False):
@@ -147,5 +172,16 @@ class Command(BaseCommand):
     def write_unmapped(path, rows):
         with open(path, "w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=["line_number", "accession", "external_study_accession", "reason"], delimiter="\t")
+            writer.writeheader()
+            writer.writerows(rows)
+
+    @staticmethod
+    def write_conflicts(path, rows):
+        with open(path, "w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=["line_number", "identity", "field", "existing", "incoming", "reason"],
+                delimiter="\t",
+            )
             writer.writeheader()
             writer.writerows(rows)

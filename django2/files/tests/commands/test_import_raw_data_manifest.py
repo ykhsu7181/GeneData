@@ -137,6 +137,42 @@ class ImportRawDataManifestTestCase(TestCase):
             1,
         )
 
+    def test_existing_nonblank_raw_metadata_is_reported_and_not_overwritten(self):
+        raw_path = "/data/project/rice/raw/IR64_leaf_01_R1.fastq.gz"
+        data_file = DataFile.objects.create(
+            file_code=f"EXIST{self.suffix}",
+            file_name="IR64_leaf_01_R1.fastq.gz",
+            file_path=raw_path,
+            description=json.dumps({
+                "note": "curated",
+                "raw_data": {
+                    "raw_data_type": "WGS",
+                    "sequencing_platform": "PacBio",
+                },
+            }),
+        )
+        row = {
+            "file_path": raw_path,
+            "file_role": "raw_reads_R1",
+            "accession_code": self.accession.accession,
+            "sample_code": self.sample.sample_code,
+            "raw_data_type": "RNA-seq",
+            "sequencing_platform": "Illumina",
+            "cluster_name": "cluster01",
+        }
+
+        result = Command().import_row(row)
+
+        data_file.refresh_from_db()
+        payload = json.loads(data_file.description)
+        self.assertEqual(payload["raw_data"]["raw_data_type"], "WGS")
+        self.assertEqual(payload["raw_data"]["sequencing_platform"], "PacBio")
+        self.assertEqual(payload["raw_data"]["cluster_name"], "cluster01")
+        self.assertEqual(
+            {item["field"] for item in result["conflicts"]},
+            {"raw_data_type", "sequencing_platform"},
+        )
+
     def test_unknown_accession_does_not_create_datafile(self):
         self.write_manifest("/raw/unknown-accession.fastq.gz", accession_code="UNKNOWN")
         call_command("import_raw_data_manifest", "--input", self.manifest_path)

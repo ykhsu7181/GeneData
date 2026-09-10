@@ -1,11 +1,16 @@
 import csv
 import hashlib
+import json
 from pathlib import Path
 
 from files.models import (
-    Accession, Annotation, Assembly, Dataset, DatasetAccession, Sample, Species,
+    Accession, AccessionExternalMapping, Annotation, Assembly, DataFile, Dataset,
+    DatasetAccession, Sample, Species,
 )
-from files.services.ingestion.metadata_policy import plan_fill_blank_metadata
+from files.services.ingestion.metadata_policy import (
+    plan_fill_blank_mapping,
+    plan_fill_blank_metadata,
+)
 from files.services.ingestion.roles import validate_file_role
 
 
@@ -126,9 +131,14 @@ def validate_batch(batch_dir):
     if not manifests:
         errors.append(_issue("batch", "", "", "no supported manifests found"))
 
-    species_codes = set(Species.objects.values_list("species_code", flat=True))
+    species_objects = {item.species_code: item for item in Species.objects.all()}
+    species_codes = set(species_objects)
     accessions = {item.accession: item for item in Accession.objects.all()}
     accession_codes = set(accessions)
+    accession_species = {
+        code: item.species.species_code if item.species_id else ""
+        for code, item in accessions.items()
+    }
     assembly_objects = {
         item.assembly_code: item
         for item in Assembly.objects.select_related("accession")
@@ -143,8 +153,16 @@ def validate_batch(batch_dir):
     annotation_owners = dict(
         Annotation.objects.values_list("annotation_code", "assembly__assembly_code")
     )
-    sample_codes = set(Sample.objects.values_list("sample_code", flat=True))
-    dataset_codes = set(Dataset.objects.values_list("dataset_code", flat=True))
+    sample_objects = {
+        item.sample_code: item
+        for item in Sample.objects.select_related("species", "accession")
+    }
+    sample_codes = set(sample_objects)
+    dataset_objects = {
+        item.dataset_code: item
+        for item in Dataset.objects.select_related("species", "project")
+    }
+    dataset_codes = set(dataset_objects)
 
     for line, row in _rows(manifests, "accessions"):
         code, species = row.get("accession"), row.get("species_code")
@@ -153,7 +171,15 @@ def validate_batch(batch_dir):
         elif species not in species_codes:
             unmapped.append(_issue("accessions", line, code, f"species not found: {species}"))
         else:
+            existing = accessions.get(code)
+            if existing:
+                _, field_conflicts = plan_fill_blank_metadata(
+                    existing,
+                    _accession_metadata(row, species_objects.get(species)),
+                )
+                _append_metadata_conflict(conflicts, "accessions", line, code, field_conflicts)
             accession_codes.add(code)
+            accession_species[code] = species
 
     for line, row in _rows(manifests, "assemblies"):
         code, accession = row.get("assembly_code"), row.get("accession")
@@ -211,6 +237,10 @@ def validate_batch(batch_dir):
         elif accession not in accession_codes:
             unmapped.append(_issue("samples", line, code, f"accession not found: {accession}"))
         elif code:
+            existing = sample_objects.get(code)
+            if existing:
+                field_conflicts = _sample_conflicts(existing, row, species_code=row.get("species_code"), accession_code=accession)
+                _append_metadata_conflict(conflicts, "samples", line, code, field_conflicts)
             sample_codes.add(code)
 
     for line, row in _rows(manifests, "datasets"):
@@ -223,6 +253,15 @@ def validate_batch(batch_dir):
         if row.get("accession") not in accession_codes:
             unmapped.append(_issue("datasets", line, code, f"accession not found: {row.get('accession')}"))
         elif code:
+            existing = dataset_objects.get(code)
+            if existing:
+                field_conflicts = _dataset_conflicts(
+                    existing,
+                    row,
+                    species_code=accession_species.get(row.get("accession"), ""),
+                    project_code=row.get("project_code"),
+                )
+                _append_metadata_conflict(conflicts, "datasets", line, code, field_conflicts)
             dataset_codes.add(code)
 
     for line, row in _rows(manifests, "dataset_accessions"):
@@ -240,6 +279,10 @@ def validate_batch(batch_dir):
             errors.append(_issue("external_mappings", line, row.get("accession"), "ena_study is required"))
         if row.get("accession") not in accession_codes:
             unmapped.append(_issue("external_mappings", line, row.get("accession"), "accession not found"))
+        else:
+            _validate_external_mapping_conflicts(
+                line, row, accessions.get(row.get("accession")), conflicts,
+            )
 
     for name in ("raw_data", "files"):
         for line, row in _rows(manifests, name):
@@ -274,6 +317,12 @@ def validate_batch(batch_dir):
                 row["resolved_file_path"] = str(path)
                 if not path.is_file():
                     errors.append(_issue("raw_data", line, row.get("file_path"), "physical file not found"))
+                existing_file = DataFile.objects.filter(file_path=str(path)).first()
+                if existing_file:
+                    field_conflicts = _raw_data_conflicts(existing_file.description, row)
+                    _append_metadata_conflict(
+                        conflicts, "raw_data", line, row.get("file_path"), field_conflicts,
+                    )
 
     return {
         "manifests": manifests,
@@ -341,6 +390,158 @@ def _issue(manifest, line_number, identity, message):
         "identity": identity or "",
         "message": message,
     }
+
+
+def _append_metadata_conflict(conflicts, manifest, line, identity, field_conflicts):
+    if field_conflicts:
+        conflicts.append(_issue(
+            manifest,
+            line,
+            identity,
+            "metadata conflict: " + ", ".join(item["field"] for item in field_conflicts),
+        ))
+
+
+def _relation_conflict(field, existing_code, incoming_code):
+    if existing_code and incoming_code and existing_code != incoming_code:
+        return {"field": field, "existing": existing_code, "incoming": incoming_code}
+    return None
+
+
+def _float_or_none(value):
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _accession_metadata(row, species):
+    return {
+        "species": species,
+        "sub_population": row.get("sub_population") or None,
+        "country": row.get("country") or None,
+        "region": row.get("region") or None,
+        "longitude": _float_or_none(row.get("longitude")),
+        "latitude": _float_or_none(row.get("latitude")),
+        "description": row.get("description") or None,
+    }
+
+
+def _sample_conflicts(existing, row, *, species_code, accession_code):
+    _, conflicts = plan_fill_blank_metadata(existing, {
+        "sample_name": row.get("sample_name") or row.get("sample_code") or None,
+        "tissue": row.get("tissue") or None,
+        "treatment": row.get("treatment") or None,
+        "replicate": row.get("replicate") or None,
+        "data_type": row.get("data_type") or None,
+        "description": row.get("description") or None,
+        "biosample_accession": row.get("biosample_accession") or None,
+        "experiment_accession": row.get("experiment_accession") or None,
+    })
+    existing_species = existing.species.species_code if existing.species_id else ""
+    existing_accession = existing.accession.accession if existing.accession_id else ""
+    for item in (
+        _relation_conflict("species", existing_species, species_code),
+        _relation_conflict("accession", existing_accession, accession_code),
+    ):
+        if item:
+            conflicts.append(item)
+    return conflicts
+
+
+def _dataset_conflicts(existing, row, *, species_code, project_code):
+    _, conflicts = plan_fill_blank_metadata(existing, {
+        "dataset_name": row.get("dataset_name") or row.get("dataset_code") or None,
+        "dataset_type": row.get("dataset_type") or None,
+        "bioproject_accession": row.get("ncbi_bioproject") or None,
+        "description": row.get("description") or None,
+    })
+    existing_species = existing.species.species_code if existing.species_id else ""
+    existing_project = existing.project.project_code if existing.project_id else ""
+    for item in (
+        _relation_conflict("species", existing_species, species_code),
+        _relation_conflict("project", existing_project, project_code),
+    ):
+        if item:
+            conflicts.append(item)
+    return conflicts
+
+
+def _split_values(value):
+    return [item.strip() for item in (value or "").split(";") if item.strip()]
+
+
+def _validate_external_mapping_conflicts(line, row, accession, conflicts):
+    if not accession:
+        return
+    study = row.get("ena_study") or row.get("bioproject")
+    shared = {
+        "external_database": row.get("external_database") or "ENA",
+        "biosample_accession": row.get("biosample") or None,
+        "experiment_accession": row.get("experiment") or None,
+        "run_accession": row.get("run") or None,
+        "scientific_name": row.get("scientific_name") or None,
+        "library_strategy": row.get("library_strategy") or None,
+        "instrument_platform": row.get("instrument_platform") or None,
+        "instrument_model": row.get("instrument_model") or None,
+    }
+    urls = _split_values(row.get("fastq_ftp") or row.get("submitted_ftp"))
+    checksums = _split_values(row.get("fastq_md5") or row.get("submitted_md5"))
+    for index in range(max(len(urls), len(checksums), 1)):
+        values = {
+            **shared,
+            "fastq_url": urls[index] if index < len(urls) else (urls[0] if len(urls) == 1 else None),
+            "fastq_md5": checksums[index] if index < len(checksums) else (checksums[0] if len(checksums) == 1 else None),
+        }
+        mapping = AccessionExternalMapping.objects.filter(
+            accession=accession,
+            external_study_accession=study,
+            biosample_accession=values["biosample_accession"],
+            experiment_accession=values["experiment_accession"],
+            run_accession=values["run_accession"],
+            fastq_url=values["fastq_url"],
+            fastq_md5=values["fastq_md5"],
+        ).first()
+        if mapping:
+            _, field_conflicts = plan_fill_blank_metadata(mapping, values)
+            _append_metadata_conflict(
+                conflicts,
+                "external_mappings",
+                line,
+                f"{accession.accession}:{study}:{index + 1}",
+                field_conflicts,
+            )
+
+
+def _raw_data_conflicts(existing_description, row):
+    if not existing_description:
+        existing_raw = {}
+    else:
+        try:
+            payload = json.loads(existing_description)
+        except (TypeError, ValueError):
+            return [{
+                "field": "description",
+                "existing": existing_description,
+                "incoming": "raw_data metadata",
+            }]
+        if not isinstance(payload, dict):
+            return [{"field": "description", "existing": payload, "incoming": "raw_data metadata"}]
+        existing_raw = payload.get("raw_data") or {}
+        if not isinstance(existing_raw, dict):
+            return [{"field": "raw_data", "existing": existing_raw, "incoming": "raw_data metadata"}]
+    _, conflicts = plan_fill_blank_mapping(existing_raw, {
+        "sample_code": row.get("sample_code") or "",
+        "species_code": row.get("species_code") or "",
+        "raw_data_type": row.get("raw_data_type") or "",
+        "sequencing_platform": row.get("sequencing_platform") or "",
+        "cluster_name": row.get("cluster_name") or "",
+        "check_status": row.get("check_status") or "unchecked",
+        "remark": row.get("remark") or "",
+    })
+    return conflicts
 
 
 def _assembly_metadata(row):

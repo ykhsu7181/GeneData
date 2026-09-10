@@ -12,6 +12,7 @@ from files.services.file_write_service import (
     create_or_get_file_relation,
 )
 from files.services.ingestion.roles import validate_file_role
+from files.services.ingestion.metadata_policy import plan_fill_blank_mapping
 from files.services.import_log_service import (
     build_import_stats,
     add_provenance_arguments,
@@ -52,20 +53,41 @@ def _int_or_none(value):
         return None
 
 
-def _safe_json(raw):
-    if not raw:
-        return {}
-    try:
-        payload = json.loads(raw)
-    except (TypeError, ValueError):
-        return {}
-    return payload if isinstance(payload, dict) else {}
-
-
 def _merge_raw_data_description(existing_description, raw_data_description):
-    payload = _safe_json(existing_description)
-    payload["raw_data"] = raw_data_description["raw_data"]
-    return json.dumps(payload, ensure_ascii=False)
+    if existing_description:
+        try:
+            payload = json.loads(existing_description)
+        except (TypeError, ValueError):
+            return existing_description, [{
+                "field": "description",
+                "existing": existing_description,
+                "incoming": raw_data_description,
+            }]
+        if not isinstance(payload, dict):
+            return existing_description, [{
+                "field": "description",
+                "existing": payload,
+                "incoming": raw_data_description,
+            }]
+    else:
+        payload = {}
+
+    existing_raw = payload.get("raw_data")
+    if existing_raw not in (None, "") and not isinstance(existing_raw, dict):
+        return existing_description, [{
+            "field": "raw_data",
+            "existing": existing_raw,
+            "incoming": raw_data_description["raw_data"],
+        }]
+    existing_raw = existing_raw or {}
+    updates, conflicts = plan_fill_blank_mapping(
+        existing_raw,
+        raw_data_description["raw_data"],
+    )
+    merged_raw = dict(existing_raw)
+    merged_raw.update(updates)
+    payload["raw_data"] = merged_raw
+    return json.dumps(payload, ensure_ascii=False), conflicts
 
 
 class Command(BaseCommand):
@@ -91,6 +113,7 @@ class Command(BaseCommand):
         created_relation = 0
         reused_relation = 0
         unmapped = []
+        conflicts = []
         scanned = 0
         skipped = 0
 
@@ -111,12 +134,14 @@ class Command(BaseCommand):
                 created_relation += result["created_relation"]
                 reused_relation += result["reused_relation"]
                 unmapped.extend(result["unmapped"])
+                conflicts.extend(result.get("conflicts", []))
                 skipped += int(result["skipped"])
 
         finished_at = datetime.now().isoformat(timespec="seconds")
         timestamp = import_timestamp()
         log_path = f"import_raw_data_log_{timestamp}.txt"
         unmapped_path = f"import_raw_data_unmapped_{timestamp}.tsv"
+        conflict_path = f"import_raw_data_conflicts_{timestamp}.tsv"
         stats = build_import_stats(
             command="import_raw_data_manifest",
             input_path=input_path,
@@ -136,6 +161,7 @@ class Command(BaseCommand):
                 "updated_datafile_count": updated_datafile,
                 "created_filerelation_count": created_relation,
                 "reused_filerelation_count": reused_relation,
+                "conflict_count": len(conflicts),
             },
         )
         self.write_reports(
@@ -143,12 +169,14 @@ class Command(BaseCommand):
             unmapped_path,
             stats,
             unmapped,
+            conflict_path,
+            conflicts,
         )
-        self.stdout.write(f"scanned_count={scanned}")
-        self.stdout.write(f"created_datafile_count={created_datafile}")
-        self.stdout.write(f"created_filerelation_count={created_relation}")
+        for key, value in stats.items():
+            self.stdout.write(f"{key}={value}")
         self.stdout.write(f"log={log_path}")
         self.stdout.write(f"unmapped={unmapped_path}")
+        self.stdout.write(f"conflicts={conflict_path}")
 
     @transaction.atomic
     def import_row(self, row, dry_run=False):
@@ -158,6 +186,7 @@ class Command(BaseCommand):
         sample_code = _clean(row.get("sample_code"))
         species_code = _clean(row.get("species_code"))
         unmapped = []
+        conflicts = []
 
         if not file_path or not file_role:
             return {
@@ -167,6 +196,7 @@ class Command(BaseCommand):
                 "created_relation": 0,
                 "reused_relation": 0,
                 "unmapped": [{"file_path": file_path, "reason": "missing file_path or file_role"}],
+                "conflicts": [],
                 "skipped": True,
             }
 
@@ -220,7 +250,20 @@ class Command(BaseCommand):
             )
         )
         if reused_datafile:
-            merged_description = _merge_raw_data_description(data_file.description, description)
+            merged_description, metadata_conflicts = _merge_raw_data_description(
+                data_file.description,
+                description,
+            )
+            conflicts = [
+                {
+                    "file_path": file_path,
+                    "field": item["field"],
+                    "existing": item["existing"],
+                    "incoming": item["incoming"],
+                    "reason": "metadata conflict; preserved existing value",
+                }
+                for item in metadata_conflicts
+            ]
             if data_file.description != merged_description:
                 updated_datafile = True
                 if not dry_run:
@@ -255,6 +298,7 @@ class Command(BaseCommand):
             "created_relation": created_relation,
             "reused_relation": reused_relation,
             "unmapped": unmapped,
+            "conflicts": conflicts,
             "skipped": False,
         }
 
@@ -268,13 +312,22 @@ class Command(BaseCommand):
             "created_relation": 0,
             "reused_relation": 0,
             "unmapped": reasons,
+            "conflicts": [],
             "skipped": True,
         }
 
-    def write_reports(self, log_path, unmapped_path, stats, unmapped):
+    def write_reports(self, log_path, unmapped_path, stats, unmapped, conflict_path, conflicts):
         write_key_value_report(log_path, stats)
 
         with open(unmapped_path, "w", encoding="utf-8") as handle:
             handle.write("file_path\treason\n")
             for item in unmapped:
                 handle.write(f"{item.get('file_path', '')}\t{item.get('reason', '')}\n")
+        with open(conflict_path, "w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=["file_path", "field", "existing", "incoming", "reason"],
+                delimiter="\t",
+            )
+            writer.writeheader()
+            writer.writerows(conflicts)
