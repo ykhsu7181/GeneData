@@ -503,6 +503,18 @@ npm run build
 security check
 ```
 
+### 9.4 当前实施状态（2026-09-10）
+
+- **IMPLEMENTED / 待首次 CI 验证**：新增 GitHub Actions workflow，PR、`main`/`master` push 和手工触发均执行独立 Django 与前端 job。
+- **IMPLEMENTED / 待首次 CI 验证**：Django job 使用临时 MySQL 8 service 和环境变量连接，不接触生产数据库；依次执行 system check、迁移漂移检查、完整 `files` 测试和 production deploy check。
+- **PASS**：原 `files/tests.py` 已迁入 `files/tests/` package，消除 `python manage.py test files` 的模块发现冲突。
+- **SECURITY EXCEPTION / OPEN**：按当前项目要求，基础 settings 暂时保留本地数据库密码作为 fallback；CI 仍通过 `GENEDATA_DB_PASSWORD` 覆盖。由于凭据仍在源码和 Git 历史中，Security Gate 不得标记为 PASS。
+- **PASS**：前端新增标准 `npm test` 入口，`package-lock.json` 已与声明依赖同步；5 个落后于当前路由/拆包实现的测试期望已校正，`npm ci`、全量 39 项行为测试和 production build 均通过。
+- **PASS**：MySQL 条件唯一约束和超长 unique `CharField` warning 保持可见，未使用 silence 绕过。
+- **LOCAL BLOCKED / CI COVERED**：本机已成功发现 238 项 Django 测试，但 `python manage.py test files` 因本地 MySQL 拒绝当前凭据（1045）而未启动；不得据此声称本地全量测试通过，首次 GitHub Actions 的隔离 MySQL 结果仍须审阅。
+- **OPEN / STAGE A**：production deploy check 当前对 error 阻塞，但仍显示 HSTS、SSL redirect、secure cookie 等 Stage A warning；在代理/HTTPS 策略人工确认前不把 warning 提升为阻塞。
+- **DEFERRED**：lint 在现有基线专项清理完成前不进入阻塞门禁。
+
 ## 10. 生产发布流程
 
 1. 创建数据库备份，并演练或确认恢复方式；TSV 明细仅用于审计和定位，不能替代数据库备份、事务、反向命令或回滚 SQL。

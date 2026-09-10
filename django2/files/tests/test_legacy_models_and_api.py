@@ -3,7 +3,7 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
-from .models import (
+from files.models import (
     Accession,
     Annotation,
     Assembly,

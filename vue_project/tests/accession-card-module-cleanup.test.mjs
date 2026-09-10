@@ -9,9 +9,10 @@ const sourcePath = path.resolve(currentDir, '../src/views/AccessionCard.vue');
 const source = fs.readFileSync(sourcePath, 'utf8');
 
 test('accession card is retained only as the accession search entry', () => {
-  assert.match(source, /accession-search-page/);
+  assert.match(source, /accession-workbench/);
   assert.match(source, /请选择一个 accession 查看详情/);
-  assert.match(source, /name:\s*'accession-detail'/);
+  assert.match(source, /name:\s*'accession-card'/);
+  assert.match(source, /<AccessionDetailTableView v-if="routeAccession" embedded/);
   assert.doesNotMatch(source, /Accession overview/);
   assert.doesNotMatch(source, /goToDetailTable/);
   assert.doesNotMatch(source, />Current Modules</);

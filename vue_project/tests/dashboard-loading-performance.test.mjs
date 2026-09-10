@@ -23,8 +23,8 @@ test('dashboard does not render empty data panels while loading', () => {
 test('dashboard charts are loaded lazily instead of blocking route navigation', () => {
   assert.doesNotMatch(distributionSource, /import \* as echarts from 'echarts'/);
   assert.doesNotMatch(geoMapSource, /import \* as echarts from 'echarts'/);
-  assert.match(distributionSource, /import\('@\/utils\/dashboardCharts'\)/);
-  assert.match(geoMapSource, /import\('@\/utils\/dashboardCharts'\)/);
+  assert.match(distributionSource, /import\('@\/utils\/dashboardPieCharts'\)/);
+  assert.match(geoMapSource, /import\('@\/utils\/dashboardMapCharts'\)/);
   assert.match(geoMapSource, /import\('@\/data\/worldMapData\.js'\)/);
 });
 

@@ -22,7 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qa01or2^im3-lsx%$reim^9mcgle()z6n10f$znjygc32jv!)l'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-development-only-change-me',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -121,13 +124,11 @@ WSGI_APPLICATION = 'filemanager.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        # 'NAME': 'dydata',
-        'NAME': 'gene_manage',
-        'USER': 'root',
-        # 'PASSWORD': 'PassWord123@',
-        'PASSWORD': 'ykxu123',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': os.environ.get('GENEDATA_DB_NAME', 'gene_manage'),
+        'USER': os.environ.get('GENEDATA_DB_USER', 'root'),
+        'PASSWORD': os.environ.get('GENEDATA_DB_PASSWORD', "PassWord123@"),
+        'HOST': os.environ.get('GENEDATA_DB_HOST', 'localhost'),
+        'PORT': os.environ.get('GENEDATA_DB_PORT', '3306'),
     }
 }
 
