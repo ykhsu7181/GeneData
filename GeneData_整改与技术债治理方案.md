@@ -456,6 +456,16 @@ GenomeFile 归档读取命令：不属于业务主链路，按审计保留策略
 
 不得因为命令仍能运行就永久保留，也不得因为目标是 new-only 就立即删除所有历史审计能力。
 
+### 8.3 当前实施状态（2026-09-10）
+
+- **PASS**：当前版本删除 11 个已跟踪历史压缩包（合计约 209 MiB），未删除工作区内未跟踪的本地备份。
+- **PASS**：`账号密码.docx` 和根目录重复 `settings_production.py` 已从当前版本移除；活动配置仅保留 `django2/filemanager/settings_production.py`。
+- **PASS**：生产 `SECRET_KEY`、数据库密码改为必需环境变量，其他数据库连接项允许环境变量覆盖；`.env.example` 只保留空值和非敏感默认值。
+- **PASS**：根 `.gitignore` 覆盖 `*.zipYYYYMMDD*`、batch `tmp/` 及 importer/backfill/reconcile 运行报告；不再无差别忽略 `audit_reports/`，生产验收报告可显式归档。
+- **PASS**：所有 `files` management command 已纳入机器可校验的生命周期清单，并由回归测试防止新增未分类命令。
+- **DEFERRED**：`cleanup_data`、`seed_ir64_demo_hierarchy` 当前标记为 `retire_pending_usage_confirmation`。只有生产脚本、定时任务、runbook 和调用日志均证明零使用后才删除。
+- **DEFERRED / SECURITY**：凭据文件及生产数据库密码曾进入 Git 历史；当前版本删除不能清除历史。必须轮换相关凭据，再单独评估受协调的历史重写和所有 clone 的同步方式。
+
 ## 9. Stage E：测试、CI 与交付门禁
 
 当前仓库没有 `.github` 目录或 GitHub Actions workflow，`CI GATE = OPEN`。
