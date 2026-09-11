@@ -23,11 +23,7 @@
 
       <template v-else>
         <section :class="['species-entry-section', { 'dashboard-overlap': hasFeaturedSpeciesCards }]">
-          <SpeciesCardGrid
-            :cards="featuredSpeciesCards"
-            @select="handleSpeciesSelect"
-            @browse-all="handleBrowseAll"
-          />
+          <SpeciesCardGrid :cards="featuredSpeciesCards" />
         </section>
 
         <section class="resource-distribution-row">
@@ -206,15 +202,6 @@ export default {
       navigateToRoute(keywordToRoute(keyword, dashboard.value))
     }
 
-    const handleSpeciesSelect = (card) => {
-      navigateToRoute({
-        path: '/data-overview',
-        query: {
-          search: card.name_cn || card.latin_name || card.species_code
-        }
-      })
-    }
-
     const handleGeoSelect = (point) => {
       navigateToRoute({
         path: '/accession-map',
@@ -222,10 +209,6 @@ export default {
           region: point.region
         }
       })
-    }
-
-    const handleBrowseAll = () => {
-      navigateToRoute('/data-overview')
     }
 
     onMounted(() => {
@@ -249,9 +232,7 @@ export default {
       navigateToRoute,
       handleSearch,
       handleKeywordClick,
-      handleSpeciesSelect,
-      handleGeoSelect,
-      handleBrowseAll
+      handleGeoSelect
     }
   }
 }

@@ -77,7 +77,7 @@
       </article>
     </section>
 
-    <section class="content-grid">
+    <section :class="['content-grid', { 'drawer-open': drawerOpen }]">
       <article class="table-card">
         <div class="table-header">
           <h2>原始数据文件列表 <span>i</span></h2>
@@ -163,7 +163,7 @@
         </footer>
       </article>
 
-      <aside :class="['detail-drawer', { open: drawerOpen }]">
+      <aside v-if="drawerOpen" class="detail-drawer">
         <header>
           <h2>原始数据详情</h2>
           <button type="button" @click="closeDrawer">×</button>
@@ -293,8 +293,14 @@ export default {
         filters.value = payload.filters || filters.value
         rows.value = payload.results || []
         pagination.value = payload.pagination || { total: 0, page: 1, page_size: pageSize.value }
-        if (!selectedRow.value && rows.value.length) {
-          selectedRow.value = rows.value[0]
+        if (selectedRow.value) {
+          const refreshedRow = rows.value.find(row => row.file_id === selectedRow.value.file_id)
+          if (refreshedRow) {
+            selectedRow.value = refreshedRow
+          } else {
+            drawerOpen.value = false
+            selectedRow.value = null
+          }
         }
       } catch (error) {
         console.error('获取原始数据失败:', error)
@@ -337,6 +343,7 @@ export default {
 
     const closeDrawer = () => {
       drawerOpen.value = false
+      selectedRow.value = null
     }
 
     const copyText = async (text, label) => {
@@ -565,9 +572,13 @@ export default {
 
 .content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 390px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+}
+
+.content-grid.drawer-open {
+  grid-template-columns: minmax(0, 1fr) 390px;
 }
 
 .table-card,

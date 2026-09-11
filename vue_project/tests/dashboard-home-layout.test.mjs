@@ -67,3 +67,17 @@ test('species cards keep a compact dashboard proportion', () => {
   assert.doesNotMatch(speciesGridSource, /metric-item/)
   assert.doesNotMatch(speciesGridSource, /材料数|样本数|数据集数/)
 })
+
+test('species cards are display-only and do not offer data overview navigation', () => {
+  const speciesGridPath = join(process.cwd(), 'src', 'components', 'SpeciesCardGrid.vue')
+  const speciesGridSource = readFileSync(speciesGridPath, 'utf8')
+
+  assert.match(speciesGridSource, /v-for="\(card, index\) in decoratedCards"/)
+  assert.match(speciesGridSource, /\{\{ card\.name_cn \}\}/)
+  assert.match(speciesGridSource, /\{\{ card\.latin_name \}\}/)
+  assert.doesNotMatch(speciesGridSource, /进入该物种数据一览/)
+  assert.doesNotMatch(speciesGridSource, /footer-arrow|card-footer/)
+  assert.doesNotMatch(speciesGridSource, /\$emit\(['"]select|browse-all/)
+  assert.doesNotMatch(source, /@select="handleSpeciesSelect"|@browse-all="handleBrowseAll"/)
+  assert.doesNotMatch(source, /const handleSpeciesSelect|const handleBrowseAll/)
+})

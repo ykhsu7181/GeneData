@@ -10,7 +10,6 @@
           '--card-secondary': card.secondaryAccent,
           '--card-glow': card.glowAccent
         }"
-        @click="$emit('select', card)"
       >
         <div class="card-cover">
           <div class="cover-overlay"></div>
@@ -27,20 +26,12 @@
             <h3>{{ card.name_cn }}</h3>
             <p>{{ card.latin_name }}</p>
           </div>
-
-          <div class="card-footer">
-            <span>进入该物种数据一览</span>
-            <i class="footer-arrow"></i>
-          </div>
         </div>
       </article>
     </div>
 
     <div v-else class="empty-state">
-      <span>暂无可展示的物种卡片数据，可先进入数据一览查看已有材料与文件分布。</span>
-      <button class="empty-action" @click="$emit('browse-all')">
-        前往数据一览
-      </button>
+      <span>暂无可展示的物种数据。</span>
     </div>
   </section>
 </template>
@@ -79,7 +70,6 @@ export default {
       default: () => []
     }
   },
-  emits: ['select', 'browse-all'],
   setup(props) {
     const shortNameFrom = (card) =>
       (card.name_cn || card.latin_name || card.species_code || 'SP')
@@ -118,13 +108,11 @@ export default {
   position: relative;
   overflow: hidden;
   border-radius: 18px;
-  cursor: pointer;
   background: #ffffff;
   border: 1px solid rgba(207, 216, 229, 0.8);
   box-shadow:
     0 12px 24px rgba(12, 35, 66, 0.08),
     0 8px 18px var(--card-glow);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
   animation: cardFadeUp 0.6s ease both;
 }
 
@@ -138,13 +126,6 @@ export default {
 
 .species-card:nth-child(4) {
   animation-delay: 0.24s;
-}
-
-.species-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 18px 30px rgba(12, 35, 66, 0.12),
-    0 10px 22px var(--card-glow);
 }
 
 .species-card::after {
@@ -240,35 +221,6 @@ export default {
   font-style: italic;
 }
 
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px dashed rgba(190, 203, 222, 0.9);
-  color: #1d4ed8;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.species-card:hover .card-footer {
-  color: #0f3e91;
-}
-
-.footer-arrow {
-  width: 7px;
-  height: 7px;
-  border-top: 2px solid currentColor;
-  border-right: 2px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform 0.2s ease;
-}
-
-.species-card:hover .footer-arrow {
-  transform: rotate(45deg) translate(2px, -2px);
-}
-
 @keyframes cardFadeUp {
   from {
     opacity: 0;
@@ -299,19 +251,6 @@ export default {
   color: #607085;
   font-size: 14px;
   line-height: 1.5;
-}
-
-.empty-action {
-  flex: 0 0 auto;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
 }
 
 @media (max-width: 1320px) {

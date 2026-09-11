@@ -28,5 +28,10 @@ assert.doesNotMatch(source, /GenomeFile/, 'RawDataView must not reference Genome
 assert.doesNotMatch(source, /genome-files/, 'RawDataView must not reference old genome file download URLs')
 assert.doesNotMatch(source, /legacy_genomefile/, 'RawDataView must not reference legacy source names')
 assert.doesNotMatch(source, /organism_fallback/, 'RawDataView must not reference organism fallback')
+assert.match(source, /:class="\['content-grid', \{ 'drawer-open': drawerOpen \}\]"/, 'RawDataView should expand its grid only while details are open')
+assert.match(source, /<aside v-if="drawerOpen" class="detail-drawer">/, 'RawDataView should hide details until a row is selected')
+assert.match(source, /@click="openDrawer\(row\)"/, 'RawDataView rows should open the detail drawer')
+assert.match(source, /const closeDrawer = \(\) => \{\s*drawerOpen\.value = false\s*selectedRow\.value = null/, 'Closing details should clear the drawer and selected row')
+assert.doesNotMatch(source, /selectedRow\.value = rows\.value\[0\]/, 'RawDataView must not select the first row automatically')
 
 console.log('raw-data page source checks passed')
