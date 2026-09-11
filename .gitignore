@@ -62,7 +62,6 @@ db.sqlite3
 *.sqlite3-journal
 media/
 staticfiles/
-audit_reports/
 file_migration_audit_*.txt
 file_migration_audit_*.tsv
 legacy_fallback_report_*.tsv
@@ -96,6 +95,18 @@ build/
 *.tgz
 *.rar
 *.7z
+*.zip[0-9]*
+
+# Local ingestion batches and generated importer/reconcile reports
+/tmp/
+/django2/import_*_log_*.txt
+/django2/import_*_unmapped_*.tsv
+/django2/import_*_conflicts_*.tsv
+/django2/import_*_errors_*.tsv
+/django2/backfill_*_log_*.txt
+/django2/backfill_*_unmapped_*.tsv
+/django2/reconcile_*_log_*.txt
+/django2/reconcile_*_details_*.tsv
 
 # Project-specific non-source assets and data
 /raw_data/

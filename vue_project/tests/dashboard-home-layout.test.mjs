@@ -18,12 +18,25 @@ test('dashboard home keeps distribution panels and geo map after removing lead c
   assert.match(source, /<GeoMapPanel/)
 })
 
+test('dashboard content only overlaps the hero slightly on desktop', () => {
+  assert.match(source, /\.dashboard-overlap\s*{[\s\S]*?margin-top:\s*-28px;/)
+  assert.match(
+    source,
+    /@media\s*\(max-width:\s*960px\)[\s\S]*?\.dashboard-overlap\s*{[\s\S]*?margin-top:\s*0;/
+  )
+  assert.doesNotMatch(source, /margin-top:\s*-78px;/)
+  assert.doesNotMatch(source, /margin-top:\s*-48px;/)
+})
+
 test('dashboard home places data resources beside subpopulation and recent updates below geo map', () => {
   assert.match(source, /<DataResourceSummary/)
   assert.match(source, /class="resource-distribution-row"/)
   assert.match(source, /title="亚群分布"[\s\S]*?:items="dashboard\.sub_population_distribution"/)
   assert.doesNotMatch(source, /title="群体分组"/)
-  assert.match(source, /<GeoMapPanel[\s\S]*?\/>\s*<RecentUpdatesBar/)
+  assert.match(
+    source,
+    /<section class="dashboard-map-section">[\s\S]*?<GeoMapPanel[\s\S]*?<RecentUpdatesBar/
+  )
 })
 
 test('dashboard home hides dataset type and file role distribution modules', () => {

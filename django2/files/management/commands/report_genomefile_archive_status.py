@@ -7,11 +7,18 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from files import query_views
 from files.management.commands import scan_files
+from files.download_views import download_datafile
 from files.models import Accession, Annotation, DataFile, FileRelation, GenomeFile
-from files.services import accession_context, file_relation_service
+from files.services import (
+    accession_context,
+    data_overview_service,
+    file_relation_service,
+    query_view_helpers,
+    transcriptome_list_service,
+)
 from files.services.file_relation_service import get_files_for_accession, get_files_for_annotation
-from files.views import GenomeFileViewSet, download_datafile
 
 
 class Command(BaseCommand):
@@ -166,8 +173,8 @@ class Command(BaseCommand):
     def _count_business_download_url_references(self):
         sources = [
             inspect.getsource(accession_context),
-            inspect.getsource(GenomeFileViewSet.get_annotation_data),
-            inspect.getsource(GenomeFileViewSet.paginated_overview),
+            inspect.getsource(query_views),
+            inspect.getsource(query_view_helpers),
         ]
         count = 0
         for source in sources:
@@ -189,10 +196,11 @@ class Command(BaseCommand):
         sources = [
             inspect.getsource(file_relation_service),
             inspect.getsource(accession_context),
+            inspect.getsource(data_overview_service),
+            inspect.getsource(transcriptome_list_service),
+            inspect.getsource(query_views),
+            inspect.getsource(query_view_helpers),
             inspect.getsource(scan_files.Command.handle),
-            inspect.getsource(GenomeFileViewSet.get_annotation_data),
-            inspect.getsource(GenomeFileViewSet.paginated_overview),
-            inspect.getsource(GenomeFileViewSet.download),
             inspect.getsource(download_datafile),
         ]
         return sum(source.count("GenomeFile.objects") for source in sources)

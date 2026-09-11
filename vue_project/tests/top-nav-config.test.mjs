@@ -33,7 +33,7 @@ test('topNavGroups keeps agreed secondary navigation structure', () => {
   assert.deepEqual(
     topNavGroups.dataOverview.children.map((item) => [item.labelKey, item.path]),
     [
-      ['nav.rawData', '/data-overview'],
+      ['nav.rawData', '/raw-data'],
       ['nav.dataOverview', '/data-overview'],
       ['nav.genome', '/genome-card'],
       ['nav.annotation', '/annotation'],

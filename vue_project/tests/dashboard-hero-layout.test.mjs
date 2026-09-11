@@ -16,9 +16,16 @@ test('dashboard hero uses compact reference-style title and content', () => {
 
 test('dashboard hero keeps a compact desktop proportion', () => {
   assert.match(source, /\.hero-panel\s*{[\s\S]*?min-height:\s*330px;/)
-  assert.match(source, /\.hero-shell\s*{[\s\S]*?padding:\s*32px 0 30px;/)
+  assert.match(source, /\.hero-shell\s*{[\s\S]*?padding:\s*32px 0 56px;/)
   assert.match(source, /\.hero-search\s*:deep\(\.el-input__wrapper\)\s*{[\s\S]*?min-height:\s*56px;/)
   assert.match(source, /\.search-button\s*{[\s\S]*?min-height:\s*54px;/)
+})
+
+test('dashboard hero keeps a smaller bottom safety area on narrow screens', () => {
+  assert.match(
+    source,
+    /@media\s*\(max-width:\s*860px\)[\s\S]*?\.hero-shell\s*{[\s\S]*?padding:\s*30px 0 36px;/
+  )
 })
 
 test('dashboard hero shows accession search placeholder and clickable examples', () => {

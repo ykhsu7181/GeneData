@@ -333,6 +333,7 @@ class Command(BaseCommand):
             passed = (
                 values.get("broken_relation_count") == "0"
                 and values.get("duplicate_relation_count") == "0"
+                and values.get("duplicate_primary_count") == "0"
             )
             return ("PASS" if passed else "FAIL"), passed
         if command == "validate_new_file_structure":

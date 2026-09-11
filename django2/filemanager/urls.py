@@ -6,7 +6,7 @@ from django.urls import include, path
 
 from files.dashboard_views import warehouse_dashboard
 from files import views
-from files.views import GenomeFileViewSet
+from files.archive_views import ArchivedGenomeFileViewSet
 
 try:
     from rest_framework.documentation import include_docs_urls
@@ -52,12 +52,12 @@ urlpatterns = [
     ),
 ]
 
-legacy_download_view = getattr(GenomeFileViewSet, "download_transcriptome", None)
+legacy_download_view = getattr(ArchivedGenomeFileViewSet, "download_transcriptome", None)
 if legacy_download_view is not None:
     urlpatterns.append(
         path(
             "gd/api/download/",
-            GenomeFileViewSet.as_view({"get": "download_transcriptome"}),
+            ArchivedGenomeFileViewSet.as_view({"get": "download_transcriptome"}),
             name="legacy-download",
         )
     )

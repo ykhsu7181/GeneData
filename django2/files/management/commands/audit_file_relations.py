@@ -18,7 +18,7 @@ RELATED_MODEL_BY_TYPE = {
 
 
 class Command(BaseCommand):
-    help = "Audit FileRelation rows for broken generic references and duplicate relation keys."
+    help = "Audit FileRelation rows for broken references, duplicate keys, and multiple primary files."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -36,15 +36,19 @@ class Command(BaseCommand):
         rows, issue_counts = self.collect_broken_rows()
         duplicate_rows = self.collect_duplicate_rows()
         rows.extend(duplicate_rows)
+        duplicate_primary_rows = self.collect_duplicate_primary_rows()
+        rows.extend(duplicate_primary_rows)
 
         self.write_tsv(report_path, rows)
 
         broken_relation_count = sum(count for issue, count in issue_counts.items() if issue != "duplicate_relation")
         duplicate_relation_count = len(duplicate_rows)
+        duplicate_primary_count = len(duplicate_primary_rows)
         lines = [
             f"filerelation_total\t{FileRelation.objects.count()}",
             f"broken_relation_count\t{broken_relation_count}",
             f"duplicate_relation_count\t{duplicate_relation_count}",
+            f"duplicate_primary_count\t{duplicate_primary_count}",
             f"report\t{report_path}",
         ]
         for issue, count in sorted(issue_counts.items()):
@@ -102,6 +106,29 @@ class Command(BaseCommand):
                     "duplicate_relation",
                     "",
                     item["file_id"],
+                    item["related_type"] or "",
+                    item["related_id"] or "",
+                    item["file_role"] or "",
+                    f"count={item['row_count']}",
+                ]
+            )
+        return rows
+
+    def collect_duplicate_primary_rows(self):
+        rows = []
+        duplicates = (
+            FileRelation.objects.filter(is_primary=True)
+            .values("related_type", "related_id", "file_role")
+            .annotate(row_count=Count("id"))
+            .filter(row_count__gt=1)
+            .order_by("related_type", "related_id", "file_role")
+        )
+        for item in duplicates:
+            rows.append(
+                [
+                    "duplicate_primary",
+                    "",
+                    "",
                     item["related_type"] or "",
                     item["related_id"] or "",
                     item["file_role"] or "",

@@ -61,7 +61,7 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
         )
 
         response = self.client.get(
-            f"/gd/api/files/genome-files/get_annotation_data/?annotation_id={self.annotation.id}"
+            f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -99,7 +99,7 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
         )
 
         response = self.client.get(
-            f"/gd/api/files/genome-files/get_annotation_data/?annotation_id={self.annotation.id}"
+            f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
         )
 
         self.assertEqual(response.status_code, 404)

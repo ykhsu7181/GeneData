@@ -28,7 +28,7 @@ class PaginatedOverviewFileRelationIntegrationTestCase(TestCase):
 
     def get_overview(self):
         return self.client.get(
-            "/gd/api/files/genome-files/paginated_overview/",
+            "/gd/api/files/query/paginated-overview/",
             {"search": self.accession_code},
         )
 
