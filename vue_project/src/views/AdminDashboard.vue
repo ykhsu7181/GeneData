@@ -158,19 +158,15 @@ export default {
     const subpopulationStats = ref([])
     
     // 检查登录状态
-    const checkAuth = () => {
-      const token = localStorage.getItem('admin_token')
-      const user = localStorage.getItem('admin_user')
-      
-      if (!token || !user) {
-        router.push('/admin/login')
-        return false
-      }
-      
+    const checkAuth = async () => {
       try {
-        const userData = JSON.parse(user)
-        userInfo.username = userData.username
-      } catch (e) {
+        const response = await axios.get('/admin/session/')
+        if (!response.data.authenticated || !response.data.user?.is_staff) {
+          router.push('/admin/login')
+          return false
+        }
+        userInfo.username = response.data.user.username
+      } catch (error) {
         router.push('/admin/login')
         return false
       }
@@ -241,11 +237,15 @@ export default {
     }
     
     // 退出登录
-    const handleLogout = () => {
-      localStorage.removeItem('admin_token')
-      localStorage.removeItem('admin_user')
-      ElMessage.success('已退出登录')
-      router.push('/admin/login')
+    const handleLogout = async () => {
+      try {
+        await axios.post('/admin/logout/')
+      } catch (error) {
+        console.error('退出管理员会话失败:', error)
+      } finally {
+        ElMessage.success('已退出登录')
+        router.push('/admin/login')
+      }
     }
     
     // 格式化Accession数量显示
@@ -253,8 +253,8 @@ export default {
       return (count !== null && count !== undefined) ? count : '-'
     }
 
-    onMounted(() => {
-      if (checkAuth()) {
+    onMounted(async () => {
+      if (await checkAuth()) {
         loadStatistics()
         loadSubpopulationStats()
       }
