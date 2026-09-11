@@ -225,6 +225,39 @@ class AccessionDetailApiTestCase(APITestCase):
             size=5678,
         )
 
+        genome_data_file = DataFile.objects.create(
+            file_code='FILE-ACCESSION-DETAIL-GENOME',
+            file_type=self.file_type,
+            file_name='genome.IR64.fasta',
+            original_name='genome.IR64.fasta',
+            file_path='/tmp/genome.IR64.fasta',
+            file_size=1234,
+        )
+        annotation_data_file = DataFile.objects.create(
+            file_code='FILE-ACCESSION-DETAIL-ANNOTATION',
+            file_type=self.gff_type,
+            file_name='annotation.IR64.gff',
+            original_name='annotation.IR64.gff',
+            file_path='/tmp/annotation.IR64.gff',
+            file_size=5678,
+        )
+        FileRelation.objects.create(
+            file=genome_data_file,
+            related_type='assembly',
+            related_id=str(self.default_assembly.id),
+            related_code=self.default_assembly.name,
+            file_role='genome',
+            is_primary=True,
+        )
+        FileRelation.objects.create(
+            file=annotation_data_file,
+            related_type='annotation',
+            related_id=str(self.default_annotation.id),
+            related_code=self.default_annotation.name,
+            file_role='annotation',
+            is_primary=True,
+        )
+
     def test_accession_detail_success(self):
         response = self.client.get('/gd/api/files/accessions/IR64/')
 
@@ -241,7 +274,7 @@ class AccessionDetailApiTestCase(APITestCase):
         self.assertTrue(response.data['data']['file_status']['genome'])
         self.assertTrue(response.data['data']['file_status']['annotation'])
 
-    def test_accession_detail_fallback_to_legacy_organism_files(self):
+    def test_accession_detail_does_not_fallback_to_legacy_organism_files(self):
         legacy_accession = Accession.objects.create(accession='LEGACY')
         legacy_assembly = Assembly.objects.create(
             accession=legacy_accession,
@@ -267,8 +300,8 @@ class AccessionDetailApiTestCase(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.data['success'])
-        self.assertEqual(response.data['data']['file_count'], 1)
-        self.assertTrue(response.data['data']['file_status']['genome'])
+        self.assertEqual(response.data['data']['file_count'], 0)
+        self.assertFalse(response.data['data']['file_status']['genome'])
         self.assertEqual(len(response.data['data']['assemblies']), 1)
 
     def test_accession_detail_not_found(self):
