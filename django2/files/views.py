@@ -13,13 +13,14 @@ import tempfile
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.conf import settings
 from django.db.models import Prefetch, Q
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect, ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import action, api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from functools import lru_cache
 from .models import (
     FileType,
@@ -3119,33 +3120,55 @@ def download_datafile(request, file_id):
         return resolved_organism
 
 
+@ensure_csrf_cookie
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def admin_session(request):
+    """Return the server-side administrator session state and issue a CSRF cookie."""
+    user = request.user
+    is_admin = bool(user and user.is_authenticated and user.is_staff)
+    return Response({
+        'success': True,
+        'authenticated': is_admin,
+        'user': {
+            'username': user.get_username(),
+            'is_staff': True,
+            'is_superuser': bool(user.is_superuser),
+        } if is_admin else None,
+    })
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@csrf_exempt
+@csrf_protect
 def admin_login(request):
     """管理员登录接口"""
     try:
-        data = json.loads(request.body)
+        data = request.data if isinstance(request.data, dict) else {}
         username = data.get('username')
         password = data.get('password')
 
-        # 硬编码验证
-        if username == 'root' and password == 'root123':
-            # 生成简单的token（实际项目中应该使用JWT）
-            token = f"admin_token_{datetime.now().timestamp()}"
-            return Response({
-                'success': True,
-                'token': token,
-                'user': {
-                    'username': username,
-                    'role': 'admin'
-                }
-            })
-        else:
+        user = authenticate(request=request._request, username=username, password=password)
+        if not user or not user.is_active:
             return Response({
                 'success': False,
                 'message': '用户名或密码错误'
             }, status=status.HTTP_401_UNAUTHORIZED)
+        if not user.is_staff:
+            return Response({
+                'success': False,
+                'message': '该账号没有管理员权限'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        django_login(request._request, user)
+        return Response({
+            'success': True,
+            'user': {
+                'username': user.get_username(),
+                'is_staff': True,
+                'is_superuser': bool(user.is_superuser),
+            }
+        })
 
     except Exception as e:
         logger.error(f"登录失败: {str(e)}")
@@ -3153,7 +3176,6 @@ def admin_login(request):
             'success': False,
             'message': '登录失败'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
- 
     @action(detail=False, methods=['get'])
     def paginated_overview(self, request):
         """Overview rows based on default assembly / default annotation context."""
@@ -3378,6 +3400,14 @@ def _analyze_uploaded_file(filename, file_path):
     }
 
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def admin_logout(request):
+    django_logout(request._request)
+    return Response({'success': True, 'message': '已退出登录'})
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def admin_statistics(request):
@@ -3565,12 +3595,12 @@ def admin_data_management_list(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@csrf_exempt
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_create_accession(request):
     """新增Accession数据"""
     try:
-        data = json.loads(request.body)
+        data = request.data if isinstance(request.data, dict) else {}
         accession = data.get('accession', '').strip()
         sub_population = data.get('subPopulation', '-').strip()
         seq_data = data.get('seqData', '-').strip()
@@ -3633,12 +3663,12 @@ def admin_create_accession(request):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
-@csrf_exempt
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_update_accession(request, accession):
     """更新Accession数据"""
     try:
-        data = json.loads(request.body)
+        data = request.data if isinstance(request.data, dict) else {}
         sub_population = data.get('subPopulation', '-').strip()
         seq_data = data.get('seqData', '-').strip()
         longitude = data.get('longitude')
@@ -3695,8 +3725,8 @@ def admin_update_accession(request, accession):
 
 
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
-@csrf_exempt
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_delete_accession(request, accession):
     """删除Accession数据"""
     try:
@@ -3776,12 +3806,12 @@ def admin_delete_accession(request, accession):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@csrf_exempt
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_batch_delete_accessions(request):
     """批量删除Accession数据"""
     try:
-        data = json.loads(request.body)
+        data = request.data if isinstance(request.data, dict) else {}
         accessions = data.get('accessions', [])
 
         if not accessions:
@@ -3870,8 +3900,8 @@ def admin_batch_delete_accessions(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@csrf_exempt
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_upload_data_file(request):
     """上传数据文件"""
     try:
@@ -3975,8 +4005,8 @@ def admin_download_data_file(request, accession, file_type):
 
 
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
-@csrf_exempt
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def admin_delete_data_file(request, accession, file_type):
     """删除数据文件"""
     try:

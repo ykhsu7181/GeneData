@@ -3,6 +3,8 @@ import tempfile
 import uuid
 
 from django.test import TestCase
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from files.models import (
     Accession,
@@ -14,6 +16,7 @@ from files.models import (
     FileType,
     Species,
 )
+from files.services.data_overview_service import build_data_overview_payload
 
 
 class DataOverviewApiTestCase(TestCase):
@@ -154,6 +157,20 @@ class DataOverviewApiTestCase(TestCase):
             },
             species_options,
         )
+
+    def test_data_overview_query_count_does_not_grow_per_accession(self):
+        self.seed_files()
+        for index in range(6):
+            Accession.objects.create(
+                species=self.species,
+                accession=f"BULK_{self.suffix}_{index}",
+            )
+
+        with CaptureQueriesContext(connection) as queries:
+            payload = build_data_overview_payload({"page": 1, "page_size": 20})
+
+        self.assertEqual(payload["count"], 7)
+        self.assertLessEqual(len(queries), 10)
 
     def test_data_overview_summary_follows_category_filter(self):
         self.seed_files()

@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
@@ -81,6 +81,17 @@ export default {
     }
     
     const loginForm = ref(null)
+
+    const loadSession = async () => {
+      try {
+        const response = await axios.get('/admin/session/')
+        if (response.data.authenticated) {
+          router.replace('/admin/dashboard')
+        }
+      } catch (error) {
+        console.error('检查管理员会话失败:', error)
+      }
+    }
     
     const handleLogin = async () => {
       if (!loginForm.value) return
@@ -88,6 +99,9 @@ export default {
       try {
         await loginForm.value.validate()
         loading.value = true
+
+        // Ensure Django has issued the CSRF cookie before the unsafe request.
+        await axios.get('/admin/session/')
         
         const response = await axios.post('/admin/login/', {
           username: loginData.username,
@@ -95,10 +109,6 @@ export default {
         })
         
         if (response.data.success) {
-          // 保存token到localStorage
-          localStorage.setItem('admin_token', response.data.token)
-          localStorage.setItem('admin_user', JSON.stringify(response.data.user))
-          
           ElMessage.success('登录成功')
           router.push('/admin/dashboard')
         } else {
@@ -115,6 +125,8 @@ export default {
         loading.value = false
       }
     }
+
+    onMounted(loadSession)
     
     return {
       loginData,

@@ -13,6 +13,7 @@ const readSource = (relativePath) => fs.readFileSync(
 const dashboardSource = readSource('../src/views/DashboardHomeView.vue');
 const distributionSource = readSource('../src/components/DistributionPanel.vue');
 const geoMapSource = readSource('../src/components/GeoMapPanel.vue');
+const publicIndexSource = readSource('../public/index.html');
 
 test('dashboard does not render empty data panels while loading', () => {
   assert.match(dashboardSource, /<template v-if="isLoading">/);
@@ -21,6 +22,7 @@ test('dashboard does not render empty data panels while loading', () => {
 });
 
 test('dashboard charts are loaded lazily instead of blocking route navigation', () => {
+  assert.doesNotMatch(publicIndexSource, /cdn\.jsdelivr\.net\/npm\/echarts|echarts\.min\.js/);
   assert.doesNotMatch(distributionSource, /import \* as echarts from 'echarts'/);
   assert.doesNotMatch(geoMapSource, /import \* as echarts from 'echarts'/);
   assert.match(distributionSource, /import\('@\/utils\/dashboardPieCharts'\)/);

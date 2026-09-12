@@ -8,6 +8,9 @@ import i18n from './i18n'
 
 // 设置axios的基本URL，确保请求发送到正确的端点
 axios.defaults.baseURL = '/gd/api'
+axios.defaults.withCredentials = true
+axios.defaults.xsrfCookieName = 'csrftoken'
+axios.defaults.xsrfHeaderName = 'X-CSRFToken'
 
 // 彻底解决ResizeObserver错误
 // 方法1: 重写ResizeObserver

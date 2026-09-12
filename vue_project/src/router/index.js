@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import axios from 'axios'
 
 const EmptyComponent = {
   template: '<div class="empty-page"><h2>功能开发中，敬请期待...</h2></div>'
@@ -185,12 +186,20 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+const hasAdminSession = async () => {
+  try {
+    const response = await axios.get('/admin/session/')
+    return response.data.authenticated === true && response.data.user?.is_staff === true
+  } catch (error) {
+    return false
+  }
+}
+
+router.beforeEach(async (to, from, next) => {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-  const adminToken = localStorage.getItem('admin_token')
 
   if (to.matched.some((record) => record.meta.requiresAdminAuth)) {
-    if (!adminToken) {
+    if (!(await hasAdminSession())) {
       next('/admin/login')
       return
     }
@@ -206,7 +215,7 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  if (to.path === '/admin/login' && adminToken) {
+  if (to.path === '/admin/login' && await hasAdminSession()) {
     next('/admin/dashboard')
     return
   }
