@@ -1100,6 +1100,7 @@ export default {
         await replaceRouteQuery(buildNormalizedQuery({
           accession: value
         }));
+        await handleRouteParams();
       } else {
         clearContextData();
         await replaceRouteQuery({});
