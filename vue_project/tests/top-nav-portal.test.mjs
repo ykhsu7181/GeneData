@@ -12,11 +12,20 @@ test('top navigation uses the GeneData portal brand', () => {
   assert.match(source, /id="top-nav-leaf-gradient"/)
 })
 
-test('top navigation keeps existing application capabilities', () => {
-  assert.match(source, /topNavGroups\.dataOverview/)
-  assert.match(source, /topNavGroups\.tools/)
+test('top navigation renders from one configuration source and keeps account actions', () => {
+  assert.match(source, /v-for="item in topNavItems"/)
+  assert.doesNotMatch(source, /primaryNavItems|topNavGroups/)
   assert.match(source, /@language-change|emitLanguageChange/)
   assert.match(source, /\$emit\('logout'\)/)
+})
+
+test('dropdown navigation supports click, keyboard semantics, and menu state', () => {
+  assert.match(source, /trigger="click"/)
+  assert.match(source, /aria-haspopup="menu"/)
+  assert.match(source, /:aria-expanded="String\(isMenuOpen\(item\.key\)\)"/)
+  assert.match(source, /@visible-change="setMenuOpen\(item\.key, \$event\)"/)
+  assert.match(source, /\.nav-link:focus-visible/)
+  assert.doesNotMatch(source, /trigger="hover"/)
 })
 
 test('top navigation uses the white portal visual treatment', () => {

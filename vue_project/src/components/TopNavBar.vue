@@ -21,72 +21,78 @@
       </button>
 
       <nav class="nav-links" aria-label="Primary navigation">
-        <button
-          v-for="item in primaryNavItems"
-          :key="item.path"
-          :class="['nav-link', { 'is-active': isGroupActive(item.groupKey) }]"
-          @click="goTo(item.path)"
-        >
-          <span class="nav-icon">
-            <el-icon><component :is="item.icon" /></el-icon>
-          </span>
-          <span>{{ $t(item.labelKey) }}</span>
-        </button>
-
-        <el-dropdown trigger="hover" class="nav-dropdown" popper-class="top-nav-dropdown">
-          <div :class="['nav-group-trigger', { 'is-active': isGroupActive('dataOverview') }]">
-            <button class="nav-link nav-link-main" @click.stop="goTo(topNavGroups.dataOverview.path)">
-              <span class="nav-icon">
-                <el-icon><DataAnalysis /></el-icon>
-              </span>
-              <span>{{ $t(topNavGroups.dataOverview.labelKey) }}</span>
-            </button>
-            <button class="nav-link nav-link-caret" @click.stop>
-              <span class="nav-caret">
-                <el-icon><ArrowDown /></el-icon>
-              </span>
-            </button>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                v-for="item in topNavGroups.dataOverview.children"
-                :key="item.path"
-                @click="goTo(item.path)"
-              >
-                {{ $t(item.labelKey) }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-
-        <el-dropdown trigger="hover" class="nav-dropdown" popper-class="top-nav-dropdown">
-          <button :class="['nav-link', 'nav-link-tools', { 'is-active': isGroupActive('tools') }]" @click.stop>
-            <span class="nav-icon">
-              <el-icon><Tools /></el-icon>
-            </span>
-            <span>{{ $t(topNavGroups.tools.labelKey) }}</span>
-            <span class="nav-caret">
-              <el-icon><ArrowDown /></el-icon>
-            </span>
+        <template v-for="item in topNavItems" :key="item.key">
+          <button
+            v-if="!item.children"
+            type="button"
+            :class="['nav-link', { 'is-active': isGroupActive(item.key) }]"
+            @click="goTo(item.path)"
+          >
+            {{ $t(item.labelKey) }}
           </button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                v-for="item in topNavGroups.tools.children"
-                :key="item.path"
-                @click="goTo(item.path)"
-              >
+
+          <el-dropdown
+            v-else-if="item.path"
+            trigger="click"
+            class="nav-dropdown"
+            popper-class="top-nav-dropdown"
+            @command="goTo"
+            @visible-change="setMenuOpen(item.key, $event)"
+          >
+            <div :class="['nav-group-trigger', { 'is-active': isGroupActive(item.key) }]">
+              <button type="button" class="nav-link nav-link-main" @click.stop="goTo(item.path)">
                 {{ $t(item.labelKey) }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-caret"
+                aria-haspopup="menu"
+                :aria-expanded="String(isMenuOpen(item.key))"
+                :aria-label="`${$t(item.labelKey)} menu`"
+              >
+                <span class="nav-caret"><el-icon><ArrowDown /></el-icon></span>
+              </button>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="child in item.children" :key="child.path" :command="child.path">
+                  {{ $t(child.labelKey) }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
+          <el-dropdown
+            v-else
+            trigger="click"
+            class="nav-dropdown"
+            popper-class="top-nav-dropdown"
+            @command="goTo"
+            @visible-change="setMenuOpen(item.key, $event)"
+          >
+            <button
+              type="button"
+              :class="['nav-link', 'nav-link-menu', { 'is-active': isGroupActive(item.key) }]"
+              aria-haspopup="menu"
+              :aria-expanded="String(isMenuOpen(item.key))"
+            >
+              <span>{{ $t(item.labelKey) }}</span>
+              <span class="nav-caret"><el-icon><ArrowDown /></el-icon></span>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="child in item.children" :key="child.path" :command="child.path">
+                  {{ $t(child.labelKey) }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </template>
       </nav>
 
       <div class="nav-actions">
         <el-dropdown @command="emitLanguageChange">
-          <button class="action-button action-language">
+          <button type="button" class="action-button action-language">
             <el-icon><Platform /></el-icon>
             <span>{{ currentLanguageLabel }}</span>
           </button>
@@ -103,7 +109,7 @@
           <span>{{ $t('common.currentUser') }}: root</span>
         </span>
 
-        <button class="logout-button" @click="$emit('logout')">
+        <button type="button" class="logout-button" @click="$emit('logout')">
           <el-icon><SwitchButton /></el-icon>
           <span>{{ $t('common.logout') }}</span>
         </button>
@@ -113,28 +119,22 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDown,
-  CollectionTag,
-  DataAnalysis,
-  House,
   Platform,
   SwitchButton,
-  Tools,
   User
 } from '@element-plus/icons-vue'
-import { getTopNavActiveGroup, topNavGroups } from '../config/topNavConfig.mjs'
+import { getTopNavActiveGroup, topNavItems } from '../config/topNavConfig.mjs'
 
 export default {
   name: 'TopNavBar',
   components: {
     ArrowDown,
-    DataAnalysis,
     Platform,
     SwitchButton,
-    Tools,
     User
   },
   props: {
@@ -148,13 +148,9 @@ export default {
     const route = useRoute()
     const router = useRouter()
 
-    const primaryNavItems = [
-      { groupKey: 'home', labelKey: 'nav.home', path: '/dashboard', icon: House },
-      { groupKey: 'accession', labelKey: 'nav.accession', path: '/accession-card', icon: CollectionTag }
-    ]
-
     const currentLanguageLabel = computed(() => (props.currentLanguage === 'zh' ? '中文' : 'English'))
     const activeGroupKey = computed(() => getTopNavActiveGroup(route.path))
+    const openMenus = ref({})
 
     const isGroupActive = (groupKey) => activeGroupKey.value === groupKey
     const goTo = (path) => {
@@ -163,12 +159,17 @@ export default {
       }
     }
     const emitLanguageChange = (language) => emit('language-change', language)
+    const setMenuOpen = (key, visible) => {
+      openMenus.value = { ...openMenus.value, [key]: visible }
+    }
+    const isMenuOpen = (key) => Boolean(openMenus.value[key])
 
     return {
-      primaryNavItems,
-      topNavGroups,
+      topNavItems,
       currentLanguageLabel,
       isGroupActive,
+      isMenuOpen,
+      setMenuOpen,
       goTo,
       emitLanguageChange
     }
@@ -258,6 +259,7 @@ export default {
   justify-content: center;
   gap: 8px;
   min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -317,15 +319,24 @@ export default {
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.nav-group-trigger.is-active,
-.nav-link-tools.is-active {
+.nav-group-trigger.is-active {
   background: transparent;
   box-shadow: none;
 }
 
-.nav-group-trigger.is-active .nav-link,
-.nav-link-tools.is-active {
+.nav-group-trigger.is-active .nav-link {
   color: #0d65d1;
+}
+
+.nav-group-trigger.is-active .nav-link-main::after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  right: 0;
+  bottom: -16px;
+  height: 2px;
+  border-radius: 2px;
+  background: #1677e8;
 }
 
 .nav-link-main {
@@ -341,22 +352,12 @@ export default {
 }
 
 .nav-link-caret,
-.nav-link-tools {
+.nav-link-menu {
   gap: 10px;
 }
 
-.nav-link-tools {
-  min-width: 106px;
+.nav-link-menu {
   justify-content: center;
-}
-
-.nav-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  font-size: 16px;
 }
 
 .nav-caret {
@@ -415,6 +416,14 @@ export default {
   border: 1px solid #d3e0ed;
 }
 
+.brand:focus-visible,
+.nav-link:focus-visible,
+.action-button:focus-visible,
+.logout-button:focus-visible {
+  outline: 3px solid rgba(22, 119, 232, 0.32);
+  outline-offset: 2px;
+}
+
 @media (max-width: 1280px) {
   .top-nav-inner {
     grid-template-columns: auto 1fr;
@@ -433,6 +442,10 @@ export default {
   }
 
   .nav-link.is-active::after {
+    bottom: -8px;
+  }
+
+  .nav-group-trigger.is-active .nav-link-main::after {
     bottom: -8px;
   }
 }

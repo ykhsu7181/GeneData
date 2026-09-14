@@ -24,6 +24,14 @@ const routes = [
     }
   },
   {
+    path: '/assembly',
+    name: 'assembly',
+    component: () => import('../views/AssemblyView.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/data',
     name: 'home',
     component: () => import('../views/HomeView.vue'),

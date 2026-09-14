@@ -2,9 +2,9 @@
   <div class="raw-data-page">
     <header class="raw-header">
       <div>
-        <p class="breadcrumb">首页 / 数据资源 / 原始数据</p>
-        <h1>原始数据 Raw Data</h1>
-        <p class="subtitle">集中展示原始测序数据在各集群中的存放路径、文件信息与校验状态。</p>
+        <p class="breadcrumb">首页 / Data / 课题组原始数据</p>
+        <h1>课题组原始数据 Research Group Raw Data</h1>
+        <p class="subtitle">集中展示课题组原始测序数据、文件位置及校验状态。</p>
       </div>
     </header>
 

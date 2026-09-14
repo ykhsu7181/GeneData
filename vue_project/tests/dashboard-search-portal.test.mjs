@@ -17,3 +17,9 @@ test('portal search routes scientific names to data search and accessions to acc
   assert.match(source, /path: '\/data-overview'[\s\S]*?search: trimmedQuery/)
   assert.match(source, /path: '\/accession-card'[\s\S]*?accession: trimmedQuery/)
 })
+
+test('portal search keeps hidden tool mappings and does not invent an Assembly mapping', () => {
+  assert.match(source, /keywords: \['codon', '密码子'\][\s\S]*?path: '\/codon-card'/)
+  assert.match(source, /keywords: \['core', 'variable', '区块', '核心可变'\][\s\S]*?path: '\/core-variable-blocks'/)
+  assert.doesNotMatch(source, /keywords:\s*\[[^\]]*assembly/i)
+})

@@ -1,36 +1,38 @@
-export const topNavGroups = {
-  home: {
+export const topNavItems = [
+  {
     key: 'home',
     labelKey: 'nav.home',
     path: '/dashboard'
   },
-  accession: {
+  {
     key: 'accession',
     labelKey: 'nav.accession',
     path: '/accession-card'
   },
-  dataOverview: {
-    key: 'dataOverview',
-    labelKey: 'nav.dataResources',
+  {
+    key: 'assembly',
+    labelKey: 'nav.assembly',
+    path: '/assembly'
+  },
+  {
+    key: 'data',
+    labelKey: 'nav.data',
     path: '/data-overview',
     children: [
-      { labelKey: 'nav.rawData', path: '/raw-data' },
       { labelKey: 'nav.dataOverview', path: '/data-overview' },
+      { labelKey: 'nav.researchGroupRawData', path: '/raw-data' }
+    ]
+  },
+  {
+    key: 'more',
+    labelKey: 'nav.more',
+    children: [
       { labelKey: 'nav.genome', path: '/genome-card' },
       { labelKey: 'nav.annotation', path: '/annotation' },
       { labelKey: 'nav.transcriptomeOverview', path: '/transcriptome-overview' }
     ]
-  },
-  tools: {
-    key: 'tools',
-    labelKey: 'nav.tools',
-    children: [
-      { labelKey: 'nav.coreVariableBlocks', path: '/core-variable-blocks' },
-      { labelKey: 'nav.codon', path: '/codon-card' },
-      { labelKey: 'nav.codonw', path: '/tools/codonw' }
-    ]
   }
-}
+]
 
 const pathAliasMap = {
   '/': '/dashboard',
@@ -42,8 +44,9 @@ const pathAliasMap = {
 const groupMatchers = {
   home: ['/dashboard'],
   accession: ['/accession-card', '/accession-detail', '/accession-map'],
-  dataOverview: ['/raw-data', '/data-overview', '/genome-card', '/annotation', '/annotation-card', '/transcriptome-overview'],
-  tools: ['/core-variable-blocks', '/core-variable-blocks-card', '/codon-card', '/tools/codonw']
+  assembly: ['/assembly'],
+  data: ['/data', '/data-chart', '/data-overview', '/raw-data'],
+  more: ['/genome-card', '/annotation', '/annotation-card', '/transcriptome', '/transcriptome-overview']
 }
 
 export const normalizeTopNavPath = (path = '') => pathAliasMap[path] || path
