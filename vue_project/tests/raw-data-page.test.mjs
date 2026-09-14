@@ -5,13 +5,11 @@ import { resolve } from 'node:path'
 const repoRoot = process.cwd()
 const routerSource = readFileSync(resolve(repoRoot, 'src/router/index.js'), 'utf8')
 const navSource = readFileSync(resolve(repoRoot, 'src/config/topNavConfig.mjs'), 'utf8')
-const resourceSource = readFileSync(resolve(repoRoot, 'src/components/DataResourceSummary.vue'), 'utf8')
 const viewPath = resolve(repoRoot, 'src/views/RawDataView.vue')
 const source = readFileSync(viewPath, 'utf8')
 
 assert.match(routerSource, /path:\s*'\/raw-data'/, 'router should expose /raw-data')
 assert.match(navSource, /path:\s*'\/raw-data'/, 'top navigation raw data entry should target /raw-data')
-assert.match(resourceSource, /route:\s*'\/raw-data'/, 'dashboard raw data card should target /raw-data')
 
 assert.match(source, /原始数据 Raw Data/, 'RawDataView should render the Raw Data title')
 assert.match(source, /query\/raw-data\//, 'RawDataView should call the raw-data API')

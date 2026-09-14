@@ -1,0 +1,33 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import test from 'node:test'
+import assert from 'node:assert/strict'
+
+const source = readFileSync(join(process.cwd(), 'src', 'components', 'TopNavBar.vue'), 'utf8')
+
+test('top navigation uses the GeneData portal brand', () => {
+  assert.match(source, /aria-label="GeneData home"/)
+  assert.match(source, /<strong>GeneData<\/strong>/)
+  assert.match(source, /<span>Genomic Data Warehouse<\/span>/)
+  assert.match(source, /id="top-nav-leaf-gradient"/)
+})
+
+test('top navigation keeps existing application capabilities', () => {
+  assert.match(source, /topNavGroups\.dataOverview/)
+  assert.match(source, /topNavGroups\.tools/)
+  assert.match(source, /@language-change|emitLanguageChange/)
+  assert.match(source, /\$emit\('logout'\)/)
+})
+
+test('top navigation uses the white portal visual treatment', () => {
+  assert.match(source, /background: rgba\(255, 255, 255, 0\.97\);/)
+  assert.match(source, /border-bottom: 1px solid #e2ebf4;/)
+  assert.match(source, /\.nav-link\.is-active::after/)
+  assert.doesNotMatch(source, /rgba\(4, 28, 70/)
+})
+
+test('top navigation retains compact mobile actions', () => {
+  assert.match(source, /@media \(max-width: 720px\)/)
+  assert.match(source, /\.user-chip,[\s\S]*?display: none;/)
+  assert.match(source, /\.action-language[\s\S]*?min-width: 40px;/)
+})
