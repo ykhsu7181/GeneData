@@ -2,7 +2,7 @@
   <div class="transcriptome-view">
     <div class="page-header">
       <div>
-        <h2 class="title">转录组表</h2>
+        <h2 class="title">{{ $t('page.transcriptomeOverview.title') }}</h2>
       </div>
     </div>
 
@@ -12,12 +12,12 @@
         <el-input
           v-model="filters.keyword"
           clearable
-          placeholder="搜索物种 / Accession / 品种"
+          :placeholder="$t('page.transcriptomeOverview.searchPlaceholder')"
           @keyup.enter="handleSearch"
           @clear="handleSearch"
         />
       </div>
-      <el-select v-model="filters.species_id" clearable placeholder="物种：全部" @change="handleFilterChange">
+      <el-select v-model="filters.species_id" clearable :placeholder="$t('page.transcriptomeOverview.speciesFilter')" @change="handleFilterChange">
         <el-option
           v-for="item in filterOptions.species"
           :key="item.id"
@@ -25,7 +25,7 @@
           :value="String(item.id)"
         />
       </el-select>
-      <el-select v-model="filters.accession_id" clearable placeholder="Accession：全部" @change="handleFilterChange">
+      <el-select v-model="filters.accession_id" clearable :placeholder="$t('page.transcriptomeOverview.accessionFilter')" @change="handleFilterChange">
         <el-option
           v-for="item in filteredAccessionOptions"
           :key="item.id"
@@ -33,7 +33,7 @@
           :value="String(item.id)"
         />
       </el-select>
-      <el-select v-model="filters.assembly_id" clearable placeholder="参考基因组版本：全部" @change="handleFilterChange">
+      <el-select v-model="filters.assembly_id" clearable :placeholder="$t('page.transcriptomeOverview.assemblyFilter')" @change="handleFilterChange">
         <el-option
           v-for="item in filteredAssemblyOptions"
           :key="item.id"
@@ -41,7 +41,7 @@
           :value="String(item.id)"
         />
       </el-select>
-      <el-select v-model="filters.sample_type" clearable placeholder="样本类型：全部" @change="handleFilterChange">
+      <el-select v-model="filters.sample_type" clearable :placeholder="$t('page.transcriptomeOverview.sampleTypeFilter')" @change="handleFilterChange">
         <el-option
           v-for="item in sampleTypeOptions"
           :key="item"
@@ -51,15 +51,14 @@
       </el-select>
       <el-button class="refresh-button" @click="refreshList">
         <el-icon><Refresh /></el-icon>
-        刷新
+        {{ $t('common.refresh') }}
       </el-button>
     </section>
 
     <section class="table-card">
       <div class="table-title-row">
         <div>
-          <h3>转录组数据列表</h3>
-          <p>Transcriptome Data List</p>
+          <h3>{{ $t('page.transcriptomeOverview.listTitle') }}</h3>
         </div>
       </div>
 
@@ -69,9 +68,9 @@
         border
         class="transcriptome-table"
         :header-cell-style="tableHeaderStyle"
-        empty-text="暂无转录组数据"
+        :empty-text="$t('page.transcriptomeOverview.empty')"
       >
-        <el-table-column label="物种" min-width="230">
+        <el-table-column :label="$t('page.transcriptomeOverview.species')" min-width="230">
           <template #default="scope">
             <div class="species-cell">
               <span class="species-icon">⌘</span>
@@ -83,7 +82,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="品种" min-width="150">
+        <el-table-column :label="$t('page.transcriptomeOverview.accession')" min-width="150">
           <template #default="scope">
             <router-link
               v-if="scope.row.accession && scope.row.accession !== '-'"
@@ -96,13 +95,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="参考基因组版本" min-width="190">
+        <el-table-column :label="$t('page.transcriptomeOverview.assembly')" min-width="190">
           <template #default="scope">
             <span class="assembly-chip">{{ displayValue(scope.row.assembly_name) }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="样本类型" min-width="140">
+        <el-table-column :label="$t('page.transcriptomeOverview.sampleType')" min-width="140">
           <template #default="scope">
             <span v-if="scope.row.sample_type && scope.row.sample_type !== '-'" :class="['sample-tag', sampleTypeClass(scope.row.sample_type)]">
               {{ scope.row.sample_type }}
@@ -111,17 +110,17 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="数据大小" min-width="140">
+        <el-table-column :label="$t('page.transcriptomeOverview.dataSize')" min-width="140">
           <template #default="scope">
             <span class="size-text">{{ displayValue(scope.row.total_size_display) }}</span>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" min-width="190" fixed="right">
+        <el-table-column :label="$t('common.actions')" min-width="190" fixed="right">
           <template #default="scope">
             <div class="action-buttons">
-              <el-button size="small" plain @click="viewDetail(scope.row)">查看详情</el-button>
-              <el-button size="small" plain type="primary" @click="openFilesDrawer(scope.row)">查看文件</el-button>
+              <el-button size="small" plain @click="viewDetail(scope.row)">{{ $t('page.transcriptomeOverview.viewDetail') }}</el-button>
+              <el-button size="small" plain type="primary" @click="openFilesDrawer(scope.row)">{{ $t('page.transcriptomeOverview.viewFiles') }}</el-button>
             </div>
           </template>
         </el-table-column>
@@ -148,21 +147,21 @@
       class="transcriptome-file-drawer"
     >
       <div v-loading="drawerLoading" class="drawer-content">
-        <el-table :data="drawerFiles" border :header-cell-style="drawerHeaderStyle" empty-text="暂无文件">
-          <el-table-column label="文件名" min-width="170">
+        <el-table :data="drawerFiles" border :header-cell-style="drawerHeaderStyle" :empty-text="$t('page.transcriptomeOverview.emptyFiles')">
+          <el-table-column :label="$t('common.fileName')" min-width="170">
             <template #default="scope">
               <div class="file-name">{{ displayValue(scope.row.file_name) }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="文件角色" min-width="130">
+          <el-table-column :label="$t('common.fileRole')" min-width="130">
             <template #default="scope">
               <span class="role-chip">{{ displayValue(scope.row.file_role_display || scope.row.file_role) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="文件类型" width="90">
+          <el-table-column :label="$t('common.fileType')" width="90">
             <template #default="scope">{{ displayValue(scope.row.file_type) }}</template>
           </el-table-column>
-          <el-table-column label="文件大小" width="110">
+          <el-table-column :label="$t('common.fileSize')" width="110">
             <template #default="scope">{{ displayValue(scope.row.file_size_display) }}</template>
           </el-table-column>
           <el-table-column label="MD5" min-width="130">
@@ -170,11 +169,11 @@
               <span class="md5-text">{{ displayValue(scope.row.md5) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="150" fixed="right">
+          <el-table-column :label="$t('common.actions')" width="150" fixed="right">
             <template #default="scope">
               <div class="drawer-actions">
-                <a class="download-link" :href="datafileDownloadUrl(scope.row)" target="_blank">下载</a>
-                <button v-if="scope.row.file_path" class="copy-button" type="button" @click="copyPath(scope.row.file_path)">复制路径</button>
+                <a class="download-link" :href="datafileDownloadUrl(scope.row)" target="_blank">{{ $t('common.download') }}</a>
+                <button v-if="scope.row.file_path" class="copy-button" type="button" @click="copyPath(scope.row.file_path)">{{ $t('page.transcriptomeOverview.copyPath') }}</button>
               </div>
             </template>
           </el-table-column>
@@ -190,6 +189,7 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import { Refresh, Search } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
 
 const DEFAULT_FILTERS = {
   keyword: '',
@@ -207,10 +207,14 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const { t } = useI18n();
     const loading = ref(false);
     const drawerLoading = ref(false);
     const fileDrawerVisible = ref(false);
-    const drawerTitle = ref('Transcriptome 文件列表');
+    const drawerTitleContext = ref('');
+    const drawerTitle = computed(() => drawerTitleContext.value
+      ? `${drawerTitleContext.value} / ${t('page.transcriptomeOverview.fileList')}`
+      : t('page.transcriptomeOverview.fileList'));
     const drawerFiles = ref([]);
     const tableData = ref([]);
     const filters = reactive({ ...DEFAULT_FILTERS });
@@ -262,7 +266,7 @@ export default {
         applyFilterOptions(payload);
       } catch (error) {
         console.error('获取转录组列表失败:', error);
-        ElMessage.error('获取转录组列表失败');
+        ElMessage.error(t('page.transcriptomeOverview.loadFailed'));
       } finally {
         loading.value = false;
       }
@@ -294,7 +298,7 @@ export default {
     const openFilesDrawer = async (row) => {
       fileDrawerVisible.value = true;
       drawerLoading.value = true;
-      drawerTitle.value = `${row.accession || '-'} / ${row.sample_type || '-'} / Transcriptome 文件列表`;
+      drawerTitleContext.value = `${row.accession || '-'} / ${row.sample_type || '-'}`;
       drawerFiles.value = [];
       try {
         const response = await axios.get('/files/query/transcriptome-files/', {
@@ -305,11 +309,10 @@ export default {
           }
         });
         const payload = response.data || {};
-        drawerTitle.value = payload.title || drawerTitle.value;
         drawerFiles.value = payload.files || [];
       } catch (error) {
         console.error('获取转录组文件失败:', error);
-        ElMessage.error('获取转录组文件失败');
+        ElMessage.error(t('page.transcriptomeOverview.filesLoadFailed'));
       } finally {
         drawerLoading.value = false;
       }
@@ -320,9 +323,9 @@ export default {
     const copyPath = async (path) => {
       try {
         await navigator.clipboard.writeText(path);
-        ElMessage.success('路径已复制');
+        ElMessage.success(t('page.transcriptomeOverview.pathCopied'));
       } catch (error) {
-        ElMessage.error('复制失败');
+        ElMessage.error(t('page.transcriptomeOverview.copyFailed'));
       }
     };
 

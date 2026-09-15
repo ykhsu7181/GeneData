@@ -33,21 +33,21 @@ test('portal homepage removes the legacy dashboard runtime chain', () => {
 test('hero provides unified search and clickable examples', () => {
   assert.match(heroSource, /role="search"/)
   assert.match(heroSource, /@submit\.prevent="submitSearch"/)
-  assert.match(heroSource, /Search accession \/ species \/ resource/)
+  assert.match(heroSource, /page\.home\.portalSearchPlaceholder/)
   assert.match(heroSource, /v-for="example in searchExamples"/)
   assert.match(heroSource, /const query = queryText\.value\.trim\(\)/)
 })
 
 test('featured accessions use the canonical accession route query', () => {
   assert.match(dashboardSource, /name: 'accession-card', query: \{ accession: item\.accession \}/)
-  assert.match(featuredSource, /Featured Accessions/)
+  assert.match(featuredSource, /page\.home\.featuredAccessions/)
   assert.match(featuredSource, /<th scope="col">Accession<\/th>/)
   assert.match(featuredSource, /@click="\$emit\('select', item\)"/)
 })
 
 test('stats bar exposes the agreed portal metrics', () => {
-  for (const label of ['Assemblies', 'Species', 'Annotations', 'Accessions']) {
-    assert.match(statsSource, new RegExp(`label: '${label}'`))
+  for (const key of ['assemblies', 'species', 'annotations', 'accessions']) {
+    assert.match(statsSource, new RegExp(`t\\('page\\.home\\.stats\\.${key}'\\)`))
   }
   assert.match(statsSource, /key: 'assembly_count'/)
   assert.match(statsSource, /return '—'/)

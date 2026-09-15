@@ -10,15 +10,15 @@
       <div class="drawer-meta">
         <p>Accession：{{ meta.accession || '-' }}</p>
         <p>Assembly：{{ meta.assembly_name || '-' }}</p>
-        <p>下载入口：DataFile download</p>
+        <p>{{ $t('page.genomeCard.downloadEntry') }}</p>
       </div>
-      <el-table :data="files" size="small" empty-text="暂无关联文件">
-        <el-table-column prop="file_name" label="文件名" min-width="170" />
-        <el-table-column prop="file_role_display" label="文件角色" min-width="130" />
-        <el-table-column prop="file_size_display" label="大小" width="90" />
-        <el-table-column label="操作" width="78">
+      <el-table :data="files" size="small" :empty-text="$t('page.genomeCard.emptyFiles')">
+        <el-table-column prop="file_name" :label="$t('common.fileName')" min-width="170" />
+        <el-table-column prop="file_role_display" :label="$t('common.fileRole')" min-width="130" />
+        <el-table-column prop="file_size_display" :label="$t('page.genomeCard.size')" width="90" />
+        <el-table-column :label="$t('common.actions')" width="78">
           <template #default="{ row }">
-            <button type="button" class="drawer-download" @click="$emit('download', row)">下载</button>
+            <button type="button" class="drawer-download" @click="$emit('download', row)">{{ $t('common.download') }}</button>
           </template>
         </el-table-column>
       </el-table>

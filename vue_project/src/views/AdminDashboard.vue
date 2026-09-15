@@ -3,11 +3,11 @@
     <!-- 顶部导航栏 -->
     <div class="admin-header">
       <div class="header-left">
-        <h1>基因数据管理系统</h1>
+        <h1>{{ $t('page.admin.title') }}</h1>
       </div>
       <div class="header-right">
-        <span class="user-info">欢迎，{{ userInfo.username }}</span>
-        <el-button type="danger" size="small" @click="handleLogout">退出登录</el-button>
+        <span class="user-info">{{ $t('page.admin.welcome', { username: userInfo.username }) }}</span>
+        <el-button type="danger" size="small" @click="handleLogout">{{ $t('page.admin.logout') }}</el-button>
       </div>
     </div>
     
@@ -22,15 +22,15 @@
         >
           <el-menu-item index="dashboard">
             <el-icon><DataBoard /></el-icon>
-            <span>数据统计</span>
+            <span>{{ $t('page.admin.statistics') }}</span>
           </el-menu-item>
           <el-menu-item index="files">
             <el-icon><Document /></el-icon>
-            <span>文件管理</span>
+            <span>{{ $t('page.admin.fileManagement') }}</span>
           </el-menu-item>
           <el-menu-item index="data-management">
             <el-icon><FolderOpened /></el-icon>
-            <span>数据表格管理</span>
+            <span>{{ $t('page.admin.dataManagement') }}</span>
           </el-menu-item>
         </el-menu>
       </div>
@@ -39,7 +39,7 @@
       <div class="admin-main">
         <!-- 数据统计页面 -->
         <div v-if="activeMenu === 'dashboard'" class="dashboard-content">
-          <h2>数据统计</h2>
+          <h2>{{ $t('page.admin.statistics') }}</h2>
           
           <div class="stats-cards" v-loading="statsLoading">
             <div class="stat-card">
@@ -48,7 +48,7 @@
               </div>
               <div class="stat-info">
                 <div class="stat-number">{{ statistics.total_files || 0 }}</div>
-                <div class="stat-label">总文件数</div>
+                <div class="stat-label">{{ $t('page.admin.totalFiles') }}</div>
               </div>
             </div>
 
@@ -58,20 +58,20 @@
               </div>
               <div class="stat-info">
                 <div class="stat-number">{{ statistics.total_size_mb || 0 }} MB</div>
-                <div class="stat-label">总文件大小</div>
+                <div class="stat-label">{{ $t('page.admin.totalFileSize') }}</div>
               </div>
             </div>
           </div>
 
           <!-- 亚群统计 -->
           <div class="subpopulation-stats">
-            <h3>按亚群统计</h3>
+            <h3>{{ $t('page.admin.bySubpopulation') }}</h3>
             <div class="stats-table" v-loading="subpopStatsLoading">
               <div class="stats-header">
-                <span class="stats-col-1">亚群</span>
-                <span class="stats-col-2">Accession数量</span>
-                <span class="stats-col-3">文件数</span>
-                <span class="stats-col-4">文件总大小</span>
+                <span class="stats-col-1">{{ $t('page.admin.subpopulation') }}</span>
+                <span class="stats-col-2">{{ $t('page.admin.accessionCount') }}</span>
+                <span class="stats-col-3">{{ $t('page.admin.fileCount') }}</span>
+                <span class="stats-col-4">{{ $t('page.admin.fileTotalSize') }}</span>
               </div>
               <div v-for="stat in subpopulationStats" :key="stat.subpopulation" class="stats-row">
                 <span class="stats-col-1">{{ stat.subpopulation }}</span>
@@ -84,13 +84,13 @@
 
           <!-- 分类统计 -->
           <div class="category-stats">
-            <h3>按类别统计</h3>
+            <h3>{{ $t('page.admin.byCategory') }}</h3>
             <div class="stats-table">
               <div class="stats-header">
-                <span class="stats-col-1">类别</span>
-                <span class="stats-col-2">Accession数量</span>
-                <span class="stats-col-3">文件数</span>
-                <span class="stats-col-4">文件总大小</span>
+                <span class="stats-col-1">{{ $t('page.admin.category') }}</span>
+                <span class="stats-col-2">{{ $t('page.admin.accessionCount') }}</span>
+                <span class="stats-col-3">{{ $t('page.admin.fileCount') }}</span>
+                <span class="stats-col-4">{{ $t('page.admin.fileTotalSize') }}</span>
               </div>
               <div v-for="(stats, category) in statistics.category_stats" :key="category" class="stats-row">
                 <span class="stats-col-1">{{ category }}</span>
@@ -118,12 +118,11 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { 
-  DataBoard, Document, FolderOpened, Check, Close 
-} from '@element-plus/icons-vue'
+import { DataBoard, Document, FolderOpened } from '@element-plus/icons-vue'
 import axios from 'axios'
 import AdminFileManager from './AdminFileManager.vue'
 import AdminDataManager from './AdminDataManager.vue'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'AdminDashboard',
@@ -132,12 +131,11 @@ export default {
     AdminDataManager,
     DataBoard,
     Document,
-    FolderOpened,
-    Check,
-    Close
+    FolderOpened
   },
   setup() {
     const router = useRouter()
+    const { t } = useI18n()
     const activeMenu = ref('dashboard')
     const statsLoading = ref(false)
     const subpopStatsLoading = ref(false)
@@ -185,7 +183,7 @@ export default {
         }
       } catch (error) {
         console.error('加载统计信息失败:', error)
-        ElMessage.error('加载统计信息失败')
+        ElMessage.error(t('page.admin.statisticsLoadFailed'))
       } finally {
         statsLoading.value = false
       }
@@ -202,7 +200,7 @@ export default {
         }
       } catch (error) {
         console.error('加载亚群统计失败:', error)
-        ElMessage.error('加载亚群统计失败')
+        ElMessage.error(t('page.admin.subpopulationLoadFailed'))
       } finally {
         subpopStatsLoading.value = false
       }
@@ -243,7 +241,7 @@ export default {
       } catch (error) {
         console.error('退出管理员会话失败:', error)
       } finally {
-        ElMessage.success('已退出登录')
+        ElMessage.success(t('messages.logoutSuccess'))
         router.push('/admin/login')
       }
     }

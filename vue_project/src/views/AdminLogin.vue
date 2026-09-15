@@ -2,8 +2,8 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
-        <h2>基因数据管理系统</h2>
-        <p>管理员登录</p>
+        <h2>{{ $t('page.admin.title') }}</h2>
+        <p>{{ $t('page.admin.loginTitle') }}</p>
       </div>
       
       <el-form 
@@ -16,7 +16,7 @@
         <el-form-item prop="username">
           <el-input
             v-model="loginData.username"
-            placeholder="请输入用户名"
+            :placeholder="$t('page.login.usernameRequired')"
             prefix-icon="User"
             size="large"
           />
@@ -26,7 +26,7 @@
           <el-input
             v-model="loginData.password"
             type="password"
-            placeholder="请输入密码"
+            :placeholder="$t('page.login.passwordRequired')"
             prefix-icon="Lock"
             size="large"
             show-password
@@ -42,13 +42,13 @@
             @click="handleLogin"
             class="login-button"
           >
-            {{ loading ? '登录中...' : '登录' }}
+            {{ loading ? $t('page.login.loggingIn') : $t('page.login.login') }}
           </el-button>
         </el-form-item>
       </el-form>
       
       <div class="login-footer">
-        <p>默认账号：root / root123</p>
+        <p>{{ $t('page.admin.defaultAccount') }}</p>
       </div>
     </div>
   </div>
@@ -59,11 +59,13 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'AdminLogin',
   setup() {
     const router = useRouter()
+    const { t } = useI18n()
     const loading = ref(false)
     
     const loginData = reactive({
@@ -73,10 +75,10 @@ export default {
     
     const loginRules = {
       username: [
-        { required: true, message: '请输入用户名', trigger: 'blur' }
+        { required: true, message: t('page.login.usernameRequired'), trigger: 'blur' }
       ],
       password: [
-        { required: true, message: '请输入密码', trigger: 'blur' }
+        { required: true, message: t('page.login.passwordRequired'), trigger: 'blur' }
       ]
     }
     
@@ -109,17 +111,17 @@ export default {
         })
         
         if (response.data.success) {
-          ElMessage.success('登录成功')
+          ElMessage.success(t('messages.loginSuccess'))
           router.push('/admin/dashboard')
         } else {
-          ElMessage.error(response.data.message || '登录失败')
+          ElMessage.error(t('messages.loginFailed'))
         }
       } catch (error) {
         console.error('登录错误:', error)
         if (error.response && error.response.data && error.response.data.message) {
-          ElMessage.error(error.response.data.message)
+          ElMessage.error(t('messages.loginFailed'))
         } else {
-          ElMessage.error('登录失败，请检查网络连接')
+          ElMessage.error(t('messages.networkLoginFailed'))
         }
       } finally {
         loading.value = false

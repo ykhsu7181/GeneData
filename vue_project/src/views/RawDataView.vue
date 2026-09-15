@@ -2,9 +2,9 @@
   <div class="raw-data-page">
     <header class="raw-header">
       <div>
-        <p class="breadcrumb">首页 / Data / 课题组原始数据</p>
-        <h1>课题组原始数据 Research Group Raw Data</h1>
-        <p class="subtitle">集中展示课题组原始测序数据、文件位置及校验状态。</p>
+        <p class="breadcrumb">{{ $t('page.rawData.breadcrumb') }}</p>
+        <h1>{{ $t('page.rawData.title') }}</h1>
+        <p class="subtitle">{{ $t('page.rawData.subtitle') }}</p>
       </div>
     </header>
 
@@ -14,16 +14,16 @@
         <input
           v-model="keyword"
           type="text"
-          placeholder="搜索 Accession / Sample / 文件名 / 路径 / MD5"
+          :placeholder="$t('page.rawData.searchPlaceholder')"
           @keyup.enter="applyFilters"
         />
       </label>
-      <button type="button" class="primary-btn" @click="applyFilters">搜索</button>
+      <button type="button" class="primary-btn" @click="applyFilters">{{ $t('common.search') }}</button>
 
       <label class="select-box">
-        <span>物种</span>
+        <span>{{ $t('common.species') }}</span>
         <select v-model="selectedSpecies" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="species in filters.species" :key="species.key" :value="species.key">
             {{ species.label }}
           </option>
@@ -31,39 +31,39 @@
       </label>
 
       <label class="select-box">
-        <span>数据类型</span>
+        <span>{{ $t('common.dataType') }}</span>
         <select v-model="selectedType" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in filters.raw_data_types" :key="item" :value="item">{{ item }}</option>
         </select>
       </label>
 
       <label class="select-box">
-        <span>测序平台</span>
+        <span>{{ $t('page.rawData.sequencingPlatform') }}</span>
         <select v-model="selectedPlatform" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in filters.sequencing_platforms" :key="item" :value="item">{{ item }}</option>
         </select>
       </label>
 
       <label class="select-box">
-        <span>所在集群</span>
+        <span>{{ $t('page.rawData.cluster') }}</span>
         <select v-model="selectedCluster" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in filters.clusters" :key="item" :value="item">{{ item }}</option>
         </select>
       </label>
 
       <label class="select-box">
-        <span>文件状态</span>
+        <span>{{ $t('page.rawData.fileStatus') }}</span>
         <select v-model="selectedStatus" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in filters.check_statuses" :key="item" :value="item">{{ statusLabel(item) }}</option>
         </select>
       </label>
 
-      <button type="button" class="light-btn" @click="resetFilters">重置</button>
-      <button type="button" class="light-btn">更多条件 ⌁</button>
+      <button type="button" class="light-btn" @click="resetFilters">{{ $t('common.reset') }}</button>
+      <button type="button" class="light-btn">{{ $t('common.moreFilters') }} ⌁</button>
     </section>
 
     <section class="summary-grid">
@@ -80,8 +80,8 @@
     <section :class="['content-grid', { 'drawer-open': drawerOpen }]">
       <article class="table-card">
         <div class="table-header">
-          <h2>原始数据文件列表 <span>i</span></h2>
-          <button type="button" class="light-btn">⇩ 导出当前结果</button>
+          <h2>{{ $t('page.rawData.fileList') }} <span>i</span></h2>
+          <button type="button" class="light-btn">⇩ {{ $t('common.exportCurrent') }}</button>
         </div>
 
         <div class="table-wrap">
@@ -103,15 +103,15 @@
               <tr>
                 <th>Accession</th>
                 <th>Sample ID</th>
-                <th>物种</th>
-                <th>数据类型</th>
-                <th>测序平台</th>
-                <th>文件名</th>
-                <th>文件角色</th>
-                <th>文件大小</th>
-                <th>校验状态</th>
-                <th>更新时间</th>
-                <th>操作</th>
+                <th>{{ $t('common.species') }}</th>
+                <th>{{ $t('common.dataType') }}</th>
+                <th>{{ $t('page.rawData.sequencingPlatform') }}</th>
+                <th>{{ $t('common.fileName') }}</th>
+                <th>{{ $t('common.fileRole') }}</th>
+                <th>{{ $t('common.fileSize') }}</th>
+                <th>{{ $t('page.rawData.columns.status') }}</th>
+                <th>{{ $t('page.rawData.columns.updatedAt') }}</th>
+                <th>{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -139,23 +139,23 @@
                 <td>{{ row.updated_at || '-' }}</td>
                 <td>
                   <div class="row-actions">
-                    <button type="button" @click.stop="openDrawer(row)">详情</button>
+                    <button type="button" @click.stop="openDrawer(row)">{{ $t('common.details') }}</button>
                   </div>
                 </td>
               </tr>
               <tr v-if="!loading && !rows.length">
-                <td colspan="11" class="empty-cell">暂无原始数据文件登记</td>
+                <td colspan="11" class="empty-cell">{{ $t('page.rawData.empty') }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <footer class="pager">
-          <span>共 {{ pagination.total || 0 }} 条</span>
+          <span>{{ $t('common.totalCount', { count: pagination.total || 0 }) }}</span>
           <select v-model.number="pageSize" @change="changePageSize">
-            <option :value="20">20条/页</option>
-            <option :value="50">50条/页</option>
-            <option :value="100">100条/页</option>
+            <option :value="20">{{ $t('common.pageSize', { size: 20 }) }}</option>
+            <option :value="50">{{ $t('common.pageSize', { size: 50 }) }}</option>
+            <option :value="100">{{ $t('common.pageSize', { size: 100 }) }}</option>
           </select>
           <button type="button" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">‹</button>
           <b>{{ currentPage }}</b>
@@ -165,42 +165,42 @@
 
       <aside v-if="drawerOpen" class="detail-drawer">
         <header>
-          <h2>原始数据详情</h2>
+          <h2>{{ $t('page.rawData.detailsTitle') }}</h2>
           <button type="button" @click="closeDrawer">×</button>
         </header>
         <div v-if="selectedRow" class="drawer-body">
           <section>
-            <h3>基本信息</h3>
+            <h3>{{ $t('common.basicInformation') }}</h3>
             <dl>
               <dt>Accession</dt><dd>{{ selectedRow.accession || '-' }}</dd>
               <dt>Sample ID</dt><dd>{{ selectedRow.sample_id || '-' }}</dd>
-              <dt>物种</dt><dd>{{ selectedRow.species_name || '-' }}（{{ selectedRow.latin_name || '-' }}）</dd>
-              <dt>数据类型</dt><dd>{{ selectedRow.raw_data_type || '-' }}</dd>
-              <dt>测序平台</dt><dd>{{ selectedRow.sequencing_platform || '-' }}</dd>
-              <dt>文件角色</dt><dd>{{ fileRoleLabel(selectedRow.file_role) }}</dd>
-              <dt>所在集群</dt><dd>{{ selectedRow.cluster_name || '-' }}</dd>
-              <dt>文件大小</dt><dd>{{ selectedRow.file_size_display || '-' }}</dd>
-              <dt>校验状态</dt><dd><span :class="['status-pill', statusClass(selectedRow.check_status)]">{{ statusLabel(selectedRow.check_status) }}</span></dd>
-              <dt>登记时间</dt><dd>{{ selectedRow.created_at || '-' }}</dd>
-              <dt>备注</dt><dd>{{ selectedRow.remark || '-' }}</dd>
+              <dt>{{ $t('common.species') }}</dt><dd>{{ selectedRow.species_name || '-' }} ({{ selectedRow.latin_name || '-' }})</dd>
+              <dt>{{ $t('common.dataType') }}</dt><dd>{{ selectedRow.raw_data_type || '-' }}</dd>
+              <dt>{{ $t('page.rawData.sequencingPlatform') }}</dt><dd>{{ selectedRow.sequencing_platform || '-' }}</dd>
+              <dt>{{ $t('common.fileRole') }}</dt><dd>{{ fileRoleLabel(selectedRow.file_role) }}</dd>
+              <dt>{{ $t('page.rawData.cluster') }}</dt><dd>{{ selectedRow.cluster_name || '-' }}</dd>
+              <dt>{{ $t('common.fileSize') }}</dt><dd>{{ selectedRow.file_size_display || '-' }}</dd>
+              <dt>{{ $t('page.rawData.columns.status') }}</dt><dd><span :class="['status-pill', statusClass(selectedRow.check_status)]">{{ statusLabel(selectedRow.check_status) }}</span></dd>
+              <dt>{{ $t('page.rawData.registeredAt') }}</dt><dd>{{ selectedRow.created_at || '-' }}</dd>
+              <dt>{{ $t('page.rawData.remarks') }}</dt><dd>{{ selectedRow.remark || '-' }}</dd>
             </dl>
           </section>
 
           <section>
-            <h3>文件路径</h3>
+            <h3>{{ $t('page.rawData.filePath') }}</h3>
             <div class="copy-box">{{ selectedRow.file_path || '-' }}</div>
-            <button type="button" class="copy-btn" @click="copyText(selectedRow.file_path, '路径')">复制路径</button>
+            <button type="button" class="copy-btn" @click="copyText(selectedRow.file_path, 'page.rawData.path')">{{ $t('page.rawData.copyPath') }}</button>
           </section>
 
           <section>
-            <h3>MD5 校验值</h3>
+            <h3>{{ $t('page.rawData.checksum') }}</h3>
             <div class="copy-box">{{ selectedRow.md5 || '-' }}</div>
-            <button type="button" class="copy-btn" @click="copyText(selectedRow.md5, 'MD5')">复制 MD5</button>
+            <button type="button" class="copy-btn" @click="copyText(selectedRow.md5, 'page.rawData.checksum')">{{ $t('page.rawData.copyChecksum') }}</button>
           </section>
 
-          <p class="drawer-tip">提示：原始数据文件体积较大，请在对应集群环境中使用。本页不提供 Web 下载入口。</p>
+          <p class="drawer-tip">{{ $t('page.rawData.usageTip') }}</p>
         </div>
-        <div v-else class="drawer-empty">点击某一行查看路径详情</div>
+        <div v-else class="drawer-empty">{{ $t('page.rawData.drawerEmpty') }}</div>
       </aside>
     </section>
   </div>
@@ -210,42 +210,44 @@
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 
 const statusMap = {
-  verified: { label: '已校验', className: 'verified' },
-  pending: { label: '待确认', className: 'pending' },
-  unchecked: { label: '未校验', className: 'unchecked' },
-  missing: { label: '文件缺失', className: 'missing' },
-  已校验: { label: '已校验', className: 'verified' },
-  待确认: { label: '待确认', className: 'pending' },
-  未校验: { label: '未校验', className: 'unchecked' },
-  文件缺失: { label: '文件缺失', className: 'missing' }
+  verified: { key: 'verified', className: 'verified' },
+  pending: { key: 'pending', className: 'pending' },
+  unchecked: { key: 'unchecked', className: 'unchecked' },
+  missing: { key: 'missing', className: 'missing' },
+  已校验: { key: 'verified', className: 'verified' },
+  待确认: { key: 'pending', className: 'pending' },
+  未校验: { key: 'unchecked', className: 'unchecked' },
+  文件缺失: { key: 'missing', className: 'missing' }
 }
 
 const fileRoleMap = {
-  raw_reads_R1: '原始测序 R1',
-  raw_reads_R2: '原始测序 R2',
-  rnaseq_raw_R1: 'RNA-seq 原始 R1',
-  rnaseq_raw_R2: 'RNA-seq 原始 R2',
-  hifi_reads: 'HiFi 原始 reads',
-  ont_reads: 'ONT 原始 reads',
-  pacbio_reads: 'PacBio 原始 reads',
-  illumina_reads: 'Illumina 原始 reads',
-  fastq: 'FASTQ 原始文件',
-  bam: '比对 BAM 文件',
-  cram: '压缩比对 CRAM',
-  vcf: '变异 VCF 文件',
-  genome_fasta: '参考基因组序列',
-  genome_index: '基因组索引',
-  annotation_gff3: '基因注释 GFF3',
-  annotation_gtf: '基因注释 GTF',
-  TEs: '转座子数据',
-  annotation: '注释文件'
+  raw_reads_R1: 'page.rawData.fileRoles.raw_reads_R1',
+  raw_reads_R2: 'page.rawData.fileRoles.raw_reads_R2',
+  rnaseq_raw_R1: 'page.rawData.fileRoles.rnaseq_raw_R1',
+  rnaseq_raw_R2: 'page.rawData.fileRoles.rnaseq_raw_R2',
+  hifi_reads: 'page.rawData.fileRoles.hifi_reads',
+  ont_reads: 'page.rawData.fileRoles.ont_reads',
+  pacbio_reads: 'page.rawData.fileRoles.pacbio_reads',
+  illumina_reads: 'page.rawData.fileRoles.illumina_reads',
+  fastq: 'page.rawData.fileRoles.fastq',
+  bam: 'page.rawData.fileRoles.bam',
+  cram: 'page.rawData.fileRoles.cram',
+  vcf: 'page.rawData.fileRoles.vcf',
+  genome_fasta: 'page.rawData.fileRoles.genome_fasta',
+  genome_index: 'page.rawData.fileRoles.genome_index',
+  annotation_gff3: 'page.rawData.fileRoles.annotation_gff3',
+  annotation_gtf: 'page.rawData.fileRoles.annotation_gtf',
+  TEs: 'page.rawData.fileRoles.TEs',
+  annotation: 'page.rawData.fileRoles.annotation'
 }
 
 export default {
   name: 'RawDataView',
   setup() {
+    const { t, te } = useI18n()
     const loading = ref(false)
     const keyword = ref('')
     const selectedSpecies = ref('')
@@ -263,12 +265,12 @@ export default {
     const selectedRow = ref(null)
 
     const summaryCards = computed(() => [
-      { key: 'accession', label: '材料数', value: summary.value.accession_count || 0, unit: '有效 Accession', icon: '苗', theme: 'green' },
-      { key: 'sample', label: '样本数', value: summary.value.sample_count || 0, unit: '样本登记', icon: '样', theme: 'blue' },
-      { key: 'file', label: '原始文件数', value: summary.value.raw_file_count || summary.value.datafile_count || 0, unit: 'DataFile 去重', icon: '文', theme: 'purple' },
-      { key: 'size', label: '总数据量', value: summary.value.total_size_display || '-', unit: '去重求和', icon: '量', theme: 'orange' },
-      { key: 'cluster', label: '集群数', value: summary.value.cluster_count || 0, unit: '存储集群', icon: '集', theme: 'cyan' },
-      { key: 'update', label: '最近更新', value: summary.value.latest_update || '-', unit: '数据更新时间', icon: '时', theme: 'pink' }
+      { key: 'accession', label: t('page.rawData.summary.accessions'), value: summary.value.accession_count || 0, unit: t('page.rawData.summary.validAccessions'), icon: '◉', theme: 'green' },
+      { key: 'sample', label: t('page.rawData.summary.samples'), value: summary.value.sample_count || 0, unit: t('page.rawData.summary.sampleRecords'), icon: '◇', theme: 'blue' },
+      { key: 'file', label: t('page.rawData.summary.files'), value: summary.value.raw_file_count || summary.value.datafile_count || 0, unit: t('page.rawData.summary.uniqueDataFiles'), icon: '▤', theme: 'purple' },
+      { key: 'size', label: t('page.rawData.summary.totalSize'), value: summary.value.total_size_display || '-', unit: t('page.rawData.summary.uniqueTotal'), icon: 'Σ', theme: 'orange' },
+      { key: 'cluster', label: t('page.rawData.summary.clusters'), value: summary.value.cluster_count || 0, unit: t('page.rawData.summary.storageClusters'), icon: '⬡', theme: 'cyan' },
+      { key: 'update', label: t('page.rawData.summary.latestUpdate'), value: summary.value.latest_update || '-', unit: t('page.rawData.summary.updateTime'), icon: '◷', theme: 'pink' }
     ])
 
     const hasNextPage = computed(() => currentPage.value * pageSize.value < (pagination.value.total || 0))
@@ -304,7 +306,7 @@ export default {
         }
       } catch (error) {
         console.error('获取原始数据失败:', error)
-        ElMessage.error('获取原始数据失败')
+        ElMessage.error(t('messages.rawDataLoadFailed'))
       } finally {
         loading.value = false
       }
@@ -347,15 +349,16 @@ export default {
     }
 
     const copyText = async (text, label) => {
+      const localizedLabel = t(label)
       if (!text || text === '-') {
-        ElMessage.warning(`${label}为空`)
+        ElMessage.warning(t('messages.valueEmpty', { label: localizedLabel }))
         return
       }
       try {
         await navigator.clipboard.writeText(text)
-        ElMessage.success(`已复制${label}`)
-      } catch (error) {
-        ElMessage.error(`复制${label}失败`)
+        ElMessage.success(t('messages.copied', { label: localizedLabel }))
+      } catch {
+        ElMessage.error(t('messages.copyFailed', { label: localizedLabel }))
       }
     }
 
@@ -367,11 +370,15 @@ export default {
       return `${text.slice(0, edge)}...${text.slice(-edge)}`
     }
 
-    const statusLabel = (status) => statusMap[status]?.label || status || '-'
+    const statusLabel = (status) => {
+      const key = statusMap[status]?.key
+      return key ? t(`status.${key}`) : status || '-'
+    }
     const statusClass = (status) => statusMap[status]?.className || 'unchecked'
     const fileRoleLabel = (role) => {
       if (!role || role === '-') return '-'
-      return fileRoleMap[role] || role
+      const key = fileRoleMap[role]
+      return key && te(key) ? t(key) : role
     }
 
     onMounted(fetchRawData)

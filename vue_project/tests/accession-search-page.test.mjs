@@ -12,9 +12,9 @@ const source = fs.readFileSync(
 
 test('accession card is a searchable landing page', () => {
   assert.match(source, /v-model="selectedAccession"/);
-  assert.match(source, /搜索 Accession \/ 品种 \/ 亚群/);
+  assert.match(source, /page\.accessionSearch\.placeholder/);
   assert.match(source, /\/files\/query\/organisms\//);
-  assert.match(source, /<el-empty[^>]+description=/);
+  assert.match(source, /<el-empty[^>]+:description=/);
   assert.match(source, /<AccessionDetailTableView v-if="routeAccession" embedded/);
   assert.doesNotMatch(source, /page-kicker">\s*ACCESSION\s*</);
   assert.doesNotMatch(source, /\/files\/accessions\//);

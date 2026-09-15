@@ -8,8 +8,8 @@ const source = readFileSync(heroPath, 'utf8')
 
 test('portal hero uses the approved GeneData identity and search-first content', () => {
   assert.match(source, /<h1>GeneData<\/h1>/)
-  assert.match(source, /<h2>Genomic Data Warehouse<\/h2>/)
-  assert.match(source, /Explore <span>•<\/span> Discover/)
+  assert.match(source, /\$t\('page\.home\.subtitle'\)/)
+  assert.match(source, /\$t\('page\.home\.tagline'\)/)
   assert.match(source, /role="search"/)
 })
 
@@ -20,7 +20,10 @@ test('portal hero trims input and ignores empty searches', () => {
 })
 
 test('portal hero exposes only working search examples', () => {
-  assert.match(source, /\['IR64', 'Oryza sativa', 'genome', 'annotation'\]/)
+  assert.match(source, /t\('page\.home\.examples\.accession'\)/)
+  assert.match(source, /t\('page\.home\.examples\.species'\)/)
+  assert.match(source, /t\('page\.home\.examples\.genome'\)/)
+  assert.match(source, /t\('page\.home\.examples\.annotation'\)/)
   assert.match(source, /@click="submitExample\(example\)"/)
   assert.match(source, /queryText\.value = example/)
 })

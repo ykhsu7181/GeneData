@@ -1,5 +1,5 @@
 <template>
-  <section class="stats-bar" aria-label="Warehouse statistics">
+  <section class="stats-bar" :aria-label="$t('page.home.stats.ariaLabel')">
     <div class="stats-inner">
       <article v-for="metric in metrics" :key="metric.key" class="metric">
         <span class="metric-icon" aria-hidden="true">
@@ -14,29 +14,32 @@
         </div>
       </article>
 
-      <p class="values">Open Data <i>•</i> Open Science <i>•</i> A Better Future</p>
+      <p class="values">{{ $t('page.home.stats.slogan') }}</p>
     </div>
   </section>
 </template>
 
 <script>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'HomeStatsBar',
   props: { summary: { type: Object, default: () => ({}) } },
   setup() {
+    const { locale, t } = useI18n()
     const metrics = computed(() => [
-      { key: 'assembly_count', label: 'Assemblies', icon: 'M10 11h12M10 16h12M10 21h12' },
-      { key: 'species_count', label: 'Species', icon: 'M16 24V10m0 8-5-5m5 2 5-5' },
-      { key: 'annotation_count', label: 'Annotations', icon: 'M11 10h10v12H11zm3 4h4m-4 4h4' },
-      { key: 'accession_count', label: 'Accessions', icon: 'M11 21c1-4 9-4 10 0M16 10a3 3 0 1 0 0 6 3 3 0 0 0 0-6' }
+      { key: 'assembly_count', label: t('page.home.stats.assemblies'), icon: 'M10 11h12M10 16h12M10 21h12' },
+      { key: 'species_count', label: t('page.home.stats.species'), icon: 'M16 24V10m0 8-5-5m5 2 5-5' },
+      { key: 'annotation_count', label: t('page.home.stats.annotations'), icon: 'M11 10h10v12H11zm3 4h4m-4 4h4' },
+      { key: 'accession_count', label: t('page.home.stats.accessions'), icon: 'M11 21c1-4 9-4 10 0M16 10a3 3 0 1 0 0 6 3 3 0 0 0 0-6' }
     ])
 
     const formatCount = (value) => {
       if (value === null || value === undefined || value === '') return '—'
       const number = Number(value)
-      return Number.isFinite(number) ? new Intl.NumberFormat('en-US').format(number) : value
+      const numberLocale = locale.value === 'zh' ? 'zh-CN' : 'en-US'
+      return Number.isFinite(number) ? new Intl.NumberFormat(numberLocale).format(number) : value
     }
 
     return { metrics, formatCount }

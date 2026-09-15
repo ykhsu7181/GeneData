@@ -14,8 +14,9 @@ test('Assembly has an authenticated standalone route', () => {
 })
 
 test('Assembly page is an honest placeholder without data requests or fake records', () => {
-  assert.match(viewSource, /<h1[^>]*>Assembly<\/h1>/)
-  assert.match(viewSource, /Coming soon/)
+  assert.match(viewSource, /\$t\('page\.assembly\.title'\)/)
+  assert.match(viewSource, /\$t\('page\.assembly\.description'\)/)
+  assert.match(viewSource, /\$t\('page\.assembly\.comingSoon'\)/)
   assert.doesNotMatch(viewSource, /axios|fetch\(|\.get\(|\.post\(|mock|fake|genome-card/i)
 })
 

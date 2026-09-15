@@ -6,9 +6,9 @@ import assert from 'node:assert/strict'
 const source = readFileSync(join(process.cwd(), 'src', 'components', 'TopNavBar.vue'), 'utf8')
 
 test('top navigation uses the GeneData portal brand', () => {
-  assert.match(source, /aria-label="GeneData home"/)
+  assert.match(source, /:aria-label="\$t\('common\.goHome'\)"/)
   assert.match(source, /<strong>GeneData<\/strong>/)
-  assert.match(source, /<span>Genomic Data Warehouse<\/span>/)
+  assert.match(source, /\$t\('page\.home\.subtitle'\)/)
   assert.match(source, /id="top-nav-leaf-gradient"/)
 })
 

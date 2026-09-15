@@ -2,10 +2,10 @@
   <div class="genome-list-panel">
     <div class="genome-list-filters">
       <div class="filter-item">
-        <span class="filter-label">物种</span>
+        <span class="filter-label">{{ $t('page.genomeCard.species') }}</span>
         <el-select
           :model-value="filters.species_id"
-          placeholder="选择物种"
+          :placeholder="$t('page.genomeCard.selectSpecies')"
           clearable
           filterable
           class="filter-select"
@@ -22,10 +22,10 @@
       </div>
 
       <div class="filter-item">
-        <span class="filter-label">品种</span>
+        <span class="filter-label">{{ $t('page.genomeCard.accession') }}</span>
         <el-select
           :model-value="filters.accession_id"
-          placeholder="选择品种"
+          :placeholder="$t('page.genomeCard.selectAccession')"
           clearable
           filterable
           class="filter-select"
@@ -42,10 +42,10 @@
       </div>
 
       <div class="filter-item">
-        <span class="filter-label">组装级别</span>
+        <span class="filter-label">{{ $t('page.genomeCard.assemblyLevel') }}</span>
         <el-select
           :model-value="filters.assembly_level"
-          placeholder="选择组装级别"
+          :placeholder="$t('page.genomeCard.selectAssemblyLevel')"
           clearable
           class="filter-select"
           @update:model-value="updateFilter('assembly_level', $event)"
@@ -62,7 +62,7 @@
 
       <el-button class="list-refresh" @click="$emit('refresh')">
         <el-icon><Refresh /></el-icon>
-        刷新
+        {{ $t('common.refresh') }}
       </el-button>
     </div>
 
@@ -72,9 +72,9 @@
         :data="rows"
         class="genome-table"
         row-key="assembly_id"
-        empty-text="暂无基因组数据"
+        :empty-text="$t('page.genomeCard.emptyGenome')"
       >
-        <el-table-column label="物种" min-width="260">
+        <el-table-column :label="$t('page.genomeCard.species')" min-width="260">
           <template #default="{ row }">
             <div class="species-cell">
               <span class="species-icon">⌘</span>
@@ -85,14 +85,14 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="品种" min-width="170">
+        <el-table-column :label="$t('page.genomeCard.accession')" min-width="170">
           <template #default="{ row }">
             <button type="button" class="accession-link" @click="$emit('go-accession', row)">
               {{ row.accession || '-' }}
             </button>
           </template>
         </el-table-column>
-        <el-table-column label="组装级别" min-width="160">
+        <el-table-column :label="$t('page.genomeCard.assemblyLevel')" min-width="160">
           <template #default="{ row }">
             <span v-if="row.assembly_level && row.assembly_level !== '-'" class="assembly-level-badge">
               {{ row.assembly_level }}
@@ -100,15 +100,15 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="chromosome_count" label="染色体数" min-width="130" />
-        <el-table-column prop="genome_size_display" label="基因组大小" min-width="160" />
-        <el-table-column label="操作" width="210" fixed="right">
+        <el-table-column prop="chromosome_count" :label="$t('page.genomeCard.chromosomeCount')" min-width="130" />
+        <el-table-column prop="genome_size_display" :label="$t('page.genomeCard.genomeSize')" min-width="160" />
+        <el-table-column :label="$t('common.actions')" width="210" fixed="right">
           <template #default="{ row }">
             <div class="table-actions">
-              <el-button size="small" @click="$emit('open-files', row)">查看文件</el-button>
+              <el-button size="small" @click="$emit('open-files', row)">{{ $t('page.genomeCard.viewFiles') }}</el-button>
               <el-button size="small" type="primary" plain @click="$emit('download-row', row)">
                 <el-icon><Download /></el-icon>
-                下载
+                {{ $t('common.download') }}
               </el-button>
             </div>
           </template>
@@ -116,7 +116,7 @@
       </el-table>
 
       <div class="genome-pagination">
-        <span>共 {{ pagination.total }} 条</span>
+        <span>{{ $t('common.totalCount', { count: pagination.total }) }}</span>
         <el-pagination
           background
           layout="sizes, prev, pager, next, jumper"

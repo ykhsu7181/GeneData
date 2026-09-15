@@ -1,7 +1,7 @@
 <template>
   <header class="top-nav">
     <div class="top-nav-inner">
-      <button class="brand" type="button" aria-label="GeneData home" @click="goTo('/dashboard')">
+      <button class="brand" type="button" :aria-label="$t('common.goHome')" @click="goTo('/dashboard')">
         <span class="brand-mark" aria-hidden="true">
           <svg viewBox="0 0 64 64">
             <defs>
@@ -16,7 +16,7 @@
         </span>
         <div class="brand-copy">
           <strong>GeneData</strong>
-          <span>Genomic Data Warehouse</span>
+          <span>{{ $t('page.home.subtitle') }}</span>
         </div>
       </button>
 

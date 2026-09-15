@@ -17,8 +17,9 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 import FeaturedAccessions from '@/components/FeaturedAccessions.vue'
 import HomeHero from '@/components/HomeHero.vue'
@@ -31,18 +32,20 @@ export default {
   components: { HomeHero, FeaturedAccessions, HomeStatsBar },
   setup() {
     const router = useRouter()
+    const { t } = useI18n()
     const dashboard = ref(emptyDashboardPayload())
     const isLoading = ref(true)
-    const loadError = ref('')
+    const loadErrorKey = ref('')
+    const loadError = computed(() => (loadErrorKey.value ? t(loadErrorKey.value) : ''))
 
     const loadDashboard = async () => {
       isLoading.value = true
-      loadError.value = ''
+      loadErrorKey.value = ''
       try {
         dashboard.value = await fetchDashboardData()
       } catch (error) {
         console.error('Failed to load homepage data', error)
-        loadError.value = 'Featured accessions are temporarily unavailable.'
+        loadErrorKey.value = 'messages.homepageLoadFailed'
       } finally {
         isLoading.value = false
       }

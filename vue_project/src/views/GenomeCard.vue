@@ -8,13 +8,13 @@
             :type="activeView === 'visualization' ? 'primary' : 'default'"
             @click="switchGenomeView('visualization')"
           >
-            可视化视图
+            {{ $t('page.genomeCard.visualizationView') }}
           </el-button>
           <el-button
             :type="activeView === 'list' ? 'primary' : 'default'"
             @click="switchGenomeView('list')"
           >
-            数据列表
+            {{ $t('page.genomeCard.dataList') }}
           </el-button>
         </el-button-group>
         <el-tooltip :content="$t('page.genomeCard.refreshData')" placement="top">
@@ -40,7 +40,7 @@
           @clear="handleOrganismChange('')"
           class="search-select"
         />
-        <el-tooltip content="Search exact Accession" placement="top">
+        <el-tooltip :content="$t('page.genomeCard.exactSearch')" placement="top">
           <el-button
             class="accession-search-button"
             :loading="loadingOrganisms"
@@ -55,7 +55,7 @@
           <span class="select-label">Assembly</span>
           <el-select
             v-model="contextAssemblyId"
-            placeholder="Select assembly"
+            :placeholder="$t('page.genomeCard.selectAssembly')"
             class="assembly-dropdown"
             :disabled="!selectedOrganism"
             clearable
@@ -101,7 +101,7 @@
         <div class="visualization-container">
           <!-- 控制面板 -->
           <div class="control-panel">
-            <div class="display-title">display</div>
+            <div class="display-title">{{ $t('page.genomeCard.display') }}</div>
             <el-checkbox v-model="displayTEs" :label="'TEs'" size="small" checked>
               <span class="checkbox-color te-color"></span> TEs
             </el-checkbox>
@@ -137,7 +137,7 @@
 
                 <div class="settings-panel">
                   <div class="setting-item">
-                    <label>每行长度 (Mb):</label>
+                    <label>{{ $t('page.genomeCard.rowLength') }}</label>
                     <el-input-number
                       v-model="segmentLengthMb"
                       :min="0.1"
@@ -152,7 +152,7 @@
                   <div class="setting-item">
                     <el-button size="small" type="primary" @click="downloadVisualization">
                       <el-icon><Download /></el-icon>
-                      下载图片
+                      {{ $t('page.genomeCard.downloadImage') }}
                     </el-button>
                   </div>
                 </div>
@@ -165,11 +165,11 @@
             <div v-if="loadingVisualization" class="loading-visualization">
               <div class="loading-content">
                 <el-icon class="is-loading"><Loading /></el-icon>
-                <span>正在加载可视化数据...</span>
+                <span>{{ $t('page.genomeCard.loadingVisualization') }}</span>
               </div>
             </div>
             <div v-else-if="!selectedOrganism || !contextAssemblyId || !selectedChromosome" class="empty-state">
-              <el-empty description="请选择有效的 Accession、Assembly 和染色体以查看可视化" />
+              <el-empty :description="$t('page.genomeCard.selectVisualization')" />
             </div>
             <div v-else ref="chromosomeContainer" class="chromosome-container"></div>
 
@@ -216,6 +216,7 @@ import { Search, Refresh, Loading, Setting, Download } from '@element-plus/icons
 import { useRoute, useRouter } from 'vue-router';
 import GenomeFileDrawer from '@/components/genome/GenomeFileDrawer.vue';
 import GenomeListPanel from '@/components/genome/GenomeListPanel.vue';
+import { useI18n } from 'vue-i18n';
 
 const normalizeQueryValue = (value) => {
   if (Array.isArray(value)) {
@@ -238,6 +239,7 @@ export default {
     GenomeListPanel
   },
   setup() {
+    const { t } = useI18n();
     const route = useRoute();
     const router = useRouter();
     const activeView = ref(route.query.view === 'list' ? 'list' : 'visualization');
@@ -296,7 +298,10 @@ export default {
     });
     const fileDrawerVisible = ref(false);
     const fileDrawerLoading = ref(false);
-    const fileDrawerTitle = ref('Genome 文件列表');
+    const fileDrawerContext = ref('');
+    const fileDrawerTitle = computed(() => fileDrawerContext.value
+      ? `${fileDrawerContext.value} / ${t('page.genomeCard.fileList')}`
+      : t('page.genomeCard.fileList'));
     const fileDrawerMeta = ref({});
     const fileDrawerFiles = ref([]);
     let chromosomeRequestId = 0;
@@ -389,11 +394,11 @@ export default {
 
     const openUrl = (url) => {
       if (!url) {
-        ElMessage.warning('暂无可下载文件');
+        ElMessage.warning(t('page.genomeCard.noDownloadFile'));
         return;
       }
       if (!String(url).includes(DATAFILE_DOWNLOAD_PREFIX)) {
-        ElMessage.error('下载链接不是 DataFile download');
+        ElMessage.error(t('page.genomeCard.invalidDownloadLink'));
         return;
       }
       window.open(new URL(url, window.location.origin).toString(), '_blank');
@@ -426,7 +431,7 @@ export default {
         }
       } catch (error) {
         console.error('获取Genome数据列表失败:', error);
-        ElMessage.error('获取Genome数据列表失败');
+        ElMessage.error(t('page.genomeCard.listLoadFailed'));
         genomeRows.value = [];
       } finally {
         genomeListLoading.value = false;
@@ -488,10 +493,10 @@ export default {
         });
         fileDrawerMeta.value = response.data || {};
         fileDrawerFiles.value = response.data?.files || [];
-        fileDrawerTitle.value = `${response.data?.accession || row?.accession || '-'} / Genome 文件列表`;
+        fileDrawerContext.value = response.data?.accession || row?.accession || '-';
       } catch (error) {
         console.error('获取Genome文件列表失败:', error);
-        ElMessage.error('获取Genome文件列表失败');
+        ElMessage.error(t('page.genomeCard.filesLoadFailed'));
         fileDrawerFiles.value = [];
       } finally {
         fileDrawerLoading.value = false;
@@ -500,7 +505,7 @@ export default {
 
     const openGenomeFiles = async (row) => {
       fileDrawerVisible.value = true;
-      fileDrawerTitle.value = `${row?.accession || '-'} / Genome 文件列表`;
+      fileDrawerContext.value = row?.accession || '-';
       fileDrawerMeta.value = {
         accession: row?.accession,
         assembly_name: row?.assembly_name
@@ -543,7 +548,7 @@ export default {
     const downloadVisualization = () => {
       const svg = d3.select(chromosomeContainer.value).select('svg');
       if (svg.empty()) {
-        ElMessage.warning('没有可下载的图片');
+        ElMessage.warning(t('page.genomeCard.imageUnavailable'));
         return;
       }
 
@@ -564,10 +569,10 @@ export default {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        ElMessage.success('图片下载成功');
+        ElMessage.success(t('page.genomeCard.imageDownloaded'));
       } catch (error) {
         console.error('下载失败:', error);
-        ElMessage.error('下载失败');
+        ElMessage.error(t('page.genomeCard.downloadFailed'));
       }
     };
 
@@ -1161,7 +1166,7 @@ export default {
         }
 
         if (!Number.isFinite(chromosomeLength.value) || chromosomeLength.value <= 0) {
-          showVisualizationEmptyState('未获取到当前染色体长度');
+          showVisualizationEmptyState(t('page.genomeCard.chromosomeLengthMissing'));
           return;
         }
 
@@ -1184,7 +1189,7 @@ export default {
       } catch (error) {
         if (axios.isCancel(error)) return;
         console.error('加载可视化数据失败:', error);
-        ElMessage.error('加载可视化数据失败');
+        ElMessage.error(t('page.genomeCard.visualizationLoadFailed'));
       } finally {
         if (requestId === visualizationRequestId) {
           loadingVisualization.value = false;
@@ -1201,7 +1206,7 @@ export default {
         organismOptions.value = allOrganisms.value;
       } catch (error) {
         console.error('获取生物体列表失败:', error);
-        ElMessage.error('获取生物体列表失败');
+        ElMessage.error(t('messages.getOrganismsFailed'));
       } finally {
         loadingOrganisms.value = false;
       }
@@ -1222,7 +1227,7 @@ export default {
     const handleAccessionSearch = async () => {
       const keyword = String(selectedOrganism.value || '').trim();
       if (!keyword) {
-        ElMessage.warning('Please enter an Accession.');
+        ElMessage.warning(t('page.genomeCard.enterAccession'));
         return;
       }
 
@@ -1230,7 +1235,7 @@ export default {
         item => normalizeAccession(item) === normalizeAccession(keyword)
       );
       if (!accession) {
-        ElMessage.warning(`No exact Accession match: ${keyword}`);
+        ElMessage.warning(t('page.genomeCard.noExactMatch', { accession: keyword }));
         return;
       }
 
@@ -1263,7 +1268,7 @@ export default {
         contextAssemblyId.value = selectUnambiguousAssembly(assemblies, requestedId);
       } catch (error) {
         console.error('获取 Assembly 列表失败:', error);
-        ElMessage.error('获取 Assembly 列表失败');
+        ElMessage.error(t('page.genomeCard.assemblyLoadFailed'));
       }
     };
 
@@ -1319,7 +1324,7 @@ export default {
       } catch (error) {
         if (axios.isCancel(error)) return;
         console.error('获取染色体列表失败:', error);
-        ElMessage.error('获取染色体列表失败');
+        ElMessage.error(t('page.genomeCard.chromosomeLoadFailed'));
         chromosomeOptions.value = [];
         selectedChromosome.value = '';
       } finally {

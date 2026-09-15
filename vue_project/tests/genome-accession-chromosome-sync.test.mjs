@@ -13,7 +13,7 @@ assert.doesNotMatch(source, /setTimeout\(\(\) => \{\s*drawChromosomeVisualizatio
 assert.match(source, /watch\(\[selectedChromosome, contextAssemblyId\]/, 'The visualization watcher should not duplicate work on accession assignment')
 assert.match(source, /Promise\.allSettled\(/, 'Optional visualization tracks should not block each other')
 assert.match(source, /commitVisualizationResults/, 'Visualization results should be committed together after the context check')
-assert.match(source, /showVisualizationEmptyState\('未获取到当前染色体长度'\)/, 'Missing chromosome length must show an explicit empty state')
+assert.match(source, /showVisualizationEmptyState\(t\('page\.genomeCard\.chromosomeLengthMissing'\)\)/, 'Missing chromosome length must show a localized explicit empty state')
 assert.match(source, /onBeforeUnmount\(/, 'Pending visualization requests should be cancelled on component unmount')
 assert.match(source, /Genome visualization draw context/, 'Drawing diagnostics should include the active context')
 

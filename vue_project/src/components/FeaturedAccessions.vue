@@ -1,30 +1,30 @@
 <template>
   <section class="featured-card" aria-labelledby="featured-accessions-title">
     <header class="featured-heading">
-      <h3 id="featured-accessions-title"><span aria-hidden="true">★</span> Featured Accessions</h3>
-      <button type="button" @click="$emit('view-all')">View All <span aria-hidden="true">→</span></button>
+      <h3 id="featured-accessions-title"><span aria-hidden="true">★</span> {{ $t('page.home.featuredAccessions') }}</h3>
+      <button type="button" @click="$emit('view-all')">{{ $t('common.viewAll') }} <span aria-hidden="true">→</span></button>
     </header>
 
-    <div v-if="loading" class="table-skeleton" aria-label="Loading featured accessions">
+    <div v-if="loading" class="table-skeleton" :aria-label="$t('page.home.featuredLoading')">
       <span v-for="index in 5" :key="index"></span>
     </div>
 
     <div v-else-if="error" class="featured-state featured-error">
       <span>{{ error }}</span>
-      <button type="button" @click="$emit('retry')">Retry</button>
+      <button type="button" @click="$emit('retry')">{{ $t('common.retry') }}</button>
     </div>
 
-    <div v-else-if="!items.length" class="featured-state">No featured accessions available.</div>
+    <div v-else-if="!items.length" class="featured-state">{{ $t('page.home.featuredEmpty') }}</div>
 
     <div v-else class="table-wrap">
       <table>
         <thead>
           <tr>
             <th scope="col">Accession</th>
-            <th scope="col">Species</th>
-            <th scope="col">Common Name</th>
-            <th scope="col">Assembly</th>
-            <th scope="col">Annotation</th>
+            <th scope="col">{{ $t('page.home.species') }}</th>
+            <th scope="col">{{ $t('page.home.commonName') }}</th>
+            <th scope="col">{{ $t('page.home.assembly') }}</th>
+            <th scope="col">{{ $t('page.home.annotation') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -34,10 +34,10 @@
                 {{ displayValue(item.accession) }}
               </button>
             </td>
-            <td data-label="Species"><em>{{ displayValue(item.species_scientific_name) }}</em></td>
-            <td data-label="Common Name">{{ displayValue(item.species_common_name) }}</td>
-            <td data-label="Assembly">{{ displayValue(item.assembly) }}</td>
-            <td data-label="Annotation">{{ displayValue(item.annotation) }}</td>
+            <td :data-label="$t('page.home.species')"><em>{{ displayValue(item.species_scientific_name) }}</em></td>
+            <td :data-label="$t('page.home.commonName')">{{ displayValue(item.species_common_name) }}</td>
+            <td :data-label="$t('page.home.assembly')">{{ displayValue(item.assembly) }}</td>
+            <td :data-label="$t('page.home.annotation')">{{ displayValue(item.annotation) }}</td>
           </tr>
         </tbody>
       </table>

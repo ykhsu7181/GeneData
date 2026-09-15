@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import axios from 'axios'
 
 const EmptyComponent = {
-  template: '<div class="empty-page"><h2>功能开发中，敬请期待...</h2></div>'
+  template: '<div class="empty-page"><h2>{{ $t("page.placeholder.developing") }}</h2></div>'
 }
 
 const routes = [

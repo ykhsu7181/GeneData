@@ -1,23 +1,25 @@
 <template>
-  <div class="app-shell">
-    <router-view v-if="isStandaloneRoute" />
+  <el-config-provider :locale="elementLocale">
+    <div class="app-shell">
+      <router-view v-if="isStandaloneRoute" />
 
-    <div v-else :class="['layout-shell', { 'is-dashboard-route': isDashboardRoute }]">
-      <TopNavBar
-        :current-language="currentLanguage"
-        @language-change="handleLanguageChange"
-        @logout="handleLogout"
-      />
+      <div v-else :class="['layout-shell', { 'is-dashboard-route': isDashboardRoute }]">
+        <TopNavBar
+          :current-language="currentLanguage"
+          @language-change="handleLanguageChange"
+          @logout="handleLogout"
+        />
 
-      <main :class="['layout-main', { 'layout-main-dashboard': isDashboardRoute }]">
-        <router-view />
-      </main>
+        <main :class="['layout-main', { 'layout-main-dashboard': isDashboardRoute }]">
+          <router-view />
+        </main>
 
-      <footer class="layout-footer">
-        {{ $t('footer.version') }}
-      </footer>
+        <footer class="layout-footer">
+          {{ $t('footer.version') }}
+        </footer>
+      </div>
     </div>
-  </div>
+  </el-config-provider>
 </template>
 
 <script>
@@ -25,6 +27,8 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import en from 'element-plus/es/locale/lang/en'
 
 import TopNavBar from '@/components/TopNavBar.vue'
 
@@ -36,13 +40,15 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const { locale } = useI18n()
+    const { locale, t } = useI18n()
 
     const currentLanguage = ref(locale.value)
+    const elementLocale = computed(() => (currentLanguage.value === 'zh' ? zhCn : en))
 
     watch(locale, (newLocale) => {
       currentLanguage.value = newLocale
-    })
+      document.documentElement.lang = newLocale === 'zh' ? 'zh-CN' : 'en'
+    }, { immediate: true })
 
     const isStandaloneRoute = computed(() => route.path === '/login' || route.path.startsWith('/admin'))
     const isDashboardRoute = computed(() => route.path === '/' || route.path === '/dashboard')
@@ -53,7 +59,7 @@ export default {
       localStorage.setItem('language', language)
 
       ElMessage({
-        message: language === 'zh' ? '已切换到中文' : 'Switched to English',
+        message: t('messages.languageChanged'),
         type: 'success'
       })
     }
@@ -61,7 +67,7 @@ export default {
     const handleLogout = () => {
       localStorage.removeItem('isLoggedIn')
       ElMessage({
-        message: currentLanguage.value === 'zh' ? '已退出登录' : 'Logged out successfully',
+        message: t('messages.logoutSuccess'),
         type: 'success'
       })
       router.push('/login')
@@ -69,6 +75,7 @@ export default {
 
     return {
       currentLanguage,
+      elementLocale,
       isStandaloneRoute,
       isDashboardRoute,
       handleLanguageChange,

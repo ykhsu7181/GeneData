@@ -7,10 +7,10 @@
           <path d="M16 19h20M16 26h20M16 33h13"></path>
         </svg>
       </span>
-      <p class="eyebrow">ASSEMBLY</p>
-      <h1 id="assembly-title">Assembly</h1>
-      <p>Assembly resources and related functions are currently under development.</p>
-      <span class="coming-soon">Coming soon</span>
+      <p class="eyebrow">{{ $t('page.assembly.eyebrow') }}</p>
+      <h1 id="assembly-title">{{ $t('page.assembly.title') }}</h1>
+      <p>{{ $t('page.assembly.description') }}</p>
+      <span class="coming-soon">{{ $t('page.assembly.comingSoon') }}</span>
     </section>
   </div>
 </template>

@@ -36,12 +36,12 @@
 
     <div class="hero-copy">
       <h1>GeneData</h1>
-      <h2>Genomic Data Warehouse</h2>
-      <p class="tagline">Explore <span>•</span> Discover <span>•</span> Utilize Genomic Resources</p>
+      <h2>{{ $t('page.home.subtitle') }}</h2>
+      <p class="tagline">{{ $t('page.home.tagline') }}</p>
 
       <form class="portal-search" role="search" @submit.prevent="submitSearch">
         <label class="search-field">
-          <span class="sr-only">Search accession, species or resource</span>
+          <span class="sr-only">{{ $t('page.home.portalSearchLabel') }}</span>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="11" cy="11" r="6"></circle>
             <path d="m16 16 4 4"></path>
@@ -49,15 +49,15 @@
           <input
             v-model="queryText"
             type="search"
-            placeholder="Search accession / species / resource ..."
+            :placeholder="$t('page.home.portalSearchPlaceholder')"
             autocomplete="off"
           />
         </label>
-        <button type="submit">Search</button>
+        <button type="submit">{{ $t('common.search') }}</button>
       </form>
 
-      <div class="search-examples" aria-label="Search examples">
-        <span>Examples:</span>
+      <div class="search-examples" :aria-label="$t('page.home.searchExamplesLabel')">
+        <span>{{ $t('common.examples') }}:</span>
         <button
           v-for="example in searchExamples"
           :key="example"
@@ -72,14 +72,21 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'HomeHero',
   emits: ['search'],
   setup(_, { emit }) {
+    const { t } = useI18n()
     const queryText = ref('')
-    const searchExamples = ['IR64', 'Oryza sativa', 'genome', 'annotation']
+    const searchExamples = computed(() => [
+      t('page.home.examples.accession'),
+      t('page.home.examples.species'),
+      t('page.home.examples.genome'),
+      t('page.home.examples.annotation')
+    ])
     const dnaRungs = [48, 92, 138, 184, 230, 276, 322, 368, 414, 460, 506, 552]
     const networkPoints = [
       [26, 184], [86, 142], [148, 170], [216, 112], [278, 146],
