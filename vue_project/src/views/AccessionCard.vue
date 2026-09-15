@@ -1,6 +1,6 @@
 <template>
   <div class="accession-workbench">
-    <section class="accession-search-panel">
+    <section v-if="!routeAccession" class="accession-search-panel">
       <div class="search-grid">
         <div class="search-wrapper">
           <el-icon class="search-icon"><Search /></el-icon>

@@ -162,7 +162,7 @@ const enUS = {
       title: 'Accession · {accession}',
       species: 'Species: {value}',
       subPopulation: 'Subpopulation: {value}',
-      backToSearch: 'Back to Accession Search',
+      searchPlaceholder: 'Search accession, e.g. IR64',
       selectPrompt: 'Select an Accession to view information',
       sectionsLabel: 'Accession sections',
       loading: 'Loading...',
@@ -170,7 +170,6 @@ const enUS = {
         basic: 'Basic Information',
         datasets: 'Datasets',
         samples: 'Samples',
-        assemblies: 'Assembly Versions',
         annotations: 'Annotation Versions',
         files: 'Related Files'
       },
@@ -193,7 +192,7 @@ const enUS = {
         description: 'Description',
         externalLink: 'External Link'
       },
-      externalIdentifiers: 'External Identifiers',
+      assemblyInformation: 'Assembly Information',
       columns: {
         datasetCode: 'Dataset ID',
         datasetName: 'Dataset Name',
@@ -205,6 +204,7 @@ const enUS = {
         tissue: 'Tissue',
         assemblyVersion: 'Assembly Version',
         assemblyCode: 'Assembly ID',
+        databaseAccession: 'Database Accession',
         referenceGenome: 'Reference Genome',
         annotationVersion: 'Annotation Version',
         annotationCode: 'Annotation ID',

@@ -27,22 +27,25 @@ test('accession search and detail routes render their dedicated pages', () => {
 
 test('unified accession page follows the approved information architecture', () => {
   assert.match(pageSource, /page\.accessionDetail\.title/);
-  assert.match(pageSource, /page\.accessionDetail\.summary\.samples/);
-  assert.match(pageSource, /page\.accessionDetail\.summary\.datasets/);
-  assert.match(pageSource, /page\.accessionDetail\.tabs\.assemblies/);
+  assert.match(pageSource, /page\.accessionDetail\.searchPlaceholder/);
+  assert.match(pageSource, /type="search"/);
+  assert.match(pageSource, /const submitSearch = async/);
   assert.match(pageSource, /page\.accessionDetail\.tabs\.datasets/);
   assert.match(pageSource, /page\.accessionDetail\.tabs\.samples/);
-  assert.match(pageSource, /page\.accessionDetail\.columns\.referenceGenome/);
+  assert.match(pageSource, /page\.accessionDetail\.assemblyInformation/);
+  assert.match(pageSource, /relationship\.assemblies/);
+  assert.match(pageSource, /item\.assembly_accession \|\| item\.standard_id/);
+  assert.match(pageSource, /openFiles\('assembly', item\.id\)/);
   assert.match(pageSource, /page\.accessionDetail\.tabs\.files/);
   assert.match(pageSource, /page\.accessionDetail\.relationship/);
   assert.match(pageSource, /page\.accessionDetail\.geography/);
   assert.match(pageSource, /page\.accessionDetail\.fields\.description/);
-  assert.match(pageSource, /page\.accessionDetail\.backToSearch/);
   assert.match(pageSource, /labelKey:\s*'page\.accessionDetail\.tabs\./);
-  assert.match(pageSource, /name:\s*'accession-card'/);
   assert.match(pageSource, /accessions\/\$\{encodeURIComponent\(routeAccession\.value\)\}\/summary/);
   assert.match(pageSource, /accessions\/\$\{encodeURIComponent\(routeAccession\.value\)\}\/\$\{tab\}/);
   assert.match(pageSource, /datafile_download_url/);
+  assert.doesNotMatch(pageSource, /page\.accessionDetail\.tabs\.assemblies/);
+  assert.doesNotMatch(pageSource, /summary-grid|summaryCards/);
   assert.doesNotMatch(pageSource, /genome-files/);
   assert.doesNotMatch(pageSource, /Back to Accession Card|返回列表|创建与更新信息/);
 });

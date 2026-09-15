@@ -162,7 +162,7 @@ const zhCN = {
       title: '品种信息 · {accession}',
       species: '物种：{value}',
       subPopulation: '亚群：{value}',
-      backToSearch: '返回品种搜索',
+      searchPlaceholder: '搜索品种编号，例如 IR64',
       selectPrompt: '请选择品种查看信息',
       sectionsLabel: '品种信息分区',
       loading: '加载中...',
@@ -170,7 +170,6 @@ const zhCN = {
         basic: '基本信息',
         datasets: '数据集',
         samples: '样本',
-        assemblies: '组装版本',
         annotations: '注释版本',
         files: '相关文件'
       },
@@ -193,7 +192,7 @@ const zhCN = {
         description: '描述',
         externalLink: '外部链接'
       },
-      externalIdentifiers: '外部标识',
+      assemblyInformation: '组装版本信息',
       columns: {
         datasetCode: '数据集编号',
         datasetName: '数据集名称',
@@ -205,6 +204,7 @@ const zhCN = {
         tissue: '组织',
         assemblyVersion: '组装版本',
         assemblyCode: '组装编码',
+        databaseAccession: '数据库编号',
         referenceGenome: '参考基因组',
         annotationVersion: '注释版本',
         annotationCode: '注释编码',

@@ -49,7 +49,8 @@ test('core workflows no longer render known bilingual or hardcoded UI copy', () 
 
 test('dynamic labels and messages react through vue-i18n without changing API endpoints', () => {
   assert.match(sources['AccessionDetailTableView.vue'], /labelKey:\s*'page\.accessionDetail\.tabs\./)
-  assert.match(sources['AccessionDetailTableView.vue'], /const summaryCards = computed\(\(\) => \[/)
+  assert.match(sources['AccessionDetailTableView.vue'], /page\.accessionDetail\.assemblyInformation/)
+  assert.match(sources['AccessionDetailTableView.vue'], /const submitSearch = async/)
   assert.match(sources['DataOverviewView.vue'], /categoryLabel\(row\.category\)/)
   assert.match(sources['RawDataView.vue'], /t\(`status\.\$\{key\}`\)/)
   assert.match(sources['AccessionCard.vue'], /\/files\/query\/organisms\//)

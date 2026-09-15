@@ -11,6 +11,7 @@ const source = fs.readFileSync(
 );
 
 test('accession card is a searchable landing page', () => {
+  assert.match(source, /<section v-if="!routeAccession" class="accession-search-panel">/);
   assert.match(source, /v-model="selectedAccession"/);
   assert.match(source, /page\.accessionSearch\.placeholder/);
   assert.match(source, /\/files\/query\/organisms\//);
@@ -26,4 +27,5 @@ test('selecting an accession keeps the canonical page and expands inline details
   assert.match(source, /accession:\s*normalizedAccession/);
   assert.match(source, /handleSearchVisibleChange/);
   assert.match(source, /fetchAccessions\(''\)/);
+  assert.match(source, /<AccessionDetailTableView v-if="routeAccession" embedded/);
 });
