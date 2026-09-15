@@ -15,8 +15,9 @@
     .nav { display:flex; gap:34px; margin-left:auto; color:#314766; font-size:14px; font-weight:600; }
     .nav b { color:var(--blue); }
     .page { max-width:1660px; margin:auto; padding:24px 28px 44px; }
-    .crumb { margin-bottom:18px; color:#657896; font-size:14px; }
-    .heading { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:16px; padding:18px 20px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 7px 20px rgba(29,68,123,.06); }
+    .crumb { margin-bottom:14px; color:#657896; font-size:14px; }
+    .heading { margin-bottom:16px; padding:16px 20px 18px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 7px 20px rgba(29,68,123,.06); }
+    .heading-row { display:flex; justify-content:space-between; align-items:center; gap:18px; }
     .heading-main { display:flex; align-items:center; gap:12px; min-width:0; flex-wrap:wrap; }
     h1 { margin:0 8px 0 0; font-size:30px; letter-spacing:-.02em; }
     .tags { display:flex; gap:8px; }
@@ -75,8 +76,7 @@
 <body>
   <header class="topbar"><div class="brand"><span>Gene</span>Data</div><nav class="nav"><b>首页</b><span>品种信息</span><span>基因组</span><span>数据资源⌄</span><span>更多⌄</span></nav></header>
   <main class="page">
-    <div class="crumb">首页 / 品种信息 / IR64</div>
-    <section class="heading"><div class="heading-main"><h1>品种信息 · IR64</h1><div class="tags"><span class="tag">物种：水稻 (Oryza sativa)</span><span class="tag green">亚群：XI</span></div></div><div class="heading-actions"><form class="accession-search" onsubmit="return false"><label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" aria-label="搜索品种编号" placeholder="搜索品种编号，例如 IR64"></label><button class="search-button" type="submit">搜索</button></form><button class="refresh" aria-label="刷新" title="刷新">↻</button></div></section>
+    <section class="heading"><div class="crumb">首页 / 品种信息 / IR64</div><div class="heading-row"><div class="heading-main"><h1>品种信息 · IR64</h1><div class="tags"><span class="tag">物种：水稻 (Oryza sativa)</span><span class="tag green">亚群：XI</span></div></div><div class="heading-actions"><form class="accession-search" onsubmit="return false"><label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" aria-label="搜索品种编号" placeholder="搜索品种编号，例如 IR64"></label><button class="search-button" type="submit">搜索</button></form><button class="refresh" aria-label="刷新" title="刷新">↻</button></div></div></section>
     <section class="layout">
       <div class="panel">
         <nav class="tabs" aria-label="详情栏目"><button class="tab active" data-tab="basic">基本信息</button><button class="tab" data-tab="datasets">数据集</button><button class="tab" data-tab="samples">样本</button><button class="tab" data-tab="annotations">注释版本</button><button class="tab" data-tab="files">相关文件</button></nav>

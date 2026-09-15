@@ -27,6 +27,8 @@ test('accession search and detail routes render their dedicated pages', () => {
 
 test('unified accession page follows the approved information architecture', () => {
   assert.match(pageSource, /page\.accessionDetail\.title/);
+  assert.match(pageSource, /<div class="page-heading">\s*<div class="accession-breadcrumb">/);
+  assert.match(pageSource, /<div class="heading-row">/);
   assert.match(pageSource, /page\.accessionDetail\.searchPlaceholder/);
   assert.match(pageSource, /type="search"/);
   assert.match(pageSource, /const submitSearch = async/);
@@ -39,6 +41,9 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /page\.accessionDetail\.tabs\.files/);
   assert.match(pageSource, /page\.accessionDetail\.relationship/);
   assert.match(pageSource, /page\.accessionDetail\.geography/);
+  assert.match(pageSource, /<CompactAccessionMap/);
+  assert.match(pageSource, /:latitude="geography\.latitude"/);
+  assert.match(pageSource, /:longitude="geography\.longitude"/);
   assert.match(pageSource, /page\.accessionDetail\.fields\.description/);
   assert.match(pageSource, /labelKey:\s*'page\.accessionDetail\.tabs\./);
   assert.match(pageSource, /accessions\/\$\{encodeURIComponent\(routeAccession\.value\)\}\/summary/);

@@ -224,6 +224,8 @@ const zhCN = {
       datafileDownload: 'DataFile 下载',
       pagination: '共 {total} 条，当前第 {page} 页',
       geography: '地理信息',
+      coordinates: '坐标',
+      mapAriaLabel: '{accession} 的地理位置地图',
       coordinatesRecorded: '已记录地理坐标',
       noCoordinates: '暂无可展示的地理坐标',
       relationship: '关系概览',

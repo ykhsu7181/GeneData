@@ -1,26 +1,27 @@
 <template>
   <div :class="['accession-page', embedded ? 'is-embedded' : '']">
-    <div class="accession-breadcrumb">{{ $t('page.accessionDetail.breadcrumb', { accession: routeAccession || '-' }) }}</div>
-
     <div class="page-heading">
-      <div class="heading-main">
-        <h1>{{ $t('page.accessionDetail.title', { accession: accession?.accession || routeAccession || '-' }) }}</h1>
-        <div v-if="accession" class="heading-tags">
-          <span class="heading-tag species-tag">{{ $t('page.accessionDetail.species', { value: speciesLabel }) }}</span>
-          <span class="heading-tag population-tag">{{ $t('page.accessionDetail.subPopulation', { value: accession.sub_population || '-' }) }}</span>
+      <div class="accession-breadcrumb">{{ $t('page.accessionDetail.breadcrumb', { accession: routeAccession || '-' }) }}</div>
+      <div class="heading-row">
+        <div class="heading-main">
+          <h1>{{ $t('page.accessionDetail.title', { accession: accession?.accession || routeAccession || '-' }) }}</h1>
+          <div v-if="accession" class="heading-tags">
+            <span class="heading-tag species-tag">{{ $t('page.accessionDetail.species', { value: speciesLabel }) }}</span>
+            <span class="heading-tag population-tag">{{ $t('page.accessionDetail.subPopulation', { value: accession.sub_population || '-' }) }}</span>
+          </div>
         </div>
-      </div>
-      <div class="heading-actions">
-        <form class="detail-search" role="search" @submit.prevent="submitSearch">
-          <label class="detail-search-field">
-            <el-icon><Search /></el-icon>
-            <input v-model="searchQuery" type="search" :placeholder="$t('page.accessionDetail.searchPlaceholder')">
-          </label>
-          <button type="submit" class="search-button" :disabled="!searchQuery.trim()">{{ $t('common.search') }}</button>
-        </form>
-        <el-tooltip :content="$t('common.refresh')" placement="top">
-          <el-button circle class="refresh-button" :aria-label="$t('common.refresh')" @click="refreshPage"><el-icon><Refresh /></el-icon></el-button>
-        </el-tooltip>
+        <div class="heading-actions">
+          <form class="detail-search" role="search" @submit.prevent="submitSearch">
+            <label class="detail-search-field">
+              <el-icon><Search /></el-icon>
+              <input v-model="searchQuery" type="search" :placeholder="$t('page.accessionDetail.searchPlaceholder')">
+            </label>
+            <button type="submit" class="search-button" :disabled="!searchQuery.trim()">{{ $t('common.search') }}</button>
+          </form>
+          <el-tooltip :content="$t('common.refresh')" placement="top">
+            <el-button circle class="refresh-button" :aria-label="$t('common.refresh')" @click="refreshPage"><el-icon><Refresh /></el-icon></el-button>
+          </el-tooltip>
+        </div>
       </div>
     </div>
 
@@ -73,7 +74,14 @@
         </main>
 
         <aside class="side-column">
-          <section class="side-card map-card"><div class="side-card-heading"><h2>{{ $t('page.accessionDetail.geography') }}</h2></div><div v-if="geography.has_point" class="map-placeholder"><span class="map-pin">●</span><strong>{{ accession.accession }}</strong><small>{{ $t('page.accessionDetail.coordinatesRecorded') }}</small><small>{{ geography.latitude }}, {{ geography.longitude }}</small></div><el-empty v-else :description="$t('page.accessionDetail.noCoordinates')" :image-size="72" /></section>
+          <section class="side-card map-card">
+            <div class="side-card-heading"><h2>{{ $t('page.accessionDetail.geography') }}</h2></div>
+            <template v-if="geography.has_point">
+              <CompactAccessionMap :accession="accession.accession" :latitude="geography.latitude" :longitude="geography.longitude" />
+              <p class="map-coordinates">{{ $t('page.accessionDetail.coordinates') }}：{{ geography.latitude }}, {{ geography.longitude }}</p>
+            </template>
+            <el-empty v-else :description="$t('page.accessionDetail.noCoordinates')" :image-size="72" />
+          </section>
           <section class="side-card relation-card"><div class="side-card-heading"><h2>{{ $t('page.accessionDetail.relationship') }}</h2><span>{{ $t('page.accessionDetail.relationshipStructure') }}</span></div><div class="structure-root">{{ accession.accession }}</div><div v-if="relationship.assemblies?.length" class="structure-list"><div v-for="assembly in relationship.assemblies" :key="assembly.id" class="structure-assembly"><strong>{{ assembly.display_name || assembly.name }}</strong><span v-for="annotation in annotationsForAssembly(assembly.id)" :key="annotation.id">{{ annotation.display_name || annotation.name }}</span></div></div><p v-else class="empty-structure">{{ $t('page.accessionDetail.noRelationship') }}</p></section>
         </aside>
       </div>
@@ -88,6 +96,7 @@ import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
+import CompactAccessionMap from '@/components/accession/CompactAccessionMap.vue';
 
 const tabs = [
   { key: 'basic', labelKey: 'page.accessionDetail.tabs.basic' },
@@ -99,7 +108,7 @@ const tabs = [
 
 export default {
   name: 'AccessionDetailTableView',
-  components: { Refresh, Search },
+  components: { CompactAccessionMap, Refresh, Search },
   props: { embedded: { type: Boolean, default: false } },
   setup() {
     const route = useRoute();
@@ -194,8 +203,9 @@ export default {
 
 <style scoped>
 .accession-page { padding:8px 0 36px; color:#15233d; }
-.accession-breadcrumb { margin-bottom:12px; color:#76849a; font-size:13px; }
-.page-heading { display:flex; align-items:center; gap:18px; margin-bottom:16px; padding:18px 20px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }
+.accession-breadcrumb { margin-bottom:14px; color:#76849a; font-size:13px; }
+.page-heading { margin-bottom:16px; padding:16px 20px 18px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }
+.heading-row { display:flex; align-items:center; gap:18px; }
 .heading-main { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }
 .page-heading h1 { margin:0 6px 0 0; color:#102c5d; font-size:30px; line-height:1.2; }
 .heading-tags { display:flex; flex-wrap:wrap; gap:8px; }
@@ -246,16 +256,14 @@ export default {
 .side-column { display:grid; gap:14px; }
 .side-card { padding:15px; }
 .side-card-heading span { color:#7a89a0; font-size:10px; }
-.map-placeholder { display:grid; place-items:center; gap:7px; min-height:160px; border-radius:10px; background:linear-gradient(135deg,#eaf4ff,#f7fbff); color:#2a5b9e; }
-.map-pin { font-size:34px; color:#2777ef; }
-.map-placeholder small { color:#718096; }
+.map-coordinates { margin:10px 0 0; color:#718096; font-size:12px; text-align:center; }
 .structure-root { display:inline-block; padding:8px 12px; border:2px solid #2b73eb; border-radius:999px; color:#1752ae; font-size:12px; font-weight:800; }
 .structure-list { margin-top:14px; border-left:2px solid #d4e2f7; padding-left:12px; }
 .structure-assembly { display:grid; gap:7px; margin:12px 0; color:#294a78; font-size:12px; }
 .structure-assembly span { padding-left:10px; color:#718096; }
 .empty-structure { color:#8795ab; font-size:12px; }
 @media (max-width:1100px) {
-  .page-heading { flex-wrap:wrap; }
+  .heading-row { flex-wrap:wrap; }
   .heading-actions { width:100%; margin-left:0; }
   .detail-search { flex:1; }
   .detail-search-field { width:auto; flex:1; }

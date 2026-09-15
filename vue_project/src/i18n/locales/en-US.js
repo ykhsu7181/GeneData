@@ -224,6 +224,8 @@ const enUS = {
       datafileDownload: 'Download DataFile',
       pagination: '{total} items, page {page}',
       geography: 'Geographic Information',
+      coordinates: 'Coordinates',
+      mapAriaLabel: 'Map showing the geographic location of {accession}',
       coordinatesRecorded: 'Geographic coordinates recorded',
       noCoordinates: 'No geographic coordinates available',
       relationship: 'Relationship Overview',
