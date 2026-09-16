@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from files.services.dashboard_service import build_dashboard_payload
 
 
-DASHBOARD_CACHE_KEY = "warehouse_dashboard_payload_v1"
+DASHBOARD_CACHE_KEY = "warehouse_dashboard_payload_v2"
 DASHBOARD_CACHE_TIMEOUT = 60 * 10
 
 

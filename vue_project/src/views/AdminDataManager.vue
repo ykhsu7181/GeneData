@@ -1,14 +1,14 @@
 <template>
   <div class="admin-data-manager">
     <div class="page-header">
-      <h2>数据表格管理</h2>
+      <h2>{{ $t('page.admin.dataManagement') }}</h2>
       <div class="header-stats">
-        <span>总计: {{ totalCount }} 条记录</span>
+        <span>{{ $t('page.admin.totalRecords', { count: totalCount }) }}</span>
         <span v-if="tableData.length > 0">
-          (当前页: {{ tableData.length }} 条)
+          {{ $t('page.admin.currentPageRecords', { count: tableData.length }) }}
         </span>
         <span v-if="selectedRows.length > 0" class="selected-info">
-          已选择: {{ selectedRows.length }} 条
+          {{ $t('page.admin.selectedRecords', { count: selectedRows.length }) }}
         </span>
       </div>
     </div>
@@ -19,7 +19,7 @@
         <div class="toolbar-left">
           <el-select
             v-model="searchAccession"
-            placeholder="请选择Accession"
+            :placeholder="$t('page.admin.selectAccession')"
             filterable
             clearable
             style="width: 250px; margin-right: 10px;"
@@ -34,7 +34,7 @@
 
           <el-select
             v-model="selectedSubPopulations"
-            placeholder="请选择亚群"
+            :placeholder="$t('page.admin.selectSubpopulation')"
             multiple
             collapse-tags
             collapse-tags-tooltip
@@ -50,7 +50,7 @@
 
           <el-button @click="resetFilters">
             <el-icon><Refresh /></el-icon>
-            重置筛选
+            {{ $t('page.admin.resetFilters') }}
           </el-button>
         </div>
 
@@ -60,15 +60,15 @@
             :disabled="selectedRows.length === 0"
             @click="handleBatchDelete">
             <el-icon><Delete /></el-icon>
-            批量删除 ({{ selectedRows.length }})
+            {{ $t('page.admin.batchDelete', { count: selectedRows.length }) }}
           </el-button>
           <el-button type="primary" @click="showAddDialog = true">
             <el-icon><Plus /></el-icon>
-            新增 Accession
+            {{ $t('page.admin.addAccession') }}
           </el-button>
           <el-button type="success" @click="handleUpdateData">
             <el-icon><Refresh /></el-icon>
-            更新数据
+            {{ $t('page.admin.updateData') }}
           </el-button>
         </div>
       </div>
@@ -287,10 +287,10 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column :label="$t('common.actions')" width="150" fixed="right">
         <template #default="scope">
-          <el-button type="primary" size="small" @click="editRow(scope.row)">编辑</el-button>
-          <el-button type="danger" size="small" @click="deleteRow(scope.row)">删除</el-button>
+          <el-button type="primary" size="small" @click="editRow(scope.row)">{{ $t('common.edit') }}</el-button>
+          <el-button type="danger" size="small" @click="deleteRow(scope.row)">{{ $t('common.delete') }}</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -311,7 +311,7 @@
     <!-- 新增/编辑对话框 - 专业版 -->
     <el-dialog
       v-model="showAddDialog"
-      :title="editingRow ? '编辑 Accession' : '新增 Accession'"
+      :title="editingRow ? $t('page.admin.editAccession') : $t('page.admin.addAccession')"
       width="900px"
       class="accession-dialog"
       @close="resetForm">
@@ -321,7 +321,7 @@
         <el-card class="form-card" shadow="never">
           <template #header>
             <div class="card-header">
-              <span class="header-title">基本信息</span>
+              <span class="header-title">{{ $t('common.basicInformation') }}</span>
             </div>
           </template>
           
@@ -331,9 +331,9 @@
                 <el-input 
                   v-model="formData.accession" 
                   :disabled="editingRow"
-                  placeholder="请输入Accession编号"
+                  :placeholder="$t('page.admin.accessionPlaceholder')"
                   clearable />
-                <div class="field-hint">{{ editingRow ? 'Accession编号不可修改' : '必填，唯一标识符' }}</div>
+                <div class="field-hint">{{ editingRow ? $t('page.admin.accessionImmutable') : $t('page.admin.accessionRequiredHint') }}</div>
               </el-form-item>
             </el-col>
             
@@ -341,7 +341,7 @@
               <el-form-item label="SubPopulation" prop="subPopulation">
                 <el-select
                   v-model="formData.subPopulation"
-                  placeholder="请选择或输入亚群"
+                  :placeholder="$t('page.admin.subpopulationPlaceholder')"
                   filterable
                   allow-create
                   default-first-option
@@ -354,7 +354,7 @@
                     :label="option.label"
                     :value="option.value" />
                 </el-select>
-                <div class="field-hint">可选择预设亚群或输入新亚群名称</div>
+                <div class="field-hint">{{ $t('page.admin.subpopulationHint') }}</div>
               </el-form-item>
             </el-col>
           </el-row>
@@ -364,16 +364,16 @@
               <el-form-item label="SeqData URL" prop="seqData">
                 <el-input 
                   v-model="formData.seqData" 
-                  placeholder="请输入SeqData链接，留空则为 -"
+                  :placeholder="$t('page.admin.seqDataPlaceholder')"
                   clearable />
-                <div class="field-hint">可选，留空则显示为 "-"</div>
+                <div class="field-hint">{{ $t('page.admin.optionalHint') }}</div>
               </el-form-item>
             </el-col>
           </el-row>
           
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="经度 (Longitude)" prop="longitude">
+              <el-form-item :label="$t('page.admin.longitude')" prop="longitude">
                 <el-input-number 
                   v-model="formData.longitude" 
                   :precision="6"
@@ -387,7 +387,7 @@
             </el-col>
             
             <el-col :span="12">
-              <el-form-item label="纬度 (Latitude)" prop="latitude">
+              <el-form-item :label="$t('page.admin.latitude')" prop="latitude">
                 <el-input-number 
                   v-model="formData.latitude" 
                   :precision="6"
@@ -406,30 +406,30 @@
         <el-card class="form-card" shadow="never">
           <template #header>
             <div class="card-header">
-              <span class="header-title">文件管理</span>
+              <span class="header-title">{{ $t('page.admin.fileManagement') }}</span>
             </div>
           </template>
 
           <!-- 基因组文件组 -->
           <div class="file-group">
             <div class="file-group-header">
-              <span>基因组文件</span>
+              <span>{{ $t('page.admin.genomeFiles') }}</span>
             </div>
             <el-row :gutter="15">
               <el-col :span="12">
                 <div class="file-field">
                   <div class="file-label">
                     <span class="label-text">Genome</span>
-                    <el-tag v-if="formData.files.genome" size="small" type="success">已上传</el-tag>
-                    <el-tag v-else size="small" type="info">未上传</el-tag>
+                    <el-tag v-if="formData.files.genome" size="small" type="success">{{ $t('page.admin.uploaded') }}</el-tag>
+                    <el-tag v-else size="small" type="info">{{ $t('page.admin.notUploaded') }}</el-tag>
                   </div>
                   <div class="file-content">
                     <span v-if="formData.files.genome" class="file-name" :title="formData.files.genome">{{ formData.files.genome }}</span>
-                    <span v-else class="no-file-text">未选择文件</span>
+                    <span v-else class="no-file-text">{{ $t('page.admin.noFileSelected') }}</span>
                   </div>
                   <div class="file-actions">
-                    <el-button size="small" type="primary" @click="selectFile('genome')">选择</el-button>
-                    <el-button v-if="formData.files.genome" size="small" type="danger" plain @click="removeFile('genome')">删除</el-button>
+                    <el-button size="small" type="primary" @click="selectFile('genome')">{{ $t('common.select') }}</el-button>
+                    <el-button v-if="formData.files.genome" size="small" type="danger" plain @click="removeFile('genome')">{{ $t('common.delete') }}</el-button>
                   </div>
                   <div class="file-format-hint">.fasta / .fa / .fas</div>
                 </div>
@@ -439,16 +439,16 @@
                 <div class="file-field">
                   <div class="file-label">
                     <span class="label-text">Annotation</span>
-                    <el-tag v-if="formData.files.annotation" size="small" type="success">已上传</el-tag>
-                    <el-tag v-else size="small" type="info">未上传</el-tag>
+                    <el-tag v-if="formData.files.annotation" size="small" type="success">{{ $t('page.admin.uploaded') }}</el-tag>
+                    <el-tag v-else size="small" type="info">{{ $t('page.admin.notUploaded') }}</el-tag>
                   </div>
                   <div class="file-content">
                     <span v-if="formData.files.annotation" class="file-name" :title="formData.files.annotation">{{ formData.files.annotation }}</span>
-                    <span v-else class="no-file-text">未选择文件</span>
+                    <span v-else class="no-file-text">{{ $t('page.admin.noFileSelected') }}</span>
                   </div>
                   <div class="file-actions">
-                    <el-button size="small" type="primary" @click="selectFile('annotation')">选择</el-button>
-                    <el-button v-if="formData.files.annotation" size="small" type="danger" plain @click="removeFile('annotation')">删除</el-button>
+                    <el-button size="small" type="primary" @click="selectFile('annotation')">{{ $t('common.select') }}</el-button>
+                    <el-button v-if="formData.files.annotation" size="small" type="danger" plain @click="removeFile('annotation')">{{ $t('common.delete') }}</el-button>
                   </div>
                   <div class="file-format-hint">.gff / .gff3</div>
                 </div>
@@ -459,23 +459,23 @@
           <!-- 转录组文件组 -->
           <div class="file-group">
             <div class="file-group-header">
-              <span>转录组文件</span>
+              <span>{{ $t('page.admin.transcriptomeFiles') }}</span>
             </div>
             <el-row :gutter="15">
               <el-col :span="8" v-for="transcriptType in transcriptomeTypes" :key="transcriptType.key">
                 <div class="file-field compact">
                   <div class="file-label">
                     <span class="label-text">{{ transcriptType.label }}</span>
-                    <el-tag v-if="formData.files[transcriptType.key]" size="small" type="success">已上传</el-tag>
-                    <el-tag v-else size="small" type="info">未上传</el-tag>
+                    <el-tag v-if="formData.files[transcriptType.key]" size="small" type="success">{{ $t('page.admin.uploaded') }}</el-tag>
+                    <el-tag v-else size="small" type="info">{{ $t('page.admin.notUploaded') }}</el-tag>
                   </div>
                   <div class="file-content compact">
                     <span v-if="formData.files[transcriptType.key]" class="file-name" :title="formData.files[transcriptType.key]">{{ formData.files[transcriptType.key] }}</span>
-                    <span v-else class="no-file-text">未选择</span>
+                    <span v-else class="no-file-text">{{ $t('page.admin.noSelection') }}</span>
                   </div>
                   <div class="file-actions">
-                    <el-button size="small" type="primary" plain @click="selectFile(transcriptType.key)">选择</el-button>
-                    <el-button v-if="formData.files[transcriptType.key]" size="small" type="danger" plain @click="removeFile(transcriptType.key)">删除</el-button>
+                    <el-button size="small" type="primary" plain @click="selectFile(transcriptType.key)">{{ $t('common.select') }}</el-button>
+                    <el-button v-if="formData.files[transcriptType.key]" size="small" type="danger" plain @click="removeFile(transcriptType.key)">{{ $t('common.delete') }}</el-button>
                   </div>
                   <div class="file-format-hint">.tar.gz</div>
                 </div>
@@ -486,23 +486,23 @@
           <!-- 其他文件组 -->
           <div class="file-group">
             <div class="file-group-header">
-              <span>其他文件</span>
+              <span>{{ $t('page.admin.otherFiles') }}</span>
             </div>
             <el-row :gutter="15">
               <el-col :span="8" v-for="otherType in otherFileTypes" :key="otherType.key">
                 <div class="file-field compact">
                   <div class="file-label">
                     <span class="label-text">{{ otherType.label }}</span>
-                    <el-tag v-if="formData.files[otherType.key]" size="small" type="success">已上传</el-tag>
-                    <el-tag v-else size="small" type="info">未上传</el-tag>
+                    <el-tag v-if="formData.files[otherType.key]" size="small" type="success">{{ $t('page.admin.uploaded') }}</el-tag>
+                    <el-tag v-else size="small" type="info">{{ $t('page.admin.notUploaded') }}</el-tag>
                   </div>
                   <div class="file-content compact">
                     <span v-if="formData.files[otherType.key]" class="file-name" :title="formData.files[otherType.key]">{{ formData.files[otherType.key] }}</span>
-                    <span v-else class="no-file-text">未选择</span>
+                    <span v-else class="no-file-text">{{ $t('page.admin.noSelection') }}</span>
                   </div>
                   <div class="file-actions">
-                    <el-button size="small" type="primary" plain @click="selectFile(otherType.key)">选择</el-button>
-                    <el-button v-if="formData.files[otherType.key]" size="small" type="danger" plain @click="removeFile(otherType.key)">删除</el-button>
+                    <el-button size="small" type="primary" plain @click="selectFile(otherType.key)">{{ $t('common.select') }}</el-button>
+                    <el-button v-if="formData.files[otherType.key]" size="small" type="danger" plain @click="removeFile(otherType.key)">{{ $t('common.delete') }}</el-button>
                   </div>
                   <div class="file-format-hint">{{ otherType.format }}</div>
                 </div>
@@ -514,10 +514,10 @@
       
       <template #footer>
         <div class="dialog-footer-professional">
-          <div class="footer-hint">保存后，所选文件将会被上传到服务器</div>
+          <div class="footer-hint">{{ $t('page.admin.uploadAfterSave') }}</div>
           <div class="footer-actions">
-            <el-button @click="showAddDialog = false">取消</el-button>
-            <el-button type="primary" @click="saveData" :loading="saving">{{ saving ? '保存中...' : '保存' }}</el-button>
+            <el-button @click="showAddDialog = false">{{ $t('common.cancel') }}</el-button>
+            <el-button type="primary" @click="saveData" :loading="saving">{{ saving ? $t('page.admin.saving') : $t('common.save') }}</el-button>
           </div>
         </div>
       </template>
@@ -528,20 +528,19 @@
 <script>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh, Download, Upload, Delete, Document } from '@element-plus/icons-vue'
+import { Plus, Refresh, Delete } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'AdminDataManager',
   components: {
     Plus,
     Refresh,
-    Download,
-    Upload,
-    Delete,
-    Document
+    Delete
   },
   setup() {
+    const { t } = useI18n()
     const loading = ref(false)
     const saving = ref(false)
     const tableData = ref([])
@@ -569,7 +568,7 @@ export default {
       { label: 'XI', value: 'XI' },
       { label: 'WILD', value: 'WILD' },
       { label: 'O.glaberrima', value: 'O.glaberrima' },
-      { label: '未知', value: '-' }
+      { label: t('page.admin.unknown'), value: '-' }
     ])
 
     // 转录组文件类型
@@ -621,7 +620,7 @@ export default {
     
     const formRules = {
       accession: [
-        { required: true, message: '请输入Accession', trigger: 'blur' }
+        { required: true, message: t('page.admin.accessionRequired'), trigger: 'blur' }
       ]
     }
 
@@ -649,7 +648,7 @@ export default {
             { label: 'XI', value: 'XI' },
             { label: 'WILD', value: 'WILD' },
             { label: 'O.glaberrima', value: 'O.glaberrima' },
-            { label: '未知', value: '-' }
+            { label: t('page.admin.unknown'), value: '-' }
           ]
 
           const defaultValues = new Set(defaultOptions.map(opt => opt.value))
@@ -700,7 +699,7 @@ export default {
 
       } catch (error) {
         console.error('加载数据失败:', error)
-        ElMessage.error('加载数据失败')
+        ElMessage.error(t('page.admin.dataLoadFailed'))
       } finally {
         loading.value = false
       }
@@ -779,17 +778,17 @@ export default {
     // 批量删除
     const handleBatchDelete = async () => {
       if (selectedRows.value.length === 0) {
-        ElMessage.warning('请先选择要删除的记录')
+        ElMessage.warning(t('page.admin.selectRecordsToDelete'))
         return
       }
 
       try {
         const accessions = selectedRows.value.map(row => row.accession)
-        const message = `确定要删除选中的 ${accessions.length} 个 Accession 吗？\n\n${accessions.join(', ')}\n\n此操作将同时删除相关的所有数据文件，且无法恢复！`
+        const message = t('page.admin.batchRecordDeleteConfirm', { count: accessions.length, accessions: accessions.join(', ') })
 
-        await ElMessageBox.confirm(message, '批量删除确认', {
-          confirmButtonText: '确定删除',
-          cancelButtonText: '取消',
+        await ElMessageBox.confirm(message, t('page.admin.batchDeleteTitle'), {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           dangerouslyUseHTMLString: false
         })
@@ -800,18 +799,18 @@ export default {
         })
 
         if (response.data.success) {
-          ElMessage.success(`成功删除 ${accessions.length} 个 Accession`)
+          ElMessage.success(t('page.admin.recordsDeleted', { count: accessions.length }))
           selectedRows.value = [] // 清空选择
           loadData()
           loadAllAccessions() // 重新加载Accession选项
         } else {
-          ElMessage.error(response.data.message || '批量删除失败')
+          ElMessage.error(t('page.admin.batchDeleteFailed'))
         }
 
       } catch (error) {
         if (error !== 'cancel') {
           console.error('批量删除失败:', error)
-          ElMessage.error('批量删除失败')
+          ElMessage.error(t('page.admin.batchDeleteFailed'))
         }
       }
     }
@@ -823,14 +822,14 @@ export default {
         const response = await axios.post('/admin/rescan/')
 
         if (response.data.success) {
-          ElMessage.success(response.data.message)
+          ElMessage.success(t('messages.dataRefreshed'))
           loadData()
         } else {
-          ElMessage.error(response.data.message)
+          ElMessage.error(t('page.admin.dataUpdateFailed'))
         }
       } catch (error) {
         console.error('更新数据失败:', error)
-        ElMessage.error('更新数据失败')
+        ElMessage.error(t('page.admin.dataUpdateFailed'))
       } finally {
         loading.value = false
       }
@@ -882,11 +881,11 @@ export default {
     const deleteRow = async (row) => {
       try {
         await ElMessageBox.confirm(
-          `确定要删除 Accession "${row.accession}" 吗？这将删除该条目的所有相关数据。`,
-          '确认删除',
+          t('page.admin.recordDeleteConfirm', { accession: row.accession }),
+          t('page.admin.deleteConfirmTitle'),
           {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
             type: 'warning'
           }
         )
@@ -894,14 +893,14 @@ export default {
         // 调用删除API
         await axios.delete(`/admin/data-management/accession/${row.accession}/delete/`)
         
-        ElMessage.success('删除成功')
+        ElMessage.success(t('page.admin.deleteSuccess'))
         loadData()
         loadAllAccessions() // 重新加载Accession选项
         
       } catch (error) {
         if (error !== 'cancel') {
           console.error('删除失败:', error)
-          ElMessage.error('删除失败')
+          ElMessage.error(t('page.admin.deleteFailed'))
         }
       }
     }
@@ -968,7 +967,7 @@ export default {
               })
             } catch (fileError) {
               console.error(`文件 ${frontendFileType} 上传失败:`, fileError)
-              ElMessage.warning(`文件 ${frontendFileType} 上传失败`)
+              ElMessage.warning(t('page.admin.fileOperationFailed', { type: frontendFileType }))
             }
           }
         }
@@ -1008,7 +1007,7 @@ export default {
           }
         }
 
-        ElMessage.success(editingRow.value ? '更新成功' : '新增成功')
+        ElMessage.success(editingRow.value ? t('page.admin.updateSuccess') : t('page.admin.createSuccess'))
         showAddDialog.value = false
         loadData()
         loadSubPopulationOptions() // 重新加载亚群选项
@@ -1016,7 +1015,7 @@ export default {
 
       } catch (error) {
         console.error('保存失败:', error)
-        ElMessage.error('保存失败')
+        ElMessage.error(t('page.admin.saveFailed'))
       } finally {
         saving.value = false
       }
@@ -1143,14 +1142,14 @@ export default {
           })
 
           if (response.data.success) {
-            ElMessage.success(`${fileType} 文件上传成功`)
+            ElMessage.success(t('page.admin.fileUploadSuccess', { name: file.name }))
             loadData() // 刷新数据
           } else {
-            ElMessage.error(response.data.message || '上传失败')
+            ElMessage.error(t('page.admin.fileUploadFailed', { name: file.name }))
           }
         } catch (error) {
           console.error('文件上传失败:', error)
-          ElMessage.error('文件上传失败')
+          ElMessage.error(t('page.admin.fileUploadFailed', { name: file.name }))
         }
       }
 
@@ -1190,18 +1189,18 @@ export default {
 
       } catch (error) {
         console.error('文件下载失败:', error)
-        ElMessage.error('文件下载失败')
+        ElMessage.error(t('page.admin.fileDownloadFailed'))
       }
     }
 
     const deleteFile = async (accession, fileType) => {
       try {
         await ElMessageBox.confirm(
-          `确定要删除 ${accession} 的 ${fileType} 文件吗？`,
-          '确认删除',
+          t('page.admin.fileDeleteConfirm', { accession, type: fileType }),
+          t('page.admin.deleteConfirmTitle'),
           {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
             type: 'warning'
           }
         )
@@ -1209,16 +1208,16 @@ export default {
         const response = await axios.delete(`/admin/data-management/delete-file/${accession}/${fileType}/`)
 
         if (response.data.success) {
-          ElMessage.success(`${fileType} 文件删除成功`)
+          ElMessage.success(t('page.admin.fileDeleted', { type: fileType }))
           loadData() // 刷新数据
         } else {
-          ElMessage.error(response.data.message || '删除失败')
+          ElMessage.error(t('page.admin.deleteFailed'))
         }
 
       } catch (error) {
         if (error !== 'cancel') {
           console.error('文件删除失败:', error)
-          ElMessage.error('文件删除失败')
+          ElMessage.error(t('page.admin.fileOperationFailed', { type: fileType }))
         }
       }
     }
@@ -1253,6 +1252,7 @@ export default {
       handleAccessionChange,
       handleAccessionClear,
       handleSubPopulationFilterChange,
+      handleSubPopulationChange,
       resetFilters,
       // 多选相关
       selectedRows,

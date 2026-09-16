@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 
@@ -308,6 +309,37 @@ class Assembly(models.Model):
     assembly_accession = models.CharField(max_length=255, blank=True, null=True)
     species_code = models.CharField(max_length=100, blank=True, null=True)
     assembly_level = models.CharField(max_length=100, blank=True, null=True)
+    biosample_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    assembly_type = models.CharField(max_length=100, blank=True, null=True)
+    assembly_method = models.CharField(max_length=255, blank=True, null=True)
+    sequencing_technology = models.CharField(max_length=255, blank=True, null=True)
+    genome_size = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    chromosome_count = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    contig_count = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    n50 = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    gc_content = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
     source_database = models.CharField(max_length=100, blank=True, null=True)
     external_project = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     file_name = models.CharField(max_length=500, blank=True, null=True)

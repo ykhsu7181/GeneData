@@ -1,9 +1,9 @@
 <template>
   <div class="core-variable-blocks-view">
     <div class="page-header">
-      <h2 class="title">Core&Variable Blocks</h2>
+      <h2 class="title">{{ $t('page.coreVariableBlocks.title') }}</h2>
       <div class="header-actions">
-        <el-tooltip content="Refresh data" placement="top">
+        <el-tooltip :content="$t('page.coreVariableBlocks.refreshData')" placement="top">
           <el-button circle size="small" @click="refreshPage" :loading="loadingPage">
             <el-icon><Refresh /></el-icon>
           </el-button>
@@ -21,7 +21,7 @@
             remote
             clearable
             class="search-select"
-            placeholder="Search accession"
+            :placeholder="$t('page.coreVariableBlocks.searchPlaceholder')"
             :remote-method="searchOrganisms"
             :loading="loadingOrganisms"
             @change="handleOrganismChange"
@@ -31,13 +31,13 @@
         </div>
 
         <div class="chromosome-wrapper">
-          <span class="field-label">Chromosome</span>
+          <span class="field-label">{{ $t('page.coreVariableBlocks.chromosome') }}</span>
           <el-select
             v-model="selectedChromosome"
             clearable
             filterable
             class="chromosome-select"
-            placeholder="Select chromosome"
+            :placeholder="$t('page.coreVariableBlocks.selectChromosome')"
             :loading="loadingChromosomes"
             @change="handleChromosomeChange"
           >
@@ -53,7 +53,7 @@
       </div>
 
       <div v-else-if="!selectedOrganism" class="empty-state">
-        <el-empty description="Select an accession to explore core and variable block summaries" />
+        <el-empty :description="$t('page.coreVariableBlocks.selectOrganismPrompt')" />
       </div>
 
       <div v-else-if="errorMessage" class="empty-state">
@@ -66,7 +66,7 @@
             <div>
               <h3 class="panel-title">{{ accessionDetail?.accession || selectedOrganism }}</h3>
             </div>
-            <span class="panel-badge">{{ coreBlocksFile ? 'Core Ready' : 'Core Missing' }}</span>
+            <span class="panel-badge">{{ coreBlocksFile ? $t('page.coreVariableBlocks.coreReady') : $t('page.coreVariableBlocks.coreMissing') }}</span>
           </div>
 
           <div class="summary-grid">
@@ -79,7 +79,7 @@
               <div class="summary-value">{{ currentAssembly?.name || '-' }}</div>
             </div>
             <div class="summary-item">
-              <div class="info-label">Chromosome</div>
+              <div class="info-label">{{ $t('page.coreVariableBlocks.chromosome') }}</div>
               <div class="summary-value">{{ selectedChromosome || '-' }}</div>
             </div>
             <div class="summary-item">
@@ -87,13 +87,13 @@
               <div class="summary-value">{{ accessionDetail?.sub_population || '-' }}</div>
             </div>
             <div class="summary-item">
-              <div class="info-label">Status</div>
-              <div class="summary-value">{{ coreBlocksFile ? 'Ready' : 'Missing' }}</div>
+              <div class="info-label">{{ $t('page.coreVariableBlocks.status') }}</div>
+              <div class="summary-value">{{ coreBlocksFile ? $t('page.coreVariableBlocks.ready') : $t('page.coreVariableBlocks.missing') }}</div>
             </div>
             <div class="summary-item summary-item-wide">
-              <div class="info-label">Source</div>
-              <div class="summary-value summary-value-ellipsis" :title="coreBlocksFile?.name || 'No related file'">
-                {{ coreBlocksFile?.name || 'No related file' }}
+              <div class="info-label">{{ $t('page.coreVariableBlocks.source') }}</div>
+              <div class="summary-value summary-value-ellipsis" :title="coreBlocksFile?.name || $t('page.coreVariableBlocks.noRelatedFile')">
+                {{ coreBlocksFile?.name || $t('page.coreVariableBlocks.noRelatedFile') }}
               </div>
             </div>
           </div>
@@ -102,37 +102,37 @@
         <div class="overview-grid">
           <div class="overview-panel">
             <div class="panel-header">
-              <h3 class="panel-title">Core Blocks Overview</h3>
-              <span class="panel-tip">{{ selectedChromosome || 'Select a chromosome to inspect core blocks' }}</span>
+              <h3 class="panel-title">{{ $t('page.coreVariableBlocks.coreOverview') }}</h3>
+              <span class="panel-tip">{{ selectedChromosome || $t('page.coreVariableBlocks.selectChromosomeTip') }}</span>
             </div>
 
             <div class="stats-list">
               <div class="stat-card">
-                <div class="stat-label">Block Count</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.blockCount') }}</div>
                 <div class="stat-value">{{ stats.blockCount }}</div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Total Length</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.totalLength') }}</div>
                 <div class="stat-value">{{ formatNumber(stats.totalLength) }}</div>
                 <div class="stat-subvalue">{{ totalLengthCoverageText }}</div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Coverage %</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.coverage') }}</div>
                 <div class="stat-value">{{ totalLengthCoverageValue }}</div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Longest Block</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.longestBlock') }}</div>
                 <div class="stat-value">{{ formatNumber(stats.maxLength) }}</div>
               </div>
             </div>
 
             <div v-if="!coreBlocksFile" class="warning-panel overview-warning">
-              <div class="warning-title">Core blocks unavailable</div>
-              <div class="warning-text">No core block source file is available for the current assembly.</div>
+              <div class="warning-title">{{ $t('page.coreVariableBlocks.coreUnavailable') }}</div>
+              <div class="warning-text">{{ $t('page.coreVariableBlocks.noCoreFile') }}</div>
             </div>
-            <div v-else-if="!selectedChromosome" class="inline-empty">Select a chromosome to view the core blocks overview.</div>
+            <div v-else-if="!selectedChromosome" class="inline-empty">{{ $t('page.coreVariableBlocks.selectCoreChromosome') }}</div>
             <div v-else-if="loadingBlocks" class="loading-inline"><el-skeleton :rows="5" animated /></div>
-            <div v-else-if="!coreBlocksData.length" class="inline-empty">No core block data is available for the current chromosome.</div>
+            <div v-else-if="!coreBlocksData.length" class="inline-empty">{{ $t('page.coreVariableBlocks.noCoreData') }}</div>
             <div v-else class="visual-content">
               <div class="chromosome-scale">
                 <div
@@ -145,7 +145,7 @@
               </div>
               <div class="range-hints"><span>0</span><span>{{ formatNumber(scaleMax) }}</span></div>
               <div class="top-blocks">
-                <div class="subsection-title">Top Core Blocks</div>
+                <div class="subsection-title">{{ $t('page.coreVariableBlocks.topCore') }}</div>
                 <div
                   v-for="item in longestBlocks"
                   :key="`${item.seqid}-${item.start}-${item.end}`"
@@ -165,44 +165,44 @@
 
           <div class="overview-panel overview-panel-variable">
             <div class="panel-header">
-              <h3 class="panel-title">Variable Blocks Overview</h3>
+              <h3 class="panel-title">{{ $t('page.coreVariableBlocks.variableOverview') }}</h3>
               <span class="panel-badge panel-badge-muted">
-                {{ variableBlocksFile ? 'Variable Ready' : 'Variable Missing' }}
+                {{ variableBlocksFile ? $t('page.coreVariableBlocks.variableReady') : $t('page.coreVariableBlocks.variableMissing') }}
               </span>
             </div>
 
             <div class="stats-list variable-stats-list">
               <div class="stat-card">
-                <div class="stat-label">Block Count</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.blockCount') }}</div>
                 <div class="stat-value">{{ variableStats.blockCount }}</div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Total Length</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.totalLength') }}</div>
                 <div class="stat-value">{{ formatNumber(variableStats.totalLength) }}</div>
                 <div class="stat-subvalue">{{ variableTotalLengthCoverageText }}</div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Coverage %</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.coverage') }}</div>
                 <div class="stat-value">{{ variableTotalLengthCoverageValue }}</div>
               </div>
               <div class="stat-card">
-                <div class="stat-label">Longest Block</div>
+                <div class="stat-label">{{ $t('page.coreVariableBlocks.longestBlock') }}</div>
                 <div class="stat-value">{{ formatNumber(variableStats.maxLength) }}</div>
               </div>
             </div>
 
             <div v-if="!variableBlocksFile" class="warning-panel overview-warning variable-warning">
-              <div class="warning-title">Variable blocks unavailable</div>
-              <div class="warning-text">No variable block source file is available for the current assembly.</div>
+              <div class="warning-title">{{ $t('page.coreVariableBlocks.variableUnavailable') }}</div>
+              <div class="warning-text">{{ $t('page.coreVariableBlocks.noVariableFile') }}</div>
             </div>
             <div v-else-if="!selectedChromosome" class="inline-empty variable-inline-empty">
-              Select a chromosome to view the variable blocks overview.
+              {{ $t('page.coreVariableBlocks.selectVariableChromosome') }}
             </div>
             <div v-else-if="loadingVariableBlocks" class="loading-inline">
               <el-skeleton :rows="5" animated />
             </div>
             <div v-else-if="!variableBlocksData.length" class="inline-empty variable-inline-empty">
-              No variable block data is available for the current chromosome.
+              {{ $t('page.coreVariableBlocks.noVariableData') }}
             </div>
             <div v-else class="visual-content">
               <div class="chromosome-scale variable-scale">
@@ -216,7 +216,7 @@
               </div>
               <div class="range-hints"><span>0</span><span>{{ formatNumber(variableScaleMax) }}</span></div>
               <div class="top-blocks variable-top-blocks">
-                <div class="subsection-title">Top Variable Blocks</div>
+                <div class="subsection-title">{{ $t('page.coreVariableBlocks.topVariable') }}</div>
                 <div
                   v-for="item in topVariableBlocks"
                   :key="`${item.seqid}-${item.start}-${item.end}`"
@@ -237,11 +237,11 @@
 
         <div class="details-panel">
           <el-tabs v-model="activeDetailTab" class="details-tabs">
-            <el-tab-pane label="Core Details" name="core">
+            <el-tab-pane :label="$t('page.coreVariableBlocks.coreDetails')" name="core">
               <div class="table-panel">
                 <div class="panel-header">
-                  <h3 class="panel-title">Core Blocks Table</h3>
-                  <span class="panel-tip">{{ coreBlocksData.length }} records</span>
+                  <h3 class="panel-title">{{ $t('page.coreVariableBlocks.coreTable') }}</h3>
+                  <span class="panel-tip">{{ $t('page.coreVariableBlocks.records', { count: coreBlocksData.length }) }}</span>
                 </div>
                 <el-table
                   :data="coreBlocksData"
@@ -250,50 +250,50 @@
                   :row-class-name="getTableRowClassName"
                   :header-cell-style="{ background: '#f0f5ff', color: '#1a56db', fontWeight: 'bold' }"
                 >
-                  <el-table-column prop="seqid" label="Chromosome" min-width="140" />
-                  <el-table-column prop="start" label="Start" min-width="140">
+                  <el-table-column prop="seqid" :label="$t('page.coreVariableBlocks.chromosome')" min-width="140" />
+                  <el-table-column prop="start" :label="$t('page.annotation.start')" min-width="140">
                     <template #default="scope">{{ formatNumber(scope.row.start) }}</template>
                   </el-table-column>
-                  <el-table-column prop="end" label="End" min-width="140">
+                  <el-table-column prop="end" :label="$t('page.annotation.end')" min-width="140">
                     <template #default="scope">{{ formatNumber(scope.row.end) }}</template>
                   </el-table-column>
-                  <el-table-column prop="length" label="Length" min-width="140">
+                  <el-table-column prop="length" :label="$t('page.annotation.length')" min-width="140">
                     <template #default="scope">{{ formatNumber(scope.row.length) }}</template>
                   </el-table-column>
                 </el-table>
               </div>
             </el-tab-pane>
-            <el-tab-pane label="Variable Details" name="variable">
+            <el-tab-pane :label="$t('page.coreVariableBlocks.variableDetails')" name="variable">
               <div class="table-panel">
                 <div class="panel-header">
-                  <h3 class="panel-title">Variable Blocks Table</h3>
-                  <span class="panel-tip">{{ variableBlocksData.length }} records</span>
+                  <h3 class="panel-title">{{ $t('page.coreVariableBlocks.variableTable') }}</h3>
+                  <span class="panel-tip">{{ $t('page.coreVariableBlocks.records', { count: variableBlocksData.length }) }}</span>
                 </div>
                 <div class="detail-summary-strip">
                   <div class="detail-summary-item">
-                    <span class="detail-summary-label">Count</span>
+                    <span class="detail-summary-label">{{ $t('page.coreVariableBlocks.count') }}</span>
                     <span class="detail-summary-value">{{ variableStats.blockCount }}</span>
                   </div>
                   <div class="detail-summary-item">
-                    <span class="detail-summary-label">Total Length</span>
+                    <span class="detail-summary-label">{{ $t('page.coreVariableBlocks.totalLength') }}</span>
                     <span class="detail-summary-value">{{ formatNumber(variableStats.totalLength) }}</span>
                   </div>
                   <div class="detail-summary-item">
-                    <span class="detail-summary-label">Coverage</span>
+                    <span class="detail-summary-label">{{ $t('page.coreVariableBlocks.coverage') }}</span>
                     <span class="detail-summary-value">{{ variableTotalLengthCoverageValue }}</span>
                   </div>
                   <div class="detail-summary-item">
-                    <span class="detail-summary-label">Longest</span>
+                    <span class="detail-summary-label">{{ $t('page.coreVariableBlocks.longest') }}</span>
                     <span class="detail-summary-value">{{ formatNumber(variableStats.maxLength) }}</span>
                   </div>
                 </div>
                 <p class="variable-placeholder-text variable-detail-note">
-                  Matrix comparison will be added in the next stage. This first pass focuses on summary, distribution, and block details.
+                  {{ $t('page.coreVariableBlocks.matrixFuture') }}
                 </p>
-                <div v-if="!variableBlocksFile" class="inline-empty variable-inline-empty">No variable block file is available for the current assembly.</div>
-                <div v-else-if="!selectedChromosome" class="inline-empty variable-inline-empty">Select a chromosome to inspect variable block details.</div>
+                <div v-if="!variableBlocksFile" class="inline-empty variable-inline-empty">{{ $t('page.coreVariableBlocks.noVariableFile') }}</div>
+                <div v-else-if="!selectedChromosome" class="inline-empty variable-inline-empty">{{ $t('page.coreVariableBlocks.selectVariableChromosome') }}</div>
                 <div v-else-if="loadingVariableBlocks" class="loading-inline"><el-skeleton :rows="5" animated /></div>
-                <div v-else-if="!variableBlocksData.length" class="inline-empty variable-inline-empty">No variable block details are available for the current chromosome.</div>
+                <div v-else-if="!variableBlocksData.length" class="inline-empty variable-inline-empty">{{ $t('page.coreVariableBlocks.noVariableData') }}</div>
                 <el-table
                   v-else
                   :data="variableBlocksData"
@@ -302,14 +302,14 @@
                   :row-class-name="getVariableTableRowClassName"
                   :header-cell-style="{ background: '#fff4ee', color: '#ea580c', fontWeight: 'bold' }"
                 >
-                  <el-table-column prop="seqid" label="Chromosome" min-width="140" />
-                  <el-table-column prop="start" label="Start" min-width="140">
+                  <el-table-column prop="seqid" :label="$t('page.coreVariableBlocks.chromosome')" min-width="140" />
+                  <el-table-column prop="start" :label="$t('page.annotation.start')" min-width="140">
                     <template #default="scope">{{ formatNumber(scope.row.start) }}</template>
                   </el-table-column>
-                  <el-table-column prop="end" label="End" min-width="140">
+                  <el-table-column prop="end" :label="$t('page.annotation.end')" min-width="140">
                     <template #default="scope">{{ formatNumber(scope.row.end) }}</template>
                   </el-table-column>
-                  <el-table-column prop="length" label="Length" min-width="140">
+                  <el-table-column prop="length" :label="$t('page.annotation.length')" min-width="140">
                     <template #default="scope">{{ formatNumber(scope.row.length) }}</template>
                   </el-table-column>
                 </el-table>
@@ -328,11 +328,13 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import { Refresh, Search } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'CoreVariableBlocks',
   components: { Refresh, Search },
   setup() {
+    const { t } = useI18n();
     const route = useRoute();
     const router = useRouter();
     const loadingPage = ref(false);
@@ -511,7 +513,7 @@ export default {
         organismOptions.value = allOrganisms.value;
       } catch (error) {
         console.error('Failed to load accessions:', error);
-        ElMessage.error('Failed to load accessions');
+        ElMessage.error(t('page.coreVariableBlocks.loadAccessionsFailed'));
       } finally {
         loadingOrganisms.value = false;
       }
@@ -567,12 +569,12 @@ export default {
           if (chromosomes.length > 0) chromosomeSource.value = 'coreBlocks';
         }
         chromosomeOptions.value = chromosomes || [];
-        if (!chromosomeOptions.value.length) ElMessage.warning('No chromosome options were found');
+        if (!chromosomeOptions.value.length) ElMessage.warning(t('page.coreVariableBlocks.noChromosomes'));
       } catch (error) {
         console.error('Failed to load chromosomes:', error);
         chromosomeOptions.value = [];
         chromosomeSource.value = '';
-        ElMessage.error('Failed to load chromosomes');
+        ElMessage.error(t('page.coreVariableBlocks.loadChromosomesFailed'));
       } finally {
         loadingChromosomes.value = false;
       }
@@ -599,7 +601,7 @@ export default {
       } catch (error) {
         console.error('Failed to load coreBlocks:', error);
         coreBlocksData.value = [];
-        ElMessage.error('Failed to load coreBlocks');
+        ElMessage.error(t('page.coreVariableBlocks.loadBlocksFailed'));
       } finally {
         loadingBlocks.value = false;
       }
@@ -665,7 +667,7 @@ export default {
         console.error('Failed to load Core&Variable Blocks page:', error);
         clearPageData();
         errorMessage.value = 'Failed to load Core&Variable Blocks data';
-        ElMessage.error('Failed to load Core&Variable Blocks data');
+        ElMessage.error(t('page.coreVariableBlocks.loadPageFailed'));
       } finally {
         loadingPage.value = false;
       }

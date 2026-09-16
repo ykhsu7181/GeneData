@@ -1,6 +1,8 @@
 from django.db import IntegrityError
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+
+from filemanager.urls import debug_urlpatterns
 from rest_framework.test import APITestCase
 
 from files.models import (
@@ -19,8 +21,11 @@ from files.models import (
 
 
 class ProjectRoutingSmokeTest(SimpleTestCase):
-    def test_debug_endpoint_route_exists(self):
-        self.assertEqual(reverse('debug'), '/gd/api/debug/')
+    @override_settings(DEBUG=True)
+    def test_debug_endpoint_route_exists_in_debug_mode(self):
+        patterns = debug_urlpatterns()
+        self.assertEqual(len(patterns), 1)
+        self.assertEqual(str(patterns[0].pattern), 'gd/api/debug/')
 
 
 class GenomeFileModelTestCase(TestCase):

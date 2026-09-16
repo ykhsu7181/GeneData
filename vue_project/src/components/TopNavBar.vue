@@ -1,83 +1,98 @@
 <template>
   <header class="top-nav">
     <div class="top-nav-inner">
-      <div class="brand" @click="goTo('/dashboard')">
-        <div class="brand-mark">
-          <span class="brand-mark-core">GD</span>
-        </div>
+      <button class="brand" type="button" :aria-label="$t('common.goHome')" @click="goTo('/dashboard')">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <defs>
+              <linearGradient id="top-nav-leaf-gradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#0c9b73" />
+                <stop offset="1" stop-color="#1e6fe0" />
+              </linearGradient>
+            </defs>
+            <path d="M51 7C33 8 17 16 11 31c-5 12-1 22 7 27 8-22 20-34 33-51Z" fill="url(#top-nav-leaf-gradient)" />
+            <path d="M16 52C24 35 34 24 48 14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+          </svg>
+        </span>
         <div class="brand-copy">
-          <strong>基因数据仓库系统</strong>
-          <span>Gene Data Warehouse</span>
+          <strong>GeneData</strong>
+          <span>{{ $t('page.home.subtitle') }}</span>
         </div>
-      </div>
+      </button>
 
       <nav class="nav-links" aria-label="Primary navigation">
-        <button
-          v-for="item in primaryNavItems"
-          :key="item.path"
-          :class="['nav-link', { 'is-active': isGroupActive(item.groupKey) }]"
-          @click="goTo(item.path)"
-        >
-          <span class="nav-icon">
-            <el-icon><component :is="item.icon" /></el-icon>
-          </span>
-          <span>{{ $t(item.labelKey) }}</span>
-        </button>
-
-        <el-dropdown trigger="hover" class="nav-dropdown" popper-class="top-nav-dropdown">
-          <div :class="['nav-group-trigger', { 'is-active': isGroupActive('dataOverview') }]">
-            <button class="nav-link nav-link-main" @click.stop="goTo(topNavGroups.dataOverview.path)">
-              <span class="nav-icon">
-                <el-icon><DataAnalysis /></el-icon>
-              </span>
-              <span>{{ $t(topNavGroups.dataOverview.labelKey) }}</span>
-            </button>
-            <button class="nav-link nav-link-caret" @click.stop>
-              <span class="nav-caret">
-                <el-icon><ArrowDown /></el-icon>
-              </span>
-            </button>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                v-for="item in topNavGroups.dataOverview.children"
-                :key="item.path"
-                @click="goTo(item.path)"
-              >
-                {{ $t(item.labelKey) }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-
-        <el-dropdown trigger="hover" class="nav-dropdown" popper-class="top-nav-dropdown">
-          <button :class="['nav-link', 'nav-link-tools', { 'is-active': isGroupActive('tools') }]" @click.stop>
-            <span class="nav-icon">
-              <el-icon><Tools /></el-icon>
-            </span>
-            <span>{{ $t(topNavGroups.tools.labelKey) }}</span>
-            <span class="nav-caret">
-              <el-icon><ArrowDown /></el-icon>
-            </span>
+        <template v-for="item in topNavItems" :key="item.key">
+          <button
+            v-if="!item.children"
+            type="button"
+            :class="['nav-link', { 'is-active': isGroupActive(item.key) }]"
+            @click="goTo(item.path)"
+          >
+            {{ $t(item.labelKey) }}
           </button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                v-for="item in topNavGroups.tools.children"
-                :key="item.path"
-                @click="goTo(item.path)"
-              >
+
+          <el-dropdown
+            v-else-if="item.path"
+            trigger="click"
+            class="nav-dropdown"
+            popper-class="top-nav-dropdown"
+            @command="goTo"
+            @visible-change="setMenuOpen(item.key, $event)"
+          >
+            <div :class="['nav-group-trigger', { 'is-active': isGroupActive(item.key) }]">
+              <button type="button" class="nav-link nav-link-main" @click.stop="goTo(item.path)">
                 {{ $t(item.labelKey) }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-caret"
+                aria-haspopup="menu"
+                :aria-expanded="String(isMenuOpen(item.key))"
+                :aria-label="`${$t(item.labelKey)} menu`"
+              >
+                <span class="nav-caret"><el-icon><ArrowDown /></el-icon></span>
+              </button>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="child in item.children" :key="child.path" :command="child.path">
+                  {{ $t(child.labelKey) }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
+          <el-dropdown
+            v-else
+            trigger="click"
+            class="nav-dropdown"
+            popper-class="top-nav-dropdown"
+            @command="goTo"
+            @visible-change="setMenuOpen(item.key, $event)"
+          >
+            <button
+              type="button"
+              :class="['nav-link', 'nav-link-menu', { 'is-active': isGroupActive(item.key) }]"
+              aria-haspopup="menu"
+              :aria-expanded="String(isMenuOpen(item.key))"
+            >
+              <span>{{ $t(item.labelKey) }}</span>
+              <span class="nav-caret"><el-icon><ArrowDown /></el-icon></span>
+            </button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="child in item.children" :key="child.path" :command="child.path">
+                  {{ $t(child.labelKey) }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </template>
       </nav>
 
       <div class="nav-actions">
         <el-dropdown @command="emitLanguageChange">
-          <button class="action-button action-language">
+          <button type="button" class="action-button action-language">
             <el-icon><Platform /></el-icon>
             <span>{{ currentLanguageLabel }}</span>
           </button>
@@ -94,7 +109,7 @@
           <span>{{ $t('common.currentUser') }}: root</span>
         </span>
 
-        <button class="logout-button" @click="$emit('logout')">
+        <button type="button" class="logout-button" @click="$emit('logout')">
           <el-icon><SwitchButton /></el-icon>
           <span>{{ $t('common.logout') }}</span>
         </button>
@@ -104,28 +119,22 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDown,
-  CollectionTag,
-  DataAnalysis,
-  House,
   Platform,
   SwitchButton,
-  Tools,
   User
 } from '@element-plus/icons-vue'
-import { getTopNavActiveGroup, topNavGroups } from '../config/topNavConfig.mjs'
+import { getTopNavActiveGroup, topNavItems } from '../config/topNavConfig.mjs'
 
 export default {
   name: 'TopNavBar',
   components: {
     ArrowDown,
-    DataAnalysis,
     Platform,
     SwitchButton,
-    Tools,
     User
   },
   props: {
@@ -139,13 +148,9 @@ export default {
     const route = useRoute()
     const router = useRouter()
 
-    const primaryNavItems = [
-      { groupKey: 'home', labelKey: 'nav.home', path: '/dashboard', icon: House },
-      { groupKey: 'accession', labelKey: 'nav.accession', path: '/accession-card', icon: CollectionTag }
-    ]
-
     const currentLanguageLabel = computed(() => (props.currentLanguage === 'zh' ? '中文' : 'English'))
     const activeGroupKey = computed(() => getTopNavActiveGroup(route.path))
+    const openMenus = ref({})
 
     const isGroupActive = (groupKey) => activeGroupKey.value === groupKey
     const goTo = (path) => {
@@ -154,12 +159,17 @@ export default {
       }
     }
     const emitLanguageChange = (language) => emit('language-change', language)
+    const setMenuOpen = (key, visible) => {
+      openMenus.value = { ...openMenus.value, [key]: visible }
+    }
+    const isMenuOpen = (key) => Boolean(openMenus.value[key])
 
     return {
-      primaryNavItems,
-      topNavGroups,
+      topNavItems,
       currentLanguageLabel,
       isGroupActive,
+      isMenuOpen,
+      setMenuOpen,
       goTo,
       emitLanguageChange
     }
@@ -172,9 +182,11 @@ export default {
   position: sticky;
   top: 0;
   z-index: 120;
-  padding: 0 18px;
-  background: linear-gradient(180deg, rgba(4, 28, 70, 0.985), rgba(7, 34, 82, 0.965));
-  box-shadow: 0 12px 28px rgba(7, 24, 58, 0.26);
+  padding: 0 22px;
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid #e2ebf4;
+  box-shadow: 0 8px 24px rgba(22, 55, 94, 0.06);
+  backdrop-filter: blur(14px);
 }
 
 .top-nav::after {
@@ -182,17 +194,17 @@ export default {
   position: absolute;
   inset: auto 0 0;
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(22, 119, 232, 0.08);
 }
 
 .top-nav-inner {
-  width: min(1680px, 100%);
+  width: min(1400px, 100%);
   margin: 0 auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
-  min-height: 78px;
+  min-height: 76px;
 }
 
 .brand {
@@ -200,52 +212,54 @@ export default {
   align-items: center;
   gap: 14px;
   min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
 .brand-mark {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #2f7cf6 0%, #1e40af 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
 }
 
-.brand-mark-core {
-  color: #ffffff;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+.brand-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .brand-copy {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  color: #ffffff;
+  color: #0c2346;
 }
 
 .brand-copy strong {
-  font-size: 15px;
-  line-height: 1.2;
-  letter-spacing: 0.04em;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -0.035em;
 }
 
 .brand-copy span {
   margin-top: 3px;
   font-size: 11px;
-  color: rgba(226, 232, 240, 0.76);
-  letter-spacing: 0.08em;
+  color: #506887;
+  letter-spacing: 0.01em;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -258,11 +272,13 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 11px 14px;
+  position: relative;
+  min-height: 44px;
+  padding: 11px 13px;
   border: none;
-  border-radius: 14px;
+  border-radius: 8px;
   background: transparent;
-  color: rgba(226, 232, 240, 0.9);
+  color: #29415f;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -271,14 +287,25 @@ export default {
 }
 
 .nav-link:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
+  color: #1268cc;
+  background: #f2f7fd;
 }
 
 .nav-link.is-active {
-  color: #ffffff;
-  background: linear-gradient(135deg, #2d68e3 0%, #1d4ed8 100%);
-  box-shadow: 0 10px 20px rgba(15, 76, 197, 0.28);
+  color: #0d65d1;
+  background: transparent;
+  box-shadow: none;
+}
+
+.nav-link.is-active::after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  right: 13px;
+  bottom: -16px;
+  height: 2px;
+  border-radius: 2px;
+  background: #1677e8;
 }
 
 .nav-dropdown,
@@ -288,19 +315,28 @@ export default {
 }
 
 .nav-group-trigger {
-  border-radius: 14px;
+  border-radius: 8px;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.nav-group-trigger.is-active,
-.nav-link-tools.is-active {
-  background: linear-gradient(135deg, #2d68e3 0%, #1d4ed8 100%);
-  box-shadow: 0 10px 20px rgba(15, 76, 197, 0.28);
+.nav-group-trigger.is-active {
+  background: transparent;
+  box-shadow: none;
 }
 
-.nav-group-trigger.is-active .nav-link,
-.nav-link-tools.is-active {
-  color: #ffffff;
+.nav-group-trigger.is-active .nav-link {
+  color: #0d65d1;
+}
+
+.nav-group-trigger.is-active .nav-link-main::after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  right: 0;
+  bottom: -16px;
+  height: 2px;
+  border-radius: 2px;
+  background: #1677e8;
 }
 
 .nav-link-main {
@@ -316,22 +352,12 @@ export default {
 }
 
 .nav-link-caret,
-.nav-link-tools {
+.nav-link-menu {
   gap: 10px;
 }
 
-.nav-link-tools {
-  min-width: 106px;
+.nav-link-menu {
   justify-content: center;
-}
-
-.nav-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  font-size: 16px;
 }
 
 .nav-caret {
@@ -354,8 +380,9 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 14px;
-  border-radius: 12px;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-radius: 9px;
   font-size: 13px;
   font-weight: 700;
 }
@@ -367,8 +394,9 @@ export default {
 }
 
 .action-button {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  border: 1px solid #d3e0ed;
+  background: #ffffff;
+  color: #29415f;
 }
 
 .action-language {
@@ -377,31 +405,48 @@ export default {
 }
 
 .user-chip {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(241, 245, 249, 0.92);
+  background: #f4f8fc;
+  color: #526b87;
   white-space: nowrap;
 }
 
 .logout-button {
-  background: rgba(187, 247, 208, 0.16);
-  color: #f8fafc;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
+  color: #315170;
+  border: 1px solid #d3e0ed;
 }
 
-@media (max-width: 1360px) {
+.brand:focus-visible,
+.nav-link:focus-visible,
+.action-button:focus-visible,
+.logout-button:focus-visible {
+  outline: 3px solid rgba(22, 119, 232, 0.32);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1280px) {
   .top-nav-inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
     padding: 12px 0;
-    gap: 14px;
+    gap: 10px 20px;
   }
 
   .nav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
     justify-content: flex-start;
   }
 
   .nav-actions {
-    justify-content: flex-start;
-    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .nav-link.is-active::after {
+    bottom: -8px;
+  }
+
+  .nav-group-trigger.is-active .nav-link-main::after {
+    bottom: -8px;
   }
 }
 
@@ -411,11 +456,23 @@ export default {
   }
 
   .top-nav-inner {
-    min-height: 72px;
+    grid-template-columns: 1fr auto;
+    min-height: 68px;
   }
 
   .brand-copy strong {
-    font-size: 14px;
+    font-size: 21px;
+  }
+
+  .brand-copy span,
+  .user-chip,
+  .action-button span,
+  .logout-button span {
+    display: none;
+  }
+
+  .action-language {
+    min-width: 40px;
   }
 
   .nav-link {

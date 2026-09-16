@@ -32,7 +32,7 @@ class IngestionFileParserTestCase(SimpleTestCase):
 
     def test_registry_contains_phase_1a_roles(self):
         expected = {
-            "genome", "annotation", "centromere", "codon", "coreBlocks",
+            "genome", "genome_fasta", "annotation", "centromere", "codon", "coreBlocks",
             "variableBlocks", "miRNA", "tRNA", "rRNA", "TEs",
             "transcriptome.all", "transcriptome.root", "transcriptome.stem",
             "transcriptome.leaf", "transcriptome.panicles", "transcriptome.shoot",

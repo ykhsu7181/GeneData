@@ -1,6 +1,6 @@
 <template>
   <div class="accession-workbench">
-    <section class="accession-search-panel">
+    <section v-if="!routeAccession" class="accession-search-panel">
       <div class="search-grid">
         <div class="search-wrapper">
           <el-icon class="search-icon"><Search /></el-icon>
@@ -10,7 +10,7 @@
             remote
             clearable
             class="search-select"
-            placeholder="搜索 Accession / 品种 / 亚群，例如 IR64"
+            :placeholder="$t('page.accessionSearch.placeholder')"
             :remote-method="searchAccessions"
             :loading="loadingAccessions"
             @change="handleAccessionChange"
@@ -25,28 +25,28 @@
           </el-select>
         </div>
         <el-button class="search-button" type="primary" :disabled="!selectedAccession" @click="submitSelectedAccession">
-          搜索
+          {{ $t('common.search') }}
         </el-button>
-        <el-select v-model="speciesFilter" class="filter-select" placeholder="物种">
-          <el-option label="物种 全部" value="" />
-          <el-option label="水稻 Oryza sativa" value="ORYZA_SATIVA" />
+        <el-select v-model="speciesFilter" class="filter-select" :placeholder="$t('page.accessionSearch.species')">
+          <el-option :label="$t('page.accessionSearch.allSpecies')" value="" />
+          <el-option :label="$t('page.accessionSearch.rice')" value="ORYZA_SATIVA" />
         </el-select>
-        <el-select v-model="subPopulationFilter" class="filter-select" placeholder="亚群">
-          <el-option label="亚群 全部" value="" />
+        <el-select v-model="subPopulationFilter" class="filter-select" :placeholder="$t('page.accessionSearch.subPopulation')">
+          <el-option :label="$t('page.accessionSearch.allSubPopulations')" value="" />
           <el-option v-for="item in subPopulationOptions" :key="item" :label="item" :value="item" />
         </el-select>
-        <el-select v-model="locationFilter" class="filter-select" placeholder="地理位置">
-          <el-option label="地理位置 全部" value="" />
-          <el-option label="中国" value="中国" />
-          <el-option label="Unknown" value="Unknown" />
+        <el-select v-model="locationFilter" class="filter-select" :placeholder="$t('page.accessionSearch.location')">
+          <el-option :label="$t('page.accessionSearch.allLocations')" value="" />
+          <el-option :label="$t('page.accessionSearch.china')" value="中国" />
+          <el-option :label="$t('common.unknown')" value="Unknown" />
         </el-select>
         <el-button class="refresh-button" :loading="loadingAccessions" @click="refreshOptions">
-          刷新
+          {{ $t('common.refresh') }}
         </el-button>
       </div>
 
       <div class="quick-examples">
-        <span>示例：</span>
+        <span>{{ $t('common.examples') }}:</span>
         <button
           v-for="item in exampleAccessions"
           :key="item"
@@ -56,14 +56,14 @@
         >
           {{ item }}
         </button>
-        <span class="quick-hint">未选择时保留空状态，选择后在同页展开详情。</span>
+        <span class="quick-hint">{{ $t('page.accessionSearch.hint') }}</span>
       </div>
     </section>
 
     <AccessionDetailTableView v-if="routeAccession" embedded />
 
     <section v-else class="empty-card">
-      <el-empty description="请选择一个 accession 查看详情" :image-size="150" />
+      <el-empty :description="$t('page.accessionSearch.empty')" :image-size="150" />
     </section>
   </div>
 </template>
@@ -74,6 +74,7 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import { Search } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import AccessionDetailTableView from './AccessionDetailTableView.vue';
 
 const RECENT_ACCESSIONS_KEY = 'recent_accessions';
@@ -94,6 +95,7 @@ export default {
   setup() {
     const route = useRoute();
     const router = useRouter();
+    const { t } = useI18n();
     const loadingAccessions = ref(false);
     const selectedAccession = ref('');
     const accessionOptions = ref([]);
@@ -144,7 +146,7 @@ export default {
       } catch (error) {
         console.error('获取 accession 列表失败:', error);
         mergeOptions([]);
-        ElMessage.error('获取 accession 列表失败');
+        ElMessage.error(t('messages.accessionListFailed'));
       } finally {
         loadingAccessions.value = false;
       }

@@ -2,10 +2,10 @@
   <div class="data-overview-modern">
     <header class="overview-header">
       <div>
-        <p class="breadcrumb">首页 / 数据资源</p>
-        <h1>数据一览表</h1>
+        <p class="breadcrumb">{{ $t('page.dataOverview.breadcrumb') }}</p>
+        <h1>{{ $t('page.dataOverview.title') }}</h1>
       </div>
-      <button class="refresh-button" type="button" @click="fetchOverview">刷新</button>
+      <button class="refresh-button" type="button" @click="fetchOverview">{{ $t('common.refresh') }}</button>
     </header>
 
     <section class="filter-panel">
@@ -14,54 +14,54 @@
         <input
           v-model="searchKeyword"
           type="text"
-          placeholder="搜索 Accession / 物种 / 数据集 / 文件名"
+          :placeholder="$t('page.dataOverview.searchPrompt')"
           @keyup.enter="applyFilters"
         />
-        <button type="button" @click="applyFilters">搜索</button>
+        <button type="button" @click="applyFilters">{{ $t('common.search') }}</button>
       </div>
 
       <label class="filter-item">
-        <span>物种</span>
+        <span>{{ $t('page.dataOverview.filters.species') }}</span>
         <select v-model="selectedSpecies" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in filters.species" :key="item.key" :value="item.key">{{ item.label }}</option>
         </select>
       </label>
 
       <label class="filter-item">
-        <span>亚群</span>
+        <span>{{ $t('page.dataOverview.filters.subPopulation') }}</span>
         <select v-model="selectedSubPopulation" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in filters.sub_populations" :key="item" :value="item">{{ item }}</option>
         </select>
       </label>
 
       <label class="filter-item">
-        <span>数据类型</span>
+        <span>{{ $t('page.dataOverview.filters.dataType') }}</span>
         <select v-model="selectedCategory" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in dataCategories" :key="item.key" :value="item.key">{{ item.label }}</option>
         </select>
       </label>
 
       <label class="filter-item">
-        <span>文件角色</span>
+        <span>{{ $t('page.dataOverview.filters.fileRole') }}</span>
         <select v-model="selectedFileRole" @change="applyFilters">
-          <option value="">全部</option>
-          <option v-for="item in filters.file_roles" :key="item.key" :value="item.key">{{ item.label }}</option>
+          <option value="">{{ $t('common.all') }}</option>
+          <option v-for="item in filters.file_roles" :key="item.key" :value="item.key">{{ fileRoleLabel(item.key, item.label) }}</option>
         </select>
       </label>
 
       <label class="filter-item">
-        <span>地理位置</span>
+        <span>{{ $t('page.dataOverview.filters.location') }}</span>
         <select v-model="selectedLocation" @change="applyFilters">
-          <option value="">全部</option>
+          <option value="">{{ $t('common.all') }}</option>
           <option v-for="item in filters.locations" :key="item" :value="item">{{ item }}</option>
         </select>
       </label>
 
-      <button class="plain-button" type="button" @click="resetFilters">重置</button>
-      <button class="plain-button more" type="button">更多条件</button>
+      <button class="plain-button" type="button" @click="resetFilters">{{ $t('common.reset') }}</button>
+      <button class="plain-button more" type="button">{{ $t('common.moreFilters') }}</button>
     </section>
 
     <section class="summary-grid">
@@ -76,13 +76,13 @@
 
     <section class="view-switcher">
       <div class="tabs">
-        <button :class="{ active: activeView === 'matrix' }" type="button" @click="activeView = 'matrix'">矩阵视图</button>
-        <button :class="{ active: activeView === 'detail' }" type="button" @click="activeView = 'detail'">明细视图</button>
+        <button :class="{ active: activeView === 'matrix' }" type="button" @click="activeView = 'matrix'">{{ $t('page.dataOverview.matrixView') }}</button>
+        <button :class="{ active: activeView === 'detail' }" type="button" @click="activeView = 'detail'">{{ $t('page.dataOverview.detailView') }}</button>
       </div>
-      <button class="export-button" type="button">导出当前结果</button>
+      <button class="export-button" type="button">{{ $t('common.exportCurrent') }}</button>
     </section>
 
-    <section v-if="loading" class="loading-card">正在加载数据一览表...</section>
+    <section v-if="loading" class="loading-card">{{ $t('page.dataOverview.loadingOverview') }}</section>
 
     <section v-else-if="activeView === 'matrix'" class="table-card">
       <div class="table-scroll">
@@ -90,17 +90,16 @@
           <thead>
             <tr>
               <th rowspan="2">Accession</th>
-              <th colspan="3">基本信息</th>
-              <th :colspan="dataCategories.length">文件统计（点击数量查看文件）</th>
-              <th rowspan="2">地理位置</th>
+              <th colspan="3">{{ $t('page.dataOverview.basicInformation') }}</th>
+              <th :colspan="dataCategories.length">{{ $t('page.dataOverview.fileStatistics') }}</th>
+              <th rowspan="2">{{ $t('common.location') }}</th>
             </tr>
             <tr>
-              <th>物种</th>
-              <th>亚群</th>
-              <th>样本数</th>
+              <th>{{ $t('common.species') }}</th>
+              <th>{{ $t('common.subPopulation') }}</th>
+              <th>{{ $t('page.dataOverview.sampleCount') }}</th>
               <th v-for="category in dataCategories" :key="category.key">
-                {{ category.label }}<br />
-                <span>{{ category.en_label }}</span>
+                {{ category.label }}
               </th>
             </tr>
           </thead>
@@ -108,7 +107,7 @@
             <tr v-for="row in matrixRows" :key="row.accession_id">
               <td><router-link class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link></td>
               <td>{{ row.species_name || '-' }}</td>
-              <td><span class="sub-population">{{ row.sub_population || 'Unknown' }}</span></td>
+              <td><span class="sub-population">{{ row.sub_population || $t('common.unknown') }}</span></td>
               <td>{{ row.sample_count }}</td>
               <td v-for="category in dataCategories" :key="`${row.accession_id}-${category.key}`">
                 <button
@@ -119,13 +118,13 @@
                 >
                   {{ cellDisplay(row, category.key) }}
                 </button>
-                <span v-else-if="cellStatus(row, category.key) === 'coming_soon'" class="building-state">建设中</span>
+                <span v-else-if="cellStatus(row, category.key) === 'coming_soon'" class="building-state">{{ $t('page.dataOverview.comingSoon') }}</span>
                 <span v-else class="empty-state">-</span>
               </td>
               <td>{{ row.location_display || '-' }}</td>
             </tr>
             <tr v-if="!matrixRows.length">
-              <td class="empty-table" :colspan="dataCategories.length + 5">暂无符合条件的数据</td>
+              <td class="empty-table" :colspan="dataCategories.length + 5">{{ $t('page.dataOverview.noMatches') }}</td>
             </tr>
           </tbody>
         </table>
@@ -137,23 +136,23 @@
         <table class="detail-table">
           <thead>
             <tr>
-              <th>物种</th>
+              <th>{{ $t('common.species') }}</th>
               <th>Accession</th>
-              <th>数据类型</th>
-              <th>数据集 (Dataset)</th>
-              <th>组装版本 (Assembly)</th>
-              <th>注释版本 (Annotation)</th>
-              <th>文件数</th>
-              <th>数据量</th>
-              <th>更新时间</th>
-              <th>操作</th>
+              <th>{{ $t('common.dataType') }}</th>
+              <th>{{ $t('page.dataOverview.columns.dataset') }}</th>
+              <th>{{ $t('page.dataOverview.columns.assembly') }}</th>
+              <th>{{ $t('page.dataOverview.columns.annotation') }}</th>
+              <th>{{ $t('page.dataOverview.columns.fileCount') }}</th>
+              <th>{{ $t('page.dataOverview.columns.dataSize') }}</th>
+              <th>{{ $t('page.dataOverview.columns.updatedAt') }}</th>
+              <th>{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="row in detailRows" :key="`${row.accession_id}-${row.category}-${row.dataset_name}`">
               <td>{{ row.species_name || '-' }}</td>
               <td><router-link class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link></td>
-              <td>{{ row.category_display }}</td>
+              <td>{{ categoryLabel(row.category) }}</td>
               <td>{{ row.dataset_name }}</td>
               <td>{{ row.assembly_name }}</td>
               <td>{{ row.annotation_name }}</td>
@@ -167,13 +166,13 @@
                   type="button"
                   @click="openFileDrawer(row, row.category)"
                 >
-                  查看文件
+                  {{ $t('page.accessionDetail.viewFiles') }}
                 </button>
-                <span v-else class="building-state">建设中</span>
+                <span v-else class="building-state">{{ $t('page.dataOverview.comingSoon') }}</span>
               </td>
             </tr>
             <tr v-if="!detailRows.length">
-              <td class="empty-table" colspan="10">暂无明细数据</td>
+              <td class="empty-table" colspan="10">{{ $t('page.dataOverview.noDetails') }}</td>
             </tr>
           </tbody>
         </table>
@@ -181,29 +180,29 @@
     </section>
 
     <footer class="pagination-bar">
-      <span>共 {{ totalCount }} 条</span>
+      <span>{{ $t('common.totalCount', { count: totalCount }) }}</span>
       <select v-model.number="pageSize" @change="changePageSize">
-        <option :value="20">20条/页</option>
-        <option :value="50">50条/页</option>
-        <option :value="100">100条/页</option>
+        <option :value="20">{{ $t('common.pageSize', { size: 20 }) }}</option>
+        <option :value="50">{{ $t('common.pageSize', { size: 50 }) }}</option>
+        <option :value="100">{{ $t('common.pageSize', { size: 100 }) }}</option>
       </select>
-      <button type="button" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">上一页</button>
+      <button type="button" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">{{ $t('common.previous') }}</button>
       <strong>{{ currentPage }}</strong>
-      <button type="button" :disabled="!hasNextPage" @click="changePage(currentPage + 1)">下一页</button>
+      <button type="button" :disabled="!hasNextPage" @click="changePage(currentPage + 1)">{{ $t('common.next') }}</button>
     </footer>
 
     <div v-if="drawerOpen" class="drawer-mask" @click="closeDrawer"></div>
     <aside :class="['file-drawer', { open: drawerOpen }]">
       <header class="drawer-header">
         <div>
-          <h2>{{ drawerPayload.title || '文件列表' }}</h2>
-          <p>DataFile 下载入口</p>
+          <h2>{{ drawerTitle }}</h2>
+          <p>{{ $t('page.dataOverview.datafileEntry') }}</p>
         </div>
         <button type="button" @click="closeDrawer">×</button>
       </header>
 
       <section class="relation-overview">
-        <p class="section-kicker">关系概览</p>
+        <p class="section-kicker">{{ $t('page.dataOverview.relationship') }}</p>
         <div class="relation-flow">
           <span>Accession {{ drawerPayload.relation_overview?.accession || '-' }}</span>
           <span>→</span>
@@ -217,23 +216,23 @@
         <table>
           <thead>
             <tr>
-              <th>文件名</th>
-              <th>文件角色</th>
-              <th>类型</th>
-              <th>大小</th>
-              <th>操作</th>
+              <th>{{ $t('common.fileName') }}</th>
+              <th>{{ $t('common.fileRole') }}</th>
+              <th>{{ $t('page.accessionDetail.columns.type') }}</th>
+              <th>{{ $t('page.accessionDetail.columns.size') }}</th>
+              <th>{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="file in drawerPayload.files" :key="file.file_id">
               <td>{{ file.file_name }}</td>
-              <td>{{ file.file_role_display }}</td>
+              <td>{{ fileRoleLabel(file.file_role, file.file_role_display) }}</td>
               <td>{{ file.file_type || '-' }}</td>
               <td>{{ file.file_size_display || '-' }}</td>
-              <td><a class="download-link" :href="file.download_url">下载</a></td>
+              <td><a class="download-link" :href="file.download_url">{{ $t('common.download') }}</a></td>
             </tr>
             <tr v-if="!drawerPayload.files?.length">
-              <td class="empty-table" colspan="5">暂无文件</td>
+              <td class="empty-table" colspan="5">{{ $t('page.dataOverview.noFiles') }}</td>
             </tr>
           </tbody>
         </table>
@@ -246,23 +245,25 @@
 import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 
 const DEFAULT_CATEGORIES = [
-  { key: 'raw_data', label: '原始数据', en_label: 'Raw Data' },
-  { key: 'genome', label: '基因组', en_label: 'Genome' },
-  { key: 'annotation', label: '注释', en_label: 'Annotation' },
-  { key: 'transcriptome', label: '转录组', en_label: 'Transcriptome' },
-  { key: 'population', label: '群体遗传', en_label: 'Population' },
-  { key: 'codon', label: '密码子', en_label: 'Codon' },
-  { key: 'centromere', label: '着丝粒', en_label: 'Centromere' },
-  { key: 'tes', label: '转座子', en_label: 'TEs' },
-  { key: 'coreblocks', label: '核心可变区块', en_label: 'CoreBlocks' },
-  { key: 'ncrna', label: 'ncRNA', en_label: 'ncRNA' }
+  { key: 'raw_data' },
+  { key: 'genome' },
+  { key: 'annotation' },
+  { key: 'transcriptome' },
+  { key: 'population' },
+  { key: 'codon' },
+  { key: 'centromere' },
+  { key: 'tes' },
+  { key: 'coreblocks' },
+  { key: 'ncrna' }
 ]
 
 export default {
   name: 'DataOverviewView',
   setup() {
+    const { locale, t, te } = useI18n()
     const loading = ref(false)
     const activeView = ref('matrix')
     const searchKeyword = ref('')
@@ -280,21 +281,45 @@ export default {
     const detailRows = ref([])
     const drawerOpen = ref(false)
     const drawerPayload = ref({ files: [], relation_overview: {} })
+    const drawerCategory = ref('')
+
+    const categoryLabel = (category) => {
+      const key = category?.key || category
+      const path = `page.dataOverview.categories.${key}`
+      if (te(path)) return t(path)
+      if (typeof category === 'object') {
+        return locale.value === 'en' ? category.en_label || category.label || key : category.label || category.en_label || key
+      }
+      return key || '-'
+    }
+
+    const fileRoleLabel = (role, fallback = '') => {
+      const path = `page.rawData.fileRoles.${role}`
+      if (te(path)) return t(path)
+      return locale.value === 'en' ? role : fallback || role
+    }
 
     const dataCategories = computed(() => {
       const categories = filters.value.data_categories?.length ? filters.value.data_categories : DEFAULT_CATEGORIES
-      if (!selectedCategory.value) return categories
-      return categories.filter(category => category.key === selectedCategory.value)
+      const visibleCategories = selectedCategory.value
+        ? categories.filter(category => category.key === selectedCategory.value)
+        : categories
+      return visibleCategories.map(category => ({ ...category, label: categoryLabel(category) }))
     })
 
     const summaryCards = computed(() => [
-      { key: 'accession', label: '材料(Accession)', value: summary.value.accession_count || 0, icon: '苗', theme: 'green' },
-      { key: 'dataset', label: '数据集(Dataset)', value: summary.value.dataset_count || 0, icon: '集', theme: 'purple' },
-      { key: 'datafile', label: '文件(DataFile)', value: summary.value.datafile_count || 0, icon: '文', theme: 'blue' },
-      { key: 'total_size', label: '总数据量', value: summary.value.total_size_display || '-', icon: '量', theme: 'orange' },
-      { key: 'geo', label: '地理位置', value: summary.value.geo_location_count || 0, unit: '个点位', icon: '地', theme: 'cyan' },
-      { key: 'updated', label: '更新时间', value: summary.value.latest_update || '-', icon: '时', theme: 'pink' }
+      { key: 'accession', label: t('page.dataOverview.summary.accessions'), value: summary.value.accession_count || 0, icon: '◉', theme: 'green' },
+      { key: 'dataset', label: t('page.dataOverview.summary.datasets'), value: summary.value.dataset_count || 0, icon: '▰', theme: 'purple' },
+      { key: 'datafile', label: t('page.dataOverview.summary.files'), value: summary.value.datafile_count || 0, icon: '▤', theme: 'blue' },
+      { key: 'total_size', label: t('page.dataOverview.summary.totalSize'), value: summary.value.total_size_display || '-', icon: 'Σ', theme: 'orange' },
+      { key: 'geo', label: t('page.dataOverview.summary.locations'), value: summary.value.geo_location_count || 0, unit: t('page.dataOverview.summary.locationUnit'), icon: '⌖', theme: 'cyan' },
+      { key: 'updated', label: t('page.dataOverview.summary.updatedAt'), value: summary.value.latest_update || '-', icon: '◷', theme: 'pink' }
     ])
+
+    const drawerTitle = computed(() => {
+      const accession = drawerPayload.value.relation_overview?.accession
+      return [accession, categoryLabel(drawerCategory.value), t('page.dataOverview.fileList')].filter(Boolean).join(' / ')
+    })
 
     const hasNextPage = computed(() => currentPage.value * pageSize.value < totalCount.value)
 
@@ -321,7 +346,7 @@ export default {
         totalCount.value = payload.count || 0
       } catch (error) {
         console.error('获取数据一览表失败:', error)
-        ElMessage.error('获取数据一览表失败')
+        ElMessage.error(t('messages.dataOverviewLoadFailed'))
       } finally {
         loading.value = false
       }
@@ -359,13 +384,14 @@ export default {
 
     const openFileDrawer = async (row, category) => {
       const accession = row.accession
+      drawerCategory.value = category
       try {
         const response = await axios.get('/files/query/data-overview-files/', { params: { accession, category } })
         drawerPayload.value = response.data || { files: [], relation_overview: {} }
         drawerOpen.value = true
       } catch (error) {
         console.error('获取文件列表失败:', error)
-        ElMessage.error('获取文件列表失败')
+        ElMessage.error(t('messages.getFileListFailed'))
       }
     }
 
@@ -395,10 +421,13 @@ export default {
       summaryCards,
       filters,
       dataCategories,
+      categoryLabel,
+      fileRoleLabel,
       matrixRows,
       detailRows,
       drawerOpen,
       drawerPayload,
+      drawerTitle,
       hasNextPage,
       fetchOverview,
       applyFilters,

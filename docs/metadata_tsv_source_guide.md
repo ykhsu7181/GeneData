@@ -131,30 +131,53 @@ BioProject 可以后续通过 NCBI 批量查询补齐。
 
 用途：补充 Assembly / 组装版本信息。
 
-建议字段：
+导入器必需字段：
 
 ```text
+assembly_code
 accession
 assembly_name
-display_name
-assembly_code
+species_code
 assembly_level
-chromosome_count
-genome_size_display
-reference_genome
-bioproject
 reference
-is_default
+source_database
+external_project
+file_name
+file_type
 description
+```
+
+可选字段：
+
+```text
+assembly_accession
+biosample_accession
+assembly_type
+assembly_method
+sequencing_technology
+genome_size
+chromosome_count
+contig_count
+n50
+gc_content
+```
+
+统计字段规则：
+
+```text
+genome_size、chromosome_count、contig_count、n50 必须为非负整数
+genome_size 和 n50 的单位为 bp，TSV 中不填写 Mb/Gb 后缀
+gc_content 必须为 0 到 100 的百分数，最多 3 位小数
+上述可选字段可以留空；旧版 TSV 无需补列即可继续导入
 ```
 
 主要来源：
 
 ```text
-NCBI Assembly：GCA/GCF 编号、组装级别、染色体数、BioProject
+NCBI Assembly：GCA/GCF 编号、BioSample、组装级别、染色体数、组装统计
 论文或项目说明：参考基因组，例如 Nipponbare、MH63、9311
 文件名 / 目录名：组装版本名称
-课题组分析记录：组装方法、版本说明
+课题组分析记录：组装类型、组装方法、测序技术和版本说明
 ```
 
 注意：

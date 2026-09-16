@@ -1,7 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import axios from 'axios'
 
 const EmptyComponent = {
-  template: '<div class="empty-page"><h2>功能开发中，敬请期待...</h2></div>'
+  template: '<div class="empty-page"><h2>{{ $t("page.placeholder.developing") }}</h2></div>'
 }
 
 const routes = [
@@ -18,6 +19,22 @@ const routes = [
     path: '/dashboard',
     name: 'dashboard-home',
     component: () => import('../views/DashboardHomeView.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/assembly',
+    name: 'assembly',
+    redirect: { name: 'accession-card' },
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/assembly/:assemblyId',
+    name: 'assembly-detail',
+    component: () => import('../views/AssemblyView.vue'),
     meta: {
       requiresAuth: true
     }
@@ -81,7 +98,21 @@ const routes = [
   {
     path: '/genome-card',
     name: 'genome-card',
-    component: () => import('../views/GenomeCard.vue'),
+    redirect: (to) => {
+      const firstQueryValue = (value) => Array.isArray(value) ? value[0] : value
+      const assemblyId = String(firstQueryValue(to.query.assembly) || '').trim()
+      const accession = String(
+        firstQueryValue(to.query.accession) || firstQueryValue(to.query.organism) || ''
+      ).trim()
+
+      if (/^\d+$/.test(assemblyId)) {
+        return { name: 'assembly-detail', params: { assemblyId } }
+      }
+      if (accession) {
+        return { name: 'accession-detail', query: { accession } }
+      }
+      return { name: 'accession-card' }
+    },
     meta: {
       requiresAuth: true
     }
@@ -185,12 +216,20 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+const hasAdminSession = async () => {
+  try {
+    const response = await axios.get('/admin/session/')
+    return response.data.authenticated === true && response.data.user?.is_staff === true
+  } catch (error) {
+    return false
+  }
+}
+
+router.beforeEach(async (to, from, next) => {
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-  const adminToken = localStorage.getItem('admin_token')
 
   if (to.matched.some((record) => record.meta.requiresAdminAuth)) {
-    if (!adminToken) {
+    if (!(await hasAdminSession())) {
       next('/admin/login')
       return
     }
@@ -206,7 +245,7 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  if (to.path === '/admin/login' && adminToken) {
+  if (to.path === '/admin/login' && await hasAdminSession()) {
     next('/admin/dashboard')
     return
   }

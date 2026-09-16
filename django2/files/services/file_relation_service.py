@@ -1,4 +1,15 @@
+import logging
+
 from files.models import FileRelation
+
+
+logger = logging.getLogger(__name__)
+
+PRIMARY_GENOME_FILE_ROLE = "genome_fasta"
+
+
+class GenomeFileSelectionError(ValueError):
+    """Raised when an Assembly has no deterministic current genome FASTA."""
 
 
 def get_files_for_object(related_type, related_id, file_role=None):
@@ -26,6 +37,44 @@ def get_primary_file(related_type, related_id, file_role=None):
     )
     if relation_files:
         return relation_files[0]
+    return None
+
+
+def get_primary_genome_file_for_assembly(assembly_id):
+    """Return the deterministic current genome FASTA for an Assembly.
+
+    A marked primary wins. Without one, the sole current candidate is accepted.
+    Multiple primaries or multiple unmarked candidates are data errors rather
+    than an invitation to pick a file by insertion order.
+    """
+    relations = list(
+        FileRelation.objects.select_related("file").filter(
+            related_type="assembly",
+            related_id=str(assembly_id),
+            file_role=PRIMARY_GENOME_FILE_ROLE,
+            file__is_current=True,
+        ).order_by("id")
+    )
+    primary_relations = [relation for relation in relations if relation.is_primary]
+
+    if len(primary_relations) > 1:
+        message = (
+            f"Assembly {assembly_id} has multiple current primary "
+            f"{PRIMARY_GENOME_FILE_ROLE} files"
+        )
+        logger.error(message)
+        raise GenomeFileSelectionError(message)
+    if primary_relations:
+        return _format_relation_file(primary_relations[0])
+    if len(relations) == 1:
+        return _format_relation_file(relations[0])
+    if len(relations) > 1:
+        message = (
+            f"Assembly {assembly_id} has multiple current unmarked "
+            f"{PRIMARY_GENOME_FILE_ROLE} files"
+        )
+        logger.error(message)
+        raise GenomeFileSelectionError(message)
     return None
 
 
