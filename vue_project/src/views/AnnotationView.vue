@@ -1065,7 +1065,7 @@ export default {
     const handleAccessionSearch = async () => {
       const keyword = String(selectedOrganism.value || '').trim();
       if (!keyword) {
-        ElMessage.warning(t('page.genomeCard.enterAccession'));
+        ElMessage.warning(t('page.annotation.enterAccession'));
         return;
       }
 
@@ -1073,7 +1073,7 @@ export default {
         item => normalizeAccession(item) === normalizeAccession(keyword)
       );
       if (!accession) {
-        ElMessage.warning(t('page.genomeCard.noExactMatch', { accession: keyword }));
+        ElMessage.warning(t('page.annotation.noExactMatch', { accession: keyword }));
         return;
       }
 

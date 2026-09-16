@@ -17,12 +17,14 @@
 | 数据一览表 | `/data-overview` | `GET /gd/api/files/query/data-overview/` | `files.query_views.query_data_overview` | `files.services.query_service.get_data_overview_payload` | `Accession + DataFile + FileRelation` |
 | 数据一览表文件抽屉 | `/data-overview` | `GET /gd/api/files/query/data-overview-files/` | `files.query_views.query_data_overview_files` | `files.services.query_service.get_data_overview_files_payload` | `DataFile + FileRelation` |
 | 原始数据 | `/raw-data` | `GET /gd/api/files/query/raw-data/` | `files.query_views.query_raw_data` | `files.services.query_service.get_raw_data_payload` | `DataFile.description.raw_data + FileRelation` |
-| Genome 数据列表 | `/genome-card` | `GET /gd/api/files/query/genome-list/` | `files.query_views.query_genome_list` | `files.services.query_service.get_genome_list_payload` | `Species / Accession / Assembly / DataFile / FileRelation` |
-| Genome 文件抽屉 | `/genome-card` | `GET /gd/api/files/query/genome-files/` | `files.query_views.query_genome_files` | `files.services.query_service.get_genome_files_payload` | `DataFile + FileRelation` |
+| Assembly 详情 | `/assembly/:assemblyId` | `GET /gd/api/files/assemblies/<assembly_id>/summary/` | `files.assembly_api_views.assembly_summary` | `files.services.assembly_detail_service.get_assembly_detail` | `Species / Accession / Assembly / Annotation / DataFile / FileRelation` |
+| Assembly 相关文件 | `/assembly/:assemblyId` | `GET /gd/api/files/accessions/<accession>/files/` | `files.accession_api_views.accession_files` | `files.services.accession_detail_service.get_accession_files` | `DataFile + FileRelation` |
 | Transcriptome 数据列表 | `/transcriptome-overview` | `GET /gd/api/files/query/transcriptome-list/` | `files.query_views.query_transcriptome_list` | `files.services.query_service.get_transcriptome_list_payload` | `Species / Accession / Assembly / Sample / DataFile / FileRelation` |
 | Transcriptome 文件抽屉 | `/transcriptome-overview` | `GET /gd/api/files/query/transcriptome-files/` | `files.query_views.query_transcriptome_files` | `files.services.query_service.get_transcriptome_files_payload` | `DataFile + FileRelation` |
 | Accession 合并页 | `/accession-card` | `GET /gd/api/files/accessions/<accession>/` | `files.views.accession_detail` | `files.services.file_relation_service` | `Accession / Assembly / Annotation / DataFile / FileRelation` |
 | DataFile 下载 | 所有文件列表 | `GET /gd/api/files/data-files/<file_id>/download/` | `files.views.download_datafile` | - | `DataFile.file_path` |
+
+`/genome-card` 已退出导航并作为兼容路由保留：带数字 `assembly` 查询参数时重定向到对应 Assembly 详情；只有 Accession 上下文时重定向到 Accession 详情；无上下文时重定向到 Accession 选择页。旧 Genome 查询接口暂保留为后端兼容能力，不再由正式前端页面调用。
 
 ## 首页 Portal 接口
 

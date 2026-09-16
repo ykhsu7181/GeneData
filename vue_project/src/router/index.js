@@ -26,6 +26,14 @@ const routes = [
   {
     path: '/assembly',
     name: 'assembly',
+    redirect: { name: 'accession-card' },
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/assembly/:assemblyId',
+    name: 'assembly-detail',
     component: () => import('../views/AssemblyView.vue'),
     meta: {
       requiresAuth: true
@@ -90,7 +98,21 @@ const routes = [
   {
     path: '/genome-card',
     name: 'genome-card',
-    component: () => import('../views/GenomeCard.vue'),
+    redirect: (to) => {
+      const firstQueryValue = (value) => Array.isArray(value) ? value[0] : value
+      const assemblyId = String(firstQueryValue(to.query.assembly) || '').trim()
+      const accession = String(
+        firstQueryValue(to.query.accession) || firstQueryValue(to.query.organism) || ''
+      ).trim()
+
+      if (/^\d+$/.test(assemblyId)) {
+        return { name: 'assembly-detail', params: { assemblyId } }
+      }
+      if (accession) {
+        return { name: 'accession-detail', query: { accession } }
+      }
+      return { name: 'accession-card' }
+    },
     meta: {
       requiresAuth: true
     }

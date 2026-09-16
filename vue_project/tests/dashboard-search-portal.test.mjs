@@ -23,3 +23,8 @@ test('portal search keeps hidden tool mappings and does not invent an Assembly m
   assert.match(source, /keywords: \['core', 'variable', '区块', '核心可变'\][\s\S]*?path: '\/core-variable-blocks'/)
   assert.doesNotMatch(source, /keywords:\s*\[[^\]]*assembly/i)
 })
+
+test('retired Genome search opens the Accession chooser instead of the legacy page', () => {
+  assert.match(source, /keywords: \['genome', '基因组'\][\s\S]*?path: '\/accession-card'/)
+  assert.doesNotMatch(source, /path: '\/genome-card'/)
+})

@@ -47,15 +47,12 @@
             </div>
 
             <h3 class="assembly-info-title">{{ $t('page.accessionDetail.assemblyInformation') }}</h3>
-            <div class="table-shell">
-              <table class="detail-table">
-                <thead><tr><th>{{ $t('page.accessionDetail.columns.assemblyVersion') }}</th><th>{{ $t('page.accessionDetail.columns.assemblyCode') }}</th><th>{{ $t('page.accessionDetail.columns.databaseAccession') }}</th><th>BioProject</th><th>Reference</th><th>{{ $t('common.actions') }}</th></tr></thead>
-                <tbody>
-                  <tr v-for="item in relationship.assemblies || []" :key="item.id"><td>{{ item.display_name || item.assembly_name || item.name || '-' }}</td><td>{{ item.assembly_code || '-' }}</td><td>{{ item.assembly_accession || item.standard_id || '-' }}</td><td>{{ item.bio_project || '-' }}</td><td>{{ item.reference || '-' }}</td><td><button class="table-action" type="button" @click="openFiles('assembly', item.id)">{{ $t('page.accessionDetail.viewFiles') }}</button></td></tr>
-                  <tr v-if="!relationship.assemblies?.length"><td colspan="6" class="empty-table-cell">{{ $t('page.accessionDetail.empty.assemblies') }}</td></tr>
-                </tbody>
-              </table>
-            </div>
+            <AssemblyVersionTable
+              :rows="relationship.assemblies || []"
+              mode="accession"
+              :action-label="$t('page.accessionDetail.viewGenome')"
+              @select="openAssembly"
+            />
           </section>
 
           <section v-else class="detail-section">
@@ -65,7 +62,13 @@
 
             <div v-else-if="activeTab === 'samples'" class="table-shell"><table class="detail-table"><thead><tr><th>{{ $t('page.accessionDetail.columns.sampleName') }}</th><th>{{ $t('page.accessionDetail.columns.sampleCode') }}</th><th>{{ $t('page.accessionDetail.columns.tissue') }}</th><th>{{ $t('common.dataType') }}</th><th>Experiment</th></tr></thead><tbody><tr v-for="item in tabRows" :key="item.id"><td>{{ item.sample_name }}</td><td>{{ item.biosample_accession }}</td><td>{{ item.tissue }}</td><td>{{ item.data_type }}</td><td>{{ item.experiment_accession }}</td></tr><tr v-if="!tabRows.length && !tabLoading"><td colspan="5" class="empty-table-cell">{{ $t('page.accessionDetail.empty.samples') }}</td></tr></tbody></table></div>
 
-            <div v-else-if="activeTab === 'annotations'" class="table-shell"><table class="detail-table"><thead><tr><th>{{ $t('page.accessionDetail.columns.annotationVersion') }}</th><th>{{ $t('page.accessionDetail.columns.annotationCode') }}</th><th>{{ $t('page.accessionDetail.columns.sourceMethod') }}</th><th>{{ $t('page.accessionDetail.columns.relatedAssembly') }}</th><th>{{ $t('common.actions') }}</th></tr></thead><tbody><tr v-for="item in tabRows" :key="item.id"><td>{{ item.display_name || item.name }}</td><td>{{ item.standard_id || '-' }}</td><td>{{ item.source_name || '-' }}</td><td>{{ item.assembly_name || '-' }}</td><td><button class="table-action" type="button" @click="openFiles('annotation', item.id)">{{ $t('page.accessionDetail.viewFiles') }}</button></td></tr><tr v-if="!tabRows.length && !tabLoading"><td colspan="5" class="empty-table-cell">{{ $t('page.accessionDetail.empty.annotations') }}</td></tr></tbody></table></div>
+            <AnnotationVersionTable
+              v-else-if="activeTab === 'annotations' && !tabLoading"
+              :rows="tabRows"
+              :show-assembly="true"
+              :show-default="false"
+              @view-files="openFiles('annotation', $event.id)"
+            />
 
             <div v-else-if="activeTab === 'files'" class="table-shell"><table class="detail-table"><thead><tr><th>{{ $t('common.fileName') }}</th><th>{{ $t('common.fileRole') }}</th><th>{{ $t('page.accessionDetail.columns.relatedType') }}</th><th>{{ $t('common.fileType') }}</th><th>{{ $t('page.accessionDetail.columns.size') }}</th><th>{{ $t('common.download') }}</th></tr></thead><tbody><tr v-for="item in filteredFiles" :key="item.id"><td>{{ item.file_name }}</td><td><span class="role-chip">{{ item.file_role }}</span></td><td>{{ item.related_type }}</td><td>{{ item.file_type }}</td><td>{{ item.size_display }}</td><td><button class="download-action" type="button" @click="downloadFile(item)">{{ $t('page.accessionDetail.datafileDownload') }}</button></td></tr><tr v-if="!filteredFiles.length && !tabLoading"><td colspan="6" class="empty-table-cell">{{ $t('page.accessionDetail.empty.files') }}</td></tr></tbody></table></div>
 
@@ -96,6 +99,8 @@ import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
+import AnnotationVersionTable from '@/components/accession/AnnotationVersionTable.vue';
+import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
 import CompactAccessionMap from '@/components/accession/CompactAccessionMap.vue';
 
 const tabs = [
@@ -108,7 +113,7 @@ const tabs = [
 
 export default {
   name: 'AccessionDetailTableView',
-  components: { CompactAccessionMap, Refresh, Search },
+  components: { AnnotationVersionTable, AssemblyVersionTable, CompactAccessionMap, Refresh, Search },
   props: { embedded: { type: Boolean, default: false } },
   setup() {
     const route = useRoute();
@@ -186,6 +191,7 @@ export default {
     };
     const selectTab = async (tab) => { activeTab.value = tab; fileScope.value = null; if (tab !== 'basic') await fetchTab(tab); };
     const openFiles = async (type, id) => { fileScope.value = { type, id }; activeTab.value = 'files'; await fetchTab('files'); };
+    const openAssembly = (assembly) => router.push({ name: 'assembly-detail', params: { assemblyId: assembly.id } });
     const downloadFile = (file) => { if (!file?.datafile_download_url) { ElMessage.error(t('messages.missingDatafileUrl')); return; } window.open(new URL(file.datafile_download_url, window.location.origin).toString(), '_blank'); };
     const refreshPage = async () => { await fetchSummary(); if (activeTab.value !== 'basic') await fetchTab(activeTab.value); };
     const submitSearch = async () => {
@@ -196,7 +202,7 @@ export default {
       await router.push({ path: route.path, query });
     };
     watch(routeAccession, (value) => { searchQuery.value = value; fetchSummary(); }, { immediate: true });
-    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, filteredFiles, geography, loading, openFiles, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs };
+    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, filteredFiles, geography, loading, openAssembly, openFiles, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs };
   }
 };
 </script>

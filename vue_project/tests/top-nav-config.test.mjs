@@ -24,7 +24,6 @@ test('Data and More contain only the agreed secondary entries', () => {
     ['nav.researchGroupRawData', '/raw-data']
   ])
   assert.deepEqual(more.children.map((item) => [item.labelKey, item.path]), [
-    ['nav.genome', '/genome-card'],
     ['nav.annotation', '/annotation'],
     ['nav.transcriptomeOverview', '/transcriptome-overview']
   ])
@@ -48,7 +47,7 @@ test('active group mapping covers visible navigation destinations', () => {
     '/data-chart': 'data',
     '/data-overview': 'data',
     '/raw-data': 'data',
-    '/genome-card': 'more',
+    '/genome-card': null,
     '/annotation': 'more',
     '/annotation-card': 'more',
     '/transcriptome': 'more',

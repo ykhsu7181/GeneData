@@ -201,7 +201,7 @@
                 <router-link
                   v-if="scope.row.genome"
                   class="data-link"
-                  :to="{ name: 'genome-card', query: buildGenomeQuery(scope.row) }">
+                  :to="buildGenomeRoute(scope.row)">
                   genome.{{ scope.row.accession }}
                 </router-link>
                 <span v-else class="data-empty">-</span>
@@ -692,6 +692,19 @@ export default {
       return query;
     };
 
+    const buildGenomeRoute = (row) => {
+      if (row.default_assembly_id) {
+        return {
+          name: 'assembly-detail',
+          params: { assemblyId: row.default_assembly_id }
+        };
+      }
+      return {
+        name: 'accession-detail',
+        query: { accession: row.accession }
+      };
+    };
+
     const buildAnnotationQuery = (row) => {
       const query = buildGenomeQuery(row);
       if (row.default_annotation_id) {
@@ -764,6 +777,7 @@ export default {
       handleGeographicClick,
       buildAccessionQuery,
       buildGenomeQuery,
+      buildGenomeRoute,
       buildAnnotationQuery
     };
   }

@@ -11,9 +11,6 @@ const walkVueFiles = (directory) => readdirSync(directory, { withFileTypes: true
 })
 
 const phaseThreeFiles = [
-  'src/views/GenomeCard.vue',
-  'src/components/genome/GenomeListPanel.vue',
-  'src/components/genome/GenomeFileDrawer.vue',
   'src/views/AnnotationView.vue',
   'src/views/TranscriptomeOverviewView.vue',
   'src/views/LoginView.vue',
@@ -52,7 +49,7 @@ test('phase three keeps routes and API contracts stable', () => {
   }
 
   const combined = phaseThreeFiles.map(read).join('\n')
-  for (const endpoint of ['/files/query/genome-list/', '/files/query/transcriptome-list/', '/admin/session/', '/admin/files/', '/admin/data-management/list/']) {
+  for (const endpoint of ['/files/query/transcriptome-list/', '/admin/session/', '/admin/files/', '/admin/data-management/list/']) {
     assert.match(combined, new RegExp(endpoint.replaceAll('/', '\\/')), `endpoint ${endpoint} should remain unchanged`)
   }
 })

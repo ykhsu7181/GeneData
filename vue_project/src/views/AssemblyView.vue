@@ -1,99 +1,389 @@
 <template>
   <div class="assembly-page">
-    <section class="assembly-placeholder" aria-labelledby="assembly-title">
-      <span class="assembly-mark" aria-hidden="true">
-        <svg viewBox="0 0 52 52">
-          <rect x="8" y="10" width="36" height="32" rx="8"></rect>
-          <path d="M16 19h20M16 26h20M16 33h13"></path>
-        </svg>
-      </span>
-      <p class="eyebrow">{{ $t('page.assembly.eyebrow') }}</p>
-      <h1 id="assembly-title">{{ $t('page.assembly.title') }}</h1>
-      <p>{{ $t('page.assembly.description') }}</p>
-      <span class="coming-soon">{{ $t('page.assembly.comingSoon') }}</span>
-    </section>
+    <div v-if="!assemblyId" class="page-state">
+      <el-empty :description="$t('page.assemblyDetail.noAssemblySelected')" />
+    </div>
+
+    <div v-else-if="loading" class="page-state page-loading">
+      <el-skeleton :rows="12" animated />
+    </div>
+
+    <div v-else-if="errorMessage" class="page-state">
+      <el-result icon="warning" :title="errorMessage">
+        <template #extra>
+          <button class="secondary-button" type="button" @click="fetchDetail">
+            <el-icon><Refresh /></el-icon>
+            {{ $t('page.assemblyDetail.retry') }}
+          </button>
+        </template>
+      </el-result>
+    </div>
+
+    <template v-else-if="detail">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <router-link to="/dashboard">{{ $t('nav.home') }}</router-link>
+        <span>/</span>
+        <router-link :to="{ name: 'accession-detail', query: { accession: assembly.accession } }">
+          {{ assembly.accession || '-' }}
+        </router-link>
+        <span>/</span>
+        <span>{{ assemblyDisplayName }}</span>
+      </nav>
+
+      <header class="page-header">
+        <div>
+          <h1>{{ $t('page.assemblyDetail.title', { accession: assembly.accession || '-', assembly: assemblyDisplayName }) }}</h1>
+          <p>
+            <span>{{ $t('page.assemblyDetail.species', { value: speciesLabel }) }}</span>
+            <span class="meta-divider" aria-hidden="true">|</span>
+            <span>{{ $t('page.assemblyDetail.subPopulation', { value: detail.sub_population || '-' }) }}</span>
+          </p>
+        </div>
+      </header>
+
+      <section class="content-card" aria-labelledby="basic-information-heading">
+        <div class="card-heading card-heading-with-actions">
+          <h2 id="basic-information-heading">{{ $t('page.assemblyDetail.basicInformation') }}</h2>
+          <div class="header-actions">
+            <button
+              class="primary-button"
+              type="button"
+              :disabled="!detail.genome_download_url"
+              @click="downloadGenome"
+            >
+              <el-icon><Download /></el-icon>
+              {{ $t('page.assemblyDetail.download') }}
+            </button>
+            <button class="secondary-button" type="button" @click="openRelatedFiles">
+              <el-icon><FolderOpened /></el-icon>
+              {{ $t('page.assemblyDetail.relatedFiles') }}
+            </button>
+          </div>
+        </div>
+        <dl class="detail-grid">
+          <template v-for="row in basicRows" :key="row.label">
+            <dt>{{ row.label }}</dt>
+            <dd>{{ displayValue(row.value) }}</dd>
+          </template>
+        </dl>
+      </section>
+
+      <section class="content-card" aria-labelledby="statistics-heading">
+        <div class="card-heading">
+          <h2 id="statistics-heading">{{ $t('page.assemblyDetail.statistics') }}</h2>
+        </div>
+        <dl class="detail-grid">
+          <template v-for="row in statisticRows" :key="row.label">
+            <dt>{{ row.label }}</dt>
+            <dd>{{ displayValue(row.value) }}</dd>
+          </template>
+        </dl>
+      </section>
+
+      <section class="content-card" aria-labelledby="annotation-heading">
+        <div class="card-heading">
+          <h2 id="annotation-heading">{{ $t('page.assemblyDetail.annotation') }}</h2>
+        </div>
+        <AnnotationVersionTable
+          :rows="annotations"
+          :show-assembly="false"
+          :show-default="true"
+          :action-label="$t('page.assemblyDetail.viewFiles')"
+          :default-column-label="$t('page.assemblyDetail.defaultColumn')"
+          :default-yes-label="$t('page.assemblyDetail.yes')"
+          :default-no-label="$t('page.assemblyDetail.no')"
+          :empty-text="$t('page.assemblyDetail.emptyAnnotations')"
+          @view-files="openAnnotationFiles"
+        />
+      </section>
+
+      <section class="content-card" aria-labelledby="related-assemblies-heading">
+        <div class="card-heading">
+          <h2 id="related-assemblies-heading">{{ $t('page.assemblyDetail.relatedAssemblies') }}</h2>
+        </div>
+        <AssemblyVersionTable
+          :rows="relatedAssemblies"
+          :current-assembly-id="assembly.id"
+          mode="revision"
+          :action-label="$t('page.assemblyDetail.viewAssembly')"
+          :current-label="$t('page.assemblyDetail.current')"
+          :empty-text="$t('page.assemblyDetail.emptyAssemblies')"
+          @select="selectAssembly"
+        />
+      </section>
+    </template>
+
+    <RelatedFilesDrawer
+      v-model="drawerVisible"
+      :title="drawerTitle"
+      :loading="drawerLoading"
+      :error-message="drawerErrorMessage"
+      :files="displayedDrawerFiles"
+      @download="downloadRelatedFile"
+      @retry="loadRelatedFiles"
+    />
   </div>
 </template>
 
 <script>
+import { computed, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import axios from 'axios';
+import { ElMessage } from 'element-plus';
+import { Download, FolderOpened, Refresh } from '@element-plus/icons-vue';
+import AnnotationVersionTable from '@/components/accession/AnnotationVersionTable.vue';
+import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
+import RelatedFilesDrawer from '@/components/assembly/RelatedFilesDrawer.vue';
+
 export default {
-  name: 'AssemblyView'
-}
+  name: 'AssemblyView',
+  components: {
+    AnnotationVersionTable,
+    AssemblyVersionTable,
+    RelatedFilesDrawer,
+    Download,
+    FolderOpened,
+    Refresh
+  },
+  setup() {
+    const route = useRoute();
+    const router = useRouter();
+    const { t, locale } = useI18n();
+    const loading = ref(false);
+    const errorKey = ref('');
+    const detail = ref(null);
+    const drawerVisible = ref(false);
+    const drawerLoading = ref(false);
+    const drawerErrorKey = ref('');
+    const drawerFiles = ref([]);
+    const drawerScope = ref(null);
+
+    const assemblyId = computed(() => String(route.params.assemblyId || '').trim());
+    const assembly = computed(() => detail.value?.assembly || {});
+    const annotations = computed(() => detail.value?.annotations || []);
+    const relatedAssemblies = computed(() => detail.value?.related_assemblies || []);
+    const assemblyDisplayName = computed(() => (
+      assembly.value.display_name || assembly.value.assembly_name || assembly.value.name || '-'
+    ));
+    const speciesLabel = computed(() => {
+      const species = detail.value?.species;
+      if (!species) return '-';
+      if (String(locale.value).startsWith('zh')) {
+        return species.chinese_name || species.scientific_name || species.common_name || '-';
+      }
+      return species.scientific_name || species.common_name || species.chinese_name || '-';
+    });
+    const errorMessage = computed(() => (errorKey.value ? t(errorKey.value) : ''));
+    const drawerErrorMessage = computed(() => (drawerErrorKey.value ? t(drawerErrorKey.value) : ''));
+    const drawerTitle = computed(() => (
+      drawerScope.value
+        ? t('page.assemblyDetail.annotationFilesTitle', { annotation: drawerScope.value.label || '-' })
+        : t('page.assemblyDetail.drawerTitle', { accession: assembly.value.accession || '-' })
+    ));
+    const displayedDrawerFiles = computed(() => {
+      if (!drawerScope.value) return drawerFiles.value;
+      return drawerFiles.value.filter((item) => item.relations?.some((relation) => (
+        relation.related_type === drawerScope.value.type
+        && String(relation.related_id) === String(drawerScope.value.id)
+      )));
+    });
+
+    const displayValue = (value) => (
+      value === null || value === undefined || value === '' ? '-' : value
+    );
+    const formatBasePairs = (value) => {
+      if (value === null || value === undefined || value === '') return '-';
+      const number = Number(value);
+      if (!Number.isFinite(number)) return value;
+      if (number >= 1e9) return `${(number / 1e9).toFixed(2).replace(/\.00$/, '')} Gb`;
+      if (number >= 1e6) return `${(number / 1e6).toFixed(2).replace(/\.00$/, '')} Mb`;
+      if (number >= 1e3) return `${(number / 1e3).toFixed(2).replace(/\.00$/, '')} Kb`;
+      return `${number.toLocaleString()} bp`;
+    };
+    const formatPercent = (value) => {
+      if (value === null || value === undefined || value === '') return '-';
+      return `${Number(value).toLocaleString()}%`;
+    };
+
+    const basicRows = computed(() => [
+      { label: t('page.assemblyDetail.fields.assemblyAccession'), value: assembly.value.assembly_accession || assembly.value.standard_id },
+      { label: t('page.assemblyDetail.fields.biosampleAccession'), value: assembly.value.biosample_accession },
+      { label: t('page.assemblyDetail.fields.assemblyType'), value: assembly.value.assembly_type },
+      { label: t('page.assemblyDetail.fields.assemblyMethod'), value: assembly.value.assembly_method },
+      { label: t('page.assemblyDetail.fields.sequencingTechnology'), value: assembly.value.sequencing_technology },
+      { label: t('page.assemblyDetail.fields.description'), value: assembly.value.description }
+    ]);
+    const statisticRows = computed(() => {
+      const statistics = detail.value?.statistics || {};
+      return [
+        { label: t('page.assemblyDetail.statisticFields.genomeSize'), value: formatBasePairs(statistics.genome_size) },
+        { label: t('page.assemblyDetail.statisticFields.assemblyLevel'), value: statistics.assembly_level },
+        { label: t('page.assemblyDetail.statisticFields.chromosomeCount'), value: statistics.chromosome_count },
+        { label: t('page.assemblyDetail.statisticFields.contigCount'), value: statistics.contig_count },
+        { label: t('page.assemblyDetail.statisticFields.n50'), value: formatBasePairs(statistics.n50) },
+        { label: t('page.assemblyDetail.statisticFields.gcContent'), value: formatPercent(statistics.gc_content) }
+      ];
+    });
+
+    const fetchDetail = async () => {
+      if (!assemblyId.value) {
+        detail.value = null;
+        errorKey.value = '';
+        return;
+      }
+      loading.value = true;
+      errorKey.value = '';
+      detail.value = null;
+      drawerVisible.value = false;
+      try {
+        const response = await axios.get(`/files/assemblies/${encodeURIComponent(assemblyId.value)}/summary/`);
+        if (!response.data?.success) throw new Error('Assembly request failed');
+        detail.value = response.data.data;
+      } catch (error) {
+        const status = error.response?.status;
+        if (status === 403) errorKey.value = 'page.assemblyDetail.forbidden';
+        else if (status === 404) errorKey.value = 'page.assemblyDetail.notFound';
+        else if (status === 409) errorKey.value = 'page.assemblyDetail.conflict';
+        else errorKey.value = 'page.assemblyDetail.loadFailed';
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const normalizeApiUrl = (url) => {
+      const value = String(url || '');
+      return value.startsWith('/gd/api/') ? value.slice('/gd/api'.length) : value;
+    };
+    const loadRelatedFiles = async () => {
+      const endpoint = normalizeApiUrl(detail.value?.related_files_url);
+      if (!endpoint) {
+        drawerFiles.value = [];
+        drawerErrorKey.value = 'page.assemblyDetail.drawerLoadFailed';
+        return;
+      }
+      drawerLoading.value = true;
+      drawerErrorKey.value = '';
+      try {
+        const files = [];
+        let page = 1;
+        let total = 0;
+        do {
+          const response = await axios.get(endpoint, { params: { page, page_size: 100 } });
+          if (!response.data?.success) throw new Error('Related files request failed');
+          const pageData = response.data.data || {};
+          const results = pageData.results || [];
+          files.push(...results);
+          total = Number(pageData.pagination?.total || files.length);
+          page += 1;
+          if (!results.length) break;
+        } while (files.length < total);
+        drawerFiles.value = files;
+      } catch {
+        drawerFiles.value = [];
+        drawerErrorKey.value = 'page.assemblyDetail.drawerLoadFailed';
+      } finally {
+        drawerLoading.value = false;
+      }
+    };
+    const openRelatedFiles = async () => {
+      drawerScope.value = null;
+      drawerVisible.value = true;
+      await loadRelatedFiles();
+    };
+    const openAnnotationFiles = async (annotation) => {
+      drawerScope.value = {
+        type: 'annotation',
+        id: annotation.id,
+        label: annotation.display_name || annotation.annotation_name || annotation.name
+      };
+      drawerVisible.value = true;
+      await loadRelatedFiles();
+    };
+    const openDownload = (url, missingKey) => {
+      if (!url) {
+        ElMessage.error(t(missingKey));
+        return;
+      }
+      window.open(new URL(url, window.location.origin).toString(), '_blank');
+    };
+    const downloadGenome = () => openDownload(
+      detail.value?.genome_download_url,
+      'page.assemblyDetail.noGenomeFile'
+    );
+    const downloadRelatedFile = (file) => openDownload(
+      file?.datafile_download_url,
+      'messages.missingDatafileUrl'
+    );
+    const selectAssembly = (item) => router.push({
+      name: 'assembly-detail',
+      params: { assemblyId: item.id }
+    });
+
+    watch(assemblyId, fetchDetail, { immediate: true });
+
+    return {
+      assemblyId,
+      loading,
+      errorMessage,
+      detail,
+      assembly,
+      annotations,
+      relatedAssemblies,
+      assemblyDisplayName,
+      speciesLabel,
+      basicRows,
+      statisticRows,
+      drawerVisible,
+      drawerLoading,
+      drawerErrorMessage,
+      drawerTitle,
+      displayedDrawerFiles,
+      displayValue,
+      fetchDetail,
+      openRelatedFiles,
+      openAnnotationFiles,
+      loadRelatedFiles,
+      downloadGenome,
+      downloadRelatedFile,
+      selectAssembly
+    };
+  }
+};
 </script>
 
 <style scoped>
-.assembly-page {
-  min-height: 520px;
-  display: grid;
-  place-items: center;
-}
-
-.assembly-placeholder {
-  width: min(660px, 100%);
-  padding: 64px 36px;
-  border: 1px solid #dbe7f3;
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 50% 0, rgba(22, 119, 232, 0.1), transparent 46%),
-    #ffffff;
-  box-shadow: 0 18px 44px rgba(22, 55, 94, 0.08);
-  text-align: center;
-}
-
-.assembly-mark {
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 20px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  color: #176fd6;
-  background: #eaf4ff;
-}
-
-.assembly-mark svg {
-  width: 42px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.eyebrow {
-  margin: 0 0 8px;
-  color: #1677e8;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-}
-
-h1 {
-  margin: 0;
-  color: #0c2346;
-  font-size: clamp(2.2rem, 5vw, 3.2rem);
-}
-
-.assembly-placeholder > p:not(.eyebrow) {
-  max-width: 480px;
-  margin: 16px auto 0;
-  color: #617792;
-  font-size: 1rem;
-  line-height: 1.7;
-}
-
-.coming-soon {
-  display: inline-flex;
-  margin-top: 24px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  color: #315f92;
-  background: #f0f6fc;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-@media (max-width: 620px) {
-  .assembly-page { min-height: 440px; }
-  .assembly-placeholder { padding: 48px 22px; }
+.assembly-page { width:min(1180px, 100%); margin:0 auto; padding:24px 22px 48px; box-sizing:border-box; }
+.breadcrumb { display:flex; gap:8px; align-items:center; margin-bottom:15px; color:#71829d; font-size:12px; }
+.breadcrumb a { color:#3974c7; text-decoration:none; }
+.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; }
+.page-header h1 { margin:0; color:#102a5e; font-size:clamp(24px, 3vw, 34px); line-height:1.25; }
+.page-header p { margin:10px 0 0; color:#607493; font-size:14px; }
+.meta-divider { margin:0 10px; color:#b6c1d1; }
+.content-card { margin-top:16px; padding:18px 20px 20px; border:1px solid #dce7f5; border-radius:12px; background:#fff; box-shadow:0 7px 22px rgba(37, 75, 122, 0.05); }
+.card-heading { display:flex; align-items:center; min-height:34px; padding-bottom:12px; }
+.card-heading-with-actions { justify-content:space-between; gap:16px; }
+.card-heading h2 { margin:0; color:#1671dc; font-size:19px; }
+.header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.primary-button,.secondary-button { display:inline-flex; min-height:36px; padding:0 15px; border-radius:8px; align-items:center; justify-content:center; gap:7px; font-size:13px; font-weight:700; cursor:pointer; }
+.primary-button { border:1px solid #1677ed; color:#fff; background:#1677ed; }
+.secondary-button { border:1px solid #bcd5fb; color:#1768cf; background:#fff; }
+.primary-button:disabled { border-color:#cbd6e4; color:#8391a5; background:#eef2f6; cursor:not-allowed; }
+.detail-grid { display:grid; grid-template-columns:minmax(190px, 34%) 1fr; margin:0; border-top:1px solid #e3eaf4; }
+.detail-grid dt,.detail-grid dd { min-height:38px; margin:0; padding:10px 12px; border-bottom:1px solid #e3eaf4; box-sizing:border-box; font-size:13px; line-height:1.45; }
+.detail-grid dt { color:#506789; }
+.detail-grid dd { color:#183a70; overflow-wrap:anywhere; }
+.page-state { min-height:520px; display:grid; place-items:center; }
+.page-loading { display:block; padding:80px 0; }
+@media (max-width: 700px) {
+  .assembly-page { padding:18px 12px 34px; }
+  .card-heading-with-actions { align-items:flex-start; flex-direction:column; }
+  .header-actions { width:100%; }
+  .primary-button,.secondary-button { flex:1; }
+  .detail-grid { grid-template-columns:1fr; }
+  .detail-grid dt { min-height:auto; padding-bottom:3px; border-bottom:0; font-weight:700; }
+  .detail-grid dd { padding-top:3px; }
+  .meta-divider { display:none; }
+  .page-header p span { display:block; margin-top:4px; }
 }
 </style>

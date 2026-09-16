@@ -36,8 +36,14 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /page\.accessionDetail\.tabs\.samples/);
   assert.match(pageSource, /page\.accessionDetail\.assemblyInformation/);
   assert.match(pageSource, /relationship\.assemblies/);
-  assert.match(pageSource, /item\.assembly_accession \|\| item\.standard_id/);
-  assert.match(pageSource, /openFiles\('assembly', item\.id\)/);
+  assert.match(pageSource, /import AssemblyVersionTable from '@\/components\/accession\/AssemblyVersionTable\.vue'/);
+  assert.match(pageSource, /<AssemblyVersionTable[\s\S]*?:rows="relationship\.assemblies \|\| \[\]"/);
+  assert.match(pageSource, /:action-label="\$t\('page\.accessionDetail\.viewGenome'\)"/);
+  assert.match(pageSource, /@select="openAssembly"/);
+  assert.match(pageSource, /router\.push\(\{ name: 'assembly-detail', params: \{ assemblyId: assembly\.id \} \}\)/);
+  assert.match(pageSource, /import AnnotationVersionTable from '@\/components\/accession\/AnnotationVersionTable\.vue'/);
+  assert.match(pageSource, /<AnnotationVersionTable[\s\S]*?:rows="tabRows"/);
+  assert.match(pageSource, /@view-files="openFiles\('annotation', \$event\.id\)"/);
   assert.match(pageSource, /page\.accessionDetail\.tabs\.files/);
   assert.match(pageSource, /page\.accessionDetail\.relationship/);
   assert.match(pageSource, /page\.accessionDetail\.geography/);
@@ -52,5 +58,6 @@ test('unified accession page follows the approved information architecture', () 
   assert.doesNotMatch(pageSource, /page\.accessionDetail\.tabs\.assemblies/);
   assert.doesNotMatch(pageSource, /summary-grid|summaryCards/);
   assert.doesNotMatch(pageSource, /genome-files/);
+  assert.doesNotMatch(pageSource, /v-for="item in relationship\.assemblies/);
   assert.doesNotMatch(pageSource, /Back to Accession Card|返回列表|创建与更新信息/);
 });

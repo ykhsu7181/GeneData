@@ -27,7 +27,6 @@ export const topNavItems = [
     key: 'more',
     labelKey: 'nav.more',
     children: [
-      { labelKey: 'nav.genome', path: '/genome-card' },
       { labelKey: 'nav.annotation', path: '/annotation' },
       { labelKey: 'nav.transcriptomeOverview', path: '/transcriptome-overview' }
     ]
@@ -46,7 +45,7 @@ const groupMatchers = {
   accession: ['/accession-card', '/accession-detail', '/accession-map'],
   assembly: ['/assembly'],
   data: ['/data', '/data-chart', '/data-overview', '/raw-data'],
-  more: ['/genome-card', '/annotation', '/annotation-card', '/transcriptome', '/transcriptome-overview']
+  more: ['/annotation', '/annotation-card', '/transcriptome', '/transcriptome-overview']
 }
 
 export const normalizeTopNavPath = (path = '') => pathAliasMap[path] || path

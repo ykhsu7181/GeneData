@@ -2,11 +2,13 @@ from django.test import TestCase
 
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
 from files.services.file_relation_service import (
+    GenomeFileSelectionError,
     get_files_for_accession,
     get_files_for_annotation,
     get_files_for_assembly,
     get_files_for_object,
     get_primary_file,
+    get_primary_genome_file_for_assembly,
 )
 
 
@@ -41,6 +43,23 @@ class FileRelationServiceTestCase(TestCase):
             file_role=file_role,
             is_primary=is_primary,
         )
+
+    def add_assembly_genome_file(self, code, *, is_current=True, is_primary=False):
+        data_file = DataFile.objects.create(
+            file_code=code,
+            file_type=self.file_type,
+            file_name=f"{code}.fasta",
+            file_path=f"/tmp/{code}.fasta",
+            is_current=is_current,
+        )
+        FileRelation.objects.create(
+            file=data_file,
+            related_type="assembly",
+            related_id=str(self.assembly.id),
+            file_role="genome_fasta",
+            is_primary=is_primary,
+        )
+        return data_file
 
     def test_get_files_for_accession_returns_data_file(self):
         self.add_relation("accession", self.accession.id, file_role="genome")
@@ -154,3 +173,54 @@ class FileRelationServiceTestCase(TestCase):
         primary = get_primary_file("accession", self.accession.id, file_role="genome")
 
         self.assertIsNone(primary)
+
+    def test_assembly_genome_selector_prefers_current_primary(self):
+        self.add_assembly_genome_file("GENOME_UNMARKED")
+        primary_file = self.add_assembly_genome_file("GENOME_PRIMARY", is_primary=True)
+
+        selected = get_primary_genome_file_for_assembly(self.assembly.id)
+
+        self.assertEqual(selected["file_id"], primary_file.id)
+        self.assertEqual(selected["file_role"], "genome_fasta")
+
+    def test_assembly_genome_selector_ignores_noncurrent_primary(self):
+        self.add_assembly_genome_file("GENOME_OLD", is_current=False, is_primary=True)
+        current_file = self.add_assembly_genome_file("GENOME_CURRENT")
+
+        selected = get_primary_genome_file_for_assembly(self.assembly.id)
+
+        self.assertEqual(selected["file_id"], current_file.id)
+
+    def test_assembly_genome_selector_rejects_multiple_current_primaries(self):
+        self.add_assembly_genome_file("GENOME_PRIMARY_A", is_primary=True)
+        self.add_assembly_genome_file("GENOME_PRIMARY_B", is_primary=True)
+
+        with self.assertRaisesRegex(GenomeFileSelectionError, "multiple current primary"):
+            get_primary_genome_file_for_assembly(self.assembly.id)
+
+    def test_assembly_genome_selector_rejects_multiple_unmarked_candidates(self):
+        self.add_assembly_genome_file("GENOME_A")
+        self.add_assembly_genome_file("GENOME_B")
+
+        with self.assertRaisesRegex(GenomeFileSelectionError, "multiple current unmarked"):
+            get_primary_genome_file_for_assembly(self.assembly.id)
+
+    def test_assembly_genome_selector_uses_exact_role_and_scope(self):
+        self.add_relation("assembly", self.assembly.id, file_role="genome", is_primary=True)
+        other_assembly = Assembly.objects.create(accession=self.accession, name="other")
+        other_file = DataFile.objects.create(
+            file_code="GENOME_OTHER",
+            file_name="other.fasta",
+            file_path="/tmp/other.fasta",
+        )
+        FileRelation.objects.create(
+            file=other_file,
+            related_type="assembly",
+            related_id=str(other_assembly.id),
+            file_role="genome_fasta",
+            is_primary=True,
+        )
+
+        selected = get_primary_genome_file_for_assembly(self.assembly.id)
+
+        self.assertIsNone(selected)
