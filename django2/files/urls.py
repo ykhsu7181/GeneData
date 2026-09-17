@@ -46,11 +46,12 @@ from .accession_api_views import (
     accession_samples,
     accession_summary,
 )
-from .assembly_api_views import assembly_summary
+from .assembly_api_views import assembly_list, assembly_summary
 
 
 # 先定义自定义路径，避免与router冲突
 urlpatterns = [
+    path('assemblies/', assembly_list, name='assembly-list'),
     path('assemblies/<int:assembly_id>/summary/', assembly_summary, name='assembly-summary'),
     path('accessions/<str:accession>/', accession_detail, name='accession-detail'),
     path('accessions/<str:accession>/summary/', accession_summary, name='accession-summary'),

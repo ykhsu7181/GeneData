@@ -168,6 +168,45 @@ class AssemblyDetailSerializer(serializers.ModelSerializer):
         return AnnotationDetailSerializer(annotations, many=True).data
 
 
+class AssemblyListSerializer(serializers.ModelSerializer):
+    accession = serializers.CharField(source='accession.accession', read_only=True)
+    accession_id = serializers.IntegerField(source='accession.id', read_only=True)
+    assembly = serializers.SerializerMethodField()
+    species = serializers.SerializerMethodField()
+    taxon_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Assembly
+        fields = [
+            'id',
+            'accession',
+            'accession_id',
+            'assembly',
+            'assembly_accession',
+            'assembly_level',
+            'species',
+            'taxon_id',
+            'is_default',
+        ]
+
+    def get_assembly(self, obj):
+        return obj.display_name or obj.assembly_name or obj.name
+
+    def _species(self, obj):
+        accession = getattr(obj, 'accession', None)
+        return getattr(accession, 'species', None)
+
+    def get_species(self, obj):
+        species = self._species(obj)
+        if species:
+            return species.scientific_name or species.common_name or species.species_code
+        return obj.species_code
+
+    def get_taxon_id(self, obj):
+        species = self._species(obj)
+        return getattr(species, 'taxonomy_id', None)
+
+
 class AccessionDetailSerializer(serializers.ModelSerializer):
     assemblies = serializers.SerializerMethodField()
 

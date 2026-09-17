@@ -103,16 +103,6 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-
-        <span class="user-chip">
-          <el-icon><User /></el-icon>
-          <span>{{ $t('common.currentUser') }}: root</span>
-        </span>
-
-        <button type="button" class="logout-button" @click="$emit('logout')">
-          <el-icon><SwitchButton /></el-icon>
-          <span>{{ $t('common.logout') }}</span>
-        </button>
       </div>
     </div>
   </header>
@@ -123,9 +113,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowDown,
-  Platform,
-  SwitchButton,
-  User
+  Platform
 } from '@element-plus/icons-vue'
 import { getTopNavActiveGroup, topNavItems } from '../config/topNavConfig.mjs'
 
@@ -133,9 +121,7 @@ export default {
   name: 'TopNavBar',
   components: {
     ArrowDown,
-    Platform,
-    SwitchButton,
-    User
+    Platform
   },
   props: {
     currentLanguage: {
@@ -143,7 +129,7 @@ export default {
       default: 'zh'
     }
   },
-  emits: ['logout', 'language-change'],
+  emits: ['language-change'],
   setup(props, { emit }) {
     const route = useRoute()
     const router = useRouter()
@@ -179,10 +165,14 @@ export default {
 
 <style scoped>
 .top-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 120;
+  height: 76px;
   padding: 0 22px;
+  overflow: visible;
   background: rgba(255, 255, 255, 0.97);
   border-bottom: 1px solid #e2ebf4;
   box-shadow: 0 8px 24px rgba(22, 55, 94, 0.06);
@@ -199,12 +189,14 @@ export default {
 
 .top-nav-inner {
   width: min(1400px, 100%);
+  height: 76px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
-  min-height: 76px;
+  min-height: 0;
+  overflow: visible;
 }
 
 .brand {
@@ -256,11 +248,14 @@ export default {
 .nav-links {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 8px;
+  height: 100%;
   min-width: 0;
   max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
 
@@ -273,6 +268,7 @@ export default {
   align-items: center;
   gap: 8px;
   position: relative;
+  height: 44px;
   min-height: 44px;
   padding: 11px 13px;
   border: none;
@@ -302,7 +298,7 @@ export default {
   position: absolute;
   left: 13px;
   right: 13px;
-  bottom: -16px;
+  bottom: -14px;
   height: 2px;
   border-radius: 2px;
   background: #1677e8;
@@ -333,7 +329,7 @@ export default {
   position: absolute;
   left: 13px;
   right: 0;
-  bottom: -16px;
+  bottom: -14px;
   height: 2px;
   border-radius: 2px;
   background: #1677e8;
@@ -374,9 +370,7 @@ export default {
   gap: 10px;
 }
 
-.action-button,
-.logout-button,
-.user-chip {
+.action-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -387,8 +381,7 @@ export default {
   font-weight: 700;
 }
 
-.action-button,
-.logout-button {
+.action-button {
   border: none;
   cursor: pointer;
 }
@@ -404,60 +397,38 @@ export default {
   justify-content: center;
 }
 
-.user-chip {
-  background: #f4f8fc;
-  color: #526b87;
-  white-space: nowrap;
-}
-
-.logout-button {
-  background: #ffffff;
-  color: #315170;
-  border: 1px solid #d3e0ed;
-}
-
 .brand:focus-visible,
 .nav-link:focus-visible,
-.action-button:focus-visible,
-.logout-button:focus-visible {
+.action-button:focus-visible {
   outline: 3px solid rgba(22, 119, 232, 0.32);
   outline-offset: 2px;
 }
 
 @media (max-width: 1280px) {
   .top-nav-inner {
-    grid-template-columns: auto 1fr;
-    padding: 12px 0;
-    gap: 10px 20px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0;
+    gap: 16px;
   }
 
   .nav-links {
-    grid-column: 1 / -1;
-    grid-row: 2;
     justify-content: flex-start;
   }
 
   .nav-actions {
     justify-content: flex-end;
   }
-
-  .nav-link.is-active::after {
-    bottom: -8px;
-  }
-
-  .nav-group-trigger.is-active .nav-link-main::after {
-    bottom: -8px;
-  }
 }
 
 @media (max-width: 720px) {
   .top-nav {
+    height: 68px;
     padding: 0 12px;
   }
 
   .top-nav-inner {
-    grid-template-columns: 1fr auto;
-    min-height: 68px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    height: 68px;
   }
 
   .brand-copy strong {
@@ -465,9 +436,7 @@ export default {
   }
 
   .brand-copy span,
-  .user-chip,
-  .action-button span,
-  .logout-button span {
+  .action-button span {
     display: none;
   }
 

@@ -56,5 +56,7 @@ test('application synchronizes vue-i18n, Element Plus, and document language', (
   assert.match(source, /element-plus\/es\/locale\/lang\/en/)
   assert.match(source, /document\.documentElement\.lang/)
   assert.match(source, /t\('messages\.languageChanged'\)/)
-  assert.match(source, /t\('messages\.logoutSuccess'\)/)
+  assert.doesNotMatch(source, /t\('messages\.logoutSuccess'\)/)
+  assert.match(source, /<footer v-if="!isDashboardRoute" class="layout-footer">/)
+  assert.match(source, /\.layout-main-dashboard\s*\{[^}]*padding: 0;/)
 })

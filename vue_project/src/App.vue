@@ -7,14 +7,13 @@
         <TopNavBar
           :current-language="currentLanguage"
           @language-change="handleLanguageChange"
-          @logout="handleLogout"
         />
 
         <main :class="['layout-main', { 'layout-main-dashboard': isDashboardRoute }]">
           <router-view />
         </main>
 
-        <footer class="layout-footer">
+        <footer v-if="!isDashboardRoute" class="layout-footer">
           {{ $t('footer.version') }}
         </footer>
       </div>
@@ -24,7 +23,7 @@
 
 <script>
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
@@ -39,7 +38,6 @@ export default {
   },
   setup() {
     const route = useRoute()
-    const router = useRouter()
     const { locale, t } = useI18n()
 
     const currentLanguage = ref(locale.value)
@@ -64,22 +62,12 @@ export default {
       })
     }
 
-    const handleLogout = () => {
-      localStorage.removeItem('isLoggedIn')
-      ElMessage({
-        message: t('messages.logoutSuccess'),
-        type: 'success'
-      })
-      router.push('/login')
-    }
-
     return {
       currentLanguage,
       elementLocale,
       isStandaloneRoute,
       isDashboardRoute,
-      handleLanguageChange,
-      handleLogout
+      handleLanguageChange
     }
   }
 }
@@ -126,6 +114,7 @@ a {
 .layout-shell {
   display: flex;
   flex-direction: column;
+  padding-top: 76px;
 }
 
 .layout-main {
@@ -138,7 +127,7 @@ a {
 .layout-main-dashboard {
   width: 100%;
   max-width: none;
-  padding: 0 0 56px;
+  padding: 0;
 }
 
 .layout-footer {
@@ -164,13 +153,17 @@ a {
 }
 
 @media (max-width: 720px) {
+  .layout-shell {
+    padding-top: 68px;
+  }
+
   .layout-main {
     width: min(100%, calc(100% - 24px));
     padding: 18px 0 28px;
   }
 
   .layout-main-dashboard {
-    padding: 0 0 36px;
+    padding: 0;
   }
 }
 </style>

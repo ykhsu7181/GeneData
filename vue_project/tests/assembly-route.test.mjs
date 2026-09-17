@@ -4,18 +4,66 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 const routerSource = readFileSync(join(process.cwd(), 'src', 'router', 'index.js'), 'utf8')
+const portalSource = readFileSync(join(process.cwd(), 'src', 'views', 'AssemblyPortalView.vue'), 'utf8')
 const viewSource = readFileSync(join(process.cwd(), 'src', 'views', 'AssemblyView.vue'), 'utf8')
 const drawerSource = readFileSync(join(process.cwd(), 'src', 'components', 'assembly', 'RelatedFilesDrawer.vue'), 'utf8')
+const recentDrawerSource = readFileSync(join(process.cwd(), 'src', 'components', 'assembly', 'AssemblyRecentDrawer.vue'), 'utf8')
 
-test('Assembly detail has an authenticated standalone route and bare Assembly redirects explicitly', () => {
+test('Assembly portal and detail have authenticated standalone routes', () => {
   assert.match(
     routerSource,
-    /path:\s*'\/assembly'[\s\S]*?redirect:\s*\{\s*name:\s*'accession-card'\s*\}[\s\S]*?requiresAuth:\s*true/
+    /path:\s*'\/assembly'[\s\S]*?component:\s*\(\)\s*=>\s*import\('\.\.\/views\/AssemblyPortalView\.vue'\)[\s\S]*?requiresAuth:\s*true/
   )
   assert.match(
     routerSource,
     /path:\s*'\/assembly\/:assemblyId'[\s\S]*?name:\s*'assembly-detail'[\s\S]*?requiresAuth:\s*true/
   )
+})
+
+test('Assembly portal uses the list API and keeps detail navigation separate', () => {
+  assert.match(portalSource, /axios\.get\('\/files\/assemblies\/'/)
+  assert.match(portalSource, /name:\s*'assembly-detail'/)
+  assert.match(portalSource, /name:\s*'accession-card'/)
+  assert.match(portalSource, /recordRecentAssembly\(row\)/)
+  assert.match(portalSource, /page\.assembly\.searchTitle/)
+})
+
+test('Assembly recently viewed is service-backed and exposes a clearable drawer', () => {
+  assert.match(portalSource, /<AssemblyRecentDrawer/)
+  assert.match(portalSource, /getRecentAssemblies/)
+  assert.match(portalSource, /removeRecentAssembly\(id\)/)
+  assert.match(portalSource, /clearRecentAssemblies\(\)/)
+  assert.match(portalSource, /drawerTrigger\?\.focus\?\.\(\)/)
+  assert.match(recentDrawerSource, /<el-drawer/)
+  assert.match(recentDrawerSource, /\$emit\('remove', item\.id\)/)
+  assert.match(recentDrawerSource, /\$emit\('clear'\)/)
+  assert.match(recentDrawerSource, /page\.assembly\.removeRecent/)
+})
+
+test('Assembly list exposes a persistent user-selectable column picker', () => {
+  assert.match(portalSource, /COLUMN_STORAGE_KEY = 'genedata_assembly_list_columns_v1'/)
+  assert.match(portalSource, /DEFAULT_COLUMN_KEYS = \['accession', 'assembly', 'assembly_accession', 'assembly_level', 'species'\]/)
+  assert.match(portalSource, /class="column-picker"/)
+  assert.match(portalSource, /visibleColumns\.length === 1 && isColumnVisible\(column\.key\)/)
+  assert.match(portalSource, /@change="toggleColumn\(column\.key, \$event\.target\.checked\)"/)
+  assert.match(portalSource, /writeColumnPreference\(normalized\)/)
+  for (const key of ['accession', 'assembly', 'assembly_accession', 'assembly_level', 'species']) {
+    assert.match(portalSource, new RegExp(`v-if="isColumnVisible\\('${key}'\\)"`))
+  }
+})
+
+test('Assembly portal canonicalizes query state and preserves it when opening detail', () => {
+  assert.match(portalSource, /const buildPortalQuery = \(search, page = 1\)/)
+  assert.match(portalSource, /router\.replace\(\{ name: 'assembly', query \}\)/)
+  assert.match(portalSource, /delete query\.q|route\.query\.q/)
+  assert.match(portalSource, /query:\s*\{\s*from:\s*'assembly',\s*\.\.\.buildPortalQuery\(routeSearch\.value, currentPage\.value\)\s*\}/)
+})
+
+test('Assembly detail preserves portal return context across breadcrumbs and related assembly switches', () => {
+  assert.match(viewSource, /hasAssemblyPortalContext/)
+  assert.match(viewSource, /name:\s*'assembly',\s*query:\s*assemblyPortalQuery/)
+  assert.match(viewSource, /const assemblyPortalQuery = computed/)
+  assert.match(viewSource, /query:\s*route\.query/)
 })
 
 test('Assembly page loads the detail contract and renders all four required sections', () => {

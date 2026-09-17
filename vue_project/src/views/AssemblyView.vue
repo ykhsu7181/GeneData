@@ -23,6 +23,12 @@
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <router-link to="/dashboard">{{ $t('nav.home') }}</router-link>
         <span>/</span>
+        <template v-if="hasAssemblyPortalContext">
+          <router-link :to="{ name: 'assembly', query: assemblyPortalQuery }">
+            {{ $t('page.assembly.title') }}
+          </router-link>
+          <span>/</span>
+        </template>
         <router-link :to="{ name: 'accession-detail', query: { accession: assembly.accession } }">
           {{ assembly.accession || '-' }}
         </router-link>
@@ -136,6 +142,13 @@ import AnnotationVersionTable from '@/components/accession/AnnotationVersionTabl
 import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
 import RelatedFilesDrawer from '@/components/assembly/RelatedFilesDrawer.vue';
 
+const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
+
+const normalizeQueryText = (value) => {
+  const normalized = value === null || value === undefined ? '' : String(value).trim();
+  return normalized;
+};
+
 export default {
   name: 'AssemblyView',
   components: {
@@ -160,6 +173,20 @@ export default {
     const drawerScope = ref(null);
 
     const assemblyId = computed(() => String(route.params.assemblyId || '').trim());
+    const assemblyPortalQuery = computed(() => {
+      const query = {};
+      const search = normalizeQueryText(firstQueryValue(route.query.search || route.query.q));
+      const page = Number(firstQueryValue(route.query.page) || 1);
+      if (search) query.search = search;
+      if (Number.isInteger(page) && page > 1) query.page = String(page);
+      return query;
+    });
+    const hasAssemblyPortalContext = computed(() => (
+      route.query.from === 'assembly'
+      || Boolean(route.query.search)
+      || Boolean(route.query.q)
+      || Boolean(route.query.page)
+    ));
     const assembly = computed(() => detail.value?.assembly || {});
     const annotations = computed(() => detail.value?.annotations || []);
     const relatedAssemblies = computed(() => detail.value?.related_assemblies || []);
@@ -317,13 +344,16 @@ export default {
     );
     const selectAssembly = (item) => router.push({
       name: 'assembly-detail',
-      params: { assemblyId: item.id }
+      params: { assemblyId: item.id },
+      query: route.query
     });
 
     watch(assemblyId, fetchDetail, { immediate: true });
 
     return {
       assemblyId,
+      assemblyPortalQuery,
+      hasAssemblyPortalContext,
       loading,
       errorMessage,
       detail,

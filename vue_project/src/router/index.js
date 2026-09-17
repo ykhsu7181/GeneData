@@ -26,7 +26,7 @@ const routes = [
   {
     path: '/assembly',
     name: 'assembly',
-    redirect: { name: 'accession-card' },
+    component: () => import('../views/AssemblyPortalView.vue'),
     meta: {
       requiresAuth: true
     }
