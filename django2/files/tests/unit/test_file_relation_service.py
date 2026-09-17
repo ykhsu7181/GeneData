@@ -205,7 +205,7 @@ class FileRelationServiceTestCase(TestCase):
         with self.assertRaisesRegex(GenomeFileSelectionError, "multiple current unmarked"):
             get_primary_genome_file_for_assembly(self.assembly.id)
 
-    def test_assembly_genome_selector_uses_exact_role_and_scope(self):
+    def test_assembly_genome_selector_accepts_named_legacy_genome_role_in_exact_scope(self):
         self.add_relation("assembly", self.assembly.id, file_role="genome", is_primary=True)
         other_assembly = Assembly.objects.create(accession=self.accession, name="other")
         other_file = DataFile.objects.create(
@@ -223,4 +223,24 @@ class FileRelationServiceTestCase(TestCase):
 
         selected = get_primary_genome_file_for_assembly(self.assembly.id)
 
+        self.assertEqual(selected["file_id"], self.data_file.id)
+        self.assertEqual(selected["file_name"], "genome.IR64.fasta")
+        self.assertEqual(selected["file_role"], "genome")
+
+    def test_assembly_genome_selector_rejects_non_fasta_legacy_genome_role(self):
+        self.data_file.file_name = "genome.IR64.fasta.fai"
+        self.data_file.save(update_fields=["file_name"])
+        self.add_relation("assembly", self.assembly.id, file_role="genome", is_primary=True)
+
+        selected = get_primary_genome_file_for_assembly(self.assembly.id)
+
         self.assertIsNone(selected)
+
+    def test_assembly_genome_selector_prefers_canonical_role_over_legacy_primary(self):
+        self.add_relation("assembly", self.assembly.id, file_role="genome", is_primary=True)
+        canonical_file = self.add_assembly_genome_file("GENOME_CANONICAL")
+
+        selected = get_primary_genome_file_for_assembly(self.assembly.id)
+
+        self.assertEqual(selected["file_id"], canonical_file.id)
+        self.assertEqual(selected["file_role"], "genome_fasta")

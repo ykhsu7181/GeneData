@@ -6,6 +6,7 @@ from files.models import FileRelation
 logger = logging.getLogger(__name__)
 
 PRIMARY_GENOME_FILE_ROLE = "genome_fasta"
+COMPATIBLE_GENOME_FILE_ROLE = "genome"
 
 
 class GenomeFileSelectionError(ValueError):
@@ -43,24 +44,37 @@ def get_primary_file(related_type, related_id, file_role=None):
 def get_primary_genome_file_for_assembly(assembly_id):
     """Return the deterministic current genome FASTA for an Assembly.
 
-    A marked primary wins. Without one, the sole current candidate is accepted.
-    Multiple primaries or multiple unmarked candidates are data errors rather
-    than an invitation to pick a file by insertion order.
+    Canonical ``genome_fasta`` relations take precedence. Existing data that
+    uses the ``genome`` role remains eligible only when the file follows the
+    ``genome.<accession>.fasta`` naming contract. A marked primary wins;
+    otherwise the sole current candidate is accepted. Ambiguity is an error.
     """
     relations = list(
         FileRelation.objects.select_related("file").filter(
             related_type="assembly",
             related_id=str(assembly_id),
-            file_role=PRIMARY_GENOME_FILE_ROLE,
+            file_role__in=(PRIMARY_GENOME_FILE_ROLE, COMPATIBLE_GENOME_FILE_ROLE),
             file__is_current=True,
         ).order_by("id")
     )
+    canonical_relations = [
+        relation for relation in relations
+        if relation.file_role == PRIMARY_GENOME_FILE_ROLE
+    ]
+    if canonical_relations:
+        relations = canonical_relations
+    else:
+        relations = [
+            relation for relation in relations
+            if _is_compatible_genome_fasta(relation.file.file_name)
+        ]
     primary_relations = [relation for relation in relations if relation.is_primary]
+    selected_role = relations[0].file_role if relations else PRIMARY_GENOME_FILE_ROLE
 
     if len(primary_relations) > 1:
         message = (
             f"Assembly {assembly_id} has multiple current primary "
-            f"{PRIMARY_GENOME_FILE_ROLE} files"
+            f"genome FASTA files (role={selected_role})"
         )
         logger.error(message)
         raise GenomeFileSelectionError(message)
@@ -71,11 +85,16 @@ def get_primary_genome_file_for_assembly(assembly_id):
     if len(relations) > 1:
         message = (
             f"Assembly {assembly_id} has multiple current unmarked "
-            f"{PRIMARY_GENOME_FILE_ROLE} files"
+            f"genome FASTA files (role={selected_role})"
         )
         logger.error(message)
         raise GenomeFileSelectionError(message)
     return None
+
+
+def _is_compatible_genome_fasta(file_name):
+    normalized = str(file_name or "").lower()
+    return normalized.startswith("genome.") and normalized.endswith(".fasta")
 
 
 def _get_relation_files(related_type, related_id, file_role=None, primary_first=False):

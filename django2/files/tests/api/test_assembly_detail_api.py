@@ -143,6 +143,18 @@ class AssemblyDetailApiTestCase(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertFalse(response.json()["success"])
 
+    def test_summary_downloads_named_fasta_with_legacy_genome_role(self):
+        genome_file = self.create_file("GENOME_IR64_LEGACY", "genome.IR64.fasta")
+        self.relate(genome_file, "assembly", self.assembly.id, "genome")
+
+        response = self.client.get(self.summary_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["data"]["genome_download_url"],
+            f"/gd/api/files/data-files/{genome_file.id}/download/",
+        )
+
     def test_summary_returns_409_for_multiple_primary_genome_files(self):
         for suffix in ("A", "B"):
             data_file = self.create_file(f"GENOME_{suffix}")

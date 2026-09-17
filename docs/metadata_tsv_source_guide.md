@@ -186,6 +186,8 @@ NCBI Assembly：GCA/GCF 编号、BioSample、组装级别、染色体数、组�
 reference_genome 通常表示组装时参考了哪个已有基因组，这个信息 NCBI 不一定直接提供，很多时候需要从论文、项目说明或分析流程记录中补充。
 ```
 
+Assembly 主基因组下载优先使用直接关联且角色为 `genome_fasta` 的当前文件。为兼容已有数据，角色为 `genome` 且文件名符合 `genome.*.fasta` 的 Assembly 直接关系也会被识别；索引及其他 Genome 文件不会成为该下载按钮的目标。
+
 ### 4. annotation_manifest.tsv
 
 用途：补充 Annotation / 注释版本信息。
