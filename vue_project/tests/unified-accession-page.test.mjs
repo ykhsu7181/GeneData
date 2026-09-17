@@ -52,7 +52,7 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /:longitude="geography\.longitude"/);
   assert.match(pageSource, /page\.accessionDetail\.fields\.description/);
   assert.match(pageSource, /labelKey:\s*'page\.accessionDetail\.tabs\./);
-  assert.match(pageSource, /accessions\/\$\{encodeURIComponent\(routeAccession\.value\)\}\/summary/);
+  assert.match(pageSource, /accessions\/\$\{encodeURIComponent\(requestedAccession\)\}\/summary/);
   assert.match(pageSource, /accessions\/\$\{encodeURIComponent\(routeAccession\.value\)\}\/\$\{tab\}/);
   assert.match(pageSource, /datafile_download_url/);
   assert.doesNotMatch(pageSource, /page\.accessionDetail\.tabs\.assemblies/);

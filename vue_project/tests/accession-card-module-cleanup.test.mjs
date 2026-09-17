@@ -10,9 +10,10 @@ const source = fs.readFileSync(sourcePath, 'utf8');
 
 test('accession card is retained only as the accession search entry', () => {
   assert.match(source, /accession-workbench/);
-  assert.match(source, /page\.accessionSearch\.empty/);
+  assert.match(source, /AccessionPortalHeader/);
+  assert.match(source, /AccessionSearchPanel/);
   assert.match(source, /name:\s*'accession-card'/);
-  assert.match(source, /<AccessionDetailTableView v-if="routeAccession" embedded/);
+  assert.match(source, /<AccessionDetailTableView v-else embedded/);
   assert.doesNotMatch(source, /Accession overview/);
   assert.doesNotMatch(source, /goToDetailTable/);
   assert.doesNotMatch(source, />Current Modules</);
@@ -24,4 +25,5 @@ test('accession card no longer contains resource-card or hierarchy-graph impleme
   assert.doesNotMatch(source, /class="hierarchy-graph"/);
   assert.doesNotMatch(source, /const resourceCards = computed/);
   assert.doesNotMatch(source, /const updateHierarchyLines =/);
+  assert.doesNotMatch(source, /speciesFilter|subPopulationFilter|locationFilter|empty-card/);
 });

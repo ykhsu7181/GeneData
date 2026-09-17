@@ -5,7 +5,7 @@ from functools import wraps
 
 from django.conf import settings
 from django.http import FileResponse
-from django.db.models import Q
+from django.db.models import Case, IntegerField, Q, Value, When
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -220,9 +220,52 @@ def query_organisms(request):
     params = _request_params(request)
     search = (params.get("search") or "").strip()
     queryset = Accession.objects.all().order_by("accession")
-    if search:
-        queryset = queryset.filter(accession__icontains=search)
-    return Response(list(queryset.values_list("accession", flat=True)))
+    if not search:
+        return Response(list(queryset.values_list("accession", flat=True)))
+
+    if len(search) > 100:
+        return Response(
+            {
+                "error": "search must not exceed 100 characters",
+                "code": "invalid_search",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    raw_limit = params.get("limit", "20")
+    try:
+        limit = int(raw_limit)
+    except (TypeError, ValueError):
+        limit = 0
+    if limit < 1:
+        return Response(
+            {"error": "limit must be a positive integer", "code": "invalid_limit"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    limit = min(limit, 50)
+
+    queryset = (
+        queryset.filter(
+            Q(accession__icontains=search)
+            | Q(species__species_code__icontains=search)
+            | Q(species__scientific_name__icontains=search)
+            | Q(species__chinese_name__icontains=search)
+            | Q(species__common_name__icontains=search)
+            | Q(sub_population__icontains=search)
+        )
+        .annotate(
+            search_rank=Case(
+                When(accession__iexact=search, then=Value(0)),
+                When(accession__istartswith=search, then=Value(1)),
+                When(accession__icontains=search, then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField(),
+            )
+        )
+        .order_by("search_rank", "accession")
+        .distinct()
+    )
+    return Response(list(queryset.values_list("accession", flat=True)[:limit]))
 
 
 @api_view(["GET"])
@@ -261,8 +304,13 @@ def query_sub_populations(request):
 @permission_classes([AllowAny])
 def query_supplementary_data(request):
     payload = {}
-    for accession in Accession.objects.all().order_by("accession"):
+    for accession in Accession.objects.select_related("species").order_by("accession"):
+        species = accession.species
         payload[accession.accession] = {
+            "species_code": species.species_code if species else None,
+            "scientific_name": species.scientific_name if species else None,
+            "chinese_name": species.chinese_name if species else None,
+            "common_name": species.common_name if species else None,
             "sub_population": accession.sub_population,
             "seq_data": accession.seq_data,
             "country": accession.country,

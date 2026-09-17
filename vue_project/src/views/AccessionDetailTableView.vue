@@ -11,6 +11,17 @@
           </div>
         </div>
         <div class="heading-actions">
+          <button
+            v-if="accession"
+            type="button"
+            :class="['favorite-button', { active: favorite }]"
+            :aria-label="$t(favorite ? 'page.accessionDetail.favorited' : 'page.accessionDetail.favorite')"
+            :aria-pressed="favorite"
+            @click="toggleFavorite"
+          >
+            <span aria-hidden="true">{{ favorite ? '★' : '☆' }}</span>
+            {{ $t(favorite ? 'page.accessionDetail.favorited' : 'page.accessionDetail.favorite') }}
+          </button>
           <form class="detail-search" role="search" @submit.prevent="submitSearch">
             <label class="detail-search-field">
               <el-icon><Search /></el-icon>
@@ -102,6 +113,11 @@ import axios from 'axios';
 import AnnotationVersionTable from '@/components/accession/AnnotationVersionTable.vue';
 import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
 import CompactAccessionMap from '@/components/accession/CompactAccessionMap.vue';
+import {
+  isFavoriteAccession,
+  recordRecentAccession,
+  toggleFavoriteAccession
+} from '@/services/accessionPreferences.js';
 
 const tabs = [
   { key: 'basic', labelKey: 'page.accessionDetail.tabs.basic' },
@@ -128,6 +144,8 @@ export default {
     const tabPagination = ref({ page: 1, page_size: 20, total: 0 });
     const fileScope = ref(null);
     const searchQuery = ref('');
+    const favorite = ref(false);
+    const recordedRouteAccession = ref('');
     const routeAccession = computed(() => String(route.query.accession || route.query.organism || '').trim());
     const accession = computed(() => summaryData.value.accession || null);
     const external = computed(() => summaryData.value.external_identifiers || {});
@@ -170,11 +188,20 @@ export default {
     const reset = () => { summaryData.value = {}; tabRows.value = []; tabPagination.value = { page: 1, page_size: 20, total: 0 }; fileScope.value = null; activeTab.value = 'basic'; };
     const fetchSummary = async () => {
       if (!routeAccession.value) { reset(); return; }
+      const requestedAccession = routeAccession.value;
       loading.value = true; errorMessageKey.value = '';
       try {
-        const response = await axios.get(`/files/accessions/${encodeURIComponent(routeAccession.value)}/summary/`);
+        const response = await axios.get(`/files/accessions/${encodeURIComponent(requestedAccession)}/summary/`);
         if (!response.data?.success) throw new Error('Request failed');
+        if (requestedAccession !== routeAccession.value) return;
         summaryData.value = response.data.data || {};
+        const loadedAccession = summaryData.value.accession?.accession || requestedAccession;
+        favorite.value = isFavoriteAccession(loadedAccession);
+        if (recordedRouteAccession.value !== requestedAccession) {
+          const result = recordRecentAccession(loadedAccession);
+          if (result.persisted) recordedRouteAccession.value = requestedAccession;
+          else ElMessage.warning(t('messages.accessionPreferenceSaveFailed'));
+        }
       } catch { reset(); errorMessageKey.value = 'messages.accessionLoadFailed'; }
       finally { loading.value = false; }
     };
@@ -194,6 +221,13 @@ export default {
     const openAssembly = (assembly) => router.push({ name: 'assembly-detail', params: { assemblyId: assembly.id } });
     const downloadFile = (file) => { if (!file?.datafile_download_url) { ElMessage.error(t('messages.missingDatafileUrl')); return; } window.open(new URL(file.datafile_download_url, window.location.origin).toString(), '_blank'); };
     const refreshPage = async () => { await fetchSummary(); if (activeTab.value !== 'basic') await fetchTab(activeTab.value); };
+    const toggleFavorite = () => {
+      const currentAccession = accession.value?.accession;
+      if (!currentAccession) return;
+      const result = toggleFavoriteAccession(currentAccession);
+      favorite.value = result.isFavorite;
+      if (!result.persisted) ElMessage.warning(t('messages.accessionPreferenceSaveFailed'));
+    };
     const submitSearch = async () => {
       const normalized = searchQuery.value.trim();
       if (!normalized || normalized === routeAccession.value) return;
@@ -201,8 +235,13 @@ export default {
       delete query.organism;
       await router.push({ path: route.path, query });
     };
-    watch(routeAccession, (value) => { searchQuery.value = value; fetchSummary(); }, { immediate: true });
-    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, filteredFiles, geography, loading, openAssembly, openFiles, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs };
+    watch(routeAccession, (value) => {
+      searchQuery.value = value;
+      favorite.value = isFavoriteAccession(value);
+      recordedRouteAccession.value = '';
+      fetchSummary();
+    }, { immediate: true });
+    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAssembly, openFiles, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
   }
 };
 </script>
@@ -225,6 +264,9 @@ export default {
 .detail-search-field input { flex:1; min-width:0; border:0; outline:0; color:#18335f; background:transparent; font:inherit; }
 .detail-search-field input::placeholder { color:#a0aec0; }
 .search-button,.table-action,.download-action { height:38px; padding:0 16px; border:1px solid #c9dcfb; border-radius:8px; background:#fff; color:#1760e8; font-size:12px; font-weight:700; cursor:pointer; }
+.favorite-button { display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 13px; border:1px solid #d5e1f2; border-radius:8px; background:#fff; color:#526079; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.favorite-button:hover,.favorite-button:focus-visible { border-color:#e6ad16; color:#a86f00; outline:none; box-shadow:0 0 0 2px rgba(230,173,22,.14); }
+.favorite-button.active { border-color:#f0c04e; background:#fff9e8; color:#a86f00; }
 .search-button { min-width:72px; border-color:#409eff; background:#409eff; color:#fff; }
 .search-button:disabled { cursor:not-allowed; opacity:.55; }
 .table-action,.download-action { height:34px; padding:0 12px; }

@@ -25,6 +25,10 @@ const sources = Object.fromEntries(viewNames.map((name) => [
   name,
   readFileSync(join(process.cwd(), 'src', 'views', name), 'utf8')
 ]))
+const accessionSearchPanelSource = readFileSync(
+  join(process.cwd(), 'src', 'components', 'accession', 'AccessionSearchPanel.vue'),
+  'utf8'
+)
 
 test('stage two static translation references exist in both locales', () => {
   const keyPattern = /(?:\$t|\bt)\(\s*'([^']+)'/g
@@ -53,7 +57,7 @@ test('dynamic labels and messages react through vue-i18n without changing API en
   assert.match(sources['AccessionDetailTableView.vue'], /const submitSearch = async/)
   assert.match(sources['DataOverviewView.vue'], /categoryLabel\(row\.category\)/)
   assert.match(sources['RawDataView.vue'], /t\(`status\.\$\{key\}`\)/)
-  assert.match(sources['AccessionCard.vue'], /\/files\/query\/organisms\//)
+  assert.match(accessionSearchPanelSource, /\/files\/query\/organisms\//)
   assert.match(sources['AccessionDetailTableView.vue'], /\/files\/accessions\//)
   assert.match(sources['DataOverviewView.vue'], /\/files\/query\/data-overview\//)
   assert.match(sources['RawDataView.vue'], /\/files\/query\/raw-data\//)
