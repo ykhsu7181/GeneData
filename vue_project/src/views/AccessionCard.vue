@@ -25,7 +25,6 @@
 
       <AccessionDistributionMap
         :items="geoItems"
-        @select="openAccession"
         @select-cluster="openClusterDrawer"
       />
 

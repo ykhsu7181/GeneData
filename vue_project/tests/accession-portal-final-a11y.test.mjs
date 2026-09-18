@@ -7,6 +7,7 @@ const readSource = (relativePath) => readFileSync(join(process.cwd(), 'src', ...
 const drawerSource = readSource(['components', 'accession', 'AccessionListDrawer.vue'])
 const mapSource = readSource(['components', 'accession', 'AccessionDistributionMap.vue'])
 const cardSource = readSource(['views', 'AccessionCard.vue'])
+const detailSource = readSource(['views', 'AccessionDetailTableView.vue'])
 
 test('final portal accessibility keeps map and drawer states named', () => {
   assert.match(mapSource, /role="img"/)
@@ -22,4 +23,13 @@ test('final portal cleanup keeps focus and cancels metadata requests', () => {
   assert.match(cardSource, /onBeforeUnmount/)
   assert.match(mapSource, /window\.removeEventListener\('resize', resizeMap\)/)
   assert.match(mapSource, /mapInstance\.dispose\(\)/)
+})
+
+test('accession detail exposes contextual return and accessible async states', () => {
+  assert.match(detailSource, /class="context-back" :to="parentLocation"/)
+  assert.match(detailSource, /role="status" aria-live="polite"/)
+  assert.match(detailSource, /role="alert"/)
+  assert.match(detailSource, /:aria-current="activeTab === tab\.key \? 'page' : undefined"/)
+  assert.match(detailSource, /:aria-label="\$t\('page\.accessionDetail\.searchPlaceholder'\)"/)
+  assert.match(detailSource, /<StarFilled v-if="favorite"/)
 })

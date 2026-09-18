@@ -27,9 +27,11 @@ test('accession search and detail routes render their dedicated pages', () => {
 
 test('unified accession page follows the approved information architecture', () => {
   assert.match(pageSource, /page\.accessionDetail\.title/);
-  assert.match(pageSource, /<div class="page-heading">\s*<nav class="accession-breadcrumb"/);
+  assert.match(pageSource, /<div class="page-heading">[\s\S]*?<nav class="accession-breadcrumb"/);
   assert.match(pageSource, /<router-link :to="\{ name: 'dashboard-home' \}">/);
-  assert.match(pageSource, /<router-link :to="\{ name: 'accession-card' \}">/);
+  assert.match(pageSource, /<router-link class="context-back" :to="parentLocation">/);
+  assert.match(pageSource, /<router-link :to="parentLocation">/);
+  assert.match(pageSource, /normalizeAccessionMapReturnPath\(route\.query\.return_to\)/);
   assert.match(pageSource, /<div class="heading-row">/);
   assert.match(pageSource, /page\.accessionDetail\.searchPlaceholder/);
   assert.match(pageSource, /type="search"/);

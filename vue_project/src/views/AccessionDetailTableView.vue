@@ -1,10 +1,14 @@
 <template>
   <div :class="['accession-page', embedded ? 'is-embedded' : '']">
     <div class="page-heading">
+      <router-link class="context-back" :to="parentLocation">
+        <el-icon aria-hidden="true"><ArrowLeft /></el-icon>
+        {{ parentReturnLabel }}
+      </router-link>
       <nav class="accession-breadcrumb" :aria-label="$t('page.accessionPortal.breadcrumbLabel')">
         <router-link :to="{ name: 'dashboard-home' }">{{ $t('nav.home') }}</router-link>
         <span aria-hidden="true">/</span>
-        <router-link :to="{ name: 'accession-card' }">{{ $t('nav.accession') }}</router-link>
+        <router-link :to="parentLocation">{{ parentBreadcrumbLabel }}</router-link>
         <span aria-hidden="true">/</span>
         <span>{{ routeAccession || '-' }}</span>
       </nav>
@@ -25,13 +29,16 @@
             :aria-pressed="favorite"
             @click="toggleFavorite"
           >
-            <span aria-hidden="true">{{ favorite ? '★' : '☆' }}</span>
+            <el-icon aria-hidden="true">
+              <StarFilled v-if="favorite" />
+              <Star v-else />
+            </el-icon>
             {{ $t(favorite ? 'page.accessionDetail.favorited' : 'page.accessionDetail.favorite') }}
           </button>
           <form class="detail-search" role="search" @submit.prevent="submitSearch">
             <label class="detail-search-field">
               <el-icon><Search /></el-icon>
-              <input v-model="searchQuery" type="search" :placeholder="$t('page.accessionDetail.searchPlaceholder')">
+              <input v-model="searchQuery" type="search" :aria-label="$t('page.accessionDetail.searchPlaceholder')" :placeholder="$t('page.accessionDetail.searchPlaceholder')">
             </label>
             <button type="submit" class="search-button" :disabled="!searchQuery.trim()">{{ $t('common.search') }}</button>
           </form>
@@ -42,15 +49,15 @@
       </div>
     </div>
 
-    <div v-if="loading" class="state-card"><el-skeleton :rows="12" animated /></div>
-    <div v-else-if="!routeAccession" class="state-card"><el-empty :description="$t('page.accessionDetail.selectPrompt')" /></div>
-    <div v-else-if="errorMessage" class="state-card"><el-empty :description="errorMessage" /></div>
+    <div v-if="loading" class="state-card" role="status" aria-live="polite"><el-skeleton :rows="12" animated /></div>
+    <div v-else-if="!routeAccession" class="state-card" role="status"><el-empty :description="$t('page.accessionDetail.selectPrompt')" /></div>
+    <div v-else-if="errorMessage" class="state-card" role="alert"><el-empty :description="errorMessage" /></div>
 
     <template v-else-if="accession">
       <div class="accession-layout">
         <main class="detail-column">
           <nav class="section-tabs" :aria-label="$t('page.accessionDetail.sectionsLabel')">
-            <button v-for="tab in tabs" :key="tab.key" type="button" :class="{ active: activeTab === tab.key }" @click="selectTab(tab.key)">{{ $t(tab.labelKey) }}</button>
+            <button v-for="tab in tabs" :key="tab.key" type="button" :class="{ active: activeTab === tab.key }" :aria-current="activeTab === tab.key ? 'page' : undefined" @click="selectTab(tab.key)">{{ $t(tab.labelKey) }}</button>
           </nav>
 
           <section v-if="activeTab === 'basic'" class="detail-section">
@@ -98,7 +105,7 @@
             <div class="side-card-heading"><h2>{{ $t('page.accessionDetail.geography') }}</h2></div>
             <template v-if="geography.has_point">
               <CompactAccessionMap :accession="accession.accession" :latitude="geography.latitude" :longitude="geography.longitude" />
-              <p class="map-coordinates">{{ $t('page.accessionDetail.coordinates') }}：{{ geography.latitude }}, {{ geography.longitude }}</p>
+              <p class="map-coordinates">{{ $t('page.accessionDetail.coordinates') }}: {{ geography.latitude }}, {{ geography.longitude }}</p>
             </template>
             <el-empty v-else :description="$t('page.accessionDetail.noCoordinates')" :image-size="72" />
           </section>
@@ -111,7 +118,7 @@
 
 <script>
 import { computed, ref, watch } from 'vue';
-import { Refresh, Search } from '@element-plus/icons-vue';
+import { ArrowLeft, Refresh, Search, Star, StarFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -124,6 +131,7 @@ import {
   recordRecentAccession,
   toggleFavoriteAccession
 } from '@/services/accessionPreferences.js';
+import { normalizeAccessionMapReturnPath } from '@/services/accessionMapRoute.mjs';
 
 const tabs = [
   { key: 'basic', labelKey: 'page.accessionDetail.tabs.basic' },
@@ -135,7 +143,7 @@ const tabs = [
 
 export default {
   name: 'AccessionDetailTableView',
-  components: { AnnotationVersionTable, AssemblyVersionTable, CompactAccessionMap, Refresh, Search },
+  components: { AnnotationVersionTable, ArrowLeft, AssemblyVersionTable, CompactAccessionMap, Refresh, Search, Star, StarFilled },
   props: { embedded: { type: Boolean, default: false } },
   setup() {
     const route = useRoute();
@@ -153,6 +161,14 @@ export default {
     const favorite = ref(false);
     const recordedRouteAccession = ref('');
     const routeAccession = computed(() => String(route.query.accession || route.query.organism || '').trim());
+    const mapReturnPath = computed(() => normalizeAccessionMapReturnPath(route.query.return_to));
+    const parentLocation = computed(() => mapReturnPath.value || { name: 'accession-card' });
+    const parentBreadcrumbLabel = computed(() => mapReturnPath.value
+      ? t('page.accessionMap.title')
+      : t('nav.accession'));
+    const parentReturnLabel = computed(() => mapReturnPath.value
+      ? t('page.accessionDetail.backToMap')
+      : t('page.accessionDetail.backToAccessions'));
     const accession = computed(() => summaryData.value.accession || null);
     const external = computed(() => summaryData.value.external_identifiers || {});
     const geography = computed(() => summaryData.value.geography || {});
@@ -247,7 +263,7 @@ export default {
       recordedRouteAccession.value = '';
       fetchSummary();
     }, { immediate: true });
-    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAssembly, openFiles, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
+    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAssembly, openFiles, parentBreadcrumbLabel, parentLocation, parentReturnLabel, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
   }
 };
 </script>
@@ -255,6 +271,8 @@ export default {
 <style scoped>
 .accession-page { padding:8px 0 36px; color:#15233d; }
 .accession-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:14px; color:#76849a; font-size:13px; }
+.context-back { display:inline-flex; align-items:center; gap:5px; margin-bottom:10px; color:#3974c7; font-size:13px; text-decoration:none; }
+.context-back:hover,.context-back:focus-visible { color:#086cde; text-decoration:underline; }
 .accession-breadcrumb a { color:#3974c7; text-decoration:none; }
 .accession-breadcrumb a:hover,.accession-breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
 .page-heading { margin-bottom:16px; padding:16px 20px 18px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }
