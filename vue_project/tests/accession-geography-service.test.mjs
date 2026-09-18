@@ -32,8 +32,8 @@ test('shared geography contract accepts zero and legal boundaries but rejects mi
 
 test('cluster colors follow the shared accession-count thresholds', () => {
   assert.equal(getGeographicClusterColor(1), '#1677e8')
-  assert.equal(getGeographicClusterColor(2), '#f07818')
-  assert.equal(getGeographicClusterColor(5), '#f07818')
+  assert.equal(getGeographicClusterColor(2), '#16a34a')
+  assert.equal(getGeographicClusterColor(5), '#16a34a')
   assert.equal(getGeographicClusterColor(6), '#7c3aed')
   assert.equal(getGeographicClusterColor(10), '#7c3aed')
   assert.equal(getGeographicClusterColor(11), '#f07818')

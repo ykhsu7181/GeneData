@@ -44,7 +44,8 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /<AssemblyVersionTable[\s\S]*?:rows="relationship\.assemblies \|\| \[\]"/);
   assert.match(pageSource, /:action-label="\$t\('page\.accessionDetail\.viewGenome'\)"/);
   assert.match(pageSource, /@select="openAssembly"/);
-  assert.match(pageSource, /router\.push\(\{ name: 'assembly-detail', params: \{ assemblyId: assembly\.id \} \}\)/);
+  assert.match(pageSource, /query = \{ from: 'accession' \}/);
+  assert.match(pageSource, /router\.push\(\{ name: 'assembly-detail', params: \{ assemblyId: assembly\.id \}, query \}\)/);
   assert.match(pageSource, /import AnnotationVersionTable from '@\/components\/accession\/AnnotationVersionTable\.vue'/);
   assert.match(pageSource, /<AnnotationVersionTable[\s\S]*?:rows="tabRows"/);
   assert.match(pageSource, /@view-files="openFiles\('annotation', \$event\.id\)"/);

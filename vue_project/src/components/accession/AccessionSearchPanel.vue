@@ -257,7 +257,7 @@ export default {
 .combobox-shell input::placeholder { color:#7d91ae; }
 .search-status { position:absolute; right:14px; color:#6d83a3; font-size:12px; }
 .search-button { border:0; border-radius:0 9px 9px 0; color:#fff; background:linear-gradient(180deg,#2e91f5,#0b71df); font-weight:700; cursor:pointer; }
-.search-button:disabled { cursor:not-allowed; opacity:.55; }
+.search-button:disabled { cursor:not-allowed; opacity:1; }
 .suggestion-list { position:absolute; z-index:20; top:calc(100% + 6px); left:0; right:0; max-height:240px; margin:0; padding:6px; overflow-y:auto; list-style:none; border:1px solid #d5e2f3; border-radius:9px; background:#fff; box-shadow:0 12px 28px rgba(32,68,119,.14); }
 .suggestion-list li { padding:9px 12px; border-radius:6px; color:#24456f; font-size:13px; cursor:pointer; }
 .suggestion-list li.active { color:#075fbf; background:#edf5ff; }

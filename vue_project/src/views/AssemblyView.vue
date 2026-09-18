@@ -20,28 +20,49 @@
     </div>
 
     <template v-else-if="detail">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <router-link to="/dashboard">{{ $t('nav.home') }}</router-link>
-        <span>/</span>
-        <router-link :to="{ name: 'assembly', query: assemblyPortalQuery }">
-          {{ $t('page.assembly.title') }}
-        </router-link>
-        <span>/</span>
-        <router-link :to="{ name: 'accession-detail', query: { accession: assembly.accession } }">
-          {{ assembly.accession || '-' }}
-        </router-link>
-        <span>/</span>
-        <span>{{ assemblyDisplayName }}</span>
-      </nav>
+      <header class="detail-header">
+        <nav class="breadcrumb" :aria-label="$t('page.assembly.breadcrumbLabel')">
+          <router-link :to="{ name: 'dashboard-home' }">{{ $t('nav.home') }}</router-link>
+          <span aria-hidden="true">/</span>
+          <router-link v-if="fromAccession" :to="{ name: 'accession-card' }">{{ $t('nav.accession') }}</router-link>
+          <router-link v-else :to="{ name: 'assembly', query: assemblyPortalQuery }">{{ $t('page.assembly.title') }}</router-link>
+          <span aria-hidden="true">/</span>
+          <router-link :to="{ name: 'accession-card', query: accessionDetailQuery }">
+            {{ assembly.accession || '-' }}
+          </router-link>
+          <span aria-hidden="true">/</span>
+          <span>{{ assemblyDisplayName }}</span>
+        </nav>
 
-      <header class="page-header">
-        <div>
+        <div class="heading-row">
+          <div class="heading-main">
           <h1>{{ $t('page.assemblyDetail.title', { accession: assembly.accession || '-', assembly: assemblyDisplayName }) }}</h1>
-          <p>
-            <span>{{ $t('page.assemblyDetail.species', { value: speciesLabel }) }}</span>
-            <span class="meta-divider" aria-hidden="true">|</span>
-            <span>{{ $t('page.assemblyDetail.subPopulation', { value: detail.sub_population || '-' }) }}</span>
-          </p>
+            <div class="heading-tags">
+              <span class="heading-tag species-tag">{{ $t('page.assemblyDetail.species', { value: speciesLabel }) }}</span>
+              <span class="heading-tag population-tag">{{ $t('page.assemblyDetail.subPopulation', { value: detail.sub_population || '-' }) }}</span>
+            </div>
+          </div>
+          <div class="heading-actions">
+            <form class="detail-search" role="search" @submit.prevent="submitSearch">
+              <label class="detail-search-field">
+                <el-icon aria-hidden="true"><Search /></el-icon>
+                <input
+                  v-model="searchQuery"
+                  type="search"
+                  :aria-label="$t('page.assembly.searchTitle')"
+                  :placeholder="$t('page.assembly.searchPlaceholder')"
+                >
+              </label>
+              <button class="search-button" type="submit" :disabled="!searchQuery.trim() || searchLoading">
+                {{ $t('common.search') }}
+              </button>
+            </form>
+            <el-tooltip :content="$t('common.refresh')" placement="top">
+              <el-button circle class="refresh-button" :aria-label="$t('common.refresh')" :loading="loading" @click="fetchDetail">
+                <el-icon><Refresh /></el-icon>
+              </el-button>
+            </el-tooltip>
+          </div>
         </div>
       </header>
 
@@ -135,7 +156,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-import { Download, FolderOpened, Refresh } from '@element-plus/icons-vue';
+import { Download, FolderOpened, Refresh, Search } from '@element-plus/icons-vue';
 import AnnotationVersionTable from '@/components/accession/AnnotationVersionTable.vue';
 import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
 import RelatedFilesDrawer from '@/components/assembly/RelatedFilesDrawer.vue';
@@ -155,7 +176,8 @@ export default {
     RelatedFilesDrawer,
     Download,
     FolderOpened,
-    Refresh
+    Refresh,
+    Search
   },
   setup() {
     const route = useRoute();
@@ -169,8 +191,13 @@ export default {
     const drawerErrorKey = ref('');
     const drawerFiles = ref([]);
     const drawerScope = ref(null);
+    const searchQuery = ref('');
+    const searchLoading = ref(false);
 
     const assemblyId = computed(() => String(route.params.assemblyId || '').trim());
+    const fromAccession = computed(() => (
+      normalizeQueryText(firstQueryValue(route.query.from)).toLocaleLowerCase() === 'accession'
+    ));
     const assemblyPortalQuery = computed(() => {
       const query = {};
       const search = normalizeQueryText(firstQueryValue(route.query.search || route.query.q));
@@ -180,6 +207,12 @@ export default {
       return query;
     });
     const assembly = computed(() => detail.value?.assembly || {});
+    const accessionDetailQuery = computed(() => {
+      const query = { accession: assembly.value.accession || '' };
+      const returnTo = normalizeQueryText(firstQueryValue(route.query.return_to));
+      if (fromAccession.value && returnTo) query.return_to = returnTo;
+      return query;
+    });
     const annotations = computed(() => detail.value?.annotations || []);
     const relatedAssemblies = computed(() => detail.value?.related_assemblies || []);
     const assemblyDisplayName = computed(() => (
@@ -188,10 +221,13 @@ export default {
     const speciesLabel = computed(() => {
       const species = detail.value?.species;
       if (!species) return '-';
-      if (String(locale.value).startsWith('zh')) {
-        return species.chinese_name || species.scientific_name || species.common_name || '-';
-      }
-      return species.scientific_name || species.common_name || species.chinese_name || '-';
+      const name = String(locale.value).startsWith('zh')
+        ? species.chinese_name || species.common_name || species.species_code
+        : species.common_name || species.species_code || species.chinese_name;
+      if (!name) return species.scientific_name || '-';
+      return species.scientific_name && species.scientific_name !== name
+        ? `${name} (${species.scientific_name})`
+        : name;
     });
     const errorMessage = computed(() => (errorKey.value ? t(errorKey.value) : ''));
     const drawerErrorMessage = computed(() => (drawerErrorKey.value ? t(drawerErrorKey.value) : ''));
@@ -259,6 +295,7 @@ export default {
         const response = await axios.get(`/files/assemblies/${encodeURIComponent(assemblyId.value)}/summary/`);
         if (!response.data?.success) throw new Error('Assembly request failed');
         detail.value = response.data.data;
+        searchQuery.value = detail.value?.assembly?.accession || '';
       } catch (error) {
         const status = error.response?.status;
         if (status === 403) errorKey.value = 'page.assemblyDetail.forbidden';
@@ -340,10 +377,43 @@ export default {
       query: route.query
     });
 
+    const submitSearch = async () => {
+      const keyword = searchQuery.value.trim();
+      if (!keyword || searchLoading.value) return;
+      searchLoading.value = true;
+      try {
+        const response = await axios.get('/files/assemblies/', {
+          params: { search: keyword, page: 1, page_size: 20 }
+        });
+        const results = Array.isArray(response.data?.results) ? response.data.results : [];
+        const normalizedKeyword = keyword.toLocaleLowerCase();
+        const exactMatch = results.find((item) => [
+          item.accession,
+          item.assembly,
+          item.assembly_accession
+        ].some((value) => String(value || '').trim().toLocaleLowerCase() === normalizedKeyword));
+        const target = exactMatch || results[0];
+        if (!target?.id) {
+          ElMessage.warning(t('page.assembly.noResults'));
+          return;
+        }
+        await router.push({
+          name: 'assembly-detail',
+          params: { assemblyId: target.id },
+          query: route.query
+        });
+      } catch {
+        ElMessage.error(t('page.assembly.loadFailed'));
+      } finally {
+        searchLoading.value = false;
+      }
+    };
+
     watch(assemblyId, fetchDetail, { immediate: true });
 
     return {
       assemblyId,
+      accessionDetailQuery,
       assemblyPortalQuery,
       loading,
       errorMessage,
@@ -362,25 +432,42 @@ export default {
       displayedDrawerFiles,
       displayValue,
       fetchDetail,
+      fromAccession,
       openRelatedFiles,
       openAnnotationFiles,
       loadRelatedFiles,
       downloadGenome,
       downloadRelatedFile,
-      selectAssembly
+      selectAssembly,
+      searchQuery,
+      searchLoading,
+      submitSearch
     };
   }
 };
 </script>
 
 <style scoped>
-.assembly-page { width:min(1180px, 100%); margin:0 auto; padding:24px 22px 48px; box-sizing:border-box; }
-.breadcrumb { display:flex; gap:8px; align-items:center; margin-bottom:15px; color:#71829d; font-size:12px; }
+.assembly-page { width:100%; margin:0; padding:8px 0 36px; box-sizing:border-box; color:#15233d; }
+.detail-header { margin-bottom:16px; padding:16px 20px 18px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }
+.breadcrumb { display:flex; gap:8px; align-items:center; margin-bottom:14px; color:#76849a; font-size:13px; }
 .breadcrumb a { color:#3974c7; text-decoration:none; }
-.page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px; }
-.page-header h1 { margin:0; color:#102a5e; font-size:clamp(24px, 3vw, 34px); line-height:1.25; }
-.page-header p { margin:10px 0 0; color:#607493; font-size:14px; }
-.meta-divider { margin:0 10px; color:#b6c1d1; }
+.breadcrumb a:hover,.breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
+.heading-row { display:flex; align-items:center; justify-content:space-between; gap:18px; }
+.heading-main { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }
+.detail-header h1 { margin:0 6px 0 0; color:#102c5d; font-size:30px; line-height:1.2; }
+.heading-tags { display:flex; flex-wrap:wrap; gap:8px; }
+.heading-tag { padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
+.species-tag { color:#1c5bc5; background:#eaf2ff; border:1px solid #cfe0ff; }
+.population-tag { color:#327b46; background:#eaf8ed; border:1px solid #ccebd3; }
+.heading-actions { display:flex; align-items:center; gap:10px; margin-left:auto; flex:0 1 520px; justify-content:flex-end; }
+.detail-search { display:grid; grid-template-columns:minmax(180px, 1fr) 72px; flex:1; max-width:430px; }
+.detail-search-field { display:flex; align-items:center; gap:9px; min-width:0; height:38px; padding:0 12px; border:1px solid #cfdef0; border-right:0; border-radius:8px 0 0 8px; background:#fff; color:#71829d; box-sizing:border-box; }
+.detail-search-field:focus-within { border-color:#4c9df3; box-shadow:0 0 0 2px rgba(47,136,255,.1); }
+.detail-search-field input { width:100%; min-width:0; border:0; outline:0; color:#18345f; background:transparent; font:inherit; font-size:13px; }
+.search-button { min-height:38px; border:0; border-radius:0 8px 8px 0; color:#fff; background:linear-gradient(180deg,#2e91f5,#0b71df); font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.search-button:disabled { cursor:not-allowed; opacity:1; }
+.refresh-button { flex:0 0 auto; }
 .content-card { margin-top:16px; padding:18px 20px 20px; border:1px solid #dce7f5; border-radius:12px; background:#fff; box-shadow:0 7px 22px rgba(37, 75, 122, 0.05); }
 .card-heading { display:flex; align-items:center; min-height:34px; padding-bottom:12px; }
 .card-heading-with-actions { justify-content:space-between; gap:16px; }
@@ -397,14 +484,17 @@ export default {
 .page-state { min-height:520px; display:grid; place-items:center; }
 .page-loading { display:block; padding:80px 0; }
 @media (max-width: 700px) {
-  .assembly-page { padding:18px 12px 34px; }
+  .assembly-page { padding:8px 0 34px; }
+  .detail-header { padding:14px; }
+  .heading-row { align-items:flex-start; flex-direction:column; }
+  .detail-header h1 { font-size:26px; }
+  .heading-actions { width:100%; flex-basis:auto; margin-left:0; }
+  .detail-search { max-width:none; }
   .card-heading-with-actions { align-items:flex-start; flex-direction:column; }
   .header-actions { width:100%; }
   .primary-button,.secondary-button { flex:1; }
   .detail-grid { grid-template-columns:1fr; }
   .detail-grid dt { min-height:auto; padding-bottom:3px; border-bottom:0; font-weight:700; }
   .detail-grid dd { padding-top:3px; }
-  .meta-divider { display:none; }
-  .page-header p span { display:block; margin-top:4px; }
 }
 </style>

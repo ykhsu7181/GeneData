@@ -521,7 +521,8 @@ export default {
 .size-legend span { display: inline-flex; gap: 6px; align-items: center; }
 .bubble { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
 .cluster-single { background: #1677e8; }
-.cluster-small,.cluster-large { background: #f07818; }
+.cluster-small { background: #16a34a; }
+.cluster-large { background: #f07818; }
 .cluster-medium { background: #7c3aed; }
 .cluster-extra-large { background: #eab308; }
 .cluster-extreme { background: #ec4899; }

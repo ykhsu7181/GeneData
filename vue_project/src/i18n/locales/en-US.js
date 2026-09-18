@@ -185,7 +185,7 @@ const enUS = {
       }
     },
     assemblyDetail: {
-      title: 'Genome assembly {accession} / {assembly}',
+      title: 'Genome assembly {accession} · {assembly}',
       species: 'Species: {value}',
       subPopulation: 'Subpopulation: {value}',
       basicInformation: 'Basic Information',

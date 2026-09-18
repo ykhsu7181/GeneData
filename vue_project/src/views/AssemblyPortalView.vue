@@ -593,19 +593,43 @@ export default {
 
 .search-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 160px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 134px;
 }
 
 .search-row :deep(.el-button) {
-  min-height: 42px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 0 9px 9px 0;
+  background: linear-gradient(180deg, #2e91f5, #0b71df);
   font-weight: 700;
-  border-radius: 8px;
 }
 
 .search-row :deep(.el-input__wrapper) {
-  min-height: 42px;
-  border-radius: 8px;
+  min-height: 46px;
+  padding-left: 16px;
+  border: 1px solid #cbdcf1;
+  border-right: 0;
+  border-radius: 9px 0 0 9px;
+  box-shadow: none;
+}
+
+.search-row :deep(.el-input__wrapper.is-focus) {
+  border-color: #4c9df3;
+  box-shadow: 0 0 0 2px rgba(47, 136, 255, 0.12);
+}
+
+.search-row :deep(.el-input__inner) {
+  color: #16385f;
+  font-size: 14px;
+}
+
+.search-row :deep(.el-input__inner::placeholder) {
+  color: #7d91ae;
+}
+
+.search-prefix-icon {
+  color: #173f75;
+  font-size: 20px;
 }
 
 .link-button,
@@ -824,6 +848,17 @@ export default {
 
   .search-row {
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .search-row :deep(.el-input__wrapper) {
+    border-right: 1px solid #cbdcf1;
+    border-radius: 9px;
+  }
+
+  .search-row :deep(.el-button) {
+    min-height: 44px;
+    border-radius: 9px;
   }
 
   .table-footer {

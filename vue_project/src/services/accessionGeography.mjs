@@ -2,7 +2,7 @@ export const GEOGRAPHIC_GRID_SIZE = 2;
 export const UNKNOWN_SUB_POPULATION = 'Unknown';
 export const GEOGRAPHIC_CLUSTER_COLORS = Object.freeze({
   single: '#1677e8',
-  small: '#f07818',
+  small: '#16a34a',
   medium: '#7c3aed',
   large: '#f07818',
   extraLarge: '#eab308',

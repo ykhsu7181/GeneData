@@ -233,7 +233,11 @@ export default {
     };
     const selectTab = async (tab) => { activeTab.value = tab; fileScope.value = null; if (tab !== 'basic') await fetchTab(tab); };
     const openFiles = async (type, id) => { fileScope.value = { type, id }; activeTab.value = 'files'; await fetchTab('files'); };
-    const openAssembly = (assembly) => router.push({ name: 'assembly-detail', params: { assemblyId: assembly.id } });
+    const openAssembly = (assembly) => {
+      const query = { from: 'accession' };
+      if (mapReturnPath.value) query.return_to = mapReturnPath.value;
+      return router.push({ name: 'assembly-detail', params: { assemblyId: assembly.id }, query });
+    };
     const downloadFile = (file) => { if (!file?.datafile_download_url) { ElMessage.error(t('messages.missingDatafileUrl')); return; } window.open(new URL(file.datafile_download_url, window.location.origin).toString(), '_blank'); };
     const refreshPage = async () => { await fetchSummary(); if (activeTab.value !== 'basic') await fetchTab(activeTab.value); };
     const toggleFavorite = () => {
@@ -284,8 +288,8 @@ export default {
 .favorite-button { display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 13px; border:1px solid #d5e1f2; border-radius:8px; background:#fff; color:#526079; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
 .favorite-button:hover,.favorite-button:focus-visible { border-color:#e6ad16; color:#a86f00; outline:none; box-shadow:0 0 0 2px rgba(230,173,22,.14); }
 .favorite-button.active { border-color:#f0c04e; background:#fff9e8; color:#a86f00; }
-.search-button { min-width:72px; border-color:#409eff; background:#409eff; color:#fff; }
-.search-button:disabled { cursor:not-allowed; opacity:.55; }
+.search-button { min-width:72px; border-color:#2e91f5; background:linear-gradient(180deg,#2e91f5,#0b71df); color:#fff; }
+.search-button:disabled { cursor:not-allowed; opacity:1; }
 .table-action,.download-action { height:34px; padding:0 12px; }
 .refresh-button { border-color:#d8e3f4; color:#1760e8; }
 .state-card { padding:40px; background:#fff; border:1px solid #e2e9f4; border-radius:14px; }

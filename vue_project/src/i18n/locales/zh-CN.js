@@ -185,7 +185,7 @@ const zhCN = {
       }
     },
     assemblyDetail: {
-      title: 'Genome assembly {accession} / {assembly}',
+      title: 'Genome assembly {accession} · {assembly}',
       species: '物种：{value}',
       subPopulation: '亚群：{value}',
       basicInformation: '基本信息',

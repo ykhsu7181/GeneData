@@ -270,7 +270,8 @@ export default {
 .top-regions { grid-column:1 / -1; display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; padding-top:7px; border-top:1px solid #e5edf7; }
 .dot { display:inline-block; width:11px; height:11px; border-radius:50%; }
 .cluster-single { background:#1677e8; }
-.cluster-small,.cluster-large { background:#f07818; }
+.cluster-small { background:#16a34a; }
+.cluster-large { background:#f07818; }
 .cluster-medium { background:#7c3aed; }
 .cluster-extra-large { background:#eab308; }
 .cluster-extreme { background:#ec4899; }

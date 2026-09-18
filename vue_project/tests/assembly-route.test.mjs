@@ -30,6 +30,8 @@ test('Assembly portal uses the list API and keeps detail navigation separate', (
   assert.match(portalSource, /class="search-card" role="search" :aria-label="\$t\('page\.assembly\.searchTitle'\)"/)
   assert.doesNotMatch(portalSource, /page\.assembly\.portalSubtitle/)
   assert.match(portalSource, /\.portal-hero\s*\{[\s\S]*?margin-bottom:\s*12px;[\s\S]*?padding-top:\s*4px;/)
+  assert.match(portalSource, /grid-template-columns:\s*minmax\(0, 1fr\) 134px/)
+  assert.match(portalSource, /min-height:\s*46px;[\s\S]*?border-radius:\s*0 9px 9px 0/)
 })
 
 test('Assembly recently viewed is service-backed and exposes a clearable drawer', () => {
@@ -77,6 +79,14 @@ test('Assembly detail preserves portal return context across breadcrumbs and rel
   assert.doesNotMatch(viewSource, /v-if="hasAssemblyPortalContext"/)
 })
 
+test('Assembly detail switches breadcrumbs according to its entry point', () => {
+  assert.match(viewSource, /const fromAccession = computed/)
+  assert.match(viewSource, /v-if="fromAccession" :to="\{ name: 'accession-card' \}"/)
+  assert.match(viewSource, /v-else :to="\{ name: 'assembly', query: assemblyPortalQuery \}"/)
+  assert.match(viewSource, /:to="\{ name: 'accession-card', query: accessionDetailQuery \}"/)
+  assert.match(viewSource, /query:\s*route\.query/)
+})
+
 test('Assembly page loads the detail contract and renders all four required sections', () => {
   assert.match(viewSource, /\/files\/assemblies\/\$\{encodeURIComponent\(assemblyId\.value\)\}\/summary\//)
   assert.match(viewSource, /page\.assemblyDetail\.basicInformation/)
@@ -84,6 +94,17 @@ test('Assembly page loads the detail contract and renders all four required sect
   assert.match(viewSource, /<AnnotationVersionTable/)
   assert.match(viewSource, /<AssemblyVersionTable/)
   assert.match(viewSource, /mode="revision"/)
+})
+
+test('Assembly detail header matches the Accession detail information architecture', () => {
+  assert.match(viewSource, /<header class="detail-header">/)
+  assert.match(viewSource, /page\.assemblyDetail\.title/)
+  assert.match(viewSource, /class="heading-tag species-tag"/)
+  assert.match(viewSource, /class="heading-tag population-tag"/)
+  assert.match(viewSource, /class="detail-search" role="search"/)
+  assert.match(viewSource, /const submitSearch = async/)
+  assert.match(viewSource, /axios\.get\('\/files\/assemblies\/'/)
+  assert.match(viewSource, /params: \{ assemblyId: target\.id \}/)
 })
 
 test('Assembly page exposes loading, missing ID, permission, 404, conflict, generic error and retry states', () => {
