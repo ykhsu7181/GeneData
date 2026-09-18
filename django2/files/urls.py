@@ -5,7 +5,7 @@ from .download_views import download_datafile
 from .views import (
     FileTypeViewSet, GenomeFileViewSet,
     OrganismViewSet, FileCategoryViewSet,
-    admin_login, admin_files_list, admin_delete_file,
+    admin_session, admin_login, admin_logout, admin_files_list, admin_delete_file,
     admin_batch_delete, admin_batch_download, admin_upload_file, admin_statistics,
     admin_rescan_files, admin_create_accession, admin_update_accession,
     admin_delete_accession, admin_data_management_list,
@@ -46,10 +46,13 @@ from .accession_api_views import (
     accession_samples,
     accession_summary,
 )
+from .assembly_api_views import assembly_list, assembly_summary
 
 
 # 先定义自定义路径，避免与router冲突
 urlpatterns = [
+    path('assemblies/', assembly_list, name='assembly-list'),
+    path('assemblies/<int:assembly_id>/summary/', assembly_summary, name='assembly-summary'),
     path('accessions/<str:accession>/', accession_detail, name='accession-detail'),
     path('accessions/<str:accession>/summary/', accession_summary, name='accession-summary'),
     path('accessions/<str:accession>/datasets/', accession_datasets, name='accession-datasets'),
@@ -105,7 +108,9 @@ urlpatterns = [
     path('genome-files/sub_populations/', ArchivedGenomeFileViewSet.as_view({'get': 'sub_populations'}), name='sub-populations'),
 
     # 管理后台API路由
+    path('session/', admin_session, name='admin-session'),
     path('login/', admin_login, name='admin-login'),
+    path('logout/', admin_logout, name='admin-logout'),
     path('files/', admin_files_list, name='admin-files-list'),
     path('files/<int:file_id>/delete/', admin_delete_file, name='admin-delete-file'),
     path('files/batch-delete/', admin_batch_delete, name='admin-batch-delete'),

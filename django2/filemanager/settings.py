@@ -132,6 +132,15 @@ DATABASES = {
     }
 }
 
+# Ordered accession identifiers promoted on the portal homepage. Unknown values
+# are ignored by the dashboard service, so deployments can manage this list
+# without coupling it to migrations.
+DASHBOARD_FEATURED_ACCESSIONS = tuple(
+    value.strip()
+    for value in os.environ.get('GENEDATA_FEATURED_ACCESSIONS', '').split(',')
+    if value.strip()
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

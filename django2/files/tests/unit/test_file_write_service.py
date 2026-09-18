@@ -11,6 +11,24 @@ from files.services.file_write_service import (
 
 
 class FileWriteServiceTestCase(TestCase):
+    def test_genome_fasta_role_is_accepted(self):
+        data_file = DataFile.objects.create(
+            file_code="FILE_GENOME_FASTA",
+            file_name="genome.fasta",
+            file_path="/tmp/genome.fasta",
+        )
+
+        relation, created, reused = create_or_get_file_relation(
+            data_file=data_file,
+            related_type="assembly",
+            related_id="1",
+            file_role="genome_fasta",
+        )
+
+        self.assertTrue(created)
+        self.assertFalse(reused)
+        self.assertEqual(relation.file_role, "genome_fasta")
+
     def test_unknown_role_is_rejected_before_relation_write(self):
         data_file = DataFile.objects.create(
             file_code="FILE_ROLE_VALIDATION",

@@ -27,7 +27,7 @@
           @clear="handleOrganismChange('')"
           class="search-select"
         />
-        <el-tooltip content="Search exact Accession" placement="top">
+        <el-tooltip :content="$t('page.annotation.searchExact')" placement="top">
           <el-button
             class="accession-search-button"
             :loading="loadingOrganisms"
@@ -41,10 +41,10 @@
 
         <!-- 染色体选择框 -->
         <div class="chromosome-select">
-          <span class="select-label">Chromosome:</span>
+          <span class="select-label">{{ $t('page.annotation.chromosome') }}:</span>
           <el-select
             v-model="selectedChromosome"
-            placeholder="Select chromosome"
+            :placeholder="$t('page.annotation.selectChromosome')"
             class="chromosome-dropdown"
             :loading="loadingChromosomes"
             clearable
@@ -63,10 +63,10 @@
 
         <!-- 特征类型选择框 -->
         <div class="feature-select">
-          <span class="select-label">Feature:</span>
+          <span class="select-label">{{ $t('page.annotation.feature') }}:</span>
           <el-select
             v-model="selectedFeatureType"
-            placeholder="Select feature type"
+            :placeholder="$t('page.annotation.selectFeature')"
             class="feature-dropdown"
             clearable
             :disabled="viewMode === 'chart'"
@@ -144,15 +144,15 @@
             height="600"
             style="width: 100%"
           >
-            <el-table-column prop="seqid" label="Chromosome" width="120" />
-            <el-table-column prop="feature" label="Feature" width="100" />
-            <el-table-column prop="start" label="Start" width="100" sortable />
-            <el-table-column prop="end" label="End" width="100" sortable />
-            <el-table-column prop="length" label="Length" width="100" sortable />
-            <el-table-column prop="strand" label="Strand" width="80" />
-            <el-table-column prop="source" label="Source" width="100" />
-            <el-table-column prop="score" label="Score" width="80" />
-            <el-table-column label="Attributes" min-width="300">
+            <el-table-column prop="seqid" :label="$t('page.annotation.chromosome')" width="120" />
+            <el-table-column prop="feature" :label="$t('page.annotation.feature')" width="100" />
+            <el-table-column prop="start" :label="$t('page.annotation.start')" width="100" sortable />
+            <el-table-column prop="end" :label="$t('page.annotation.end')" width="100" sortable />
+            <el-table-column prop="length" :label="$t('page.annotation.length')" width="100" sortable />
+            <el-table-column prop="strand" :label="$t('page.annotation.strand')" width="80" />
+            <el-table-column prop="source" :label="$t('page.annotation.source')" width="100" />
+            <el-table-column prop="score" :label="$t('page.annotation.score')" width="80" />
+            <el-table-column :label="$t('page.annotation.attributes')" min-width="300">
               <template #default="scope">
                 <div class="attributes-container">
                   <div v-for="(value, key) in scope.row.attributes" :key="key" class="attribute-item">
@@ -187,17 +187,17 @@
             </div>
           </div>
           <div v-else-if="!selectedOrganism || !selectedChromosome" class="empty-state">
-            <el-empty description="请选择生物体和染色体以查看可视化" />
+            <el-empty :description="$t('page.annotation.selectVisualization')" />
           </div>
           <div v-else class="chart-content">
             <!-- 可视化控制面板 -->
             <div class="visualization-controls">
               <div class="control-group">
-                <span class="control-label">显示特征类型:</span>
+                <span class="control-label">{{ $t('page.annotation.displayFeatureTypes') }}</span>
                 <el-checkbox-group v-model="displayFeatures" @change="updateVisualization" class="feature-checkboxes">
                   <el-checkbox label="gene" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('gene') }"></span>
-                    基因
+                    {{ $t('page.annotation.gene') }}
                   </el-checkbox>
                   <el-checkbox label="mRNA" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('mRNA') }"></span>
@@ -205,11 +205,11 @@
                   </el-checkbox>
                   <el-checkbox label="CDS" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('CDS') }"></span>
-                    编码序列
+                    {{ $t('page.annotation.codingSequence') }}
                   </el-checkbox>
                   <el-checkbox label="exon" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('exon') }"></span>
-                    外显子
+                    {{ $t('page.annotation.exon') }}
                   </el-checkbox>
                   <el-checkbox label="five_prime_UTR" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('five_prime_UTR') }"></span>
@@ -222,7 +222,7 @@
                 </el-checkbox-group>
               </div>
               <div class="control-group">
-                <span class="control-label">每行长度 (Mb):</span>
+                <span class="control-label">{{ $t('page.annotation.rowLength') }}</span>
                 <div class="segment-length-controls">
                   <el-button
                     size="small"
@@ -263,7 +263,7 @@
                     @click="resetSegmentLength"
                     class="reset-button"
                   >
-                    重置1Mb
+                    {{ $t('page.annotation.resetOneMb') }}
                   </el-button>
                 </div>
               </div>
@@ -285,6 +285,7 @@ import { ElMessage } from 'element-plus';
 import { Refresh, Search, Grid, TrendCharts, Loading } from '@element-plus/icons-vue';
 import axios from 'axios';
 import * as d3 from 'd3';
+import { useI18n } from 'vue-i18n';
 
 const normalizeQueryValue = (value) => {
   if (Array.isArray(value)) {
@@ -310,6 +311,7 @@ export default {
     Loading
   },
   setup() {
+    const { t } = useI18n();
     const route = useRoute();
     const router = useRouter();
     const loading = ref(true);
@@ -486,7 +488,7 @@ export default {
         organismOptions.value = allOrganisms.value;
       } catch (error) {
         console.error('获取有注释文件的生物体列表失败:', error);
-        ElMessage.error('获取有注释文件的生物体列表失败');
+        ElMessage.error(t('page.annotation.organismLoadFailed'));
       } finally {
         loadingOrganisms.value = false;
       }
@@ -533,7 +535,7 @@ export default {
 
       } catch (error) {
         console.error('获取注释数据失败:', error);
-        ElMessage.error('获取注释数据失败');
+        ElMessage.error(t('page.annotation.dataLoadFailed'));
       } finally {
         loadingAnnotation.value = false;
       }
@@ -576,7 +578,7 @@ export default {
 
       } catch (error) {
         console.error('获取可视化数据失败:', error);
-        ElMessage.error('获取可视化数据失败');
+        ElMessage.error(t('page.annotation.visualizationLoadFailed'));
       } finally {
         loadingVisualization.value = false;
       }
@@ -638,7 +640,7 @@ export default {
           .style("text-align", "center")
           .style("padding", "50px")
           .style("color", "#999")
-          .text("没有要显示的注释特征");
+          .text(t('page.annotation.noFeatures'));
         return;
       }
 
@@ -870,9 +872,9 @@ export default {
 
                   tooltip.html(`
                     <strong>${feature.feature}</strong><br/>
-                    位置: ${feature.start.toLocaleString()} - ${feature.end.toLocaleString()}<br/>
-                    长度: ${feature.length.toLocaleString()} bp<br/>
-                    链: ${feature.strand}<br/>
+                    ${t('page.annotation.position')}: ${feature.start.toLocaleString()} - ${feature.end.toLocaleString()}<br/>
+                    ${t('page.annotation.length')}: ${feature.length.toLocaleString()} bp<br/>
+                    ${t('page.annotation.strand')}: ${feature.strand}<br/>
                     ${feature.attributes.ID ? 'ID: ' + feature.attributes.ID : ''}
                   `)
                     .style("left", (event.pageX + 10) + "px")
@@ -1042,7 +1044,7 @@ export default {
         }
       } catch (error) {
         console.error('获取数据失败:', error);
-        ElMessage.error('获取数据失败');
+        ElMessage.error(t('messages.getDataFailed'));
       } finally {
         loading.value = false;
       }
@@ -1063,7 +1065,7 @@ export default {
     const handleAccessionSearch = async () => {
       const keyword = String(selectedOrganism.value || '').trim();
       if (!keyword) {
-        ElMessage.warning('Please enter an Accession.');
+        ElMessage.warning(t('page.annotation.enterAccession'));
         return;
       }
 
@@ -1071,7 +1073,7 @@ export default {
         item => normalizeAccession(item) === normalizeAccession(keyword)
       );
       if (!accession) {
-        ElMessage.warning(`No exact Accession match: ${keyword}`);
+        ElMessage.warning(t('page.annotation.noExactMatch', { accession: keyword }));
         return;
       }
 
@@ -1100,6 +1102,7 @@ export default {
         await replaceRouteQuery(buildNormalizedQuery({
           accession: value
         }));
+        await handleRouteParams();
       } else {
         clearContextData();
         await replaceRouteQuery({});
