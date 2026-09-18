@@ -235,7 +235,7 @@ export default {
 
 <style scoped>
 .accession-workbench { min-height:calc(100vh - 160px); color:#132449; }
-.shortcut-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; margin-top:14px; }
+.shortcut-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; margin-top:12px; }
 .metadata-error { margin:10px 0 0; color:#b5473e; font-size:12px; text-align:center; }
 .metadata-error button { padding:3px 7px; border:0; background:transparent; color:#1760e8; font:inherit; font-weight:700; cursor:pointer; }
 @media (max-width:900px) {

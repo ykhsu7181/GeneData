@@ -28,7 +28,7 @@
           :aria-label="$t('page.accessionPortal.removeItem', { accession: item.accession })"
           @click="$emit('remove', item.accession)"
         >
-          {{ mode === 'favorites' ? '★' : '×' }}
+          <el-icon aria-hidden="true"><Delete /></el-icon>
         </button>
       </div>
     </div>
@@ -48,9 +48,11 @@
 <script>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Delete } from '@element-plus/icons-vue';
 
 export default {
   name: 'AccessionListDrawer',
+  components: { Delete },
   props: {
     modelValue: { type: Boolean, default: false },
     mode: { type: String, default: 'recent' },

@@ -17,12 +17,12 @@ export default {
 </script>
 
 <style scoped>
-.portal-header { margin-bottom:18px; }
-.portal-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:12px; color:#7183a0; font-size:13px; }
+.portal-header { margin-bottom:12px; padding-top:4px; }
+.portal-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:8px; color:#7183a0; font-size:13px; }
 .portal-breadcrumb a { color:#2b6fc7; text-decoration:none; }
-.portal-header h1 { margin:0; color:#102f61; font-size:34px; line-height:1.1; letter-spacing:-.03em; }
-.portal-header p { margin:7px 0 0; color:#607698; font-size:14px; }
+.portal-header h1 { margin:0; color:#102f61; font-size:30px; line-height:1.12; letter-spacing:-.03em; }
+.portal-header p { margin:6px 0 0; color:#607698; font-size:14px; }
 @media (max-width:700px) {
-  .portal-header h1 { font-size:29px; }
+  .portal-header h1 { font-size:26px; }
 }
 </style>

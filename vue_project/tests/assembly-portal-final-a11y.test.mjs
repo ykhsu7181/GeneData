@@ -14,8 +14,6 @@ test('Assembly portal final accessibility names search, list state, actions, and
   assert.match(portalSource, /:aria-label="\$t\('page\.assembly\.searchExample'/)
   assert.match(portalSource, /:aria-label="\$t\('page\.assembly\.openAssembly'/)
   assert.match(portalSource, /:aria-label="\$t\('page\.assembly\.openAccession'/)
-  assert.match(portalSource, /:aria-label="\$t\('page\.assembly\.columnSettings'\)"/)
-  assert.match(portalSource, /role="group"/)
   assert.match(portalSource, /<template #empty>/)
   assert.match(portalSource, /role="status"/)
   assert.match(portalSource, /page\.assembly\.clearSearch/)

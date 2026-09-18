@@ -24,7 +24,7 @@
           @clear="clearSearch"
         >
           <template #prefix>
-            <span aria-hidden="true">⌕</span>
+            <el-icon class="search-prefix-icon" aria-hidden="true"><Search /></el-icon>
           </template>
         </el-input>
         <el-button type="primary" size="large" :loading="loading" @click="submitSearch">
@@ -54,48 +54,10 @@
       >
         <div class="card-header">
           <h2 id="assembly-list-title">
-            <span aria-hidden="true">▣</span>
+            <el-icon aria-hidden="true"><Collection /></el-icon>
             {{ $t('page.assembly.listTitle') }}
           </h2>
-          <div class="list-actions">
-            <span class="total">{{ $t('page.assembly.totalAssemblies', { count: total }) }}</span>
-            <details class="column-picker">
-              <summary
-                class="column-picker-trigger"
-                :aria-label="$t('page.assembly.columnSettings')"
-              >
-                <span>{{ $t('page.assembly.showColumns') }}</span>
-                <span class="column-count">{{ visibleColumns.length }}/{{ columnOptions.length }}</span>
-              </summary>
-              <div
-                class="column-menu"
-                role="group"
-                :aria-label="$t('page.assembly.columnSettings')"
-              >
-                <label
-                  v-for="column in columnOptions"
-                  :key="column.key"
-                  class="column-option"
-                >
-                  <input
-                    type="checkbox"
-                    :checked="isColumnVisible(column.key)"
-                    :disabled="visibleColumns.length === 1 && isColumnVisible(column.key)"
-                    @change="toggleColumn(column.key, $event.target.checked)"
-                  >
-                  <span>{{ $t(column.labelKey) }}</span>
-                </label>
-                <div class="column-menu-actions">
-                  <button type="button" class="inline-action" @click="selectAllColumns">
-                    {{ $t('page.assembly.selectAllColumns') }}
-                  </button>
-                  <button type="button" class="inline-action" @click="restoreDefaultColumns">
-                    {{ $t('page.assembly.restoreDefaultColumns') }}
-                  </button>
-                </div>
-              </div>
-            </details>
-          </div>
+          <span class="total">{{ $t('page.assembly.totalAssemblies', { count: total }) }}</span>
         </div>
 
         <el-alert
@@ -121,7 +83,7 @@
           :aria-label="$t('page.assembly.listTitle')"
           @row-click="openAssembly"
         >
-          <el-table-column v-if="isColumnVisible('accession')" prop="accession" :label="$t('page.assembly.columns.accession')" min-width="110">
+          <el-table-column prop="accession" :label="$t('page.assembly.columns.accession')" min-width="110">
             <template #default="{ row }">
               <button
                 type="button"
@@ -133,7 +95,7 @@
               </button>
             </template>
           </el-table-column>
-          <el-table-column v-if="isColumnVisible('assembly')" prop="assembly" :label="$t('page.assembly.columns.assembly')" min-width="150">
+          <el-table-column prop="assembly" :label="$t('page.assembly.columns.assembly')" min-width="150">
             <template #default="{ row }">
               <button
                 type="button"
@@ -145,7 +107,7 @@
               </button>
             </template>
           </el-table-column>
-          <el-table-column v-if="isColumnVisible('assembly_accession')" prop="assembly_accession" :label="$t('page.assembly.columns.assemblyAccession')" min-width="180">
+          <el-table-column prop="assembly_accession" :label="$t('page.assembly.columns.assemblyAccession')" min-width="180">
             <template #default="{ row }">
               <button
                 v-if="row.assembly_accession"
@@ -159,12 +121,12 @@
               <span v-else>{{ emptyMark }}</span>
             </template>
           </el-table-column>
-          <el-table-column v-if="isColumnVisible('assembly_level')" prop="assembly_level" :label="$t('page.assembly.columns.level')" min-width="130">
+          <el-table-column prop="assembly_level" :label="$t('page.assembly.columns.level')" min-width="130">
             <template #default="{ row }">
               {{ formatLevel(row.assembly_level) }}
             </template>
           </el-table-column>
-          <el-table-column v-if="isColumnVisible('species')" prop="species" :label="$t('page.assembly.columns.species')" min-width="150">
+          <el-table-column prop="species" :label="$t('page.assembly.columns.species')" min-width="150">
             <template #default="{ row }">
               <em>{{ displayValue(row.species) }}</em>
             </template>
@@ -205,7 +167,7 @@
       <aside class="recent-card" aria-labelledby="recent-assemblies-title">
         <div class="card-header">
           <h2 id="recent-assemblies-title">
-            <span aria-hidden="true">◷</span>
+            <el-icon aria-hidden="true"><Clock /></el-icon>
             {{ $t('page.assembly.recent') }}
           </h2>
           <button
@@ -251,6 +213,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
+import { Clock, Collection, Search } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AssemblyRecentDrawer from '@/components/assembly/AssemblyRecentDrawer.vue';
@@ -263,15 +226,6 @@ import {
 
 const RECENT_PANEL_LIMIT = 5;
 const DEFAULT_PAGE_SIZE = 20;
-const COLUMN_STORAGE_KEY = 'genedata_assembly_list_columns_v1';
-const DEFAULT_COLUMN_KEYS = ['accession', 'assembly', 'assembly_accession', 'assembly_level', 'species'];
-const ASSEMBLY_COLUMN_OPTIONS = [
-  { key: 'accession', labelKey: 'page.assembly.columns.accession' },
-  { key: 'assembly', labelKey: 'page.assembly.columns.assembly' },
-  { key: 'assembly_accession', labelKey: 'page.assembly.columns.assemblyAccession' },
-  { key: 'assembly_level', labelKey: 'page.assembly.columns.level' },
-  { key: 'species', labelKey: 'page.assembly.columns.species' }
-];
 const emptyMark = '—';
 
 const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
@@ -281,34 +235,13 @@ const normalizeText = (value) => {
   return normalized;
 };
 
-const normalizeColumnKeys = (keys) => {
-  if (!Array.isArray(keys)) return [...DEFAULT_COLUMN_KEYS];
-  const selected = DEFAULT_COLUMN_KEYS.filter((key) => keys.includes(key));
-  return selected.length ? selected : [...DEFAULT_COLUMN_KEYS];
-};
-
-const readColumnPreference = () => {
-  try {
-    const raw = window.localStorage.getItem(COLUMN_STORAGE_KEY);
-    return normalizeColumnKeys(raw ? JSON.parse(raw) : DEFAULT_COLUMN_KEYS);
-  } catch {
-    return [...DEFAULT_COLUMN_KEYS];
-  }
-};
-
-const writeColumnPreference = (keys) => {
-  try {
-    window.localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(keys));
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 export default {
   name: 'AssemblyPortalView',
   components: {
-    AssemblyRecentDrawer
+    AssemblyRecentDrawer,
+    Clock,
+    Collection,
+    Search
   },
   setup() {
     const route = useRoute();
@@ -323,8 +256,6 @@ export default {
     const pageSize = ref(DEFAULT_PAGE_SIZE);
     const recentAssemblies = ref([]);
     const recentDrawerOpen = ref(false);
-    const columnOptions = ASSEMBLY_COLUMN_OPTIONS;
-    const visibleColumns = ref(readColumnPreference());
     const examples = ['IR64', '02428', 'default'];
     let requestToken = 0;
     let drawerTrigger = null;
@@ -436,28 +367,6 @@ export default {
 
     const showStorageError = () => ElMessage.warning(t('page.assembly.preferenceSaveFailed'));
 
-    const isColumnVisible = (key) => visibleColumns.value.includes(key);
-
-    const setVisibleColumns = (keys) => {
-      const normalized = normalizeColumnKeys(keys);
-      visibleColumns.value = normalized;
-      if (!writeColumnPreference(normalized)) showStorageError();
-    };
-
-    const toggleColumn = (key, checked) => {
-      if (!DEFAULT_COLUMN_KEYS.includes(key)) return;
-      if (checked) {
-        setVisibleColumns([...visibleColumns.value, key]);
-        return;
-      }
-      if (visibleColumns.value.length <= 1) return;
-      setVisibleColumns(visibleColumns.value.filter((columnKey) => columnKey !== key));
-    };
-
-    const selectAllColumns = () => setVisibleColumns(DEFAULT_COLUMN_KEYS);
-
-    const restoreDefaultColumns = () => setVisibleColumns(DEFAULT_COLUMN_KEYS);
-
     const openRecentDrawer = (trigger) => {
       drawerTrigger = trigger || null;
       recentDrawerOpen.value = true;
@@ -535,7 +444,6 @@ export default {
       changePage,
       clearRecent,
       clearSearch,
-      columnOptions,
       currentPage,
       displayValue,
       emptyMark,
@@ -544,7 +452,6 @@ export default {
       examples,
       fetchAssemblies,
       formatLevel,
-      isColumnVisible,
       loading,
       openAccession,
       openAssembly,
@@ -560,13 +467,9 @@ export default {
       restoreDrawerFocus,
       routeSearch,
       searchInput,
-      selectAllColumns,
       submitSearch,
-      restoreDefaultColumns,
-      toggleColumn,
       total,
-      useExample,
-      visibleColumns
+      useExample
     };
   }
 };
@@ -579,7 +482,7 @@ export default {
 }
 
 .portal-hero {
-  padding: 24px 8px 14px;
+  padding: 14px 8px 10px;
 }
 
 .breadcrumb {
@@ -605,14 +508,14 @@ export default {
 .portal-hero h1 {
   margin: 0;
   color: #0a2b73;
-  font-size: 34px;
+  font-size: 30px;
   line-height: 1.15;
 }
 
 .portal-hero p {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: #46618f;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .search-card,
@@ -625,15 +528,15 @@ export default {
 }
 
 .search-card {
-  padding: 22px 26px 18px;
-  margin-bottom: 16px;
+  padding: 16px 20px 14px;
+  margin-bottom: 14px;
 }
 
 .search-card h2,
 .card-header h2 {
   margin: 0;
   color: #0060df;
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1.2;
 }
 
@@ -641,17 +544,17 @@ export default {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 160px;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .search-row :deep(.el-button) {
-  min-height: 44px;
+  min-height: 42px;
   font-weight: 700;
   border-radius: 8px;
 }
 
 .search-row :deep(.el-input__wrapper) {
-  min-height: 44px;
+  min-height: 42px;
   border-radius: 8px;
 }
 
@@ -660,7 +563,7 @@ export default {
   flex-wrap: wrap;
   justify-content: center;
   gap: 14px;
-  margin-top: 12px;
+  margin-top: 9px;
   color: #58719b;
   font-size: 13px;
 }
@@ -668,8 +571,7 @@ export default {
 .examples button,
 .link-button,
 .inline-action,
-.view-all,
-.column-picker-trigger {
+.view-all {
   border: 0;
   background: transparent;
   color: #0068e8;
@@ -685,9 +587,7 @@ export default {
 .inline-action:hover,
 .inline-action:focus-visible,
 .view-all:hover:not(:disabled),
-.view-all:focus-visible:not(:disabled),
-.column-picker-trigger:hover,
-.column-picker-trigger:focus-visible {
+.view-all:focus-visible:not(:disabled) {
   text-decoration: underline;
   outline: none;
 }
@@ -700,7 +600,7 @@ export default {
 
 .list-card,
 .recent-card {
-  padding: 16px;
+  padding: 14px 15px;
 }
 
 .card-header {
@@ -708,7 +608,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .card-header h2 {
@@ -717,88 +617,9 @@ export default {
   gap: 9px;
 }
 
-.list-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.column-picker {
-  position: relative;
-}
-
-.column-picker-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 6px 10px;
-  border: 1px solid #c9dcfb;
-  border-radius: 8px;
-  background: #fff;
-  list-style: none;
-}
-
-.column-picker-trigger::-webkit-details-marker {
-  display: none;
-}
-
-.column-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  min-height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: #edf5ff;
-  color: #31558f;
-  font-size: 12px;
-}
-
-.column-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 30;
-  display: grid;
-  gap: 8px;
-  min-width: 220px;
-  padding: 12px;
-  border: 1px solid #d5e2f3;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 14px 30px rgba(32, 68, 119, 0.16);
-}
-
-.column-option {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #173d7c;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.column-option input {
-  width: 15px;
-  height: 15px;
-  accent-color: #1677e8;
-}
-
-.column-option input:disabled + span {
-  color: #9aabc6;
-}
-
-.column-menu-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #e3ebf5;
+.card-header h2 .el-icon {
+  color: #153f79;
+  font-size: 20px;
 }
 
 .total,
@@ -939,7 +760,7 @@ export default {
 
 @media (max-width: 720px) {
   .portal-hero h1 {
-    font-size: 28px;
+    font-size: 27px;
   }
 
   .search-row {

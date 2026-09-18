@@ -33,6 +33,9 @@ test('recent and favorites preserve accessions when metadata is missing', () => 
   assert.match(recentSource, /items\.slice\(0, 5\)/)
   assert.match(favoriteSource, /max-height:190px/)
   assert.match(favoriteSource, /overflow-y:auto/)
+  assert.match(recentSource, /import \{ Clock \} from '@element-plus\/icons-vue'/)
+  assert.match(favoriteSource, /import \{ StarFilled \} from '@element-plus\/icons-vue'/)
+  assert.match(drawerSource, /import \{ Delete \} from '@element-plus\/icons-vue'/)
 })
 
 test('shared drawer supports recent favorite and cluster modes with focus restoration', () => {

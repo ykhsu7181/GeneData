@@ -40,16 +40,13 @@ test('Assembly recently viewed is service-backed and exposes a clearable drawer'
   assert.match(recentDrawerSource, /page\.assembly\.removeRecent/)
 })
 
-test('Assembly list exposes a persistent user-selectable column picker', () => {
-  assert.match(portalSource, /COLUMN_STORAGE_KEY = 'genedata_assembly_list_columns_v1'/)
-  assert.match(portalSource, /DEFAULT_COLUMN_KEYS = \['accession', 'assembly', 'assembly_accession', 'assembly_level', 'species'\]/)
-  assert.match(portalSource, /class="column-picker"/)
-  assert.match(portalSource, /visibleColumns\.length === 1 && isColumnVisible\(column\.key\)/)
-  assert.match(portalSource, /@change="toggleColumn\(column\.key, \$event\.target\.checked\)"/)
-  assert.match(portalSource, /writeColumnPreference\(normalized\)/)
-  for (const key of ['accession', 'assembly', 'assembly_accession', 'assembly_level', 'species']) {
-    assert.match(portalSource, new RegExp(`v-if="isColumnVisible\\('${key}'\\)"`))
-  }
+test('Assembly list uses fixed columns and Element Plus icons', () => {
+  assert.match(portalSource, /import \{ Clock, Collection, Search \} from '@element-plus\/icons-vue'/)
+  assert.match(portalSource, /<Collection \/>/)
+  assert.match(portalSource, /<Clock \/>/)
+  assert.match(portalSource, /<Search \/>/)
+  assert.doesNotMatch(portalSource, /column-picker|isColumnVisible|genedata_assembly_list_columns_v1/)
+  assert.doesNotMatch(portalSource, /鈱|鈻|鈼|鈫/)
 })
 
 test('Assembly portal canonicalizes query state and preserves it when opening detail', () => {

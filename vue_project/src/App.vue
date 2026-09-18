@@ -121,7 +121,7 @@ a {
   flex: 1;
   width: min(1480px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 30px 0 42px;
+  padding: 20px 0 38px;
 }
 
 .layout-main-dashboard {
@@ -159,7 +159,7 @@ a {
 
   .layout-main {
     width: min(100%, calc(100% - 24px));
-    padding: 18px 0 28px;
+    padding: 14px 0 26px;
   }
 
   .layout-main-dashboard {

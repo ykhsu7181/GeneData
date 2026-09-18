@@ -281,12 +281,12 @@ export default {
 </script>
 
 <style scoped>
-.search-panel { padding:20px 22px 17px; border:1px solid rgba(202,220,240,.9); border-radius:12px; background:rgba(255,255,255,.97); box-shadow:0 10px 28px rgba(49,93,147,.06); }
-.search-panel h2 { margin:0; color:#086cde; font-size:18px; }
-.search-form { display:grid; grid-template-columns:minmax(0,1fr) 134px; margin-top:15px; }
+.search-panel { padding:16px 20px 14px; border:1px solid rgba(202,220,240,.9); border-radius:12px; background:rgba(255,255,255,.97); box-shadow:0 10px 28px rgba(49,93,147,.06); }
+.search-panel h2 { margin:0; color:#086cde; font-size:17px; }
+.search-form { display:grid; grid-template-columns:minmax(0,1fr) 134px; margin-top:12px; }
 .combobox-shell { position:relative; display:flex; align-items:center; min-width:0; }
 .search-icon { position:absolute; left:17px; z-index:2; color:#173f75; font-size:20px; pointer-events:none; }
-.combobox-shell input { width:100%; height:52px; padding:0 118px 0 48px; border:1px solid #cbdcf1; border-right:0; border-radius:9px 0 0 9px; outline:0; color:#16385f; background:#fff; font:inherit; font-size:14px; }
+.combobox-shell input { width:100%; height:46px; padding:0 118px 0 48px; border:1px solid #cbdcf1; border-right:0; border-radius:9px 0 0 9px; outline:0; color:#16385f; background:#fff; font:inherit; font-size:14px; }
 .combobox-shell input:focus { border-color:#4c9df3; box-shadow:0 0 0 2px rgba(47,136,255,.12); }
 .combobox-shell input::placeholder { color:#7d91ae; }
 .search-status { position:absolute; right:14px; color:#6d83a3; font-size:12px; }
@@ -297,7 +297,7 @@ export default {
 .suggestion-list li.active { color:#075fbf; background:#edf5ff; }
 .suggestion-list .empty-option { color:#7a8da9; cursor:default; }
 .search-error { margin:8px 0 0; color:#c2413a; font-size:12px; }
-.examples { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:9px 15px; margin-top:11px; color:#637a9f; font-size:12px; }
+.examples { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:9px 15px; margin-top:9px; color:#637a9f; font-size:12px; }
 .examples button { padding:0; border:0; background:transparent; color:#0874e9; font:inherit; font-weight:700; cursor:pointer; }
 .examples button:hover,.examples button:focus-visible { text-decoration:underline; outline:none; }
 @media (max-width:600px) {
