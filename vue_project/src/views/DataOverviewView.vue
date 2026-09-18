@@ -89,7 +89,7 @@
         <table class="matrix-table">
           <thead>
             <tr>
-              <th rowspan="2">Accession</th>
+              <th rowspan="2">{{ $t('page.dataOverview.accession') }}</th>
               <th colspan="3">{{ $t('page.dataOverview.basicInformation') }}</th>
               <th :colspan="dataCategories.length">{{ $t('page.dataOverview.fileStatistics') }}</th>
               <th rowspan="2">{{ $t('common.location') }}</th>
@@ -137,7 +137,7 @@
           <thead>
             <tr>
               <th>{{ $t('common.species') }}</th>
-              <th>Accession</th>
+              <th>{{ $t('page.dataOverview.accession') }}</th>
               <th>{{ $t('common.dataType') }}</th>
               <th>{{ $t('page.dataOverview.columns.dataset') }}</th>
               <th>{{ $t('page.dataOverview.columns.assembly') }}</th>
@@ -204,11 +204,11 @@
       <section class="relation-overview">
         <p class="section-kicker">{{ $t('page.dataOverview.relationship') }}</p>
         <div class="relation-flow">
-          <span>Accession {{ drawerPayload.relation_overview?.accession || '-' }}</span>
+          <span>{{ $t('page.dataOverview.accession') }} {{ drawerPayload.relation_overview?.accession || '-' }}</span>
           <span>→</span>
           <span>{{ drawerPayload.relation_overview?.assembly || '-' }}</span>
           <span>→</span>
-          <span>{{ drawerPayload.relation_overview?.annotation || 'DataFile' }}</span>
+          <span>{{ drawerPayload.relation_overview?.annotation || $t('page.dataOverview.dataFile') }}</span>
         </div>
       </section>
 

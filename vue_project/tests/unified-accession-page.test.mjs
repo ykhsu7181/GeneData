@@ -29,7 +29,7 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /page\.accessionDetail\.title/);
   assert.match(pageSource, /<div class="page-heading">[\s\S]*?<nav class="accession-breadcrumb"/);
   assert.match(pageSource, /<router-link :to="\{ name: 'dashboard-home' \}">/);
-  assert.match(pageSource, /<router-link class="context-back" :to="parentLocation">/);
+  assert.doesNotMatch(pageSource, /class="context-back"|parentReturnLabel/);
   assert.match(pageSource, /<router-link :to="parentLocation">/);
   assert.match(pageSource, /normalizeAccessionMapReturnPath\(route\.query\.return_to\)/);
   assert.match(pageSource, /<div class="heading-row">/);

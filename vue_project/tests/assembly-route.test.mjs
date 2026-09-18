@@ -26,6 +26,10 @@ test('Assembly portal uses the list API and keeps detail navigation separate', (
   assert.match(portalSource, /name:\s*'accession-card'/)
   assert.match(portalSource, /recordRecentAssembly\(row\)/)
   assert.match(portalSource, /page\.assembly\.searchTitle/)
+  assert.doesNotMatch(portalSource, /<h2 id="assembly-search-title">/)
+  assert.match(portalSource, /class="search-card" role="search" :aria-label="\$t\('page\.assembly\.searchTitle'\)"/)
+  assert.doesNotMatch(portalSource, /page\.assembly\.portalSubtitle/)
+  assert.match(portalSource, /\.portal-hero\s*\{[\s\S]*?margin-bottom:\s*12px;[\s\S]*?padding-top:\s*4px;/)
 })
 
 test('Assembly recently viewed is service-backed and exposes a clearable drawer', () => {
@@ -40,12 +44,22 @@ test('Assembly recently viewed is service-backed and exposes a clearable drawer'
   assert.match(recentDrawerSource, /page\.assembly\.removeRecent/)
 })
 
-test('Assembly list uses fixed columns and Element Plus icons', () => {
-  assert.match(portalSource, /import \{ Clock, Collection, Search \} from '@element-plus\/icons-vue'/)
+test('Assembly list keeps five default columns and exposes optional statistics through More', () => {
+  assert.match(portalSource, /import \{ ArrowDown, Clock, Collection, Search \} from '@element-plus\/icons-vue'/)
   assert.match(portalSource, /<Collection \/>/)
   assert.match(portalSource, /<Clock \/>/)
   assert.match(portalSource, /<Search \/>/)
-  assert.doesNotMatch(portalSource, /column-picker|isColumnVisible|genedata_assembly_list_columns_v1/)
+  assert.match(portalSource, /page\.assembly\.totalAssemblies[\s\S]*?<el-popover[\s\S]*?page\.assembly\.moreColumns/)
+  assert.match(portalSource, /prop="accession"/)
+  assert.match(portalSource, /prop="assembly"/)
+  assert.match(portalSource, /prop="assembly_accession"/)
+  assert.match(portalSource, /prop="assembly_level"/)
+  assert.match(portalSource, /prop="species"/)
+  assert.match(portalSource, /const selectedStatisticColumns = ref\(\[\]\)/)
+  assert.match(portalSource, /v-for="column in visibleStatisticColumns"/)
+  for (const key of ['genome_size', 'chromosome_count', 'contig_count', 'n50', 'gc_content']) {
+    assert.match(portalSource, new RegExp(`key: '${key}'`))
+  }
   assert.doesNotMatch(portalSource, /鈱|鈻|鈼|鈫/)
 })
 

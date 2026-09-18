@@ -1,7 +1,5 @@
 <template>
-  <section class="search-panel" :aria-labelledby="searchTitleId">
-    <h2 :id="searchTitleId">{{ $t('page.accessionPortal.searchTitle') }}</h2>
-
+  <section class="search-panel" :aria-label="$t('page.accessionPortal.searchTitle')">
     <form class="search-form" role="search" @submit.prevent="submitSearch">
       <div class="combobox-shell">
         <el-icon class="search-icon" aria-hidden="true"><Search /></el-icon>
@@ -58,17 +56,6 @@
       {{ $t('page.accessionPortal.searchError') }}
     </p>
 
-    <div class="examples">
-      <span>{{ $t('page.accessionPortal.examples') }}:</span>
-      <button
-        v-for="example in examples"
-        :key="example.value"
-        type="button"
-        @click="useExample(example)"
-      >
-        {{ example.label }}
-      </button>
-    </div>
   </section>
 </template>
 
@@ -92,12 +79,7 @@ export default {
     const searchError = ref(false);
     const suggestionsOpen = ref(false);
     const activeIndex = ref(-1);
-    const searchTitleId = 'accession-search-title';
     const listboxId = 'accession-search-options';
-    const examples = [
-      { label: '02428', value: '02428' },
-      { label: 'IR64', value: 'IR64' }
-    ];
     let debounceTimer = null;
     let activeController = null;
     let requestSequence = 0;
@@ -212,7 +194,6 @@ export default {
       await fetchSuggestions(keyword);
     };
 
-    const useExample = (example) => emit('select', example.value);
 
     const handleKeydown = (event) => {
       if (event.key === 'Escape') {
@@ -247,7 +228,6 @@ export default {
     return {
       activeIndex,
       activeOptionId,
-      examples,
       handleBlur,
       handleFocus,
       handleInput,
@@ -259,11 +239,9 @@ export default {
       searchError,
       searchInput,
       searchTerm,
-      searchTitleId,
       selectOption,
       submitSearch,
-      suggestionsOpen,
-      useExample
+      suggestionsOpen
     };
   }
 };
@@ -271,8 +249,7 @@ export default {
 
 <style scoped>
 .search-panel { padding:16px 20px 14px; border:1px solid rgba(202,220,240,.9); border-radius:12px; background:rgba(255,255,255,.97); box-shadow:0 10px 28px rgba(49,93,147,.06); }
-.search-panel h2 { margin:0; color:#086cde; font-size:17px; }
-.search-form { display:grid; grid-template-columns:minmax(0,1fr) 134px; margin-top:12px; }
+.search-form { display:grid; grid-template-columns:minmax(0,1fr) 134px; }
 .combobox-shell { position:relative; display:flex; align-items:center; min-width:0; }
 .search-icon { position:absolute; left:17px; z-index:2; color:#173f75; font-size:20px; pointer-events:none; }
 .combobox-shell input { width:100%; height:46px; padding:0 118px 0 48px; border:1px solid #cbdcf1; border-right:0; border-radius:9px 0 0 9px; outline:0; color:#16385f; background:#fff; font:inherit; font-size:14px; }
@@ -286,9 +263,6 @@ export default {
 .suggestion-list li.active { color:#075fbf; background:#edf5ff; }
 .suggestion-list .empty-option { color:#7a8da9; cursor:default; }
 .search-error { margin:8px 0 0; color:#c2413a; font-size:12px; }
-.examples { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:9px 15px; margin-top:9px; color:#637a9f; font-size:12px; }
-.examples button { padding:0; border:0; background:transparent; color:#0874e9; font:inherit; font-weight:700; cursor:pointer; }
-.examples button:hover,.examples button:focus-visible { text-decoration:underline; outline:none; }
 @media (max-width:600px) {
   .search-panel { padding:16px; }
   .search-form { grid-template-columns:1fr; gap:8px; }

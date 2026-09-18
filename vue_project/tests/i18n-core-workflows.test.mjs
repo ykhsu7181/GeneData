@@ -45,6 +45,7 @@ test('core workflows no longer render known bilingual or hardcoded UI copy', () 
   assert.doesNotMatch(sources['RawDataView.vue'], /课题组原始数据 Research Group Raw Data/)
   assert.doesNotMatch(sources['DataOverviewView.vue'], /数据集 \(Dataset\)|组装版本 \(Assembly\)|注释版本 \(Annotation\)/)
   assert.doesNotMatch(sources['DataOverviewView.vue'], /{{\s*category\.en_label\s*}}/)
+  assert.doesNotMatch(sources['DataOverviewView.vue'], /<th(?:\s+rowspan="2")?>Accession<\/th>|\|\| 'DataFile'/)
   assert.doesNotMatch(sources['AccessionDetailTableView.vue'], /label:\s*'基本信息'/)
   for (const source of Object.values(sources)) {
     assert.doesNotMatch(source, /ElMessage\.(?:error|warning|success)\(\s*['"][\u3400-\u9fff]/)

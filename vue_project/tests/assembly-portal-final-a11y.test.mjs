@@ -11,12 +11,15 @@ test('Assembly portal final accessibility names search, list state, actions, and
   assert.match(portalSource, /role="search"/)
   assert.match(portalSource, /:aria-busy="String\(loading\)"/)
   assert.match(portalSource, /aria-live="polite"/)
-  assert.match(portalSource, /:aria-label="\$t\('page\.assembly\.searchExample'/)
+  assert.doesNotMatch(portalSource, /page\.assembly\.searchExample|class="examples"/)
   assert.match(portalSource, /:aria-label="\$t\('page\.assembly\.openAssembly'/)
   assert.match(portalSource, /:aria-label="\$t\('page\.assembly\.openAccession'/)
   assert.match(portalSource, /<template #empty>/)
   assert.match(portalSource, /role="status"/)
   assert.match(portalSource, /page\.assembly\.clearSearch/)
+  assert.match(portalSource, /aria-haspopup="dialog"/)
+  assert.match(portalSource, /page\.assembly\.chooseColumns/)
+  assert.match(portalSource, /role="group"/)
 })
 
 test('Assembly recent drawer final accessibility supports named drawer actions and focus restoration', () => {

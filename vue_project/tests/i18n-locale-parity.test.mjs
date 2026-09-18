@@ -39,6 +39,13 @@ test('approved portal labels stay stable in both locales', () => {
   )
   assert.equal(zhCN.page.accessionDetail.breadcrumb, '首页 / 品种信息 / {accession}')
   assert.equal(zhCN.page.accessionSearch.placeholder, '搜索品种编号 / 物种 / 亚群，例如 IR64')
+  assert.equal(zhCN.page.home.title, '全部数据')
+  assert.equal(zhCN.page.dataOverview.accession, '品种编号')
+  assert.equal(zhCN.page.dataOverview.summary.accessions, '品种数')
+  assert.equal(zhCN.page.dataOverview.summary.files, '文件数')
+  assert.equal(zhCN.page.dataOverview.datafileEntry, '数据文件下载入口')
+  assert.equal(zhCN.page.accessionPortal.viewFullMap, '详情')
+  assert.equal(enUS.page.accessionPortal.viewFullMap, 'Detail')
 })
 
 test('i18n bootstrap preserves locale ids and uses split locale modules', () => {

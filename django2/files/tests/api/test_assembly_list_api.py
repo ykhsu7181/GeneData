@@ -39,6 +39,11 @@ class AssemblyListApiTestCase(TestCase):
             assembly_accession="GCA_013265735.1",
             standard_id="ASM-IR64-STANDARD",
             assembly_level="Chromosome",
+            genome_size=387400000,
+            chromosome_count=12,
+            contig_count=19,
+            n50=27000000,
+            gc_content="43.500",
             is_default=True,
         )
         self.o2428_assembly = Assembly.objects.create(
@@ -80,6 +85,11 @@ class AssemblyListApiTestCase(TestCase):
                 "assembly",
                 "assembly_accession",
                 "assembly_level",
+                "genome_size",
+                "chromosome_count",
+                "contig_count",
+                "n50",
+                "gc_content",
                 "species",
                 "taxon_id",
                 "is_default",
@@ -87,6 +97,12 @@ class AssemblyListApiTestCase(TestCase):
         )
         self.assertNotIn("annotations", first)
         self.assertNotIn("files", first)
+        ir64_row = next(row for row in payload["results"] if row["id"] == self.ir64_assembly.id)
+        self.assertEqual(ir64_row["genome_size"], 387400000)
+        self.assertEqual(ir64_row["chromosome_count"], 12)
+        self.assertEqual(ir64_row["contig_count"], 19)
+        self.assertEqual(ir64_row["n50"], 27000000)
+        self.assertEqual(float(ir64_row["gc_content"]), 43.5)
 
     def test_search_matches_accession_assembly_accession_and_species(self):
         by_accession = self.client.get("/gd/api/files/assemblies/", {"search": "IR64"}).json()

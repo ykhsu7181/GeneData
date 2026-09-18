@@ -2,13 +2,14 @@
   <main class="accession-map-view">
     <header class="page-heading">
       <div>
-        <router-link class="back-link" :to="{ name: 'accession-card' }">
-          <el-icon aria-hidden="true"><ArrowLeft /></el-icon>
-          {{ $t('page.accessionMap.backToOverview') }}
-        </router-link>
-        <p class="eyebrow">{{ $t('page.accessionMap.eyebrow') }}</p>
+        <nav class="map-breadcrumb" :aria-label="$t('page.accessionPortal.breadcrumbLabel')">
+          <router-link :to="{ name: 'dashboard-home' }">{{ $t('nav.home') }}</router-link>
+          <span aria-hidden="true">/</span>
+          <router-link :to="{ name: 'accession-card' }">{{ $t('nav.accession') }}</router-link>
+          <span aria-hidden="true">/</span>
+          <span>{{ $t('page.accessionMap.title') }}</span>
+        </nav>
         <h1>{{ $t('page.accessionMap.title') }}</h1>
-        <p class="page-description">{{ $t('page.accessionMap.description') }}</p>
       </div>
       <el-button :loading="loading" @click="fetchData">
         <el-icon aria-hidden="true"><Refresh /></el-icon>
@@ -75,21 +76,10 @@
           </el-button>
         </div>
       </div>
-      <div class="filter-summary" aria-live="polite">
-        {{ $t('page.accessionMap.resultSummary', {
-          mapped: filteredMetrics.mappedAccessions,
-          total: baseMetrics.mappedAccessions,
-          regions: filteredMetrics.geographicRegions
-        }) }}
-      </div>
     </section>
 
     <section class="map-card" :aria-label="$t('page.accessionMap.mapAriaLabel')">
       <div class="map-toolbar">
-        <div>
-          <h2>{{ $t('page.accessionMap.mapTitle') }}</h2>
-          <p>{{ $t('page.accessionMap.mapHint') }}</p>
-        </div>
         <div class="map-actions">
           <el-select
             v-model="selectedClusterKey"
@@ -117,7 +107,7 @@
         </div>
       </div>
 
-      <div class="map-stage">
+      <div class="map-stage" aria-live="polite">
         <div v-if="loading" class="state-panel" role="status">
           <el-icon class="is-loading" aria-hidden="true"><Loading /></el-icon>
           <span>{{ $t('page.accessionMap.loadingGeographicData') }}</span>
@@ -158,7 +148,6 @@
           <span><i class="bubble cluster-extra-large" />51–100</span>
           <span><i class="bubble cluster-extreme" />&gt;100</span>
         </div>
-        <span>{{ $t('page.accessionMap.gridNotice') }}</span>
       </footer>
     </section>
 
@@ -198,7 +187,6 @@ import axios from 'axios';
 import * as echarts from 'echarts';
 import {
   Aim,
-  ArrowLeft,
   FullScreen,
   Loading,
   Location,
@@ -228,7 +216,6 @@ export default {
   components: {
     AccessionListDrawer,
     Aim,
-    ArrowLeft,
     FullScreen,
     Loading,
     Location,
@@ -490,7 +477,7 @@ export default {
 .accession-map-view {
   width: min(1440px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 24px 0 48px;
+  padding: 4px 0 48px;
   color: #12335f;
 }
 
@@ -502,20 +489,10 @@ export default {
   margin-bottom: 18px;
 }
 
-.back-link {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 12px;
-  color: #35628f;
-  text-decoration: none;
-}
-
-.back-link:hover,
-.back-link:focus-visible { color: #0878e8; }
-.eyebrow { margin: 0 0 4px; color: #0878e8; font-size: 13px; font-weight: 700; }
-.page-heading h1 { margin: 0; color: #092e68; font-size: clamp(28px, 3vw, 38px); line-height: 1.2; }
-.page-description { max-width: 760px; margin: 8px 0 0; color: #587092; line-height: 1.6; }
+.map-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:8px; color:#76849a; font-size:13px; }
+.map-breadcrumb a { color:#3974c7; text-decoration:none; }
+.map-breadcrumb a:hover,.map-breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
+.page-heading h1 { margin:0; color:#102f61; font-size:30px; line-height:1.12; letter-spacing:-.03em; }
 
 .filter-card,
 .map-card,
@@ -530,19 +507,16 @@ export default {
 .filter-grid { display: grid; grid-template-columns: 1.15fr 1fr 1.15fr auto; gap: 14px; align-items: end; }
 .filter-field { display: grid; gap: 7px; min-width: 0; color: #284c77; font-size: 13px; font-weight: 650; }
 .filter-actions { display: flex; }
-.filter-summary { margin-top: 13px; color: #607897; font-size: 13px; }
 
 .map-card { overflow: hidden; }
-.map-toolbar { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 16px 18px; border-bottom: 1px solid #e1ebf6; }
-.map-toolbar h2 { margin: 0; color: #0b54ac; font-size: 20px; }
-.map-toolbar p { margin: 4px 0 0; color: #6c809b; font-size: 13px; }
+.map-toolbar { display: flex; justify-content: flex-end; gap: 20px; align-items: center; padding: 16px 18px; border-bottom: 1px solid #e1ebf6; }
 .map-actions { display: flex; flex-shrink: 0; align-items: center; }
 .region-select { width: 230px; margin-right: 10px; }
 .map-stage { position: relative; min-height: clamp(460px, 62vh, 680px); background: #f7faff; }
 .echarts-map { width: 100%; height: clamp(460px, 62vh, 680px); }
 .state-panel { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; color: #637b9a; text-align: center; }
 .state-panel > .el-icon { font-size: 30px; color: #287fdc; }
-.map-footer { display: flex; justify-content: space-between; gap: 18px; align-items: center; min-height: 50px; padding: 8px 18px; border-top: 1px solid #e1ebf6; color: #637b9a; font-size: 12px; }
+.map-footer { display: flex; justify-content: flex-start; gap: 18px; align-items: center; min-height: 50px; padding: 8px 18px; border-top: 1px solid #e1ebf6; color: #637b9a; font-size: 12px; }
 .size-legend { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
 .size-legend span { display: inline-flex; gap: 6px; align-items: center; }
 .bubble { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
@@ -566,8 +540,9 @@ export default {
 }
 
 @media (max-width: 640px) {
-  .accession-map-view { width: min(100% - 24px, 1440px); padding-top: 16px; }
+  .accession-map-view { width: min(100% - 24px, 1440px); padding-top: 4px; }
   .page-heading { align-items: flex-start; }
+  .page-heading h1 { font-size: 26px; }
   .page-heading > .el-button { padding-inline: 9px; }
   .filter-grid { grid-template-columns: 1fr; }
   .filter-actions .el-button { width: 100%; }

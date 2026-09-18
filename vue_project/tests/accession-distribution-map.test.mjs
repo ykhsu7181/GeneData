@@ -41,13 +41,12 @@ test('distribution map opens the review drawer before navigating for every bubbl
   assert.match(cardSource, /drawerMode\.value = 'cluster'/)
 })
 
-test('distribution map reports mapped accessions and cleans up echarts lifecycle', () => {
+test('distribution map keeps accessible counts and cleans up echarts lifecycle', () => {
   assert.match(mapSource, /mappedAccessions/)
   assert.match(mapSource, /totalAccessions/)
-  assert.match(mapSource, /mappedOfTotal/)
+  assert.doesNotMatch(mapSource, /mappedOfTotal|regionCount|unmappedCount|class="map-summary"/)
   assert.match(mapSource, /role="img"/)
   assert.match(mapSource, /page\.accessionPortal\.mapAriaLabel/)
-  assert.match(mapSource, /aria-live="polite"/)
   assert.match(mapSource, /echarts\.registerMap\('world', worldMapData\)/)
   assert.match(mapSource, /mapInstance\.on\('click', handleMapClick\)/)
   assert.match(mapSource, /mapInstance\.off\('click', handleMapClick\)/)
@@ -55,10 +54,8 @@ test('distribution map reports mapped accessions and cleans up echarts lifecycle
   assert.match(mapSource, /mapInstance\.dispose\(\)/)
 })
 
-test('distribution overview explains its metrics and supports data and global views', () => {
-  assert.match(mapSource, /page\.accessionPortal\.mapDescription/)
-  assert.match(mapSource, /metrics\.value\.unmappedAccessions/)
-  assert.match(mapSource, /metrics\.value\.geographicRegions/)
+test('distribution overview keeps a compact heading and supports data and global views', () => {
+  assert.doesNotMatch(mapSource, /page\.accessionPortal\.mapDescription/)
   assert.match(mapSource, /getTopGeographicRegions\(props\.items\)/)
   assert.match(mapSource, /getGeographicViewport\(props\.items\)/)
   assert.match(mapSource, /center: dataViewport\.value\.center/)

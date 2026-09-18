@@ -3,7 +3,6 @@
     <header class="card-heading">
       <div>
         <h2 :id="titleId"><el-icon aria-hidden="true"><Location /></el-icon>{{ $t('page.accessionPortal.geographicDistribution') }}</h2>
-        <p>{{ $t('page.accessionPortal.mapDescription') }}</p>
       </div>
       <router-link class="full-map-link" to="/accession-map">
         {{ $t('page.accessionPortal.viewFullMap') }}
@@ -42,11 +41,6 @@
     <p v-else class="map-empty">{{ $t('page.accessionPortal.mapEmpty') }}</p>
 
     <footer class="map-footer">
-      <div class="map-summary" aria-live="polite">
-        <strong>{{ $t('page.accessionPortal.mappedOfTotal', { mapped: mappedAccessions, total: totalAccessions }) }}</strong>
-        <span>{{ $t('page.accessionPortal.regionCount', { count: geographicRegions }) }}</span>
-        <span>{{ $t('page.accessionPortal.unmappedCount', { count: unmappedAccessions }) }}</span>
-      </div>
       <div class="legend" :aria-label="$t('page.accessionPortal.numberOfAccessions')">
         <strong>{{ $t('page.accessionPortal.numberOfAccessions') }}:</strong>
         <span><i class="dot cluster-single"></i>1</span>
@@ -103,8 +97,6 @@ export default {
     const metrics = computed(() => buildGeographicMetrics(props.items));
     const totalAccessions = computed(() => metrics.value.totalAccessions);
     const mappedAccessions = computed(() => metrics.value.mappedAccessions);
-    const unmappedAccessions = computed(() => metrics.value.unmappedAccessions);
-    const geographicRegions = computed(() => metrics.value.geographicRegions);
     const topRegions = computed(() => getTopGeographicRegions(props.items));
     const dataViewport = computed(() => getGeographicViewport(props.items));
     const clusters = computed(() => (
@@ -246,14 +238,12 @@ export default {
 
     return {
       mapContainer,
-      geographicRegions,
       mappedAccessions,
       resetDataView,
       resetGlobalView,
       titleId,
       topRegions,
-      totalAccessions,
-      unmappedAccessions
+      totalAccessions
     };
   }
 };
@@ -264,7 +254,6 @@ export default {
 .card-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:0 5px 10px; }
 .card-heading h2 { display:flex; align-items:center; gap:8px; margin:0; color:#086cde; font-size:17px; }
 .card-heading h2 .el-icon { color:#153f79; font-size:20px; }
-.card-heading p { margin:4px 0 0 28px; color:#657b9d; font-size:12px; }
 .full-map-link { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:0 12px; flex:0 0 auto; border:1px solid #bed8fb; border-radius:8px; color:#0874e9; background:#f7fbff; font-size:12px; font-weight:700; text-decoration:none; }
 .full-map-link:hover,.full-map-link:focus-visible { border-color:#78acef; background:#edf6ff; outline:none; }
 .map-stage { position:relative; }
@@ -273,9 +262,8 @@ export default {
 .map-controls { position:absolute; top:10px; right:10px; z-index:2; display:flex; gap:6px; }
 .map-control-button { display:inline-flex; align-items:center; gap:5px; min-height:30px; padding:0 9px; border:1px solid #cbdcf1; border-radius:7px; color:#315b94; background:rgba(255,255,255,.94); font:inherit; font-size:11px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(32,68,119,.1); }
 .map-control-button:hover,.map-control-button:focus-visible { border-color:#78acef; color:#086cde; outline:none; }
-.map-footer { display:grid; grid-template-columns:1fr auto; align-items:start; gap:8px 18px; margin:9px 5px 0; color:#526d94; font-size:11px; }
-.map-summary { display:flex; align-items:center; flex-wrap:wrap; gap:8px 16px; }
-.map-summary strong,.top-regions strong { color:#183c6e; }
+.map-footer { display:grid; grid-template-columns:1fr; align-items:start; gap:8px; margin:9px 5px 0; color:#526d94; font-size:11px; }
+.top-regions strong { color:#183c6e; }
 .legend { display:flex; align-items:center; flex-wrap:wrap; gap:16px; }
 .legend strong { color:#183c6e; }
 .legend span { display:inline-flex; align-items:center; gap:6px; }
@@ -288,7 +276,6 @@ export default {
 .cluster-extreme { background:#ec4899; }
 @media (max-width:700px) {
   .card-heading { align-items:flex-start; }
-  .card-heading p { margin-left:0; }
   .full-map-link { padding:0 9px; }
   .map-footer { grid-template-columns:1fr; }
   .map-footer,.legend { align-items:flex-start; flex-wrap:wrap; }

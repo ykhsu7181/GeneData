@@ -47,22 +47,24 @@ test('detailed map provides loading, error, empty, keyboard, and responsive stat
   assert.match(source, /@media \(max-width: 640px\)/)
   assert.match(source, /prefers-reduced-motion: reduce/)
   assert.match(source, /animation: !reducedMotion/)
+  assert.match(source, /\.accession-map-view\s*\{[\s\S]*?padding:\s*4px 0 48px/)
+  assert.match(source, /\.page-heading h1\s*\{[^}]*font-size:\s*30px;[^}]*line-height:\s*1\.12;/)
   assert.match(source, /resizeObserver\?\.disconnect\(\)/)
   assert.match(source, /mapInstance\.value\.dispose\(\)/)
 })
 
 test('detailed map has complete Chinese and English interaction copy', () => {
   for (const key of [
-    'backToOverview',
-    'resultSummary',
     'fitDataView',
     'globalView',
     'loadFailed',
     'noResults',
-    'clusterTooltip',
-    'gridNotice'
+    'clusterTooltip'
   ]) {
     assert.match(zhSource, new RegExp(`${key}:`))
     assert.match(enSource, new RegExp(`${key}:`))
   }
+  assert.doesNotMatch(source, /page\.accessionMap\.(eyebrow|description|resultSummary|gridNotice|mapTitle|mapHint)/)
+  assert.doesNotMatch(source, /class="back-link"|backToOverview/)
+  assert.match(source, /class="map-breadcrumb"/)
 })

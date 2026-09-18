@@ -1,10 +1,6 @@
 <template>
   <div :class="['accession-page', embedded ? 'is-embedded' : '']">
     <div class="page-heading">
-      <router-link class="context-back" :to="parentLocation">
-        <el-icon aria-hidden="true"><ArrowLeft /></el-icon>
-        {{ parentReturnLabel }}
-      </router-link>
       <nav class="accession-breadcrumb" :aria-label="$t('page.accessionPortal.breadcrumbLabel')">
         <router-link :to="{ name: 'dashboard-home' }">{{ $t('nav.home') }}</router-link>
         <span aria-hidden="true">/</span>
@@ -118,7 +114,7 @@
 
 <script>
 import { computed, ref, watch } from 'vue';
-import { ArrowLeft, Refresh, Search, Star, StarFilled } from '@element-plus/icons-vue';
+import { Refresh, Search, Star, StarFilled } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -143,7 +139,7 @@ const tabs = [
 
 export default {
   name: 'AccessionDetailTableView',
-  components: { AnnotationVersionTable, ArrowLeft, AssemblyVersionTable, CompactAccessionMap, Refresh, Search, Star, StarFilled },
+  components: { AnnotationVersionTable, AssemblyVersionTable, CompactAccessionMap, Refresh, Search, Star, StarFilled },
   props: { embedded: { type: Boolean, default: false } },
   setup() {
     const route = useRoute();
@@ -166,9 +162,6 @@ export default {
     const parentBreadcrumbLabel = computed(() => mapReturnPath.value
       ? t('page.accessionMap.title')
       : t('nav.accession'));
-    const parentReturnLabel = computed(() => mapReturnPath.value
-      ? t('page.accessionDetail.backToMap')
-      : t('page.accessionDetail.backToAccessions'));
     const accession = computed(() => summaryData.value.accession || null);
     const external = computed(() => summaryData.value.external_identifiers || {});
     const geography = computed(() => summaryData.value.geography || {});
@@ -263,7 +256,7 @@ export default {
       recordedRouteAccession.value = '';
       fetchSummary();
     }, { immediate: true });
-    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAssembly, openFiles, parentBreadcrumbLabel, parentLocation, parentReturnLabel, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
+    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAssembly, openFiles, parentBreadcrumbLabel, parentLocation, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
   }
 };
 </script>
@@ -271,8 +264,6 @@ export default {
 <style scoped>
 .accession-page { padding:8px 0 36px; color:#15233d; }
 .accession-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:14px; color:#76849a; font-size:13px; }
-.context-back { display:inline-flex; align-items:center; gap:5px; margin-bottom:10px; color:#3974c7; font-size:13px; text-decoration:none; }
-.context-back:hover,.context-back:focus-visible { color:#086cde; text-decoration:underline; }
 .accession-breadcrumb a { color:#3974c7; text-decoration:none; }
 .accession-breadcrumb a:hover,.accession-breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
 .page-heading { margin-bottom:16px; padding:16px 20px 18px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }

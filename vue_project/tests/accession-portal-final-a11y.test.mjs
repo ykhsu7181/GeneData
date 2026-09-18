@@ -12,7 +12,7 @@ const detailSource = readSource(['views', 'AccessionDetailTableView.vue'])
 test('final portal accessibility keeps map and drawer states named', () => {
   assert.match(mapSource, /role="img"/)
   assert.match(mapSource, /mapAriaLabel/)
-  assert.match(mapSource, /aria-live="polite"/)
+  assert.doesNotMatch(mapSource, /class="map-summary"/)
   assert.match(drawerSource, /noClusterAccessions/)
   assert.match(drawerSource, /:aria-label="\$t\('page\.accessionPortal\.removeItem'/)
 })
@@ -26,7 +26,7 @@ test('final portal cleanup keeps focus and cancels metadata requests', () => {
 })
 
 test('accession detail exposes contextual return and accessible async states', () => {
-  assert.match(detailSource, /class="context-back" :to="parentLocation"/)
+  assert.doesNotMatch(detailSource, /class="context-back"|parentReturnLabel/)
   assert.match(detailSource, /role="status" aria-live="polite"/)
   assert.match(detailSource, /role="alert"/)
   assert.match(detailSource, /:aria-current="activeTab === tab\.key \? 'page' : undefined"/)

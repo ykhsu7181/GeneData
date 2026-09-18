@@ -7,11 +7,9 @@
         <span>{{ $t('page.assembly.title') }}</span>
       </nav>
       <h1 id="assembly-title">{{ $t('page.assembly.title') }}</h1>
-      <p>{{ $t('page.assembly.portalSubtitle') }}</p>
     </section>
 
-    <section class="search-card" role="search" :aria-labelledby="'assembly-search-title'">
-      <h2 id="assembly-search-title">{{ $t('page.assembly.searchTitle') }}</h2>
+    <section class="search-card" role="search" :aria-label="$t('page.assembly.searchTitle')">
       <div class="search-row">
         <el-input
           v-model="searchInput"
@@ -31,18 +29,6 @@
           {{ $t('common.search') }}
         </el-button>
       </div>
-      <div class="examples" :aria-label="$t('common.examples')">
-        <span>{{ $t('page.assembly.examples') }}:</span>
-        <button
-          v-for="example in examples"
-          :key="example"
-          type="button"
-          :aria-label="$t('page.assembly.searchExample', { example })"
-          @click="useExample(example)"
-        >
-          {{ example }}
-        </button>
-      </div>
     </section>
 
     <div class="content-grid">
@@ -57,7 +43,33 @@
             <el-icon aria-hidden="true"><Collection /></el-icon>
             {{ $t('page.assembly.listTitle') }}
           </h2>
-          <span class="total">{{ $t('page.assembly.totalAssemblies', { count: total }) }}</span>
+          <div class="list-header-actions">
+            <span class="total">{{ $t('page.assembly.totalAssemblies', { count: total }) }}</span>
+            <el-popover placement="bottom-end" :width="280" trigger="click">
+              <template #reference>
+                <el-button
+                  class="more-columns-button"
+                  text
+                  :aria-label="$t('page.assembly.chooseColumns')"
+                  aria-haspopup="dialog"
+                >
+                  {{ $t('page.assembly.moreColumns') }}
+                  <el-icon aria-hidden="true"><ArrowDown /></el-icon>
+                </el-button>
+              </template>
+              <div class="column-picker" role="group" :aria-label="$t('page.assembly.chooseColumns')">
+                <el-checkbox-group v-model="selectedStatisticColumns">
+                  <el-checkbox
+                    v-for="column in statisticColumnOptions"
+                    :key="column.key"
+                    :value="column.key"
+                  >
+                    {{ $t(column.labelKey) }}
+                  </el-checkbox>
+                </el-checkbox-group>
+              </div>
+            </el-popover>
+          </div>
         </div>
 
         <el-alert
@@ -129,6 +141,17 @@
           <el-table-column prop="species" :label="$t('page.assembly.columns.species')" min-width="150">
             <template #default="{ row }">
               <em>{{ displayValue(row.species) }}</em>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-for="column in visibleStatisticColumns"
+            :key="column.key"
+            :prop="column.key"
+            :label="$t(column.labelKey)"
+            :min-width="column.minWidth"
+          >
+            <template #default="{ row }">
+              {{ formatStatistic(row[column.key], column.key) }}
             </template>
           </el-table-column>
           <template #empty>
@@ -213,7 +236,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-import { Clock, Collection, Search } from '@element-plus/icons-vue';
+import { ArrowDown, Clock, Collection, Search } from '@element-plus/icons-vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AssemblyRecentDrawer from '@/components/assembly/AssemblyRecentDrawer.vue';
@@ -227,6 +250,13 @@ import {
 const RECENT_PANEL_LIMIT = 5;
 const DEFAULT_PAGE_SIZE = 20;
 const emptyMark = '—';
+const statisticColumnOptions = [
+  { key: 'genome_size', labelKey: 'page.assembly.columns.genomeSize', minWidth: 140 },
+  { key: 'chromosome_count', labelKey: 'page.assembly.columns.chromosomeCount', minWidth: 150 },
+  { key: 'contig_count', labelKey: 'page.assembly.columns.contigCount', minWidth: 125 },
+  { key: 'n50', labelKey: 'page.assembly.columns.n50', minWidth: 125 },
+  { key: 'gc_content', labelKey: 'page.assembly.columns.gcContent', minWidth: 125 }
+];
 
 const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
 
@@ -239,6 +269,7 @@ export default {
   name: 'AssemblyPortalView',
   components: {
     AssemblyRecentDrawer,
+    ArrowDown,
     Clock,
     Collection,
     Search
@@ -256,7 +287,7 @@ export default {
     const pageSize = ref(DEFAULT_PAGE_SIZE);
     const recentAssemblies = ref([]);
     const recentDrawerOpen = ref(false);
-    const examples = ['IR64', '02428', 'default'];
+    const selectedStatisticColumns = ref([]);
     let requestToken = 0;
     let drawerTrigger = null;
 
@@ -270,11 +301,39 @@ export default {
       error.value ? t('page.assembly.loadFailed') : t('page.assembly.noResults')
     ));
     const recentPanelItems = computed(() => recentAssemblies.value.slice(0, RECENT_PANEL_LIMIT));
+    const visibleStatisticColumns = computed(() => statisticColumnOptions.filter(
+      (column) => selectedStatisticColumns.value.includes(column.key)
+    ));
 
     const rangeStart = computed(() => (total.value ? ((currentPage.value - 1) * pageSize.value) + 1 : 0));
     const rangeEnd = computed(() => Math.min(currentPage.value * pageSize.value, total.value));
 
     const displayValue = (value) => normalizeText(value) || emptyMark;
+
+    const formatBasePairs = (value) => {
+      if (value === null || value === undefined || value === '') return emptyMark;
+      const number = Number(value);
+      if (!Number.isFinite(number) || number < 0) return emptyMark;
+      const units = [
+        { threshold: 1e9, divisor: 1e9, suffix: 'Gb' },
+        { threshold: 1e6, divisor: 1e6, suffix: 'Mb' },
+        { threshold: 1e3, divisor: 1e3, suffix: 'kb' }
+      ];
+      const unit = units.find((item) => number >= item.threshold);
+      if (!unit) return `${new Intl.NumberFormat(locale.value).format(number)} bp`;
+      return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(number / unit.divisor)} ${unit.suffix}`;
+    };
+
+    const formatStatistic = (value, key) => {
+      if (key === 'genome_size' || key === 'n50') return formatBasePairs(value);
+      if (value === null || value === undefined || value === '') return emptyMark;
+      const number = Number(value);
+      if (!Number.isFinite(number)) return emptyMark;
+      if (key === 'gc_content') {
+        return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 3 }).format(number)}%`;
+      }
+      return new Intl.NumberFormat(locale.value).format(number);
+    };
 
     const formatLevel = (value) => {
       const normalized = normalizeText(value);
@@ -355,10 +414,6 @@ export default {
 
     const submitSearch = () => pushQuery(searchInput.value, 1);
     const clearSearch = () => pushQuery('', 1);
-    const useExample = (example) => {
-      searchInput.value = example;
-      submitSearch();
-    };
     const changePage = (page) => pushQuery(routeSearch.value, page);
 
     const loadRecent = () => {
@@ -449,8 +504,8 @@ export default {
       emptyMark,
       emptyText,
       error,
-      examples,
       fetchAssemblies,
+      formatStatistic,
       formatLevel,
       loading,
       openAccession,
@@ -467,9 +522,11 @@ export default {
       restoreDrawerFocus,
       routeSearch,
       searchInput,
+      selectedStatisticColumns,
+      statisticColumnOptions,
       submitSearch,
       total,
-      useExample
+      visibleStatisticColumns
     };
   }
 };
@@ -482,7 +539,8 @@ export default {
 }
 
 .portal-hero {
-  padding: 14px 8px 10px;
+  margin-bottom: 12px;
+  padding-top: 4px;
 }
 
 .breadcrumb {
@@ -490,8 +548,8 @@ export default {
   gap: 8px;
   align-items: center;
   color: #4b6693;
-  font-size: 14px;
-  margin-bottom: 10px;
+  font-size: 13px;
+  margin-bottom: 8px;
 }
 
 .breadcrumb a {
@@ -512,12 +570,6 @@ export default {
   line-height: 1.15;
 }
 
-.portal-hero p {
-  margin: 6px 0 0;
-  color: #46618f;
-  font-size: 15px;
-}
-
 .search-card,
 .list-card,
 .recent-card {
@@ -532,7 +584,6 @@ export default {
   margin-bottom: 14px;
 }
 
-.search-card h2,
 .card-header h2 {
   margin: 0;
   color: #0060df;
@@ -544,7 +595,6 @@ export default {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 160px;
   gap: 12px;
-  margin-top: 12px;
 }
 
 .search-row :deep(.el-button) {
@@ -558,17 +608,6 @@ export default {
   border-radius: 8px;
 }
 
-.examples {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 9px;
-  color: #58719b;
-  font-size: 13px;
-}
-
-.examples button,
 .link-button,
 .inline-action,
 .view-all {
@@ -580,8 +619,6 @@ export default {
   cursor: pointer;
 }
 
-.examples button:hover,
-.examples button:focus-visible,
 .link-button:hover,
 .link-button:focus-visible,
 .inline-action:hover,
@@ -620,6 +657,28 @@ export default {
 .card-header h2 .el-icon {
   color: #153f79;
   font-size: 20px;
+}
+
+.list-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.more-columns-button {
+  padding: 5px 7px;
+  color: #1760e8;
+  font-weight: 700;
+}
+
+.column-picker :deep(.el-checkbox-group) {
+  display: grid;
+  gap: 4px;
+}
+
+.column-picker :deep(.el-checkbox) {
+  margin-right: 0;
 }
 
 .total,

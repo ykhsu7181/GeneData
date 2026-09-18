@@ -14,7 +14,7 @@ assert.match(source, /page\.dataOverview\.fileStatistics/, 'matrix header should
 assert.doesNotMatch(source, /数据类型（点击单元格查看文件）/, 'matrix header should not use technical cell-click copy')
 assert.match(source, /page\.accessionDetail\.viewFiles/, 'detail rows should provide a localized view files action')
 assert.match(source, /page\.dataOverview\.comingSoon/, 'population data without real data should render as localized building state')
-assert.match(source, /DataFile/, 'download/file drawer copy should refer to DataFile')
+assert.match(source, /page\.dataOverview\.dataFile/, 'download/file drawer copy should use the localized data-file label')
 assert.match(source, /selectedSpecies/, 'DataOverviewView should expose a species filter')
 assert.match(source, /params\.species/, 'DataOverviewView should submit species filters to the API')
 assert.match(source, /categoryLabel\(row\.category\)/, 'category labels should use locale-aware display values')
