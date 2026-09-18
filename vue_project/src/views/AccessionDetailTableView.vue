@@ -1,7 +1,13 @@
 <template>
   <div :class="['accession-page', embedded ? 'is-embedded' : '']">
     <div class="page-heading">
-      <div class="accession-breadcrumb">{{ $t('page.accessionDetail.breadcrumb', { accession: routeAccession || '-' }) }}</div>
+      <nav class="accession-breadcrumb" :aria-label="$t('page.accessionPortal.breadcrumbLabel')">
+        <router-link :to="{ name: 'dashboard-home' }">{{ $t('nav.home') }}</router-link>
+        <span aria-hidden="true">/</span>
+        <router-link :to="{ name: 'accession-card' }">{{ $t('nav.accession') }}</router-link>
+        <span aria-hidden="true">/</span>
+        <span>{{ routeAccession || '-' }}</span>
+      </nav>
       <div class="heading-row">
         <div class="heading-main">
           <h1>{{ $t('page.accessionDetail.title', { accession: accession?.accession || routeAccession || '-' }) }}</h1>
@@ -248,7 +254,9 @@ export default {
 
 <style scoped>
 .accession-page { padding:8px 0 36px; color:#15233d; }
-.accession-breadcrumb { margin-bottom:14px; color:#76849a; font-size:13px; }
+.accession-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:14px; color:#76849a; font-size:13px; }
+.accession-breadcrumb a { color:#3974c7; text-decoration:none; }
+.accession-breadcrumb a:hover,.accession-breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
 .page-heading { margin-bottom:16px; padding:16px 20px 18px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }
 .heading-row { display:flex; align-items:center; gap:18px; }
 .heading-main { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }

@@ -12,10 +12,6 @@
         <main :class="['layout-main', { 'layout-main-dashboard': isDashboardRoute }]">
           <router-view />
         </main>
-
-        <footer v-if="!isDashboardRoute" class="layout-footer">
-          {{ $t('footer.version') }}
-        </footer>
       </div>
     </div>
   </el-config-provider>
@@ -128,14 +124,6 @@ a {
   width: 100%;
   max-width: none;
   padding: 0;
-}
-
-.layout-footer {
-  padding: 18px 20px 28px;
-  text-align: center;
-  color: #5f6f85;
-  font-size: 13px;
-  letter-spacing: 0.03em;
 }
 
 .empty-page {

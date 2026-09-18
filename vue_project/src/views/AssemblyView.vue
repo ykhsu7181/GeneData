@@ -23,12 +23,10 @@
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <router-link to="/dashboard">{{ $t('nav.home') }}</router-link>
         <span>/</span>
-        <template v-if="hasAssemblyPortalContext">
-          <router-link :to="{ name: 'assembly', query: assemblyPortalQuery }">
-            {{ $t('page.assembly.title') }}
-          </router-link>
-          <span>/</span>
-        </template>
+        <router-link :to="{ name: 'assembly', query: assemblyPortalQuery }">
+          {{ $t('page.assembly.title') }}
+        </router-link>
+        <span>/</span>
         <router-link :to="{ name: 'accession-detail', query: { accession: assembly.accession } }">
           {{ assembly.accession || '-' }}
         </router-link>
@@ -181,12 +179,6 @@ export default {
       if (Number.isInteger(page) && page > 1) query.page = String(page);
       return query;
     });
-    const hasAssemblyPortalContext = computed(() => (
-      route.query.from === 'assembly'
-      || Boolean(route.query.search)
-      || Boolean(route.query.q)
-      || Boolean(route.query.page)
-    ));
     const assembly = computed(() => detail.value?.assembly || {});
     const annotations = computed(() => detail.value?.annotations || []);
     const relatedAssemblies = computed(() => detail.value?.related_assemblies || []);
@@ -353,7 +345,6 @@ export default {
     return {
       assemblyId,
       assemblyPortalQuery,
-      hasAssemblyPortalContext,
       loading,
       errorMessage,
       detail,

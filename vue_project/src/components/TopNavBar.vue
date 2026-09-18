@@ -140,7 +140,8 @@ export default {
 
     const isGroupActive = (groupKey) => activeGroupKey.value === groupKey
     const goTo = (path) => {
-      if (route.path !== path) {
+      const target = router.resolve(path)
+      if (route.fullPath !== target.fullPath) {
         router.push(path)
       }
     }

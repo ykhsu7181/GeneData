@@ -30,6 +30,12 @@ test('dropdown navigation supports click, keyboard semantics, and menu state', (
   assert.doesNotMatch(source, /trigger="hover"/)
 })
 
+test('top navigation clears detail query state when returning to a portal route', () => {
+  assert.match(source, /const target = router\.resolve\(path\)/)
+  assert.match(source, /route\.fullPath !== target\.fullPath/)
+  assert.doesNotMatch(source, /route\.path !== path/)
+})
+
 test('top navigation uses the white portal visual treatment', () => {
   assert.match(source, /background: rgba\(255, 255, 255, 0\.97\);/)
   assert.match(source, /border-bottom: 1px solid #e2ebf4;/)

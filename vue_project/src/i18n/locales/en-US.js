@@ -244,7 +244,7 @@ const enUS = {
       title: 'Accession',
       subtitle: 'Search and explore accessions, revisit recent records, and browse collection geography.',
       searchTitle: 'Search Accession',
-      searchPlaceholder: 'Search accession / species / variety ...',
+      searchPlaceholder: 'Enter a variety name, e.g. IR64',
       searching: 'Searching...',
       searchError: 'Search failed. Please try again.',
       noSearchResults: 'No matching accessions',
@@ -988,10 +988,6 @@ const enUS = {
       comingSoon: 'Organism detailed information display feature coming soon',
       currentOrganism: 'Currently selected organism'
     }
-  },
-  footer: {
-    copyright: '© 2025 Genome Data Repository',
-    version: 'Data Repository System v1.0.0'
   }
 }
 

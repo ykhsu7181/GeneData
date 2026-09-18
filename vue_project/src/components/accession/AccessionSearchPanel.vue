@@ -95,10 +95,8 @@ export default {
     const searchTitleId = 'accession-search-title';
     const listboxId = 'accession-search-options';
     const examples = [
-      { label: '02428', value: '02428', type: 'accession' },
-      { label: 'IR64', value: 'IR64', type: 'accession' },
-      { label: 'Oryza sativa', value: 'Oryza sativa', type: 'query' },
-      { label: 'japonica', value: 'japonica', type: 'query' }
+      { label: '02428', value: '02428' },
+      { label: 'IR64', value: 'IR64' }
     ];
     let debounceTimer = null;
     let activeController = null;
@@ -214,16 +212,7 @@ export default {
       await fetchSuggestions(keyword);
     };
 
-    const useExample = async (example) => {
-      if (example.type === 'accession') {
-        emit('select', example.value);
-        return;
-      }
-      searchTerm.value = example.value;
-      clearTimeout(debounceTimer);
-      await fetchSuggestions(example.value);
-      searchInput.value?.focus();
-    };
+    const useExample = (example) => emit('select', example.value);
 
     const handleKeydown = (event) => {
       if (event.key === 'Escape') {

@@ -57,10 +57,10 @@ test('Assembly portal canonicalizes query state and preserves it when opening de
 })
 
 test('Assembly detail preserves portal return context across breadcrumbs and related assembly switches', () => {
-  assert.match(viewSource, /hasAssemblyPortalContext/)
   assert.match(viewSource, /name:\s*'assembly',\s*query:\s*assemblyPortalQuery/)
   assert.match(viewSource, /const assemblyPortalQuery = computed/)
   assert.match(viewSource, /query:\s*route\.query/)
+  assert.doesNotMatch(viewSource, /v-if="hasAssemblyPortalContext"/)
 })
 
 test('Assembly page loads the detail contract and renders all four required sections', () => {

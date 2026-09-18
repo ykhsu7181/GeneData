@@ -244,7 +244,7 @@ const zhCN = {
       title: '品种信息',
       subtitle: '搜索和探索品种，返回最近浏览记录，并查看采集地理分布。',
       searchTitle: '搜索品种',
-      searchPlaceholder: '搜索品种编号 / 物种 / 亚群……',
+      searchPlaceholder: '输入品种名进行搜索，例如IR64',
       searching: '搜索中……',
       searchError: '搜索失败，请重试。',
       noSearchResults: '没有匹配的品种',
@@ -988,10 +988,6 @@ const zhCN = {
       comingSoon: '生物体详细信息展示功能即将上线',
       currentOrganism: '当前选择的生物体'
     }
-  },
-  footer: {
-    copyright: '© 2025 基因组数据仓库',
-    version: '数据仓库系统 v1.0.0'
   }
 }
 

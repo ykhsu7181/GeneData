@@ -29,11 +29,11 @@ test('portal search enforces the approved request contract', () => {
   assert.doesNotMatch(searchSource, /query\/organisms\/\?search=/)
 })
 
-test('portal search distinguishes accession and query examples', () => {
-  assert.match(searchSource, /label: '02428', value: '02428', type: 'accession'/)
-  assert.match(searchSource, /label: 'Oryza sativa', value: 'Oryza sativa', type: 'query'/)
-  assert.match(searchSource, /if \(example\.type === 'accession'\)/)
-  assert.match(searchSource, /await fetchSuggestions\(example\.value\)/)
+test('portal search examples contain accession names only', () => {
+  assert.match(searchSource, /label: '02428', value: '02428'/)
+  assert.match(searchSource, /label: 'IR64', value: 'IR64'/)
+  assert.doesNotMatch(searchSource, /Oryza sativa|japonica|type: 'query'/)
+  assert.match(searchSource, /const useExample = \(example\) => emit\('select', example\.value\)/)
 })
 
 test('portal suggestions expose combobox and keyboard semantics', () => {
