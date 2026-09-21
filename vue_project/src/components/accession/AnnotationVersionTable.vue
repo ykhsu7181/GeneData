@@ -13,7 +13,17 @@
       </thead>
       <tbody>
         <tr v-for="item in rows" :key="item.id">
-          <td>{{ item.display_name || item.annotation_name || item.name || '-' }}</td>
+          <td>
+            <button
+              v-if="enableNavigation"
+              class="annotation-version-link"
+              type="button"
+              @click="$emit('view-annotation', item)"
+            >
+              {{ item.display_name || item.annotation_name || item.name || '-' }}
+            </button>
+            <span v-else>{{ item.display_name || item.annotation_name || item.name || '-' }}</span>
+          </td>
           <td>{{ item.standard_id || item.annotation_code || '-' }}</td>
           <td>{{ item.source_name || item.source_database || '-' }}</td>
           <td v-if="showAssembly">{{ item.assembly_name || '-' }}</td>
@@ -44,13 +54,14 @@ export default {
     showAssembly: { type: Boolean, default: true },
     showDefault: { type: Boolean, default: false },
     showActions: { type: Boolean, default: true },
+    enableNavigation: { type: Boolean, default: false },
     actionLabel: { type: String, default: '' },
     emptyText: { type: String, default: '' },
     defaultColumnLabel: { type: String, default: '' },
     defaultYesLabel: { type: String, default: '' },
     defaultNoLabel: { type: String, default: '' }
   },
-  emits: ['view-files'],
+  emits: ['view-files', 'view-annotation'],
   computed: {
     columnCount() {
       return 3 + Number(this.showAssembly) + Number(this.showDefault) + Number(this.showActions);
@@ -72,6 +83,9 @@ export default {
 .version-table th { background:#f1f6fd; color:#4b607e; white-space:nowrap; }
 .version-table td { color:#1c3359; }
 .version-table tbody tr:last-child td { border-bottom:0; }
+.annotation-version-link { padding:0; border:0; background:transparent; color:#1760e8; font:inherit; font-weight:700; text-align:left; cursor:pointer; }
+.annotation-version-link:hover { text-decoration:underline; }
+.annotation-version-link:focus-visible { outline:2px solid #409eff; outline-offset:3px; border-radius:2px; }
 .version-table-action { height:34px; padding:0 12px; border:1px solid #c9dcfb; border-radius:8px; background:#fff; color:#1760e8; font-size:12px; font-weight:700; cursor:pointer; }
 .default-badge { display:inline-block; min-width:24px; padding:3px 7px; border-radius:6px; background:#eef2f7; color:#718096; text-align:center; font-size:10px; font-weight:800; }
 .default-badge.is-default { background:#dff6e5; color:#25813f; }

@@ -645,6 +645,11 @@ const zhCN = {
     },
     annotation: {
       title: 'Annotation',
+      backToAssembly: '返回组装版本',
+      viewDefaultAnnotation: '查看默认注释',
+      assemblyNotFound: '未找到链接中指定的组装版本',
+      annotationNotFound: '未找到链接中指定的注释版本',
+      contextLoadFailed: '无法加载该注释版本的上下文信息',
       enterAccession: '请输入 Accession',
       noExactMatch: '没有精确匹配的 Accession：{accession}',
       searchPlaceholder: '搜索生物体 Accession',

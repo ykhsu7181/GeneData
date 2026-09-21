@@ -115,11 +115,13 @@
           :rows="annotations"
           :show-assembly="false"
           :show-default="true"
+          :enable-navigation="true"
           :action-label="$t('page.assemblyDetail.viewFiles')"
           :default-column-label="$t('page.assemblyDetail.defaultColumn')"
           :default-yes-label="$t('page.assemblyDetail.yes')"
           :default-no-label="$t('page.assemblyDetail.no')"
           :empty-text="$t('page.assemblyDetail.emptyAnnotations')"
+          @view-annotation="openAnnotation"
           @view-files="openAnnotationFiles"
         />
       </section>
@@ -391,6 +393,19 @@ export default {
       drawerVisible.value = true;
       await loadRelatedFiles();
     };
+    const openAnnotation = (annotation) => {
+      if (!assembly.value.accession || !assembly.value.id || !annotation?.id) return;
+      router.push({
+        name: 'annotation',
+        query: {
+          accession: assembly.value.accession,
+          assembly: String(assembly.value.id),
+          annotation: String(annotation.id),
+          from: 'assembly',
+          return_to: route.fullPath
+        }
+      });
+    };
     const openDownload = (url, missingKey) => {
       if (!url) {
         ElMessage.error(t(missingKey));
@@ -469,6 +484,7 @@ export default {
       fetchDetail,
       fromAccession,
       openRelatedFiles,
+      openAnnotation,
       openAnnotationFiles,
       loadRelatedFiles,
       downloadGenome,

@@ -147,6 +147,15 @@ test('Annotation file actions filter the shared Accession file inventory by rela
   assert.match(viewSource, /relation\.related_type === drawerScope\.value\.type/)
 })
 
+test('Annotation names open the annotation page with a restorable Assembly source context', () => {
+  assert.match(viewSource, /:enable-navigation="true"/)
+  assert.match(viewSource, /@view-annotation="openAnnotation"/)
+  assert.match(viewSource, /name:\s*'annotation'/)
+  assert.match(viewSource, /annotation:\s*String\(annotation\.id\)/)
+  assert.match(viewSource, /from:\s*'assembly'/)
+  assert.match(viewSource, /return_to:\s*route\.fullPath/)
+})
+
 test('Related Files drawer provides file metadata, empty/error states and DataFile download action', () => {
   assert.match(drawerSource, /v-else-if="errorMessage"/)
   assert.match(drawerSource, /item\.file_name/)

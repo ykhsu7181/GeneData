@@ -35,7 +35,9 @@ test('annotation version table supports assembly and default columns', () => {
   assert.match(annotationSource, /showAssembly:\s*\{\s*type:\s*Boolean/);
   assert.match(annotationSource, /showDefault:\s*\{\s*type:\s*Boolean/);
   assert.match(annotationSource, /showActions:\s*\{\s*type:\s*Boolean/);
-  assert.match(annotationSource, /emits:\s*\['view-files'\]/);
+  assert.match(annotationSource, /enableNavigation:\s*\{\s*type:\s*Boolean,\s*default:\s*false/);
+  assert.match(annotationSource, /emits:\s*\['view-files', 'view-annotation'\]/);
+  assert.match(annotationSource, /class="annotation-version-link"[\s\S]*?\$emit\('view-annotation', item\)/);
   assert.match(annotationSource, /item\.standard_id \|\| item\.annotation_code \|\| '-'/);
   assert.match(annotationSource, /item\.source_name \|\| item\.source_database \|\| '-'/);
   assert.match(annotationSource, /item\.is_default \? defaultYesLabel : defaultNoLabel/);

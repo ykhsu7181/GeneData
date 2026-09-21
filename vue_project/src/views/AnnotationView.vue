@@ -1,5 +1,14 @@
 <template>
   <div class="annotation-view">
+    <button
+      v-if="annotationReturnPath"
+      class="annotation-back-link"
+      type="button"
+      @click="returnToAssembly"
+    >
+      <span aria-hidden="true">←</span>
+      {{ $t('page.annotation.backToAssembly') }}
+    </button>
     <!-- 复用数据一览表的标题样式 -->
     <div class="page-header">
       <h2 class="title">{{ $t('page.annotation.title') }}</h2>
@@ -109,6 +118,19 @@
     <div class="data-card">
       <div v-if="loading" class="loading">
         <el-skeleton :rows="6" animated />
+      </div>
+
+      <div v-else-if="contextErrorKey" class="context-error" role="alert">
+        <el-result icon="warning" :title="$t(contextErrorKey)">
+          <template #extra>
+            <el-button v-if="annotationReturnPath" @click="returnToAssembly">
+              {{ $t('page.annotation.backToAssembly') }}
+            </el-button>
+            <el-button type="primary" @click="useDefaultAnnotation">
+              {{ $t('page.annotation.viewDefaultAnnotation') }}
+            </el-button>
+          </template>
+        </el-result>
       </div>
 
       <div v-else-if="!selectedOrganism" class="empty-state">
@@ -301,6 +323,12 @@ const matchesId = (item, value) => {
   return String(item.id) === String(value);
 };
 
+const normalizeAssemblyReturnPath = (value) => {
+  const normalized = normalizeQueryValue(value);
+  if (!normalized || normalized.startsWith('//')) return '';
+  return /^\/assembly\/[^/?#]+(?:[/?#]|$)/.test(normalized) ? normalized : '';
+};
+
 export default {
   name: 'AnnotationView',
   components: {
@@ -345,6 +373,13 @@ export default {
     const hierarchyAssemblies = ref([]);
     const loadedHierarchyAccession = ref('');
     const routeSyncInProgress = ref(false);
+    const hierarchyLoadFailed = ref(false);
+    const contextErrorKey = ref('');
+    const annotationReturnPath = computed(() => (
+      normalizeQueryValue(route.query.from) === 'assembly'
+        ? normalizeAssemblyReturnPath(route.query.return_to)
+        : ''
+    ));
 
     // 计算属性：以Mb为单位的分段长度
     const segmentLengthMb = computed({
@@ -357,7 +392,7 @@ export default {
       }
     });
 
-    const buildNormalizedQuery = ({ accession, assembly, annotation }) => {
+    const buildNormalizedQuery = ({ accession, assembly, annotation, from, returnTo }) => {
       const query = {};
       if (accession) {
         query.accession = accession;
@@ -367,6 +402,13 @@ export default {
       }
       if (annotation) {
         query.annotation = String(annotation);
+      }
+      if (from === 'assembly') {
+        query.from = 'assembly';
+      }
+      const safeReturnPath = normalizeAssemblyReturnPath(returnTo);
+      if (safeReturnPath) {
+        query.return_to = safeReturnPath;
       }
       return query;
     };
@@ -378,12 +420,18 @@ export default {
       const targetAccession = normalizeQueryValue(query.accession);
       const targetAssembly = normalizeQueryValue(query.assembly);
       const targetAnnotation = normalizeQueryValue(query.annotation);
+      const currentFrom = normalizeQueryValue(route.query.from);
+      const currentReturnTo = normalizeQueryValue(route.query.return_to);
+      const targetFrom = normalizeQueryValue(query.from);
+      const targetReturnTo = normalizeQueryValue(query.return_to);
       const routeHasLegacyOrganism = Boolean(normalizeQueryValue(route.query.organism));
 
       if (
         currentAccession === targetAccession &&
         currentAssembly === targetAssembly &&
         currentAnnotation === targetAnnotation &&
+        currentFrom === targetFrom &&
+        currentReturnTo === targetReturnTo &&
         !routeHasLegacyOrganism
       ) {
         return;
@@ -437,13 +485,16 @@ export default {
       if (!accession) {
         hierarchyAssemblies.value = [];
         loadedHierarchyAccession.value = '';
+        hierarchyLoadFailed.value = false;
         return;
       }
 
       if (loadedHierarchyAccession.value === accession && hierarchyAssemblies.value.length) {
+        hierarchyLoadFailed.value = false;
         return;
       }
 
+      hierarchyLoadFailed.value = false;
       try {
         const response = await axios.get(`/files/accessions/${accession}/`);
         hierarchyAssemblies.value = response.data?.data?.assemblies || [];
@@ -452,6 +503,7 @@ export default {
         console.error('获取 accession hierarchy 失败:', error);
         hierarchyAssemblies.value = [];
         loadedHierarchyAccession.value = accession;
+        hierarchyLoadFailed.value = true;
       }
     };
 
@@ -460,11 +512,10 @@ export default {
         return null;
       }
 
-      return (
-        hierarchyAssemblies.value.find((item) => matchesId(item, requestedAssemblyId)) ||
-        hierarchyAssemblies.value.find((item) => item.is_default) ||
-        hierarchyAssemblies.value[0]
-      );
+      if (requestedAssemblyId) {
+        return hierarchyAssemblies.value.find((item) => matchesId(item, requestedAssemblyId)) || null;
+      }
+      return hierarchyAssemblies.value.find((item) => item.is_default) || hierarchyAssemblies.value[0];
     };
 
     const pickAnnotation = (assembly, requestedAnnotationId) => {
@@ -472,11 +523,10 @@ export default {
         return null;
       }
 
-      return (
-        assembly.annotations.find((item) => matchesId(item, requestedAnnotationId)) ||
-        assembly.annotations.find((item) => item.is_default) ||
-        assembly.annotations[0]
-      );
+      if (requestedAnnotationId) {
+        return assembly.annotations.find((item) => matchesId(item, requestedAnnotationId)) || null;
+      }
+      return assembly.annotations.find((item) => item.is_default) || assembly.annotations[0];
     };
 
     // 获取有注释文件的生物体列表
@@ -997,6 +1047,8 @@ export default {
       featureTypeOptions.value = ['all'];
       visualizationData.value = [];
       chromosomeLength.value = 0;
+      contextErrorKey.value = '';
+      hierarchyLoadFailed.value = false;
     };
 
     const syncRouteContext = async () => {
@@ -1006,18 +1058,35 @@ export default {
 
       if (!accession) {
         clearContextData();
-        return;
+        return true;
       }
 
+      contextErrorKey.value = '';
       selectedOrganism.value = accession;
       contextAccession.value = accession;
 
       await fetchAccessionHierarchy(accession);
 
+      if (hierarchyLoadFailed.value) {
+        contextErrorKey.value = 'page.annotation.contextLoadFailed';
+        return false;
+      }
+
       const assembly = pickAssembly(requestedAssemblyId);
+      if (requestedAssemblyId && !assembly) {
+        contextAssemblyId.value = '';
+        contextAnnotationId.value = '';
+        contextErrorKey.value = 'page.annotation.assemblyNotFound';
+        return false;
+      }
       const annotation = pickAnnotation(assembly, requestedAnnotationId);
 
       contextAssemblyId.value = assembly?.id ? String(assembly.id) : '';
+      if (requestedAnnotationId && !annotation) {
+        contextAnnotationId.value = '';
+        contextErrorKey.value = 'page.annotation.annotationNotFound';
+        return false;
+      }
       contextAnnotationId.value = annotation?.id ? String(annotation.id) : '';
 
       if (allOrganisms.value.length && !allOrganisms.value.includes(accession)) {
@@ -1027,8 +1096,39 @@ export default {
       await replaceRouteQuery(buildNormalizedQuery({
         accession,
         assembly: assembly?.id || '',
-        annotation: annotation?.id || ''
+        annotation: annotation?.id || '',
+        from: normalizeQueryValue(route.query.from),
+        returnTo: route.query.return_to
       }));
+      return true;
+    };
+
+    const returnToAssembly = () => {
+      if (annotationReturnPath.value) {
+        router.push(annotationReturnPath.value);
+        return;
+      }
+      const targetAssemblyId = contextAssemblyId.value || normalizeQueryValue(route.query.assembly);
+      if (targetAssemblyId) {
+        router.push({ name: 'assembly-detail', params: { assemblyId: targetAssemblyId } });
+      } else {
+        router.push({ name: 'assembly' });
+      }
+    };
+
+    const useDefaultAnnotation = async () => {
+      const requestedAssemblyId = contextErrorKey.value === 'page.annotation.assemblyNotFound'
+        ? ''
+        : contextAssemblyId.value || normalizeQueryValue(route.query.assembly);
+      await router.replace({
+        path: route.path,
+        query: buildNormalizedQuery({
+          accession: contextAccession.value || normalizeQueryValue(route.query.accession),
+          assembly: requestedAssemblyId,
+          from: normalizeQueryValue(route.query.from),
+          returnTo: route.query.return_to
+        })
+      });
     };
 
     // 获取文件列表（保持兼容性）
@@ -1144,8 +1244,13 @@ export default {
 
     // 处理URL参数
     const handleRouteParams = async () => {
-      await syncRouteContext();
-      await fetchFiles();
+      loading.value = true;
+      const isValidContext = await syncRouteContext();
+      if (isValidContext) {
+        await fetchFiles();
+      } else {
+        loading.value = false;
+      }
     };
 
     watch(
@@ -1200,6 +1305,8 @@ export default {
       currentPage,
       pageSize,
       totalCount,
+      contextErrorKey,
+      annotationReturnPath,
       viewMode,
       annotationContainer,
       displayFeatures,
@@ -1226,7 +1333,9 @@ export default {
       handleFeatureTypeChange,
       handleSizeChange,
       handleCurrentChange,
-      handleRouteParams
+      handleRouteParams,
+      returnToAssembly,
+      useDefaultAnnotation
     };
   }
 };
@@ -1236,6 +1345,22 @@ export default {
 .annotation-view {
   padding: 0;
 }
+
+.annotation-back-link {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin:0 0 12px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#1760e8;
+  font:inherit;
+  cursor:pointer;
+}
+
+.annotation-back-link:hover { text-decoration:underline; }
+.annotation-back-link:focus-visible { outline:2px solid #409eff; outline-offset:4px; border-radius:2px; }
 
 .page-header {
   display: flex;

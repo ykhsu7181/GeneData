@@ -645,6 +645,11 @@ const enUS = {
     },
     annotation: {
       title: 'Annotation',
+      backToAssembly: 'Back to assembly',
+      viewDefaultAnnotation: 'View default annotation',
+      assemblyNotFound: 'The assembly specified by this link was not found',
+      annotationNotFound: 'The annotation specified by this link was not found',
+      contextLoadFailed: 'Unable to load the context for this annotation',
       enterAccession: 'Enter an Accession',
       noExactMatch: 'No exact Accession match: {accession}',
       searchPlaceholder: 'Search Organism Accession',
