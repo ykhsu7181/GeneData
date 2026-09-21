@@ -365,6 +365,7 @@ const enUS = {
     },
     dataOverview: {
       title: 'Data Overview',
+      subtitle: 'Browse genome, transcriptome, population genetics, and other GeneData resources.',
       searchPlaceholder: 'Search Organism Accession',
       refreshData: 'Refresh Data',
       accession: 'Accession',
@@ -393,6 +394,7 @@ const enUS = {
       breadcrumb: 'Home / Data',
       searchPrompt: 'Search Accession / species / dataset / file name',
       filters: {
+        label: 'Data Overview filters',
         species: 'Species',
         subPopulation: 'Subpopulation',
         dataType: 'Data Type',
@@ -410,6 +412,10 @@ const enUS = {
       noDetails: 'No detail data',
       columns: {
         dataset: 'Dataset',
+        originalName: 'Original File Name',
+        fileCode: 'File Code',
+        dataSource: 'Data Source',
+        description: 'Description',
         assembly: 'Assembly',
         annotation: 'Annotation',
         fileCount: 'Files',
@@ -417,7 +423,9 @@ const enUS = {
         updatedAt: 'Updated At'
       },
       summary: {
+        label: 'Repository statistics',
         accessions: 'Accessions',
+        assemblies: 'Assemblies',
         datasets: 'Datasets',
         files: 'DataFiles',
         totalSize: 'Total Data Size',
@@ -441,7 +449,26 @@ const enUS = {
       datafileEntry: 'DataFile Download',
       dataFile: 'DataFile',
       relationship: 'Relationship Overview',
-      noFiles: 'No files available'
+      noFiles: 'No files available',
+      fileTable: 'Data List',
+      optionalColumns: 'Optional: dataset, source, MD5, description',
+      columnSettings: 'Columns',
+      chooseColumns: 'Choose visible data columns',
+      detail: {
+        title: 'Data File Details',
+        basic: 'Basic Information',
+        relationship: 'Relationships',
+        integrity: 'Integrity and Time',
+        primary: 'Primary',
+        createdAt: 'Created At',
+        empty: 'No file details available',
+        loadFailed: 'Failed to load file details',
+        copyMd5: 'Copy MD5',
+        copySuccess: 'MD5 copied',
+        copyFailed: 'Failed to copy MD5',
+        openFor: 'View details for {file}',
+        downloadFor: 'Download {file}'
+      }
     },
     rawData: {
       breadcrumb: 'Home / Data / Research Group Raw Data',

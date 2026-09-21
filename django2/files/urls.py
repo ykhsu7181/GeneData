@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .archive_views import ArchivedGenomeFileViewSet
 from .download_views import download_datafile
+from .datafile_api_views import datafile_detail
 from .views import (
     FileTypeViewSet, GenomeFileViewSet,
     OrganismViewSet, FileCategoryViewSet,
@@ -62,6 +63,7 @@ urlpatterns = [
     path('accessions/<str:accession>/annotations/', accession_annotations, name='accession-annotations'),
     path('accessions/<str:accession>/files/', accession_files, name='accession-files'),
     path('data-files/<int:file_id>/download/', download_datafile, name='datafile-download'),
+    path('data-files/<int:file_id>/detail/', datafile_detail, name='datafile-detail'),
     path('query/organisms/', query_organisms, name='query-organisms'),
     path('query/annotation-organisms/', query_annotation_organisms, name='query-annotation-organisms'),
     path('query/sub-populations/', query_sub_populations, name='query-sub-populations'),

@@ -365,6 +365,7 @@ const zhCN = {
     },
     dataOverview: {
       title: '数据一览表',
+      subtitle: '浏览 GeneData 中的基因组、转录组、群体遗传等数据资源。',
       searchPlaceholder: '搜索生物体 Accession',
       refreshData: '刷新数据',
       accession: '品种编号',
@@ -393,6 +394,7 @@ const zhCN = {
       breadcrumb: '首页 / 数据资源',
       searchPrompt: '搜索 Accession / 物种 / 数据集 / 文件名',
       filters: {
+        label: '数据一览筛选',
         species: '物种',
         subPopulation: '亚群',
         dataType: '数据类型',
@@ -410,6 +412,10 @@ const zhCN = {
       noDetails: '暂无明细数据',
       columns: {
         dataset: '数据集',
+        originalName: '原始文件名',
+        fileCode: '文件编号',
+        dataSource: '数据来源',
+        description: '文件描述',
         assembly: '组装版本',
         annotation: '注释版本',
         fileCount: '文件数',
@@ -417,7 +423,9 @@ const zhCN = {
         updatedAt: '更新时间'
       },
       summary: {
+        label: '数据仓库统计',
         accessions: '品种数',
+        assemblies: '基因组数',
         datasets: '数据集',
         files: '文件数',
         totalSize: '总数据量',
@@ -441,7 +449,26 @@ const zhCN = {
       datafileEntry: '数据文件下载入口',
       dataFile: '数据文件',
       relationship: '关系概览',
-      noFiles: '暂无文件'
+      noFiles: '暂无文件',
+      fileTable: '数据列表',
+      optionalColumns: '可选字段：数据集、数据来源、MD5、文件描述',
+      columnSettings: '列设置',
+      chooseColumns: '选择数据列表显示字段',
+      detail: {
+        title: '数据文件详情',
+        basic: '基本信息',
+        relationship: '关联信息',
+        integrity: '校验与时间',
+        primary: '主文件',
+        createdAt: '创建时间',
+        empty: '暂无文件详情',
+        loadFailed: '获取文件详情失败',
+        copyMd5: '复制 MD5',
+        copySuccess: 'MD5 已复制',
+        copyFailed: '复制 MD5 失败',
+        openFor: '查看文件 {file} 的详情',
+        downloadFor: '下载文件 {file}'
+      }
     },
     rawData: {
       breadcrumb: '首页 / Data / 课题组原始数据',

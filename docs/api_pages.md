@@ -14,8 +14,8 @@
 | 页面 | 前端路由 | 主要接口 | 后端入口 | 查询 service | 数据来源 |
 | --- | --- | --- | --- | --- | --- |
 | 首页 Portal | `/dashboard` | `GET /gd/api/warehouse/dashboard/` | `files.dashboard_views.warehouse_dashboard` | `files.services.dashboard_service.build_dashboard_payload` | `Assembly / Species / Annotation / Accession` |
-| 数据一览表 | `/data-overview` | `GET /gd/api/files/query/data-overview/` | `files.query_views.query_data_overview` | `files.services.query_service.get_data_overview_payload` | `Accession + DataFile + FileRelation` |
-| 数据一览表文件抽屉 | `/data-overview` | `GET /gd/api/files/query/data-overview-files/` | `files.query_views.query_data_overview_files` | `files.services.query_service.get_data_overview_files_payload` | `DataFile + FileRelation` |
+| 数据一览表 | `/data-overview` | `GET /gd/api/files/query/data-overview/` | `files.query_views.query_data_overview` | `files.services.data_overview_v2_service.build_data_overview_payload` | `DataFile + FileRelation`（文件级分页） |
+| DataFile 安全详情 | `/data-overview` | `GET /gd/api/files/data-files/<file_id>/detail/` | `files.datafile_api_views.datafile_detail` | `files.services.data_overview_v2_service.build_datafile_detail_payload` | `DataFile + FileRelation`（不返回 `file_path`） |
 | 原始数据 | `/raw-data` | `GET /gd/api/files/query/raw-data/` | `files.query_views.query_raw_data` | `files.services.query_service.get_raw_data_payload` | `DataFile.description.raw_data + FileRelation` |
 | Assembly 详情 | `/assembly/:assemblyId` | `GET /gd/api/files/assemblies/<assembly_id>/summary/` | `files.assembly_api_views.assembly_summary` | `files.services.assembly_detail_service.get_assembly_detail` | `Species / Accession / Assembly / Annotation / DataFile / FileRelation` |
 | Assembly 相关文件 | `/assembly/:assemblyId` | `GET /gd/api/files/accessions/<accession>/files/` | `files.accession_api_views.accession_files` | `files.services.accession_detail_service.get_accession_files` | `DataFile + FileRelation` |

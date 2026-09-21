@@ -87,7 +87,7 @@ app.use(router)
 app.use(i18n)
 
 // 全局错误处理
-app.config.errorHandler = (err, vm, info) => {
+app.config.errorHandler = (err) => {
   if (err.message &&
       (err.message.includes('ResizeObserver loop') ||
        err.message.includes('ResizeObserver loop completed'))) {
@@ -97,13 +97,3 @@ app.config.errorHandler = (err, vm, info) => {
 };
 
 app.mount('#app')
-
-// 根据环境设置baseURL
-let baseURL = ''
-if (process.env.NODE_ENV === 'production') {
-  // 生产环境使用域名
-  baseURL = 'https://riceome.hzau.edu.cn/gd/'
-} else {
-  // 开发环境使用本地地址
-  baseURL = 'http://localhost:8080/'
-}
