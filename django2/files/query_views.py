@@ -510,6 +510,49 @@ def query_download_transcriptome(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @reject_ambiguous_context
+def query_annotation_options(request):
+    params = _request_params(request)
+    organism, accession_obj, assembly, annotation = get_context_organism(
+        annotation_id=params.get("annotation_id"),
+        assembly_id=params.get("assembly_id"),
+        accession=params.get("accession"),
+        organism=params.get("organism"),
+    )
+    if not organism:
+        return Response({"error": "缺少必要的参数: organism"}, status=status.HTTP_400_BAD_REQUEST)
+
+    service_file = _existing_service_file(get_files_for_annotation(annotation.id, file_role="annotation")) if annotation else None
+    if not service_file:
+        return Response({"error": f"未找到 {organism} 的注释文件"}, status=status.HTTP_404_NOT_FOUND)
+
+    chromosome_aliases = _build_context_chromosome_aliases(
+        accession_obj=accession_obj,
+        assembly=assembly,
+        organism=organism,
+    )
+    rows = _parse_feature_file(
+        service_file["file_path"],
+        chromosome_aliases=chromosome_aliases,
+    )
+    chromosomes = sorted({row["seqid"] for row in rows})
+    feature_types = sorted({row["feature"] for row in rows if row.get("feature")})
+    return Response(
+        {
+            "annotation_id": annotation.id if annotation else None,
+            "chromosomes": chromosomes,
+            "feature_types": feature_types,
+            "summary": {
+                "total_features": len(rows),
+                "chromosome_count": len(chromosomes),
+                "feature_type_count": len(feature_types),
+            },
+        }
+    )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_annotation_data(request):
     params = _request_params(request)
     organism, accession_obj, assembly, annotation = get_context_organism(
@@ -534,27 +577,32 @@ def query_annotation_data(request):
         assembly=assembly,
         organism=organism,
     )
-    all_rows = _parse_feature_file(
+    filtered_rows = _parse_feature_file(
         service_file["file_path"],
         chromosome=chromosome,
         feature_type=None if feature_type == "all" else feature_type,
         chromosome_aliases=chromosome_aliases,
     )
-    chromosomes = sorted({row["seqid"] for row in all_rows})
-    feature_types = sorted({row["feature"] for row in all_rows if row.get("feature")})
+    chromosomes = sorted({row["seqid"] for row in filtered_rows})
+    feature_types = sorted({row["feature"] for row in filtered_rows if row.get("feature")})
+    filtered_statistics = {
+        "chromosomes": chromosomes,
+        "feature_types": feature_types,
+        "total_features": len(filtered_rows),
+    }
     return Response(
         {
-            "results": all_rows[(page - 1) * page_size: page * page_size],
-            "count": len(all_rows),
+            "results": filtered_rows[(page - 1) * page_size: page * page_size],
+            "count": len(filtered_rows),
+            "filtered_count": len(filtered_rows),
             "page": page,
             "page_size": page_size,
-            "total_pages": (len(all_rows) + page_size - 1) // page_size,
+            "total_pages": (len(filtered_rows) + page_size - 1) // page_size,
             "annotation_file": _adapt_annotation_file_service_result(service_file),
-            "statistics": {
-                "chromosomes": chromosomes,
-                "feature_types": feature_types,
-                "total_features": len(all_rows),
-            },
+            "filtered_statistics": filtered_statistics,
+            # Compatibility field for existing callers. New clients should use
+            # filtered_statistics and query annotation-options for full totals.
+            "statistics": filtered_statistics,
         }
     )
 

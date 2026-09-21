@@ -15,6 +15,7 @@ from .views import (
 )
 from .query_views import (
     query_annotation_data,
+    query_annotation_options,
     query_annotation_organisms,
     query_centromere,
     query_chromosome_length,
@@ -76,6 +77,7 @@ urlpatterns = [
     path('query/paginated-transcriptome-overview/', query_paginated_transcriptome_overview, name='query-paginated-transcriptome-overview'),
     path('query/download-transcriptome/', query_download_transcriptome, name='query-download-transcriptome'),
     path('query/annotation-data/', query_annotation_data, name='query-annotation-data'),
+    path('query/annotation-options/', query_annotation_options, name='query-annotation-options'),
     path('query/chromosomes/', query_chromosomes, name='query-chromosomes'),
     path('query/chromosome-length/', query_chromosome_length, name='query-chromosome-length'),
     path('query/tes/', query_tes, name='query-tes'),

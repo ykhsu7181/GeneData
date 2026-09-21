@@ -6,7 +6,7 @@ const source = readFileSync(resolve(process.cwd(), 'src/views/AnnotationView.vue
 
 assert.match(
   source,
-  /await replaceRouteQuery\(buildNormalizedQuery\(\{\s*accession: value\s*\}\)\);\s*await handleRouteParams\(\);/,
+  /await pushRouteQuery\(buildNormalizedQuery\(\{ accession: value \}\)\);\s*await handleRouteParams\(\);/,
   'Annotation accession selection should immediately resolve hierarchy and load annotation data'
 )
 
