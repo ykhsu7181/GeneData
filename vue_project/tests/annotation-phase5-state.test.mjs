@@ -43,7 +43,8 @@ test('Annotation preserves its validated Assembly return context across filter c
 })
 
 test('Annotation keeps the search controls in one scrollable row at narrow widths', () => {
-  assert.match(searchPanel, /\.search-scroll \{ overflow-x: auto;/)
+  assert.match(searchPanel, /\.search-scroll \{[\s\S]*?overflow-x: auto;/)
+  assert.match(searchPanel, /\.search-scroll::-webkit-scrollbar \{ display: none; \}/)
   assert.match(searchPanel, /\.search-grid \{[\s\S]*min-width: 1100px;/)
   assert.doesNotMatch(searchPanel, /\.search-grid[\s\S]{0,240}flex-wrap/)
 })

@@ -34,7 +34,8 @@ test('Annotation search keeps all five selectors and search action in one deskto
   assert.ok(order.every(index => index >= 0))
   assert.deepEqual(order, [...order].sort((a, b) => a - b))
   assert.match(searchPanel, /grid-template-columns:\s*minmax\(160px,[\s\S]*110px;/)
-  assert.match(searchPanel, /\.search-scroll \{ overflow-x: auto;/)
+  assert.match(searchPanel, /\.search-scroll \{[\s\S]*?overflow-x: auto;/)
+  assert.match(searchPanel, /scrollbar-width: none;/)
   assert.match(searchPanel, /min-width: 1100px;/)
 })
 

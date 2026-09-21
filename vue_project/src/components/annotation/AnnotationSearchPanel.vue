@@ -11,7 +11,7 @@
       </span>
       <div class="search-grid">
         <div class="field field-accession">
-          <span class="field-label">Accession</span>
+          <span class="field-label">{{ $t('page.annotation.accession') }}</span>
           <el-autocomplete
             :model-value="accession"
             :aria-label="$t('page.annotation.accessionFieldLabel')"
@@ -228,7 +228,13 @@ export default {
   box-shadow: 0 14px 36px rgba(36, 103, 178, 0.08);
 }
 
-.search-scroll { overflow-x: auto; padding-bottom: 2px; }
+.search-scroll {
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.search-scroll::-webkit-scrollbar { display: none; }
 .search-scroll:focus-visible { outline: 2px solid #409eff; outline-offset: 3px; border-radius: 6px; }
 .sr-only {
   position: absolute;

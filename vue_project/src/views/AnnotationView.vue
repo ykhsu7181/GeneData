@@ -5,7 +5,7 @@
         <RouterLink to="/dashboard">{{ $t('nav.home') }}</RouterLink>
         <span aria-hidden="true">/</span>
         <button v-if="annotationReturnPath" type="button" @click="returnToAssembly">
-          {{ $t('page.annotation.assembly') }}
+          {{ $t('page.annotation.assemblyBreadcrumb') }}
         </button>
         <span v-if="annotationReturnPath" aria-hidden="true">/</span>
         <span>{{ $t('page.annotation.title') }}</span>

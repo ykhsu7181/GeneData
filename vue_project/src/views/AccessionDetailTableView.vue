@@ -73,6 +73,16 @@
               :action-label="$t('page.accessionDetail.viewGenome')"
               @select="openAssembly"
             />
+
+            <h3 class="annotation-info-title">{{ $t('page.accessionDetail.tabs.annotations') }}</h3>
+            <AnnotationVersionTable
+              :rows="relationship.annotations || []"
+              :show-assembly="true"
+              :show-default="false"
+              :enable-navigation="true"
+              @view-annotation="openAnnotation"
+              @view-files="openFiles('annotation', $event.id)"
+            />
           </section>
 
           <section v-else class="detail-section">
@@ -81,14 +91,6 @@
             <div v-if="activeTab === 'datasets'" class="table-shell"><table class="detail-table"><thead><tr><th>{{ $t('page.accessionDetail.columns.datasetCode') }}</th><th>{{ $t('page.accessionDetail.columns.datasetName') }}</th><th>{{ $t('page.accessionDetail.columns.type') }}</th><th>BioProject</th><th>{{ $t('page.accessionDetail.columns.externalDatabase') }}</th><th>{{ $t('page.accessionDetail.columns.runCount') }}</th></tr></thead><tbody><tr v-for="item in tabRows" :key="item.id"><td>{{ item.dataset_code }}</td><td>{{ item.dataset_name || '-' }}</td><td>{{ item.dataset_type || '-' }}</td><td>{{ item.bioproject_accession || '-' }}</td><td>{{ item.external_database || '-' }}</td><td>{{ item.run_count }}</td></tr><tr v-if="!tabRows.length && !tabLoading"><td colspan="6" class="empty-table-cell">{{ $t('page.accessionDetail.empty.datasets') }}</td></tr></tbody></table></div>
 
             <div v-else-if="activeTab === 'samples'" class="table-shell"><table class="detail-table"><thead><tr><th>{{ $t('page.accessionDetail.columns.sampleName') }}</th><th>{{ $t('page.accessionDetail.columns.sampleCode') }}</th><th>{{ $t('page.accessionDetail.columns.tissue') }}</th><th>{{ $t('common.dataType') }}</th><th>Experiment</th></tr></thead><tbody><tr v-for="item in tabRows" :key="item.id"><td>{{ item.sample_name }}</td><td>{{ item.biosample_accession }}</td><td>{{ item.tissue }}</td><td>{{ item.data_type }}</td><td>{{ item.experiment_accession }}</td></tr><tr v-if="!tabRows.length && !tabLoading"><td colspan="5" class="empty-table-cell">{{ $t('page.accessionDetail.empty.samples') }}</td></tr></tbody></table></div>
-
-            <AnnotationVersionTable
-              v-else-if="activeTab === 'annotations' && !tabLoading"
-              :rows="tabRows"
-              :show-assembly="true"
-              :show-default="false"
-              @view-files="openFiles('annotation', $event.id)"
-            />
 
             <div v-else-if="activeTab === 'files'" class="table-shell"><table class="detail-table"><thead><tr><th>{{ $t('common.fileName') }}</th><th>{{ $t('common.fileRole') }}</th><th>{{ $t('page.accessionDetail.columns.relatedType') }}</th><th>{{ $t('common.fileType') }}</th><th>{{ $t('page.accessionDetail.columns.size') }}</th><th>{{ $t('common.download') }}</th></tr></thead><tbody><tr v-for="item in filteredFiles" :key="item.id"><td>{{ item.file_name }}</td><td><span class="role-chip">{{ item.file_role }}</span></td><td>{{ item.related_type }}</td><td>{{ item.file_type }}</td><td>{{ item.size_display }}</td><td><button class="download-action" type="button" @click="downloadFile(item)">{{ $t('page.accessionDetail.datafileDownload') }}</button></td></tr><tr v-if="!filteredFiles.length && !tabLoading"><td colspan="6" class="empty-table-cell">{{ $t('page.accessionDetail.empty.files') }}</td></tr></tbody></table></div>
 
@@ -133,7 +135,6 @@ const tabs = [
   { key: 'basic', labelKey: 'page.accessionDetail.tabs.basic' },
   { key: 'datasets', labelKey: 'page.accessionDetail.tabs.datasets' },
   { key: 'samples', labelKey: 'page.accessionDetail.tabs.samples' },
-  { key: 'annotations', labelKey: 'page.accessionDetail.tabs.annotations' },
   { key: 'files', labelKey: 'page.accessionDetail.tabs.files' }
 ];
 
@@ -238,6 +239,18 @@ export default {
       if (mapReturnPath.value) query.return_to = mapReturnPath.value;
       return router.push({ name: 'assembly-detail', params: { assemblyId: assembly.id }, query });
     };
+    const openAnnotation = (annotation) => {
+      const assemblyId = annotation?.assembly_id;
+      if (!routeAccession.value || !assemblyId || !annotation?.id) return;
+      return router.push({
+        name: 'annotation',
+        query: {
+          accession: routeAccession.value,
+          assembly: String(assemblyId),
+          annotation: String(annotation.id)
+        }
+      });
+    };
     const downloadFile = (file) => { if (!file?.datafile_download_url) { ElMessage.error(t('messages.missingDatafileUrl')); return; } window.open(new URL(file.datafile_download_url, window.location.origin).toString(), '_blank'); };
     const refreshPage = async () => { await fetchSummary(); if (activeTab.value !== 'basic') await fetchTab(activeTab.value); };
     const toggleFavorite = () => {
@@ -260,7 +273,7 @@ export default {
       recordedRouteAccession.value = '';
       fetchSummary();
     }, { immediate: true });
-    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAssembly, openFiles, parentBreadcrumbLabel, parentLocation, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
+    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAnnotation, openAssembly, openFiles, parentBreadcrumbLabel, parentLocation, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
   }
 };
 </script>

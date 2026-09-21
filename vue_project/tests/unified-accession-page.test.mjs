@@ -47,7 +47,10 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /query = \{ from: 'accession' \}/);
   assert.match(pageSource, /router\.push\(\{ name: 'assembly-detail', params: \{ assemblyId: assembly\.id \}, query \}\)/);
   assert.match(pageSource, /import AnnotationVersionTable from '@\/components\/accession\/AnnotationVersionTable\.vue'/);
-  assert.match(pageSource, /<AnnotationVersionTable[\s\S]*?:rows="tabRows"/);
+  assert.match(pageSource, /<AnnotationVersionTable[\s\S]*?:rows="relationship\.annotations \|\| \[\]"/);
+  assert.match(pageSource, /:enable-navigation="true"/);
+  assert.match(pageSource, /@view-annotation="openAnnotation"/);
+  assert.match(pageSource, /name: 'annotation'[\s\S]*?accession: routeAccession\.value[\s\S]*?assembly: String\(assemblyId\)[\s\S]*?annotation: String\(annotation\.id\)/);
   assert.match(pageSource, /@view-files="openFiles\('annotation', \$event\.id\)"/);
   assert.match(pageSource, /page\.accessionDetail\.tabs\.files/);
   assert.match(pageSource, /page\.accessionDetail\.relationship/);
@@ -61,6 +64,7 @@ test('unified accession page follows the approved information architecture', () 
   assert.match(pageSource, /accessions\/\$\{encodeURIComponent\(routeAccession\.value\)\}\/\$\{tab\}/);
   assert.match(pageSource, /datafile_download_url/);
   assert.doesNotMatch(pageSource, /page\.accessionDetail\.tabs\.assemblies/);
+  assert.doesNotMatch(pageSource, /\{ key: 'annotations', labelKey:/);
   assert.doesNotMatch(pageSource, /summary-grid|summaryCards/);
   assert.doesNotMatch(pageSource, /genome-files/);
   assert.doesNotMatch(pageSource, /v-for="item in relationship\.assemblies/);
