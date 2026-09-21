@@ -97,12 +97,14 @@
         <div class="card-heading">
           <h2 id="statistics-heading">{{ $t('page.assemblyDetail.statistics') }}</h2>
         </div>
-        <dl class="detail-grid">
-          <template v-for="row in statisticRows" :key="row.label">
-            <dt>{{ row.label }}</dt>
-            <dd>{{ displayValue(row.value) }}</dd>
-          </template>
-        </dl>
+        <div class="statistics-grid">
+          <dl v-for="(column, index) in statisticColumns" :key="index" class="detail-grid statistics-column">
+            <template v-for="row in column" :key="row.label">
+              <dt>{{ row.label }}</dt>
+              <dd>{{ displayValue(row.value) }}</dd>
+            </template>
+          </dl>
+        </div>
       </section>
 
       <section class="content-card" aria-labelledby="annotation-heading">
@@ -260,6 +262,31 @@ export default {
       if (value === null || value === undefined || value === '') return '-';
       return `${Number(value).toLocaleString()}%`;
     };
+    const formatInteger = (value) => {
+      if (value === null || value === undefined || value === '') return '-';
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toLocaleString() : value;
+    };
+    const formatNContent = (count, percentage) => {
+      const formattedCount = formatInteger(count);
+      const formattedPercentage = formatPercent(percentage);
+      if (formattedCount === '-' && formattedPercentage === '-') return '-';
+      if (formattedPercentage === '-') return formattedCount;
+      if (formattedCount === '-') return formattedPercentage;
+      return `${formattedCount} (${formattedPercentage})`;
+    };
+    const formatAssemblyLevel = (value) => {
+      if (value === null || value === undefined || value === '') return '-';
+      const normalized = String(value).trim().toLocaleLowerCase().replace(/[\s_-]+/g, '');
+      const levelKeys = {
+        chromosome: 'chromosome',
+        scaffold: 'scaffold',
+        contig: 'contig',
+        completegenome: 'completeGenome'
+      };
+      const levelKey = levelKeys[normalized];
+      return levelKey ? t(`page.assemblyDetail.levelValues.${levelKey}`) : value;
+    };
 
     const basicRows = computed(() => [
       { label: t('page.assemblyDetail.fields.assemblyAccession'), value: assembly.value.assembly_accession || assembly.value.standard_id },
@@ -269,15 +296,23 @@ export default {
       { label: t('page.assemblyDetail.fields.sequencingTechnology'), value: assembly.value.sequencing_technology },
       { label: t('page.assemblyDetail.fields.description'), value: assembly.value.description }
     ]);
-    const statisticRows = computed(() => {
+    const statisticColumns = computed(() => {
       const statistics = detail.value?.statistics || {};
       return [
-        { label: t('page.assemblyDetail.statisticFields.genomeSize'), value: formatBasePairs(statistics.genome_size) },
-        { label: t('page.assemblyDetail.statisticFields.assemblyLevel'), value: statistics.assembly_level },
-        { label: t('page.assemblyDetail.statisticFields.chromosomeCount'), value: statistics.chromosome_count },
-        { label: t('page.assemblyDetail.statisticFields.contigCount'), value: statistics.contig_count },
-        { label: t('page.assemblyDetail.statisticFields.n50'), value: formatBasePairs(statistics.n50) },
-        { label: t('page.assemblyDetail.statisticFields.gcContent'), value: formatPercent(statistics.gc_content) }
+        [
+          { label: t('page.assemblyDetail.statisticFields.genomeSize'), value: formatBasePairs(statistics.genome_size) },
+          { label: t('page.assemblyDetail.statisticFields.n50'), value: formatBasePairs(statistics.n50) },
+          { label: t('page.assemblyDetail.statisticFields.gcContent'), value: formatPercent(statistics.gc_content) },
+          { label: t('page.assemblyDetail.statisticFields.atContent'), value: formatPercent(statistics.at_content) },
+          { label: t('page.assemblyDetail.statisticFields.nCountAndPercentage'), value: formatNContent(statistics.n_count, statistics.n_percentage) }
+        ],
+        [
+          { label: t('page.assemblyDetail.statisticFields.chromosomeCount'), value: formatInteger(statistics.chromosome_count) },
+          { label: t('page.assemblyDetail.statisticFields.sequenceCount'), value: formatInteger(statistics.sequence_count) },
+          { label: t('page.assemblyDetail.statisticFields.sequenceMd5'), value: statistics.sequence_md5 },
+          { label: t('page.assemblyDetail.statisticFields.gapCount'), value: formatInteger(statistics.gap_count) },
+          { label: t('page.assemblyDetail.statisticFields.assemblyLevel'), value: formatAssemblyLevel(statistics.assembly_level) }
+        ]
       ];
     });
 
@@ -424,7 +459,7 @@ export default {
       assemblyDisplayName,
       speciesLabel,
       basicRows,
-      statisticRows,
+      statisticColumns,
       drawerVisible,
       drawerLoading,
       drawerErrorMessage,
@@ -481,6 +516,8 @@ export default {
 .detail-grid dt,.detail-grid dd { min-height:38px; margin:0; padding:10px 12px; border-bottom:1px solid #e3eaf4; box-sizing:border-box; font-size:13px; line-height:1.45; }
 .detail-grid dt { color:#506789; }
 .detail-grid dd { color:#183a70; overflow-wrap:anywhere; }
+.statistics-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); column-gap:28px; border-top:1px solid #e3eaf4; }
+.statistics-column { border-top:0; }
 .page-state { min-height:520px; display:grid; place-items:center; }
 .page-loading { display:block; padding:80px 0; }
 @media (max-width: 700px) {
@@ -496,5 +533,9 @@ export default {
   .detail-grid { grid-template-columns:1fr; }
   .detail-grid dt { min-height:auto; padding-bottom:3px; border-bottom:0; font-weight:700; }
   .detail-grid dd { padding-top:3px; }
+  .statistics-grid { grid-template-columns:1fr; gap:0; }
+  .statistics-grid .detail-grid { grid-template-columns:minmax(145px, 44%) 1fr; }
+  .statistics-grid .detail-grid dt { min-height:38px; padding:10px 12px; border-bottom:1px solid #e3eaf4; font-weight:400; }
+  .statistics-grid .detail-grid dd { padding:10px 12px; }
 }
 </style>

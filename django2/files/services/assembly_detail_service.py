@@ -35,11 +35,16 @@ def get_assembly_detail(assembly_id):
         "sub_population": accession.sub_population,
         "statistics": {
             "genome_size": assembly.genome_size,
-            "assembly_level": assembly.assembly_level,
-            "chromosome_count": assembly.chromosome_count,
-            "contig_count": assembly.contig_count,
             "n50": assembly.n50,
             "gc_content": assembly.gc_content,
+            "at_content": assembly.at_content,
+            "n_count": assembly.n_count,
+            "n_percentage": assembly.n_percentage,
+            "chromosome_count": assembly.chromosome_count,
+            "sequence_count": assembly.sequence_count,
+            "sequence_md5": assembly.sequence_md5,
+            "gap_count": assembly.gap_count,
+            "assembly_level": assembly.assembly_level,
         },
         "annotations": [
             serialize_annotation(annotation, assembly=assembly)

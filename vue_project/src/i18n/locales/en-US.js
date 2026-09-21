@@ -227,7 +227,18 @@ const enUS = {
         chromosomeCount: 'Chromosome Count',
         contigCount: 'Contig Count',
         n50: 'N50',
-        gcContent: 'GC Content'
+        gcContent: 'GC Content',
+        atContent: 'AT Content',
+        nCountAndPercentage: 'N Count and Percentage',
+        sequenceCount: 'Sequence Count',
+        sequenceMd5: 'Sequence MD5 / Checksum',
+        gapCount: 'Gap Count'
+      },
+      levelValues: {
+        chromosome: 'Chromosome',
+        scaffold: 'Scaffold',
+        contig: 'Contig',
+        completeGenome: 'Complete Genome'
       }
     },
     accessionSearch: {

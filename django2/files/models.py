@@ -340,6 +340,36 @@ class Assembly(models.Model):
         null=True,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
     )
+    at_content = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    n_count = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    n_percentage = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    sequence_count = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    sequence_md5 = models.CharField(max_length=32, blank=True, null=True)
+    gap_count = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
     source_database = models.CharField(max_length=100, blank=True, null=True)
     external_project = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     file_name = models.CharField(max_length=500, blank=True, null=True)

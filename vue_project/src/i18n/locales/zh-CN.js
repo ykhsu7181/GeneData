@@ -185,13 +185,13 @@ const zhCN = {
       }
     },
     assemblyDetail: {
-      title: 'Genome assembly {accession} · {assembly}',
+      title: '基因组组装 {accession} · {assembly}',
       species: '物种：{value}',
       subPopulation: '亚群：{value}',
       basicInformation: '基本信息',
-      statistics: 'Assembly Statistics',
-      annotation: 'Annotation',
-      relatedAssemblies: 'Related assemblies',
+      statistics: '组装统计',
+      annotation: '注释版本',
+      relatedAssemblies: '相关组装版本',
       download: '下载',
       relatedFiles: '相关文件',
       viewFiles: '查看文件',
@@ -214,20 +214,31 @@ const zhCN = {
       emptyAnnotations: '暂无注释版本',
       emptyAssemblies: '暂无相关 Assembly',
       fields: {
-        assemblyAccession: 'Submitted GenBank assembly',
-        biosampleAccession: 'BioSample ID',
-        assemblyType: 'Assembly type',
-        assemblyMethod: 'Assembly method',
-        sequencingTechnology: 'Sequencing technology',
-        description: 'Description'
+        assemblyAccession: 'GenBank 提交组装编号',
+        biosampleAccession: 'BioSample 编号',
+        assemblyType: '组装类型',
+        assemblyMethod: '组装方法',
+        sequencingTechnology: '测序技术',
+        description: '描述'
       },
       statisticFields: {
-        genomeSize: 'Genome Size',
-        assemblyLevel: 'Assembly Level',
-        chromosomeCount: 'Chromosome Count',
-        contigCount: 'Contig Count',
+        genomeSize: '基因组大小',
+        assemblyLevel: '组装级别',
+        chromosomeCount: '染色体数量',
+        contigCount: 'Contig 数量',
         n50: 'N50',
-        gcContent: 'GC Content'
+        gcContent: 'GC 含量',
+        atContent: 'AT 含量',
+        nCountAndPercentage: 'N 数量及比例',
+        sequenceCount: '序列数量',
+        sequenceMd5: '序列 MD5 / 校验值',
+        gapCount: '间隙数量'
+      },
+      levelValues: {
+        chromosome: '染色体级',
+        scaffold: 'Scaffold 级',
+        contig: 'Contig 级',
+        completeGenome: '完整基因组'
       }
     },
     accessionSearch: {

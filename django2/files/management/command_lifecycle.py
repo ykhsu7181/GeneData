@@ -11,6 +11,7 @@ COMMAND_LIFECYCLE = {
     "audit_file_relations": ACTIVE,
     "audit_genome_transcriptome_readiness": ACTIVE,
     "audit_legacy_fallback": RETAIN_AUDIT,
+    "backfill_assembly_fasta_statistics": ACTIVE,
     "backfill_assembly_from_genome_relations": LEGACY_REPAIR,
     "backfill_genomefile_to_datafile": LEGACY_REPAIR,
     "cleanup_data": RETIRE_PENDING_USAGE_CONFIRMATION,

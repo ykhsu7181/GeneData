@@ -33,6 +33,12 @@ class AssemblyDetailApiTestCase(TestCase):
             contig_count=19,
             n50=27000000,
             gc_content=Decimal("43.500"),
+            at_content=Decimal("56.500"),
+            n_count=1200,
+            n_percentage=Decimal("0.310"),
+            sequence_count=12,
+            sequence_md5="0123456789abcdef0123456789abcdef",
+            gap_count=18,
             is_default=True,
         )
         self.related_assembly = Assembly.objects.create(
@@ -105,6 +111,14 @@ class AssemblyDetailApiTestCase(TestCase):
         self.assertEqual(data["sub_population"], "GJ")
         self.assertEqual(data["statistics"]["genome_size"], 387400000)
         self.assertEqual(data["statistics"]["gc_content"], 43.5)
+        self.assertEqual(data["statistics"]["at_content"], 56.5)
+        self.assertEqual(data["statistics"]["n_count"], 1200)
+        self.assertEqual(data["statistics"]["sequence_count"], 12)
+        self.assertEqual(
+            data["statistics"]["sequence_md5"],
+            "0123456789abcdef0123456789abcdef",
+        )
+        self.assertEqual(data["statistics"]["gap_count"], 18)
         self.assertEqual(
             {item["id"] for item in data["annotations"]},
             {self.annotation.id},
@@ -130,11 +144,16 @@ class AssemblyDetailApiTestCase(TestCase):
         self.assertIsNone(data["genome_download_url"])
         self.assertEqual(data["statistics"], {
             "genome_size": None,
-            "assembly_level": None,
-            "chromosome_count": None,
-            "contig_count": None,
             "n50": None,
             "gc_content": None,
+            "at_content": None,
+            "n_count": None,
+            "n_percentage": None,
+            "chromosome_count": None,
+            "sequence_count": None,
+            "sequence_md5": None,
+            "gap_count": None,
+            "assembly_level": None,
         })
 
     def test_summary_returns_404_for_unknown_assembly(self):

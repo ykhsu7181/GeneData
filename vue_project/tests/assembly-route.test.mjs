@@ -96,6 +96,21 @@ test('Assembly page loads the detail contract and renders all four required sect
   assert.match(viewSource, /mode="revision"/)
 })
 
+test('Assembly statistics are split into two balanced five-item columns', () => {
+  assert.match(viewSource, /class="statistics-grid"/)
+  assert.match(viewSource, /v-for="\(column, index\) in statisticColumns"/)
+  for (const key of [
+    'genomeSize', 'n50', 'gcContent', 'atContent', 'nCountAndPercentage',
+    'chromosomeCount', 'sequenceCount', 'sequenceMd5', 'gapCount', 'assemblyLevel'
+  ]) {
+    assert.match(viewSource, new RegExp(`statisticFields\\.${key}`))
+  }
+  assert.doesNotMatch(viewSource, /statisticFields\.contigCount/)
+  assert.match(viewSource, /\.statistics-grid\s*\{[\s\S]*?grid-template-columns:repeat\(2, minmax\(0, 1fr\)\)/)
+  assert.match(viewSource, /const formatAssemblyLevel = \(value\)/)
+  assert.match(viewSource, /page\.assemblyDetail\.levelValues/)
+})
+
 test('Assembly detail header matches the Accession detail information architecture', () => {
   assert.match(viewSource, /<header class="detail-header">/)
   assert.match(viewSource, /page\.assemblyDetail\.title/)
