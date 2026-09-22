@@ -2,8 +2,10 @@ CANONICAL_FILE_ROLES = frozenset(
     {
         "genome",
         "genome_fasta",
+        "genome_index",
         "annotation",
         "centromere",
+        "telomere",
         "codon",
         "coreBlocks",
         "variableBlocks",
