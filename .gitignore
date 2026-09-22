@@ -129,6 +129,7 @@ build/
 /django2/.pydeps_manual/
 /django2/.pydeps_runtime/
 /django2/.pydeps_stage1/
+/django2/audit_reports/
 /django2/media/
 /vue_project/dist/
 /vue_project/dist.zip

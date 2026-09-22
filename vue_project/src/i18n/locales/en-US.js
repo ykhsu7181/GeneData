@@ -365,7 +365,7 @@ const enUS = {
     },
     dataOverview: {
       title: 'Data Overview',
-      subtitle: 'Browse genome, transcriptome, population genetics, and other GeneData resources.',
+      breadcrumbLabel: 'Data resource breadcrumb',
       searchPlaceholder: 'Search Organism Accession',
       refreshData: 'Refresh Data',
       accession: 'Accession',
@@ -453,6 +453,7 @@ const enUS = {
       fileTable: 'Data List',
       optionalColumns: 'Optional: dataset, source, MD5, description',
       columnSettings: 'Columns',
+      moreColumns: 'More',
       chooseColumns: 'Choose visible data columns',
       detail: {
         title: 'Data File Details',

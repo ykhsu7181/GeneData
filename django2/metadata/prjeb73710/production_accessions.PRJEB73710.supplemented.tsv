@@ -1,0 +1,609 @@
+id	accession	species_id	species_code	sub_population	country	region	longitude	latitude	description
+87	02428			GJ	China	East_Asia	118.76	32.06	
+122	117425			cB			78.96	20.59	
+120	117534			cA			121.77	12.88	
+221	117534_N22_18ng			cA					
+126	125619			XI			78.96	20.59	
+127	125827			XI			104.2	35.86	
+128	127518			XI			100.99	15.87	
+129	127564			XI			113.92	-0.79	
+121	127652			cA			90.36	23.69	
+130	127742			XI			78.96	20.59	
+123	128077			GJ			113.92	-0.79	
+211	13-65			GJ					
+124	132278			GJ			102.5	19.86	
+131	132424			XI			90.36	23.69	
+142	17S			XI			112.98	28.11	
+209	18WR-118			GJ					
+212	18XHB-49			cA					
+220	18XHB-57			XI					
+214	18XHB-83			XI					
+143	201B			XI			112.98	28.11	
+233	2037(Rajahamsal)			XI					
+144	33S			XI			112.98	28.11	
+61	3R11			XI			100.99	15.87	
+62	3R17			XI			101.98	4.21	
+50	3R25			GJ			101.98	4.21	
+51	3R30			GJ			12.57	41.87	
+52	3R34			GJ			102.5	19.86	
+145	66S			XI			112.98	28.11	
+227	80050YR72136-43			GJ					
+228	80A97YR303-304-1-3			GJ					
+234	80B			XI					
+146	923			XI			112.98	28.11	
+452	9311_21cell			XI					
+453	9311_22cr			XI					
+161	A123			GJ					
+229	Aerjituo			GJ					
+235	Aihechi			XI					
+236	Aijiaonante			XI					
+29	Aikoku			GJ			138.25	36.2	
+230	Ailuyu			GJ					
+237	Aimakang			XI					
+238	Aituogu 151			XI					
+239	Aizizhan			XI					
+30	Akita			GJ			138.25	36.2	
+231	Albania Rice			GJ					
+232	American Huangkedao			GJ					
+46	AUS449			cA			90.36	23.69	
+125	Azucena			GJ	Philippines	Southeast_Asia	121.77	12.88	
+240	Baigedao			GJ					
+241	Baikehanhe			XI					
+140	Balilla			GJ					
+242	Baoxie -7B			XI					
+243	Baoxuan 21			XI					
+86	Basmati1			cB	Pakistan	South_Asia	69.35	30.38	
+84	Basmati334			cB			69.35	30.38	
+244	Bawangbian 1			XI					
+245	Baxiang			XI					
+246	Biwusheng			XI					
+247	BRC 25-146-2-1			XI					
+248	Buleida A-75			XI					
+249	BW 293-2			XI					
+250	C 894-21			XI					
+63	C62S			XI			113.27	23.13	
+47	C7			cA			104.08	30.65	
+162	CarolinaGoldSelect			GJ					
+95	CG14			O.glaberrima					
+251	CHANH 148			XI					
+252	Chaoyangyihao B			XI					
+253	Chengduai 3			XI					
+254	Chengnongshuijing			XI					
+255	Chenwan 3			XI					
+256	Chimao			GJ					
+257	CISOKAN			XI					
+64	CJS			XI			114.31	30.59	
+96	CN1			XI	China	East_Asia	104.08	30.65	
+258	CO 22			XI					
+259	Cungunuo			GJ					
+260	Cunsanli			GJ					
+261	CW01			WILD	China	East_Asia			
+262	CW02			WILD	China	East_Asia			
+263	CW03			-	Cambodia	Southeast_Asia			
+264	CW05			WILD	Brunei	Southeast_Asia			
+265	CW06			-	Burma	Southeast_Asia			
+266	CW07			WILD	Nepal	South_Asia			
+267	CW08			WILD	Phillipines	Southeast_Asia			
+268	CW09			WILD	Sri lanka	South_Asia			
+269	CW10			WILD	Thailand	Southeast_Asia			
+270	CW11			WILD	Bangladesh	South_Asia			
+271	CW12			WILD	China	East_Asia			
+272	CW13			WILD	China	East_Asia			
+273	CW14			WILD	China	East_Asia			
+274	CW15			WILD	Laos	Southeast_Asia			
+275	CW16			WILD	China	East_Asia			
+276	CW17			WILD	India	South_Asia			
+277	CW18			WILD	China	East_Asia			
+278	CW19			WILD	China	East_Asia			
+279	CW21			WILD	China	East_Asia			
+280	CW22			WILD	China	East_Asia			
+281	CW23			WILD	China	East_Asia			
+282	CW31			WILD	China	East_Asia			
+283	CW32			WILD	China	East_Asia			
+284	CW33			WILD	Laos	Southeast_Asia			
+285	CW34			WILD	Nepal	South_Asia			
+286	CW35			WILD	Sri lanka	South_Asia			
+287	CW36			WILD	Sri lanka	South_Asia			
+288	CW37			WILD	Burma	Southeast_Asia			
+219	CX20			XI					
+218	CX3			XI					
+97	D62			XI	China	East_Asia	104.08	30.65	
+289	Dandongludao			GJ					
+290	Dangyu 5			XI					
+98	DG			XI	China	East_Asia	119.3	26.1	
+291	DGB			XI					
+88	DHX2			GJ	China	East_Asia	126.66	45.74	
+292	Dianrui 409B			XI					
+293	Djanda Mandja			GJ					
+85	DomSufid			cB			53.69	32.43	
+294	Dongtingwanxian			XI					
+65	DR1			XI			120.96	23.7	
+48	DR11			cA			78.96	20.59	
+49	DR12			cB			90.36	23.69	
+66	DR13			XI					
+53	DR14			GJ			121.77	12.88	
+67	DR15			XI			78.96	20.59	
+54	DR16			GJ			121.77	12.88	
+55	DR17			GJ			25.49	42.73	
+56	DR18			GJ			138.25	36.2	
+68	DR2			XI			120.15	30.27	
+57	DR20			GJ			95.96	21.92	
+69	DR3			XI			108.28	14.06	
+70	DR4			XI			121.77	12.88	
+71	DR5			XI			46.87	-18.77	
+72	DR6			XI			100.99	15.87	
+73	DR7			XI			102.5	19.86	
+74	DR8			XI			108.28	14.06	
+75	DR9			XI			113.92	-0.79	
+141	Dular			XI					
+222	Dumai			cA					
+454	DXCWR			WILD					
+295	ECIA 179-S13			XI					
+296	Esiniu			XI					
+297	Fanhaopi			XI					
+99	FH838			XI	China	East_Asia	104.08	30.65	
+100	FS32			XI	China	East_Asia	104.2	35.86	
+298	Funingzipigengzi			XI					
+299	G Zhenshan 97B			XI					
+101	G46			XI	China	East_Asia	104.08	30.65	
+102	G630			XI	Guyana	Unknown	-58.93	4.86	
+103	G8			XI	China	East_Asia	113.27	23.13	
+31	Gim			GJ			138.25	36.2	
+300	GM4			XI					
+301	Gongchengxiang			GJ					
+302	Gongju 73			XI					
+303	Guangluai 15-			XI					
+304	Guangluai 4			XI					
+305	Guizhao 2			XI					
+147	GWX30			XI			115.91	28.67	
+306	GZ 1368-5-4			XI					
+307	Hanmadao4			XI					
+308	Haobayong 1			GJ					
+309	Haomake (K)			GJ					
+310	Haoxiang			XI					
+150	HBK			GJ			102.71	25.05	
+163	HEG4			GJ					
+311	Heibiao			GJ					
+312	Heidu 4			XI					
+313	Heimangdao			GJ					
+151	HHZ			XI			113.27	23.13	
+164	Hitomebore			GJ					
+152	HMXRS1			XI			114.31	30.59	
+76	HMZ			XI			113.27	23.13	
+314	Hongainuo			XI					
+315	Honggenghangu3			XI					
+316	Honggu			XI					
+317	Hongmisandan			GJ					
+318	Hongse 90			GJ					
+319	Hongwan 1			XI					
+180	HR-12			XI					
+320	Huangsiguizhan			XI					
+321	Huhui 91269			XI					
+115	HZ			XI			113.27	23.13	
+104	II32			XI	China	East_Asia	112.98	28.11	
+322	IR 10179-23-1-3			XI					
+323	IR 661-1			XI					
+324	IR24			XI					
+325	IR26			XI					
+132	IR64			XI	Philippine	Southeast_Asia	121.77	12.88	
+455	IR64_20sd			XI					
+456	IR64_21cell			XI					
+457	IR64_22cr			XI					
+135	IR8			XI	Philippines	Southeast_Asia			
+326	IRAT 10			XI					
+458	IRGC104165			O.glaberrima					
+327	ITA 221			-					
+328	J34			XI					
+459	J4115			XI	China	East_Asia			
+105	J4155			XI			112.98	28.11	
+116	J4155S			XI			112.98	28.11	
+329	Jaibattey			XI					
+330	Jiabala			XI					
+331	Jianghuadao			GJ					
+332	Jiangnongzao 1 B			XI					
+181	Jiayu253			XI					
+333	Jiefangxian			XI					
+334	Jiienuo			XI					
+335	Jinbaoyin			XI					
+336	Jindao 1			GJ					
+337	Jinghu3 B			XI					
+338	Jinnante 43B			XI					
+339	Jinxibai2			XI					
+340	Jinzhinuo4			XI					
+77	JR2031			XI			114.31	30.59	
+341	JWR 221			XI					
+342	K 24			XI					
+343	Kahamu			XI					
+223	Kasalath			cA					
+344	Keluoduo B			GJ					
+165	KitaakeX			GJ					
+89	Kosh			GJ	Japan	East_Asia	138.25	36.2	
+90	KY131			GJ	Japan	East_Asia	138.25	36.2	
+345	L 301B			XI					
+346	Lamujia			GJ					
+347	LanSheng			GJ					
+348	Laoguangtou 83			GJ					
+349	Laohongdao			GJ					
+350	Laozaogu			XI					
+78	LDXZ			XI			114.31	30.59	
+91	Lemont			GJ	United States	North_America	-95.71	37.09	
+351	Lemont_21cell			GJ					
+352	lemont_22cr			GJ					
+353	Lengshuigu 2			-					
+354	Lengshuinuo			GJ					
+32	LG31			GJ			104.2	35.86	
+33	LG5			GJ			104.2	35.86	
+355	Liming B			GJ					
+356	Linguo			GJ					
+357	Liusha 1			XI					
+358	Liushizao			XI					
+92	LJ			GJ	China	East_Asia	102.71	25.05	
+117	LK638S			XI			112.98	28.11	
+359	Longhuamaohu			GJ					
+137	LTH			GJ			102.71	25.05	
+360	Lucaihao			XI					
+361	Luke 3			XI					
+362	Malaihong			XI					
+363	Mamagu			XI					
+364	Meihuanuo			XI					
+365	Menjiading 2			XI					
+366	Menjiagao 1			XI					
+133	MH63RS3			XI			119.3	26.1	
+367	Minbeiwanxian			XI					
+58	Mitak			GJ			113.92	-0.79	
+368	Miyang46			XI					
+369	Momi			XI					
+370	Mowangguneiza			XI					
+371	Muguanuo			-					
+372	Muxiqiu			GJ					
+224	N22_21cell			cA					
+225	N22_22cr			cA					
+373	Nabated A Smar			GJ					
+93	NamRoo			GJ	Thailand	Southeast_Asia	100.99	15.87	
+374	Nangaogu			XI					
+375	Nanjing 11			XI					
+376	Nanoay P.A			GJ					
+377	Nantehao			XI					
+378	Nanxiongzaoyouzhan			XI					
+34	NG39			GJ			104.2	35.86	
+379	NH265			O.glaberrima					
+380	NH266			O.glaberrima					
+381	NH267			O.glaberrima					
+382	NH268			O.glaberrima					
+383	NH269			O.glaberrima					
+384	NH270			O.glaberrima					
+385	NH271			O.glaberrima					
+386	NH272			O.glaberrima					
+387	NH273			O.glaberrima					
+388	NH274			O.glaberrima					
+389	NH275			O.glaberrima					
+390	NH277			-					
+391	NH278			WILD					
+392	NH279			WILD					
+393	NH280			WILD					
+394	NH281			WILD					
+395	NH282			-					
+396	NH283			WILD					
+397	NH284			WILD					
+398	NH285			WILD					
+399	NH286			WILD					
+400	Ninghui 21			GJ					
+153	Nipponbare		ORYZA_SATIVA	GJ			138.25	36.2	
+217	NJ11			XI					
+401	NJ6			XI					
+35	No8			GJ			138.25	36.2	
+460	Npb-MSU			GJ					
+461	Npb-T2T			GJ					
+41	ObarRS3			WILD			-9.7	9.95	
+42	OglaRS2			WILD			-9.7	9.95	
+43	OgluRS3			WILD			-51.93	-14.24	
+44	OmerRS3			WILD			133.78	25.27	
+45	OnivRS2			WILD			78.96	20.59	
+119	OrufRS1			WILD			148.57	-6.16	
+402	P1790-5-1M-4-5M-1B-3M-B			XI					
+148	P64S			XI			112.98	28.11	
+403	PA64S			-					
+404	Pei C122			XI					
+216	PI653432			XI					
+213	PI653439			cA					
+405	PMS 10B			XI					
+208	PPR1			WILD					
+406	Qianchonglang2			GJ					
+226	Qingke			cA					
+407	Qingnuo Kyohatamochi			GJ					
+408	Qingsiai 16B			XI					
+409	Qitoubaigu3			XI					
+410	Qitougu			XI					
+411	Qiuqianbai			XI					
+412	Qiutianxiaoting			GJ					
+182	QUAN			XI					
+413	R42			-					
+106	R498			XI	China	East_Asia			
+107	R527			XI	China	East_Asia	104.08	30.65	
+136	R600			XI	China	East_Asia	120.15	30.27	
+79	R70			XI			114.31	30.59	
+138	R9311			XI					
+414	RD23			XI					
+415	Rohini			XI					
+416	RP 1570-44-1			XI					
+183	RP-Bio-226			XI					
+417	RY2			GJ					
+108	S548			XI	China	East_Asia	104.08	30.65	
+418	Sanbaili			XI					
+462	SanQishiluo			XI					
+419	Sansuijin			GJ					
+36	Sasa			GJ			138.25	36.2	
+420	Seln 244A6-20			XI					
+421	Shufeng 101			XI					
+422	SLK 2-18-2			XI					
+37	SN265			GJ			104.2	35.86	
+423	Sri Lanka 1			XI					
+424	Taidongludao			GJ					
+425	Taishannuo			XI					
+463	Taizhongzailai 1			XI					
+426	Teqingxuanhui			XI					
+184	Tetep			XI	Unknown	Unknown			
+139	TF			XI			113.27	23.13	
+185	TG1			XI	India	South_Asia			
+186	TG10			XI	Brazil	South_America			
+154	TG11			cA	Pakistan	South_Asia			
+158	TG12			cB	Bangladesh	South_Asia			
+187	TG13			XI	China	East_Asia			
+7	TG14			GJ	Philippines	Southeast_Asia	121.77	12.88	
+166	TG15			GJ	Malaysia	Southeast_Asia			
+188	TG16			XI	Lao People's Democratic Republic	Southeast_Asia			
+8	TG17			GJ	Thailand	Southeast_Asia	100.99	15.87	
+167	TG18			GJ	Bhutan	South_Asia			
+9	TG19			GJ	Democratic People's Republic of Korea	East_Asia	104.2	40.34	
+168	TG2			GJ	Bhutan	South_Asia			
+189	TG21			XI	Romania	Europe			
+10	TG22			GJ	Japan	East_Asia	138.25	36.2	
+190	TG24			XI	China	East_Asia			
+2	TG27			cA	Sri Lanka	South_Asia	80.77	7.87	
+191	TG28			XI	Fiji	Oceania			
+11	TG29			GJ	Korea, Republic of	East_Asia	127.77	35.91	
+12	TG3			GJ	India	South_Asia	78.96	20.59	
+192	TG30			XI	Bangladesh	South_Asia			
+13	TG31			GJ	Indonesia	Southeast_Asia	113.92	-0.79	
+169	TG32			GJ	Viet Nam	Southeast_Asia			
+17	TG33			XI	Viet Nam	Southeast_Asia	108.28	14.06	
+159	TG34			cB	Japan	East_Asia			
+170	TG4			GJ	Lao People's Democratic Republic	Southeast_Asia			
+18	TG42			XI	Indonesia	Southeast_Asia	113.92	-0.79	
+193	TG43			XI	Thailand	Southeast_Asia			
+194	TG45			XI	Chinese Taipei	East_Asia			
+171	TG46			GJ	Malaysia	Southeast_Asia			
+3	TG49			cA	Bangladesh	South_Asia	90.36	23.69	
+195	TG5			XI	Philippines	Southeast_Asia			
+19	TG50			XI	Nigeria	Africa	8.68	9.08	
+196	TG51			XI	Sierra Leone	Africa			
+20	TG53			XI	India	South_Asia	78.96	20.59	
+160	TG54			cB	India	South_Asia			
+21	TG55			XI	Bangladesh	South_Asia	90.36	23.69	
+22	TG56			XI	Myanmar	Southeast_Asia	95.96	21.92	
+197	TG58			XI	Bangladesh	South_Asia			
+23	TG59			XI	India	South_Asia	78.96	20.59	
+4	TG6			cA	India	South_Asia	78.96	20.59	
+155	TG60			cA	India	South_Asia			
+24	TG61			XI	Thailand	Southeast_Asia	100.99	15.87	
+156	TG62			cA	Bangladesh	South_Asia			
+14	TG63			GJ	Lao People's Democratic Republic	Southeast_Asia	102.5	19.86	
+15	TG65			GJ	United States of America	North_America	-95.71	37.09	
+25	TG68			XI			113.27	23.13	
+198	TG7			XI	Indonesia	Southeast_Asia			
+26	TG70			XI	China	East_Asia	119.3	26.1	
+172	TG75			GJ	China	East_Asia			
+199	TG76			XI	Colombia	South_America			
+200	TG77			XI	Senegal	Africa			
+201	TG78			XI	Thailand	Southeast_Asia			
+202	TG8			XI	Nepal	South_Asia			
+27	TG80			XI	China	East_Asia	104.08	30.65	
+5	TG81			cB	Iran	West_Asia	53.69	32.43	
+203	TG82			XI	Viet Nam	Southeast_Asia			
+204	TG83			XI	India	South_Asia			
+205	TG84			XI	Chinese Taipei	East_Asia			
+206	TG86			XI	Philippines	Southeast_Asia			
+157	TG87			cA	India	South_Asia			
+207	TG88			XI	Philippines	Southeast_Asia			
+28	TG9			XI	Sri Lanka	South_Asia	80.77	7.87	
+16	TG90			GJ	China	East_Asia	104.2	35.86	
+427	Tjantajan			XI					
+109	TM			XI	Madagascar	Africa	46.87	-18.77	
+173	TN1			GJ					
+38	Toyo			GJ			138.25	36.2	
+428	TQ			XI					
+110	Tumba			XI	Indonesia	Southeast_Asia	113.92	-0.79	
+429	Vietnam Zaodao			XI					
+484	W0103		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	85.90678554	20.44525735	Patna, Cuttack, Orissa, India
+483	W0107		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	85.88579329	20.34816333	Pahala, Orissa, India
+499	W0108		ORYZA_RUFIPOGON	Or-II	India	South_Asia	85.88298993	20.46250352	Cuttack, Orissa, India
+572	W0133		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	82.17678566	17.05381633	Bicavole, Samalkot, Andhra, India
+573	W0135		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	82.27678566	17.05381633	Kesavaram, Samalkot, Andhra, India
+570	W0136		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	81.81966446	16.90684184	Kadiam, Andhra, India
+571	W0137		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	81.91966446	16.90684184	Kadiam, Andhra, India
+498	W0143		ORYZA_RUFIPOGON	Or-II	Srilanka	South_Asia	79.83405269	7.209578686	Negombo, Ceylon
+588	W0145		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	100.4938242	13.75216314	Bangkok,Thailand
+480	W0147		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	85.98298993	20.46250352	Patna, Cuttack, Orissa, India
+566	W0149		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	78.65710858	22.97351437	Raipur, Madhya Pradesh, India
+585	W0157		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	92.93883464	26.20081819	Inside of Titabar Rice Expt. Stn., Assam, India
+586	W0164		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	98.6601502	18.79650844	Chiengmai, Thailand
+503	W0166		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	98.7601502	18.79650844	Chiengmai, Thailand
+509	W0169		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.5938242	13.75216314	Chumpae, Konkhen, Thailand
+510	W0171		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.6938242	13.75216314	Chumpae, Konkhen, Thailand
+472	W0179		ORYZA_RUFIPOGON	Or-Ia	Thailand	Southeast_Asia	100.7938242	13.75216314	Rajburi, Thailand
+506	W0180		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	99.97010762	18.77664293	Ngao, Lamphang, Thailand
+593	W0234		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	102.7596728	17.7697317	Nongkai, Thailand
+574	W0573		ORYZA_RUFIPOGON	Or-IIIb	Malaysia	Southeast_Asia	102.3870609	6.054812023	Bachak (Kelantan), Malaya
+473	W0590		ORYZA_RUFIPOGON	Or-Ia	Malaysia	Southeast_Asia	102.5255466	5.73569514	Jerteh, Malaya
+589	W0594		ORYZA_RUFIPOGON	Or-unspecific	Malaysia	Southeast_Asia	101.6868765	3.139134231	Malaya
+590	W0596		ORYZA_RUFIPOGON	Or-unspecific	Malaysia	Southeast_Asia	101.7868765	3.139134231	Malaya
+518	W0600		ORYZA_RUFIPOGON	Or-II	Malaysia	Southeast_Asia	103.0377873	5.404313696	Padang Kemunting, Malaya
+491	W0627		ORYZA_RUFIPOGON	Or-Ib	Myanmar	Southeast_Asia	96.09953754	19.75144706	between Pedu and Toungoo (?), Burma
+490	W0630		ORYZA_RUFIPOGON	Or-Ib	Myanmar	Southeast_Asia	94.56388066	20.46228692	Magwe, Burma
+470	W0632		ORYZA_RUFIPOGON	Or-Ia	Myanmar	Southeast_Asia	96.19953754	19.75144706	Pyin-ma-aing, Prome, Burma
+502	W0634		ORYZA_RUFIPOGON	Or-II	Myanmar	Southeast_Asia	97.38768813	25.37914273	Myitkyina, Burma
+471	W0639		ORYZA_RUFIPOGON	Or-Ia	Myanmar	Southeast_Asia	96.29953754	19.75144706	Burma
+467	W1080		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	93.03883464	26.20081819	Near Bagdogra, Assam, India
+489	W1084		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	93.13883464	26.20081819	Near Bagdogra, Assam, India
+500	W1093		ORYZA_RUFIPOGON	Or-II	India	South_Asia	91.73568694	26.14717611	Gauhati, Assam, India
+468	W1107		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	94.16672864	26.82405105	Kokilamukh, India
+469	W1117		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	94.26672864	26.82405105	Kokilamukh, India
+501	W1126		ORYZA_RUFIPOGON	Or-II	India	South_Asia	92.38339872	24.60747368	Karimganj, India
+481	W1142		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.08298993	20.46250352	Cuttack, Orissa, India 3miles from CRRI
+530	W1214		ORYZA_RUFIPOGON	Or-II	Philippines	Southeast_Asia	125.1289776	6.06580942	Musuan, Mindanao, Philippines
+532	W1236		ORYZA_RUFIPOGON	Or-II	Papua New Guinea	Oceania	145.78875	-5.23392953	Madang, Australian New Guinea
+525	W1292		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	106.8451076	-6.211434675	Handilmanarap, Kalimantan, Indonesia
+464	W1411			WILD					
+568	W1536		ORYZA_RUFIPOGON	Or-IIIb	Srilanka	South_Asia	79.83513853	8.034136457	Putlalam (?), Ceylon
+494	W1547		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	100.8904173	14.4977944	Saraburi, Thailand
+505	W1550		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	99.74059892	19.5539307	CR-6 Phan, Chiangrai, Thailand
+511	W1552		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.5298257	14.33050174	AYD Ayutthaya, Thailand
+519	W1553		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	103.0760635	14.61362397	MRT Maharat, Thailand
+508	W1556		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.3049163	14.66261212	ATS Between Anthong and Suphanburi, Thailand
+587	W1557		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	99.99135643	14.53794845	SPB Suphanburi, Thailand
+536	W1559		ORYZA_RUFIPOGON	Or-IIIa	Thailand	Southeast_Asia	100.8938242	13.75216314	BNB Bahn Non Bo, Thailand
+495	W1619		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	100.0904173	14.4977944	SRB Saraburi, Thailand
+583	W1666		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	89.03	26.34	JR-4 26.34 N, 89.03 E, India
+582	W1668		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	82.46	18.52	JP-4 18.52 N, 82.46 E, Orissa, India ca.1,000m alt.
+485	W1677		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.01	20.29	CT-4 20.29 N, 86.01 E, Orissa, India
+486	W1679		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.02	20.29	CT-4 20.29 N, 86.01 E, Orissa, India
+551	W1718		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.1414719	22.63189697	
+476	W1719		ORYZA_RUFIPOGON	Or-Ia	China	East_Asia	110.40747	18.800625	
+477	W1723		ORYZA_RUFIPOGON	Or-Ia	China	East_Asia	110.50747	18.800625	
+537	W1725		ORYZA_RUFIPOGON	Or-IIIa	Thailand	Southeast_Asia	100.9938242	13.75216314	
+492	W1726		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	101.0938242	13.75216314	B Thailand
+482	W1731		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.18298993	20.46250352	WI-2 55km E of Cuttack for Konarak, India
+479	W1732		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	84.79415823	19.31491846	WI-4 100km S of Berhampur, India
+466	W1735		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	75.78776007	26.91247201	WI-7 40km N of Jeypore, India
+575	W1736		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	75.88776007	26.91247201	WI-8 28km S of Jeypore, India
+576	W1737		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	75.98776007	26.91247201	WI-9 28km S of Jeypore, India
+577	W1742		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	76.08776007	26.91247201	WI-14 100km N of Jeypore, India
+578	W1748		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	76.18776007	26.91247201	WI-20 200km N of Jeypore, India
+580	W1750		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	80.63385863	20.02344784	WI-22 30km S of Pakhanjore, India
+567	W1777		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	79.3022316	19.95105892	WI-51 98km NE of Chandrapur, India
+565	W1783		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	76.63929506	12.295854	WI-67 Shimoga Dist., Mysore, India
+493	W1787		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	101.1938242	13.75216314	Thailand
+569	W1809		ORYZA_RUFIPOGON	Or-IIIb	Srilanka	South_Asia	79.90691092	6.883201666	Sri Lanka
+579	W1810		ORYZA_RUFIPOGON	Or-unspecific	Srilanka	South_Asia	80.00691092	6.883201666	Sri Lanka
+584	W1825		ORYZA_RUFIPOGON	Or-unspecific	Bangladesh	South_Asia	90.40720201	23.70994003	Bangladesh
+478	W1839		ORYZA_RUFIPOGON	Or-Ia	China	East_Asia	110.60747	18.800625	
+507	W1859		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.12	17.52	NN51 17.52 N, 100.12 E, Thailand 70m alt.
+496	W1865		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	100.98	14.56	NE3 14.56 N, 100.98 E, Thailand 20m alt.
+517	W1880		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	102.91	17.03	NE25 17.03 N, 102.91 E, Thailand 210m alt.
+516	W1890		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	102.75	17.85	NE37 17.85 N, 102.75 E, Thailand 170m alt.
+520	W1895		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	104.18	17.25	NE47 17.25 N, 104.18 E, Thailand 180m alt.
+513	W1919		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	102.19	14.73	NE85 14.73 N, 102.19 E, Thailand ca.150m alt.
+552	W1943		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.2414719	22.63189697	
+594	W1970		ORYZA_RUFIPOGON	Or-unspecific	Indonesia	Southeast_Asia	106.7932779	-6.58914202	(-a) IL-274, (-b) IL-281, (-c) Between Bogor and Jakarta, Indonesia
+524	W1976		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	106.8932779	-6.58914202	IL-A Between Bogor and Jakarta, Indonesia
+564	W2005		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	74.2	15.35	15.35 N, 74.20 E, 200-500m alt., India
+465	W2014			WILD					
+528	W2022		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	114.1441925	-1.10602914	KL-3 Kalimantan, Indonesia
+534	W2036		ORYZA_RUFIPOGON	Or-IIIa	Myanmar	Southeast_Asia	96.49748496	17.3278911	Pegu, Burma
+533	W2051		ORYZA_RUFIPOGON	Or-IIIa	Bangladesh	South_Asia	91.4119806	24.37866546	HS-4 Hobiganji, Bangladesh
+488	W2053		ORYZA_RUFIPOGON	Or-Ib	Bangladesh	South_Asia	91.5119806	24.37866546	HS-6 Hobiganji, Bangladesh
+487	W2064		ORYZA_RUFIPOGON	Or-Ib	Bangladesh	South_Asia	89.55013947	22.81666329	KH-5 Khulna, Bangladesh
+581	W2066		ORYZA_RUFIPOGON	Or-unspecific	Nepal	South_Asia	81.63556992	28.58475303	Surkhet, Nepal
+563	W2099		ORYZA_RUFIPOGON	Or-IIIa	Australia	Oceania	142.5695007	-20.99398491	Queensland, Australia
+531	W2108		ORYZA_RUFIPOGON	Or-II	Australia	Oceania	142.6695007	-20.99398491	Queensland, Australia
+529	W2197		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	114.2441925	-1.10602914	KL-13 Kalimantan, Indonesia
+515	W2267		ORYZA_RUFIPOGON	Or-II	Laos	Southeast_Asia	102.42	18.14	18.14 N, 102.42 E, Laos
+535	W2275		ORYZA_RUFIPOGON	Or-IIIa	Thailand	Southeast_Asia	100.37	16.09	CP41 16.09 N, 100.37 E, Thailand
+504	W2283		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	99.47	16.49	NN59b 16.49 N, 99.47 E, Thailand
+497	W2305		ORYZA_RUFIPOGON	Or-Ib	Laos	Southeast_Asia	105.5	14.5	LP9a<br>14.50 N, 105.50 E, Ban Nong Sa, Phakse, Laos
+514	W2308		ORYZA_RUFIPOGON	Or-II	Laos	Southeast_Asia	102.38	17.57	LV1<br>17.57 N, 102.38 E, Vientian, Laos
+591	W2310		ORYZA_RUFIPOGON	Or-unspecific	Laos	Southeast_Asia	102.36	17.51	LV8<br>17.51 N, 102.36 E, Vientian, Laos
+592	W2311		ORYZA_RUFIPOGON	Or-unspecific	Laos	Southeast_Asia	102.46	17.52	LV9<br>17.52 N, 102.36 E, Vientian, Laos
+523	W2318		ORYZA_RUFIPOGON	Or-II	Vietnam	Southeast_Asia	106.06	10.24	HT16<br>10.24 N, 106.06 E, Tieng Giang Prov., Vietnam
+475	W2319		ORYZA_RUFIPOGON	Or-Ia	Vietnam	Southeast_Asia	106.25	10.33	HT17<br>10.33 N, 106.25 E, Long An Prov., Vietnam
+521	W2320		ORYZA_RUFIPOGON	Or-II	Vietnam	Southeast_Asia	105.36	10.42	CT1<br>10.42 N, 105.36 E, Vetnam
+522	W2321		ORYZA_RUFIPOGON	Or-II	Vietnam	Southeast_Asia	105.37	10.44	CT3<br>10.44 N, 105.37 E, Tan Cong Sinh vil., Vietnam
+474	W2332		ORYZA_RUFIPOGON	Or-Ia	Vietnam	Southeast_Asia	105.8504023	21.03342563	CT17<br>Vietnam
+554	W3000		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.25089	21.38298	Suixi county, Guangdong
+527	W3007		ORYZA_RUFIPOGON	Or-II	China	East_Asia	112.79155	22.37538	Kaiping County, Guangdong Province
+559	W3009		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	112.84849	22.889038	Gaoming county, Guangdong
+560	W3012		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	113.2614288	23.11891174	Guangzhou city, Guangdong
+545	W3029		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.19004	21.670145	Hepu county, Guangxi
+549	W3033		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.97141	22.275869	Bobai county, Guangxi
+553	W3035		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.3414719	22.63189697	Yulin City, Guangxi
+548	W3037		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.60844	23.099092	Gui county, Guangxi
+547	W3038		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.36	23.07	Gui county, Guangxi
+550	W3040		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.07166	23.394571	Guiping county, Guangxi
+546	W3046		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.26704	22.692957	Heng county, Guangxi
+541	W3047		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	106.90867	23.73387	Tianyang County, Guangxi
+540	W3051		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	106.6121063	23.90158272	Baise City, Guangxi
+542	W3052		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	107.00867	23.73387	Tianyang County, Guangxi
+526	W3054		ORYZA_RUFIPOGON	Or-II	China	East_Asia	110.70747	18.800625	Wanning County, Hainan Province
+555	W3055		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.80747	18.800625	Wanning County, Hainan Province
+543	W3063		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	108.63303	19.097265	East Li Autonomous County, Hainan
+544	W3066		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.1728	18.746597	East Li Autonomous County, Hainan
+556	W3071		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.7559	19.620953	Wenchang County, Hainan Province
+557	W3074		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.8559	19.620953	Wenchang County, Hainan Province
+562	W3082		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	116.6061	28.232292	Dongxiang County, jiangxi Province
+538	W3086		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	102.00642	23.604008	Yuanjiang Hani, Yi and Dai Autonomous County, Yunnan
+539	W3088		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	102.10642	23.604008	Yuanjiang Hani, Yi and Dai Autonomous County, Yunnan
+512	W3090		ORYZA_RUFIPOGON	Or-II	China	East_Asia	100.79406	22.012938	Jinghong County, Yunnan Province
+561	W3092		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	113.55217	26.801975	Chalin County, Hunan Province
+558	W3096		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	111.33645	25.276974	Jiangyong County, Hunan Province
+430	Wanlixian			XI					
+431	Wanshi			GJ					
+432	Weiguo			GJ					
+433	Wenxiangnuo			XI					
+174	wild111			WILD					
+175	wild12			WILD					
+176	wild131			WILD					
+177	wild219			WILD					
+178	wild273			WILD					
+179	wild65			WILD					
+111	WSSM			XI	China	East_Asia	113.27	23.13	
+434	Wuziluosi 215			GJ					
+6	WW8			cB	Nepal	South_Asia	84.12	28.39	
+39	WYG3			GJ			104.2	35.86	
+59	WYJ3			GJ					
+435	WYJ7			GJ					
+436	Xiangai B			XI					
+437	Xiangaizao 10hao			XI					
+438	Xiangdao			XI					
+439	Xianggu			XI					
+595	Xiangwanxian 3			XI					
+596	Xiangzaoxian 7			XI					
+597	Xianluosichi			XI					
+598	Xiaobaimi			XI					
+599	Xiaohonggu			XI					
+440	Xishi 15			GJ					
+118	XL628S			XI			112.98	28.11	
+60	XS134			GJ			120.15	30.27	
+600	Xuanenchangtanqingzhan			XI					
+601	Xugunuo			XI					
+80	XYXZ			XI			113.27	23.13	
+112	Y3551			XI	China	East_Asia	104.08	30.65	
+149	Y4B			XI			112.98	28.11	
+113	Y58S			XI	China	East_Asia	112.98	28.11	
+441	Yangkenuo			GJ					
+602	Yanshuichi			XI					
+210	YCW03			GJ					
+442	Yelicanghua			GJ					
+40	YF47			GJ			104.2	35.86	
+603	Yikong			XI					
+81	YJSM			XI			113.27	23.13	
+604	Younian			XI					
+443	YR196			GJ					
+444	Yuyannuo			GJ					
+114	YX1			XI	China	East_Asia	104.08	30.65	
+215	YZ-2			XI					
+82	YZX			XI			112.98	28.11	
+83	Z9311S			XI			114.31	30.59	
+445	Zaoshengbai			GJ					
+446	Zaoshunonghu 6			GJ					
+605	Zaoshuxiangheimi			XI					
+606	Zaoxian 240			XI					
+447	ZCD			GJ					
+94	ZH11			GJ	China	East_Asia	117.2	30.09	
+607	Zhendao 232			XI					
+448	Zhenfu 8			GJ					
+449	Zhengdao 5			GJ					
+450	Zhuyuan			GJ					
+608	Zhuzhen B			XI					
+451	Zimangfeie			GJ					
+609	Zinuo			XI					
+134	ZS97RS3			XI			115.91	28.67	

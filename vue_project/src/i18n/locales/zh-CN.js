@@ -365,7 +365,7 @@ const zhCN = {
     },
     dataOverview: {
       title: '数据一览表',
-      subtitle: '浏览 GeneData 中的基因组、转录组、群体遗传等数据资源。',
+      breadcrumbLabel: '数据资源页面路径',
       searchPlaceholder: '搜索生物体 Accession',
       refreshData: '刷新数据',
       accession: '品种编号',
@@ -453,6 +453,7 @@ const zhCN = {
       fileTable: '数据列表',
       optionalColumns: '可选字段：数据集、数据来源、MD5、文件描述',
       columnSettings: '列设置',
+      moreColumns: '更多',
       chooseColumns: '选择数据列表显示字段',
       detail: {
         title: '数据文件详情',

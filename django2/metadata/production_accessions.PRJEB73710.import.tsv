@@ -1,0 +1,131 @@
+id	accession	species_id	species_code	sub_population	country	region	longitude	latitude	description
+153	Nipponbare		ORYZA_SATIVA	GJ			138.25	36.2	
+484	W0103		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	85.90678554	20.44525735	Patna, Cuttack, Orissa, India
+483	W0107		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	85.88579329	20.34816333	Pahala, Orissa, India
+499	W0108		ORYZA_RUFIPOGON	Or-II	India	South_Asia	85.88298993	20.46250352	Cuttack, Orissa, India
+572	W0133		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	82.17678566	17.05381633	Bicavole, Samalkot, Andhra, India
+573	W0135		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	82.27678566	17.05381633	Kesavaram, Samalkot, Andhra, India
+570	W0136		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	81.81966446	16.90684184	Kadiam, Andhra, India
+571	W0137		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	81.91966446	16.90684184	Kadiam, Andhra, India
+498	W0143		ORYZA_RUFIPOGON	Or-II	Srilanka	South_Asia	79.83405269	7.209578686	Negombo, Ceylon
+588	W0145		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	100.4938242	13.75216314	Bangkok,Thailand
+480	W0147		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	85.98298993	20.46250352	Patna, Cuttack, Orissa, India
+566	W0149		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	78.65710858	22.97351437	Raipur, Madhya Pradesh, India
+585	W0157		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	92.93883464	26.20081819	Inside of Titabar Rice Expt. Stn., Assam, India
+586	W0164		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	98.6601502	18.79650844	Chiengmai, Thailand
+503	W0166		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	98.7601502	18.79650844	Chiengmai, Thailand
+509	W0169		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.5938242	13.75216314	Chumpae, Konkhen, Thailand
+510	W0171		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.6938242	13.75216314	Chumpae, Konkhen, Thailand
+472	W0179		ORYZA_RUFIPOGON	Or-Ia	Thailand	Southeast_Asia	100.7938242	13.75216314	Rajburi, Thailand
+506	W0180		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	99.97010762	18.77664293	Ngao, Lamphang, Thailand
+593	W0234		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	102.7596728	17.7697317	Nongkai, Thailand
+574	W0573		ORYZA_RUFIPOGON	Or-IIIb	Malaysia	Southeast_Asia	102.3870609	6.054812023	Bachak (Kelantan), Malaya
+473	W0590		ORYZA_RUFIPOGON	Or-Ia	Malaysia	Southeast_Asia	102.5255466	5.73569514	Jerteh, Malaya
+589	W0594		ORYZA_RUFIPOGON	Or-unspecific	Malaysia	Southeast_Asia	101.6868765	3.139134231	Malaya
+590	W0596		ORYZA_RUFIPOGON	Or-unspecific	Malaysia	Southeast_Asia	101.7868765	3.139134231	Malaya
+518	W0600		ORYZA_RUFIPOGON	Or-II	Malaysia	Southeast_Asia	103.0377873	5.404313696	Padang Kemunting, Malaya
+491	W0627		ORYZA_RUFIPOGON	Or-Ib	Myanmar	Southeast_Asia	96.09953754	19.75144706	between Pedu and Toungoo (?), Burma
+490	W0630		ORYZA_RUFIPOGON	Or-Ib	Myanmar	Southeast_Asia	94.56388066	20.46228692	Magwe, Burma
+470	W0632		ORYZA_RUFIPOGON	Or-Ia	Myanmar	Southeast_Asia	96.19953754	19.75144706	Pyin-ma-aing, Prome, Burma
+502	W0634		ORYZA_RUFIPOGON	Or-II	Myanmar	Southeast_Asia	97.38768813	25.37914273	Myitkyina, Burma
+471	W0639		ORYZA_RUFIPOGON	Or-Ia	Myanmar	Southeast_Asia	96.29953754	19.75144706	Burma
+467	W1080		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	93.03883464	26.20081819	Near Bagdogra, Assam, India
+489	W1084		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	93.13883464	26.20081819	Near Bagdogra, Assam, India
+500	W1093		ORYZA_RUFIPOGON	Or-II	India	South_Asia	91.73568694	26.14717611	Gauhati, Assam, India
+468	W1107		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	94.16672864	26.82405105	Kokilamukh, India
+469	W1117		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	94.26672864	26.82405105	Kokilamukh, India
+501	W1126		ORYZA_RUFIPOGON	Or-II	India	South_Asia	92.38339872	24.60747368	Karimganj, India
+481	W1142		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.08298993	20.46250352	Cuttack, Orissa, India 3miles from CRRI
+530	W1214		ORYZA_RUFIPOGON	Or-II	Philippines	Southeast_Asia	125.1289776	6.06580942	Musuan, Mindanao, Philippines
+532	W1236		ORYZA_RUFIPOGON	Or-II	Papua New Guinea	Oceania	145.78875	-5.23392953	Madang, Australian New Guinea
+525	W1292		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	106.8451076	-6.211434675	Handilmanarap, Kalimantan, Indonesia
+568	W1536		ORYZA_RUFIPOGON	Or-IIIb	Srilanka	South_Asia	79.83513853	8.034136457	Putlalam (?), Ceylon
+494	W1547		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	100.8904173	14.4977944	Saraburi, Thailand
+505	W1550		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	99.74059892	19.5539307	CR-6 Phan, Chiangrai, Thailand
+511	W1552		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.5298257	14.33050174	AYD Ayutthaya, Thailand
+519	W1553		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	103.0760635	14.61362397	MRT Maharat, Thailand
+508	W1556		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.3049163	14.66261212	ATS Between Anthong and Suphanburi, Thailand
+587	W1557		ORYZA_RUFIPOGON	Or-unspecific	Thailand	Southeast_Asia	99.99135643	14.53794845	SPB Suphanburi, Thailand
+536	W1559		ORYZA_RUFIPOGON	Or-IIIa	Thailand	Southeast_Asia	100.8938242	13.75216314	BNB Bahn Non Bo, Thailand
+495	W1619		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	100.0904173	14.4977944	SRB Saraburi, Thailand
+583	W1666		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	89.03	26.34	JR-4 26.34 N, 89.03 E, India
+582	W1668		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	82.46	18.52	JP-4 18.52 N, 82.46 E, Orissa, India ca.1,000m alt.
+485	W1677		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.01	20.29	CT-4 20.29 N, 86.01 E, Orissa, India
+486	W1679		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.02	20.29	CT-4 20.29 N, 86.01 E, Orissa, India
+551	W1718		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.1414719	22.63189697	
+476	W1719		ORYZA_RUFIPOGON	Or-Ia	China	East_Asia	110.40747	18.800625	
+477	W1723		ORYZA_RUFIPOGON	Or-Ia	China	East_Asia	110.50747	18.800625	
+537	W1725		ORYZA_RUFIPOGON	Or-IIIa	Thailand	Southeast_Asia	100.9938242	13.75216314	
+492	W1726		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	101.0938242	13.75216314	B Thailand
+482	W1731		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	86.18298993	20.46250352	WI-2 55km E of Cuttack for Konarak, India
+479	W1732		ORYZA_RUFIPOGON	Or-Ib	India	South_Asia	84.79415823	19.31491846	WI-4 100km S of Berhampur, India
+466	W1735		ORYZA_RUFIPOGON	Or-Ia	India	South_Asia	75.78776007	26.91247201	WI-7 40km N of Jeypore, India
+575	W1736		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	75.88776007	26.91247201	WI-8 28km S of Jeypore, India
+576	W1737		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	75.98776007	26.91247201	WI-9 28km S of Jeypore, India
+577	W1742		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	76.08776007	26.91247201	WI-14 100km N of Jeypore, India
+578	W1748		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	76.18776007	26.91247201	WI-20 200km N of Jeypore, India
+580	W1750		ORYZA_RUFIPOGON	Or-unspecific	India	South_Asia	80.63385863	20.02344784	WI-22 30km S of Pakhanjore, India
+567	W1777		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	79.3022316	19.95105892	WI-51 98km NE of Chandrapur, India
+565	W1783		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	76.63929506	12.295854	WI-67 Shimoga Dist., Mysore, India
+493	W1787		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	101.1938242	13.75216314	Thailand
+569	W1809		ORYZA_RUFIPOGON	Or-IIIb	Srilanka	South_Asia	79.90691092	6.883201666	Sri Lanka
+579	W1810		ORYZA_RUFIPOGON	Or-unspecific	Srilanka	South_Asia	80.00691092	6.883201666	Sri Lanka
+584	W1825		ORYZA_RUFIPOGON	Or-unspecific	Bangladesh	South_Asia	90.40720201	23.70994003	Bangladesh
+478	W1839		ORYZA_RUFIPOGON	Or-Ia	China	East_Asia	110.60747	18.800625	
+507	W1859		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	100.12	17.52	NN51 17.52 N, 100.12 E, Thailand 70m alt.
+496	W1865		ORYZA_RUFIPOGON	Or-Ib	Thailand	Southeast_Asia	100.98	14.56	NE3 14.56 N, 100.98 E, Thailand 20m alt.
+517	W1880		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	102.91	17.03	NE25 17.03 N, 102.91 E, Thailand 210m alt.
+516	W1890		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	102.75	17.85	NE37 17.85 N, 102.75 E, Thailand 170m alt.
+520	W1895		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	104.18	17.25	NE47 17.25 N, 104.18 E, Thailand 180m alt.
+513	W1919		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	102.19	14.73	NE85 14.73 N, 102.19 E, Thailand ca.150m alt.
+552	W1943		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.2414719	22.63189697	
+594	W1970		ORYZA_RUFIPOGON	Or-unspecific	Indonesia	Southeast_Asia	106.7932779	-6.58914202	(-a) IL-274, (-b) IL-281, (-c) Between Bogor and Jakarta, Indonesia
+524	W1976		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	106.8932779	-6.58914202	IL-A Between Bogor and Jakarta, Indonesia
+564	W2005		ORYZA_RUFIPOGON	Or-IIIb	India	South_Asia	74.2	15.35	15.35 N, 74.20 E, 200-500m alt., India
+528	W2022		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	114.1441925	-1.10602914	KL-3 Kalimantan, Indonesia
+534	W2036		ORYZA_RUFIPOGON	Or-IIIa	Myanmar	Southeast_Asia	96.49748496	17.3278911	Pegu, Burma
+533	W2051		ORYZA_RUFIPOGON	Or-IIIa	Bangladesh	South_Asia	91.4119806	24.37866546	HS-4 Hobiganji, Bangladesh
+488	W2053		ORYZA_RUFIPOGON	Or-Ib	Bangladesh	South_Asia	91.5119806	24.37866546	HS-6 Hobiganji, Bangladesh
+487	W2064		ORYZA_RUFIPOGON	Or-Ib	Bangladesh	South_Asia	89.55013947	22.81666329	KH-5 Khulna, Bangladesh
+581	W2066		ORYZA_RUFIPOGON	Or-unspecific	Nepal	South_Asia	81.63556992	28.58475303	Surkhet, Nepal
+563	W2099		ORYZA_RUFIPOGON	Or-IIIa	Australia	Oceania	142.5695007	-20.99398491	Queensland, Australia
+531	W2108		ORYZA_RUFIPOGON	Or-II	Australia	Oceania	142.6695007	-20.99398491	Queensland, Australia
+529	W2197		ORYZA_RUFIPOGON	Or-II	Indonesia	Southeast_Asia	114.2441925	-1.10602914	KL-13 Kalimantan, Indonesia
+515	W2267		ORYZA_RUFIPOGON	Or-II	Laos	Southeast_Asia	102.42	18.14	18.14 N, 102.42 E, Laos
+535	W2275		ORYZA_RUFIPOGON	Or-IIIa	Thailand	Southeast_Asia	100.37	16.09	CP41 16.09 N, 100.37 E, Thailand
+504	W2283		ORYZA_RUFIPOGON	Or-II	Thailand	Southeast_Asia	99.47	16.49	NN59b 16.49 N, 99.47 E, Thailand
+497	W2305		ORYZA_RUFIPOGON	Or-Ib	Laos	Southeast_Asia	105.5	14.5	LP9a<br>14.50 N, 105.50 E, Ban Nong Sa, Phakse, Laos
+514	W2308		ORYZA_RUFIPOGON	Or-II	Laos	Southeast_Asia	102.38	17.57	LV1<br>17.57 N, 102.38 E, Vientian, Laos
+591	W2310		ORYZA_RUFIPOGON	Or-unspecific	Laos	Southeast_Asia	102.36	17.51	LV8<br>17.51 N, 102.36 E, Vientian, Laos
+592	W2311		ORYZA_RUFIPOGON	Or-unspecific	Laos	Southeast_Asia	102.46	17.52	LV9<br>17.52 N, 102.36 E, Vientian, Laos
+523	W2318		ORYZA_RUFIPOGON	Or-II	Vietnam	Southeast_Asia	106.06	10.24	HT16<br>10.24 N, 106.06 E, Tieng Giang Prov., Vietnam
+475	W2319		ORYZA_RUFIPOGON	Or-Ia	Vietnam	Southeast_Asia	106.25	10.33	HT17<br>10.33 N, 106.25 E, Long An Prov., Vietnam
+521	W2320		ORYZA_RUFIPOGON	Or-II	Vietnam	Southeast_Asia	105.36	10.42	CT1<br>10.42 N, 105.36 E, Vetnam
+522	W2321		ORYZA_RUFIPOGON	Or-II	Vietnam	Southeast_Asia	105.37	10.44	CT3<br>10.44 N, 105.37 E, Tan Cong Sinh vil., Vietnam
+474	W2332		ORYZA_RUFIPOGON	Or-Ia	Vietnam	Southeast_Asia	105.8504023	21.03342563	CT17<br>Vietnam
+554	W3000		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.25089	21.38298	Suixi county, Guangdong
+527	W3007		ORYZA_RUFIPOGON	Or-II	China	East_Asia	112.79155	22.37538	Kaiping County, Guangdong Province
+559	W3009		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	112.84849	22.889038	Gaoming county, Guangdong
+560	W3012		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	113.2614288	23.11891174	Guangzhou city, Guangdong
+545	W3029		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.19004	21.670145	Hepu county, Guangxi
+549	W3033		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.97141	22.275869	Bobai county, Guangxi
+553	W3035		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.3414719	22.63189697	Yulin City, Guangxi
+548	W3037		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.60844	23.099092	Gui county, Guangxi
+547	W3038		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.36	23.07	Gui county, Guangxi
+550	W3040		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.07166	23.394571	Guiping county, Guangxi
+546	W3046		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.26704	22.692957	Heng county, Guangxi
+541	W3047		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	106.90867	23.73387	Tianyang County, Guangxi
+540	W3051		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	106.6121063	23.90158272	Baise City, Guangxi
+542	W3052		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	107.00867	23.73387	Tianyang County, Guangxi
+526	W3054		ORYZA_RUFIPOGON	Or-II	China	East_Asia	110.70747	18.800625	Wanning County, Hainan Province
+555	W3055		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.80747	18.800625	Wanning County, Hainan Province
+543	W3063		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	108.63303	19.097265	East Li Autonomous County, Hainan
+544	W3066		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	109.1728	18.746597	East Li Autonomous County, Hainan
+556	W3071		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.7559	19.620953	Wenchang County, Hainan Province
+557	W3074		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	110.8559	19.620953	Wenchang County, Hainan Province
+562	W3082		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	116.6061	28.232292	Dongxiang County, jiangxi Province
+538	W3086		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	102.00642	23.604008	Yuanjiang Hani, Yi and Dai Autonomous County, Yunnan
+539	W3088		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	102.10642	23.604008	Yuanjiang Hani, Yi and Dai Autonomous County, Yunnan
+512	W3090		ORYZA_RUFIPOGON	Or-II	China	East_Asia	100.79406	22.012938	Jinghong County, Yunnan Province
+561	W3092		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	113.55217	26.801975	Chalin County, Hunan Province
+558	W3096		ORYZA_RUFIPOGON	Or-IIIa	China	East_Asia	111.33645	25.276974	Jiangyong County, Hunan Province
