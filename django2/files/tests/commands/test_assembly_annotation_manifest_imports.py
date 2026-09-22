@@ -47,8 +47,8 @@ class AssemblyAnnotationManifestImportTests(TestCase):
     def annotation_manifest(self):
         return self.write_manifest(
             "annotation.tsv",
-            "annotation_code\taccession\tassembly_code\tannotation_name\tannotation_version\tspecies_code\tsource_database\texternal_project\tfile_name\tfile_type\tdescription",
-            "ANN_IR64\tIR64\tASM_IR64\tIR64 genome annotation\tv1\tORYZA_SATIVA\tFigshare\tPRJEB73710\tannotation.IR64.gff\tGFF\tImported annotation",
+            "annotation_code\taccession\tassembly_code\tannotation_name\tannotation_version\tspecies_code\tsource_database\tsource_name\texternal_project\tfile_name\tfile_type\tdescription",
+            "ANN_IR64\tIR64\tASM_IR64\tIR64 genome annotation\tv1\tORYZA_SATIVA\tFigshare\tFigshare public import\tPRJEB73710\tannotation.IR64.gff\tGFF\tImported annotation",
         )
 
     def command_args(self, command, manifest, dry_run=False):
@@ -101,6 +101,7 @@ class AssemblyAnnotationManifestImportTests(TestCase):
         self.assertEqual(assembly.accession, self.accession)
         self.assertEqual(annotation.accession, self.accession)
         self.assertEqual(annotation.assembly, assembly)
+        self.assertEqual(annotation.source_name, "Figshare public import")
 
         assembly_row = get_accession_assemblies(self.accession)["results"][0]
         annotation_row = get_accession_annotations(self.accession)["results"][0]

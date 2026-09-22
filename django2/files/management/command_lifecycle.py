@@ -21,6 +21,7 @@ COMMAND_LIFECYCLE = {
     "compare_annotation_files": RETAIN_AUDIT,
     "compare_overview_files": RETAIN_AUDIT,
     "generate_legacy_fix_todo": RETAIN_AUDIT,
+    "generate_hierarchy_manifests_from_file_list": ACTIVE,
     "import_accession_external_mapping_manifest": ACTIVE,
     "import_accession_hierarchy_metadata": LEGACY_REPAIR,
     "import_accession_manifest": ACTIVE,
@@ -42,6 +43,7 @@ COMMAND_LIFECYCLE = {
     "scan_files": ACTIVE,
     "seed_ir64_demo_hierarchy": RETIRE_PENDING_USAGE_CONFIRMATION,
     "validate_new_file_structure": ACTIVE,
+    "validate_hierarchy_manifest_package": ACTIVE,
     "validate_manual_files": ACTIVE,
     "validate_prjeb73710_relationships": RETAIN_AUDIT,
 }

@@ -1,0 +1,2 @@
+assembly_code	accession	assembly_accession	assembly_name	species_code	assembly_level	biosample_accession	assembly_type	assembly_method	sequencing_technology	genome_size	chromosome_count	contig_count	n50	gc_content	reference	source_database	external_project	file_name	file_type	description
+ASM_IR64	IR64		IR64 genome assembly													Public database		genome.IR64.fasta	FASTA	IR64 genome assembly bound to manual_files/genome.IR64.fasta.

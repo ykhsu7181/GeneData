@@ -87,6 +87,7 @@ class Command(BaseCommand):
             annotation_rows,
             manual_root=manual_root,
         )
+        _, default_annotation_codes = self.annotation_default_plan(annotation_rows)
         timestamp = timezone.localtime().strftime("%Y%m%d_%H%M%S")
         report_path = output_dir / f"incremental_hierarchy_batch_{timestamp}.tsv"
         summary_path = output_dir / f"incremental_hierarchy_batch_{timestamp}.txt"
@@ -152,7 +153,8 @@ class Command(BaseCommand):
                 if not assembly.is_default:
                     assembly.is_default = True
                     assembly.save(update_fields=["is_default", "updated_at"])
-            for annotation in annotations.values():
+            for code in default_annotation_codes:
+                annotation = annotations[code]
                 Annotation.objects.filter(assembly=annotation.assembly).exclude(
                     id=annotation.id
                 ).update(is_default=False)
@@ -313,7 +315,65 @@ class Command(BaseCommand):
                     "assembly_code": assembly_code,
                     "annotation_code": code,
                 })
+        default_errors, _ = self.annotation_default_plan(annotation_rows)
+        errors.extend(default_errors)
         return errors, planned_files
+
+    @classmethod
+    def annotation_default_plan(cls, rows):
+        grouped = {}
+        errors = []
+        defaults = set()
+        for line_number, row in enumerate(rows, start=2):
+            grouped.setdefault(row.get("assembly_code", ""), []).append(
+                (line_number, row)
+            )
+
+        for assembly_code, items in grouped.items():
+            explicit = []
+            invalid = False
+            for line_number, row in items:
+                raw = (row.get("is_default") or "").strip().lower()
+                if not raw:
+                    continue
+                if raw in {"1", "true", "yes", "y"}:
+                    explicit.append((line_number, row))
+                elif raw not in {"0", "false", "no", "n"}:
+                    errors.append(cls.error(
+                        "annotation",
+                        line_number,
+                        row.get("accession", ""),
+                        row.get("annotation_code", ""),
+                        f"invalid_is_default:{row.get('is_default', '')}",
+                    ))
+                    invalid = True
+            if invalid:
+                continue
+            if len(explicit) == 1:
+                defaults.add(explicit[0][1]["annotation_code"])
+                continue
+            if len(explicit) > 1:
+                line_number, row = explicit[1]
+                errors.append(cls.error(
+                    "annotation",
+                    line_number,
+                    row.get("accession", ""),
+                    row.get("annotation_code", ""),
+                    f"multiple_default_annotations:{assembly_code}",
+                ))
+                continue
+            if len(items) == 1 and not (items[0][1].get("is_default") or "").strip():
+                defaults.add(items[0][1]["annotation_code"])
+                continue
+            line_number, row = items[0]
+            errors.append(cls.error(
+                "annotation",
+                line_number,
+                row.get("accession", ""),
+                row.get("annotation_code", ""),
+                f"missing_default_annotation:{assembly_code}",
+            ))
+        return errors, defaults
 
     def validate_manifest_file(
         self,
@@ -338,7 +398,12 @@ class Command(BaseCommand):
         parsed = parse_ingestion_filename(path.name)
         if not parsed:
             return {"error": f"unrecognized_filename:{file_name}", "path": path, "parsed": None}
-        if parsed["accession_code"] != expected_accession:
+        parsed_accession = parsed["accession_code"]
+        versioned_annotation = (
+            parsed["file_role"] == "annotation"
+            and parsed_accession.startswith(f"{expected_accession}.")
+        )
+        if parsed_accession != expected_accession and not versioned_annotation:
             return {"error": f"filename_accession_mismatch:{file_name}", "path": path, "parsed": parsed}
         if parsed["file_role"] not in expected_roles:
             return {"error": f"unexpected_file_role:{parsed['file_role']}", "path": path, "parsed": parsed}

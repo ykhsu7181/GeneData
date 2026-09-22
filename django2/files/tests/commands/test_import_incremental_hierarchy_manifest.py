@@ -123,6 +123,54 @@ class IncrementalHierarchyManifestCommandTestCase(TestCase):
             3,
         )
 
+    def test_explicit_default_selects_standard_annotation_with_multiple_versions(self):
+        versioned_gff = Path(self.manual_dir.name) / "annotation.IR64.IGDBv1.Allset.gff"
+        versioned_gff.write_text(
+            "##gff-version 3\nchr1\tdemo\tgene\t1\t6\t.\t+\t.\tID=g2\n",
+            encoding="utf-8",
+        )
+        self.annotation_manifest.write_text(
+            ANNOTATION_HEADER
+            + "\tis_default\n"
+            + "ANN_IR64_IGDBv1_Allset\tIR64\tASM_IR64\tIR64 IGDBv1 Allset annotation\t"
+            "IGDBv1.Allset\tORYZA_SATIVA\tPublic database\tTEST_PROJECT\t"
+            "annotation.IR64.IGDBv1.Allset.gff\tGFF\tVersioned annotation\tfalse\n"
+            + "ANN_IR64\tIR64\tASM_IR64\tIR64 annotation\tv1\t"
+            "ORYZA_SATIVA\tPublic database\tTEST_PROJECT\t"
+            "annotation.IR64.gff\tGFF\tDefault annotation\ttrue\n",
+            encoding="utf-8",
+        )
+
+        output = self.run_command("--apply")
+
+        self.assertIn("status\tAPPLIED", output)
+        self.assertTrue(Annotation.objects.get(annotation_code="ANN_IR64").is_default)
+        self.assertFalse(
+            Annotation.objects.get(annotation_code="ANN_IR64_IGDBv1_Allset").is_default
+        )
+
+    def test_multiple_annotations_without_explicit_default_are_blocked(self):
+        versioned_gff = Path(self.manual_dir.name) / "annotation.IR64.IGDBv1.Allset.gff"
+        versioned_gff.write_text(
+            "##gff-version 3\nchr1\tdemo\tgene\t1\t6\t.\t+\t.\tID=g2\n",
+            encoding="utf-8",
+        )
+        self.annotation_manifest.write_text(
+            ANNOTATION_HEADER
+            + "\nANN_IR64\tIR64\tASM_IR64\tIR64 annotation\tv1\t"
+            "ORYZA_SATIVA\tPublic database\tTEST_PROJECT\t"
+            "annotation.IR64.gff\tGFF\tDefault annotation\n"
+            + "ANN_IR64_IGDBv1_Allset\tIR64\tASM_IR64\tIR64 IGDBv1 Allset annotation\t"
+            "IGDBv1.Allset\tORYZA_SATIVA\tPublic database\tTEST_PROJECT\t"
+            "annotation.IR64.IGDBv1.Allset.gff\tGFF\tVersioned annotation\n",
+            encoding="utf-8",
+        )
+
+        output = self.run_command("--apply")
+
+        self.assertIn("status\tBLOCKED", output)
+        self.assertFalse(Assembly.objects.filter(assembly_code="ASM_IR64").exists())
+
     def test_missing_file_blocks_entire_batch(self):
         self.gff.unlink()
 
