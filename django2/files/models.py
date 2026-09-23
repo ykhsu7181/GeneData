@@ -86,6 +86,8 @@ class Accession(models.Model):
     longitude = models.FloatField(blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    view_count = models.PositiveBigIntegerField(default=0, db_index=True)
+    last_viewed_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -492,6 +494,66 @@ class DataFile(models.Model):
 
     def __str__(self):
         return self.file_name
+
+
+class AnnotationFeatureIndex(models.Model):
+    STATUS_BUILDING = 'building'
+    STATUS_READY = 'ready'
+    STATUS_FAILED = 'failed'
+    STATUS_CHOICES = [
+        (STATUS_BUILDING, 'Building'),
+        (STATUS_READY, 'Ready'),
+        (STATUS_FAILED, 'Failed'),
+    ]
+
+    annotation = models.OneToOneField(
+        'Annotation', on_delete=models.CASCADE, related_name='feature_index'
+    )
+    source_file = models.ForeignKey(
+        'DataFile', on_delete=models.PROTECT, related_name='annotation_feature_indexes'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_BUILDING)
+    source_file_size = models.BigIntegerField()
+    source_file_mtime_ns = models.BigIntegerField()
+    source_file_md5 = models.CharField(max_length=64, blank=True, default='')
+    feature_count = models.BigIntegerField(default=0)
+    chromosomes = models.JSONField(default=list)
+    feature_types = models.JSONField(default=list)
+    error_message = models.TextField(blank=True, default='')
+    indexed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'annotation_feature_index'
+
+
+class AnnotationFeature(models.Model):
+    feature_index = models.ForeignKey(
+        'AnnotationFeatureIndex', on_delete=models.CASCADE, related_name='features'
+    )
+    source_line = models.BigIntegerField()
+    seqid = models.CharField(max_length=255)
+    source = models.CharField(max_length=255, blank=True, null=True)
+    feature = models.CharField(max_length=100, blank=True, null=True)
+    start = models.BigIntegerField()
+    end = models.BigIntegerField()
+    length = models.BigIntegerField()
+    score = models.CharField(max_length=100, blank=True, null=True)
+    strand = models.CharField(max_length=10, blank=True, null=True)
+    phase = models.CharField(max_length=20, blank=True, null=True)
+    attributes = models.JSONField(default=dict)
+    sequence_ontology = models.CharField(max_length=100, blank=True, null=True)
+    name = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'annotation_feature'
+        ordering = ['source_line', 'id']
+        indexes = [
+            models.Index(fields=['feature_index', 'seqid', 'feature', 'start'], name='idx_af_seq_type_start'),
+            models.Index(fields=['feature_index', 'feature'], name='idx_af_feature_type'),
+            models.Index(fields=['feature_index', 'seqid', 'start', 'end'], name='idx_af_seq_interval'),
+        ]
 
 
 class FileRelation(models.Model):

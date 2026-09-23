@@ -185,9 +185,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-# Unindexed FASTA reads are a compatibility fallback, not the primary path.
-FASTA_FALLBACK_MAX_BYTES = 512 * 1024 * 1024
-FASTA_FALLBACK_TIMEOUT_SECONDS = 5
+# Annotation source files are indexed offline. These caches only contain
+# database-backed API payloads and are versioned by the source-file fingerprint.
+ANNOTATION_OPTIONS_CACHE_SECONDS = 60 * 60
+ANNOTATION_DATA_CACHE_SECONDS = 5 * 60
+ANNOTATION_MAX_PAGE_SIZE = 10000
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

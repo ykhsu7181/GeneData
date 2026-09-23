@@ -14,6 +14,7 @@ import files.views as file_views
 from files.archive_views import ArchivedGenomeFileViewSet
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
 from files.services.file_relation_service import get_files_for_accession
+from files.services.annotation_feature_index_service import build_annotation_feature_index
 
 
 class Stage12BArchiveGenomeFileTestCase(TransactionTestCase):
@@ -119,6 +120,7 @@ class Stage12BArchiveGenomeFileTestCase(TransactionTestCase):
             content=annotation_content,
         )
         self.add_relation(annotation_data_file, "annotation", self.annotation.id, "annotation")
+        build_annotation_feature_index(self.annotation)
 
         accession_response = self.client.get(f"/gd/api/files/accessions/{self.accession_code}/")
         annotation_response = self.client.get(

@@ -113,13 +113,16 @@ const enUS = {
       portalSearchPlaceholder: 'Search accession / species / resource ...',
       portalSearchLabel: 'Search accession, species or resource',
       searchExamplesLabel: 'Search examples',
-      featuredAccessions: 'Featured Accessions',
-      featuredLoading: 'Loading featured accessions',
-      featuredEmpty: 'No featured accessions available.',
+      featuredAccessions: 'Popular Accessions',
+      featuredLoading: 'Loading popular accessions',
+      featuredEmpty: 'No popular accessions available.',
       species: 'Species',
       commonName: 'Common Name',
+      country: 'Country',
       assembly: 'Assembly',
       annotation: 'Annotation',
+      annotationDatasets: 'Annotation',
+      popularScroll: 'Popular accessions list; scroll vertically for more',
       examples: {
         accession: 'IR64',
         species: 'Oryza sativa',
@@ -151,6 +154,7 @@ const enUS = {
       totalAssemblies: 'Total: {count}',
       moreColumns: 'More',
       chooseColumns: 'Choose Assembly list statistics columns',
+      resetColumnWidths: 'Reset column widths',
       recent: 'Recently Viewed',
       viewAllRecent: 'View all recently viewed assemblies',
       noRecent: 'No recently viewed assemblies',
@@ -283,7 +287,14 @@ const enUS = {
       topRegions: 'Top regions',
       noClusterAccessions: 'No accessions in this cluster',
       moreItems: 'more',
-      accessions: 'accessions'
+      accessions: 'accessions',
+      drawerColumns: {
+        species: 'Species',
+        longitude: 'Longitude',
+        latitude: 'Latitude',
+        country: 'Country',
+        region: 'Region'
+      }
     },
     accessionDetail: {
       breadcrumb: 'Home / Accession / {accession}',
@@ -455,6 +466,8 @@ const enUS = {
       columnSettings: 'Columns',
       moreColumns: 'More',
       chooseColumns: 'Choose visible data columns',
+      resetColumnWidths: 'Reset column widths',
+      resizeColumn: 'Resize {column} column',
       detail: {
         title: 'Data File Details',
         basic: 'Basic Information',

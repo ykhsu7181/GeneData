@@ -28,7 +28,11 @@
     <section class="file-table-card">
       <header class="table-heading">
         <h2>{{ $t('page.dataOverview.fileTable') }} <small>({{ $t('common.totalCount', { count: totalCount }) }})</small></h2>
-        <DataOverviewColumnSettings v-model="selectedColumns" :columns="columnOptions" />
+        <DataOverviewColumnSettings
+          v-model="selectedColumns"
+          :columns="columnOptions"
+          @reset-widths="restoreColumnWidths"
+        />
       </header>
 
       <el-alert v-if="loadError" :title="$t('messages.dataOverviewLoadFailed')" type="error" show-icon :closable="false">
@@ -36,9 +40,40 @@
       </el-alert>
 
       <div v-loading="loading" class="table-scroll" :aria-busy="loading" aria-live="polite">
-        <table class="file-table">
+        <table class="file-table" :style="{ width: `${tableWidth}px` }">
           <caption class="sr-only">{{ $t('page.dataOverview.fileTable') }}</caption>
-          <thead><tr><th v-for="column in visibleColumns" :key="column.key">{{ column.label }}</th><th>{{ $t('common.actions') }}</th></tr></thead>
+          <colgroup>
+            <col v-for="column in visibleColumns" :key="column.key" :style="{ width: `${columnWidth(column.key)}px` }" />
+            <col :style="{ width: `${columnWidth('actions')}px` }" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th v-for="column in visibleColumns" :key="column.key">
+                {{ column.label }}
+                <button
+                  type="button"
+                  class="column-resizer"
+                  :aria-label="$t('page.dataOverview.resizeColumn', { column: column.label })"
+                  @pointerdown="startColumnResize($event, column.key)"
+                  @dblclick="resetSingleColumn(column.key)"
+                  @keydown.left.prevent="resizeColumnByKeyboard(column.key, -10)"
+                  @keydown.right.prevent="resizeColumnByKeyboard(column.key, 10)"
+                />
+              </th>
+              <th>
+                {{ $t('common.actions') }}
+                <button
+                  type="button"
+                  class="column-resizer"
+                  :aria-label="$t('page.dataOverview.resizeColumn', { column: $t('common.actions') })"
+                  @pointerdown="startColumnResize($event, 'actions')"
+                  @dblclick="resetSingleColumn('actions')"
+                  @keydown.left.prevent="resizeColumnByKeyboard('actions', -10)"
+                  @keydown.right.prevent="resizeColumnByKeyboard('actions', 10)"
+                />
+              </th>
+            </tr>
+          </thead>
           <tbody>
             <tr v-for="row in rows" :key="row.file_id">
               <td v-for="column in visibleColumns" :key="column.key" :class="`cell-${column.key}`">
@@ -83,10 +118,30 @@ import DataFileDetailDrawer from '@/components/data-overview/DataFileDetailDrawe
 import DataOverviewColumnSettings from '@/components/data-overview/DataOverviewColumnSettings.vue'
 import DataOverviewStats from '@/components/data-overview/DataOverviewStats.vue'
 import { fetchDataFileDetail, fetchDataOverview } from '@/services/dataOverview'
+import {
+  loadColumnWidths,
+  resetColumnWidths,
+  resizeColumn,
+  saveColumnWidths
+} from '@/services/tableColumnWidths.mjs'
 
 const STORAGE_KEY = 'genedata:data-overview-columns:v1'
+const WIDTH_STORAGE_KEY = 'genedata:data-overview-column-widths:v1'
 const DEFAULT_COLUMNS = ['category', 'file_name', 'species_name', 'accession', 'file_type', 'file_size_display']
 const OPTIONAL_COLUMNS = ['dataset_name', 'data_source', 'md5', 'description']
+const DEFAULT_COLUMN_WIDTHS = {
+  category: 130,
+  file_name: 300,
+  species_name: 180,
+  accession: 150,
+  file_type: 130,
+  file_size_display: 130,
+  dataset_name: 180,
+  data_source: 170,
+  md5: 260,
+  description: 280,
+  actions: 190
+}
 
 const { locale, t, te } = useI18n()
 const route = useRoute()
@@ -110,6 +165,7 @@ let overviewController = null
 let detailController = null
 let overviewRequestId = 0
 let detailRequestId = 0
+let activeResize = null
 
 const loadStoredColumns = () => {
   try {
@@ -118,6 +174,7 @@ const loadStoredColumns = () => {
   } catch (_) { return DEFAULT_COLUMNS }
 }
 const selectedColumns = ref(loadStoredColumns())
+const columnWidths = ref(loadColumnWidths(WIDTH_STORAGE_KEY, DEFAULT_COLUMN_WIDTHS))
 watch(selectedColumns, value => {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(value)) } catch (_) { /* preference storage is optional */ }
 }, { deep: true })
@@ -144,6 +201,46 @@ const columnOptions = computed(() => [
   { key: 'description', label: t('page.dataOverview.columns.description') }
 ])
 const visibleColumns = computed(() => columnOptions.value.filter(column => selectedColumns.value.includes(column.key)))
+const columnWidth = key => columnWidths.value[key] || DEFAULT_COLUMN_WIDTHS[key] || 120
+const tableWidth = computed(() => (
+  visibleColumns.value.reduce((total, column) => total + columnWidth(column.key), 0)
+  + columnWidth('actions')
+))
+const persistColumnWidths = () => saveColumnWidths(WIDTH_STORAGE_KEY, columnWidths.value)
+const setColumnWidth = (key, width, { persist = true } = {}) => {
+  columnWidths.value = resizeColumn(columnWidths.value, key, width, DEFAULT_COLUMN_WIDTHS)
+  if (persist) persistColumnWidths()
+}
+const handleColumnResizeMove = event => {
+  if (!activeResize) return
+  setColumnWidth(
+    activeResize.key,
+    activeResize.startWidth + event.clientX - activeResize.startX,
+    { persist: false }
+  )
+}
+const stopColumnResize = () => {
+  if (activeResize) persistColumnWidths()
+  activeResize = null
+  window.removeEventListener('pointermove', handleColumnResizeMove)
+  window.removeEventListener('pointerup', stopColumnResize)
+  document.body.classList.remove('is-resizing-table-column')
+}
+const startColumnResize = (event, key) => {
+  if (!(key in DEFAULT_COLUMN_WIDTHS)) return
+  event.preventDefault()
+  stopColumnResize()
+  activeResize = { key, startX: event.clientX, startWidth: columnWidth(key) }
+  window.addEventListener('pointermove', handleColumnResizeMove)
+  window.addEventListener('pointerup', stopColumnResize, { once: true })
+  document.body.classList.add('is-resizing-table-column')
+}
+const resizeColumnByKeyboard = (key, amount) => setColumnWidth(key, columnWidth(key) + amount)
+const resetSingleColumn = key => setColumnWidth(key, DEFAULT_COLUMN_WIDTHS[key])
+const restoreColumnWidths = () => {
+  columnWidths.value = resetColumnWidths(DEFAULT_COLUMN_WIDTHS)
+  persistColumnWidths()
+}
 const pageCount = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize.value)))
 
 const requestParams = () => ({
@@ -257,6 +354,7 @@ watch(() => route.query, async query => {
 }, { immediate: true })
 
 onBeforeUnmount(() => {
+  stopColumnResize()
   overviewController?.abort()
   detailController?.abort()
   overviewRequestId += 1
@@ -265,5 +363,5 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.data-overview-page{min-height:calc(100vh - 160px);color:#102c55}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.page-heading{margin-bottom:12px;padding-top:4px}.breadcrumb{display:flex;gap:8px;align-items:center;margin-bottom:8px;color:#4b6693;font-size:13px}.breadcrumb a{color:#31558f;text-decoration:none}.breadcrumb a:hover,.breadcrumb a:focus-visible{color:#0068e8;text-decoration:underline}.page-heading h1{margin:0;color:#0a2b73;font-size:30px;line-height:1.15}.filter-panel{display:grid;grid-template-columns:minmax(330px,1.7fr) repeat(4,minmax(142px,.65fr)) 94px;gap:12px;align-items:end;padding:18px;border:1px solid #d9e6f5;border-radius:15px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.06)}.search-control{display:grid;grid-template-columns:minmax(0,1fr) 106px}.search-control :deep(.el-input__wrapper){height:44px;border-radius:8px 0 0 8px;box-shadow:0 0 0 1px #cbdcf1 inset}.search-control>.el-button{height:44px;border-radius:0 8px 8px 0;background:linear-gradient(135deg,#3098f5,#0871e7);font-weight:700}.filter-field{min-width:0}.filter-field :deep(.el-select){width:100%}.filter-field :deep(.el-select__wrapper){min-height:44px}.reset-button{height:44px}.file-table-card{overflow:hidden;border:1px solid #d8e5f4;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.07)}.table-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px}.table-heading h2{margin:0;color:#123a72;font-size:17px}.table-heading h2 small{font-size:13px;font-weight:500}.table-scroll{min-height:260px;overflow:auto;padding:0 16px}.file-table{width:100%;min-width:980px;border-collapse:collapse;border:1px solid #dae6f3}.file-table th,.file-table td{padding:11px 13px;border-right:1px solid #e1eaf4;border-bottom:1px solid #e1eaf4;text-align:left;font-size:13px}.file-table th{background:#edf5ff;color:#163c72;font-weight:800;white-space:nowrap}.file-table tbody tr:hover{background:#f8fbff}.file-name,.truncate{display:block;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-name{color:#173b70;font-weight:600}.cell-species_name em{color:#385c88}.accession-link,.actions-cell a,.actions-cell button{color:#0874e8;font-weight:700;text-decoration:none}.actions-cell{white-space:nowrap}.actions-cell button{padding:0;border:0;background:transparent;cursor:pointer}.actions-cell span{margin:0 10px;color:#aac0dc}.category-tag{display:inline-flex;padding:3px 9px;border-radius:6px;background:#e4f1ff;color:#0874e8;font-weight:700;white-space:nowrap}.category-annotation{background:#e8f8ee;color:#15935a}.category-raw_data{background:#fff0df;color:#d56d0b}.category-transcriptome{background:#f0eaff;color:#7546d8}.category-population{background:#ffe9ed;color:#d43d5b}.empty-cell{height:180px!important;text-align:center!important;color:#7a8da8}.pagination-bar{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;color:#58708e;font-size:13px}.pagination-bar>div{display:flex;align-items:center;gap:9px}.page-size{width:78px}.pagination-bar strong{display:grid;place-items:center;width:34px;height:34px;border-radius:7px;background:#1279ed;color:#fff}.file-table code{color:#536a87;font-size:12px}@media(max-width:1280px){.filter-panel{grid-template-columns:repeat(3,minmax(0,1fr))}.search-control{grid-column:span 2}.reset-button{width:100%}}@media(max-width:760px){.page-heading h1{font-size:27px}.filter-panel{grid-template-columns:1fr}.search-control{grid-column:auto}.table-heading,.pagination-bar{align-items:flex-start;flex-direction:column}}
+.data-overview-page{min-height:calc(100vh - 160px);color:#102c55}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.page-heading{margin-bottom:12px;padding-top:4px}.breadcrumb{display:flex;gap:8px;align-items:center;margin-bottom:8px;color:#4b6693;font-size:13px}.breadcrumb a{color:#31558f;text-decoration:none}.breadcrumb a:hover,.breadcrumb a:focus-visible{color:#0068e8;text-decoration:underline}.page-heading h1{margin:0;color:#0a2b73;font-size:30px;line-height:1.15}.filter-panel{display:grid;grid-template-columns:minmax(330px,1.7fr) repeat(4,minmax(142px,.65fr)) 94px;gap:12px;align-items:end;padding:18px;border:1px solid #d9e6f5;border-radius:15px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.06)}.search-control{display:grid;grid-template-columns:minmax(0,1fr) 106px}.search-control :deep(.el-input__wrapper){height:44px;border-radius:8px 0 0 8px;box-shadow:0 0 0 1px #cbdcf1 inset}.search-control>.el-button{height:44px;border-radius:0 8px 8px 0;background:linear-gradient(135deg,#3098f5,#0871e7);font-weight:700}.filter-field{min-width:0}.filter-field :deep(.el-select){width:100%}.filter-field :deep(.el-select__wrapper){min-height:44px}.reset-button{height:44px}.file-table-card{overflow:hidden;border:1px solid #d8e5f4;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.07)}.table-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px}.table-heading h2{margin:0;color:#123a72;font-size:17px}.table-heading h2 small{font-size:13px;font-weight:500}.table-scroll{min-height:260px;overflow:auto;padding:0 16px}.file-table{min-width:100%;border-collapse:collapse;border:1px solid #dae6f3;table-layout:fixed}.file-table th,.file-table td{padding:11px 13px;border-right:1px solid #e1eaf4;border-bottom:1px solid #e1eaf4;text-align:left;font-size:13px;overflow:hidden;text-overflow:ellipsis}.file-table th{position:relative;background:#edf5ff;color:#163c72;font-weight:800;white-space:nowrap}.column-resizer{position:absolute;top:0;right:-5px;z-index:2;width:10px;height:100%;padding:0;border:0;background:transparent;cursor:col-resize;touch-action:none}.column-resizer::after{content:'';position:absolute;top:22%;bottom:22%;left:4px;width:2px;border-radius:2px;background:#9eb9d8;opacity:0}.file-table th:hover .column-resizer::after,.column-resizer:focus-visible::after{opacity:1}.column-resizer:focus-visible{outline:2px solid #1479e8;outline-offset:-2px}.data-overview-page :global(body.is-resizing-table-column){cursor:col-resize;user-select:none}.file-table tbody tr:hover{background:#f8fbff}.file-name,.truncate{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-name{color:#173b70;font-weight:600}.cell-species_name em{color:#385c88}.accession-link,.actions-cell a,.actions-cell button{color:#0874e8;font-weight:700;text-decoration:none}.actions-cell{white-space:nowrap}.actions-cell button{padding:0;border:0;background:transparent;cursor:pointer}.actions-cell span{margin:0 10px;color:#aac0dc}.category-tag{display:inline-flex;padding:3px 9px;border-radius:6px;background:#e4f1ff;color:#0874e8;font-weight:700;white-space:nowrap}.category-annotation{background:#e8f8ee;color:#15935a}.category-raw_data{background:#fff0df;color:#d56d0b}.category-transcriptome{background:#f0eaff;color:#7546d8}.category-population{background:#ffe9ed;color:#d43d5b}.empty-cell{height:180px!important;text-align:center!important;color:#7a8da8}.pagination-bar{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;color:#58708e;font-size:13px}.pagination-bar>div{display:flex;align-items:center;gap:9px}.page-size{width:78px}.pagination-bar strong{display:grid;place-items:center;width:34px;height:34px;border-radius:7px;background:#1279ed;color:#fff}.file-table code{color:#536a87;font-size:12px}@media(max-width:1280px){.filter-panel{grid-template-columns:repeat(3,minmax(0,1fr))}.search-control{grid-column:span 2}.reset-button{width:100%}}@media(max-width:760px){.page-heading h1{font-size:27px}.filter-panel{grid-template-columns:1fr}.search-control{grid-column:auto}.table-heading,.pagination-bar{align-items:flex-start;flex-direction:column}}
 </style>

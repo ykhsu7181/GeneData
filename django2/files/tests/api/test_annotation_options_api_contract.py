@@ -28,20 +28,26 @@ class AnnotationOptionsApiContractTests(SimpleTestCase):
             {"seqid": "chr2", "feature": "gene"},
         ]
 
-    @patch("files.query_views._build_context_chromosome_aliases", return_value={})
-    @patch("files.query_views._parse_feature_file")
+    @patch("files.query_views.cached_value", side_effect=lambda key, factory, timeout: factory())
+    @patch("files.query_views.get_ready_annotation_index")
     @patch("files.query_views.get_files_for_annotation")
     @patch("files.query_views.get_context_organism")
     def test_options_return_full_filter_metadata(
         self,
         get_context_organism,
         get_files_for_annotation,
-        parse_feature_file,
-        _build_aliases,
+        get_ready_annotation_index,
+        _cached_value,
     ):
         get_context_organism.return_value = self.context
         get_files_for_annotation.return_value = [self.service_file]
-        parse_feature_file.return_value = self.rows
+        get_ready_annotation_index.return_value = SimpleNamespace(
+            pk=2,
+            source_file_mtime_ns=123,
+            feature_count=3,
+            chromosomes=["chr1", "chr2"],
+            feature_types=["gene", "mRNA"],
+        )
 
         response = query_annotation_options(
             self.factory.get("/query/annotation-options/", {"annotation_id": 7})
@@ -58,21 +64,35 @@ class AnnotationOptionsApiContractTests(SimpleTestCase):
         })
 
     @patch("files.query_views._adapt_annotation_file_service_result", return_value={"id": 11})
-    @patch("files.query_views._build_context_chromosome_aliases", return_value={})
-    @patch("files.query_views._parse_feature_file")
+    @patch("files.query_views.cached_value")
+    @patch("files.query_views.get_ready_annotation_index")
     @patch("files.query_views.get_files_for_annotation")
     @patch("files.query_views.get_context_organism")
     def test_data_marks_statistics_as_filtered(
         self,
         get_context_organism,
         get_files_for_annotation,
-        parse_feature_file,
-        _build_aliases,
+        get_ready_annotation_index,
+        cached_value,
         _adapt_file,
     ):
         get_context_organism.return_value = self.context
         get_files_for_annotation.return_value = [self.service_file]
-        parse_feature_file.return_value = [self.rows[1]]
+        get_ready_annotation_index.return_value = SimpleNamespace(
+            pk=2, source_file_mtime_ns=123, feature_count=3
+        )
+        filtered_statistics = {
+            "chromosomes": ["chr1"],
+            "feature_types": ["mRNA"],
+            "total_features": 1,
+        }
+        cached_value.return_value = {
+            "results": [self.rows[1]],
+            "count": 1,
+            "filtered_count": 1,
+            "filtered_statistics": filtered_statistics,
+            "statistics": filtered_statistics,
+        }
 
         response = query_annotation_data(
             self.factory.get(

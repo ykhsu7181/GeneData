@@ -58,15 +58,19 @@
                 </el-button>
               </template>
               <div class="column-picker" role="group" :aria-label="$t('page.assembly.chooseColumns')">
-                <el-checkbox-group v-model="selectedStatisticColumns">
+                <el-checkbox-group v-model="selectedColumns">
                   <el-checkbox
-                    v-for="column in statisticColumnOptions"
+                    v-for="column in columnOptions"
                     :key="column.key"
                     :value="column.key"
+                    :disabled="column.required"
                   >
                     {{ $t(column.labelKey) }}
                   </el-checkbox>
                 </el-checkbox-group>
+                <el-button class="reset-widths-button" size="small" @click="restoreColumnWidths">
+                  {{ $t('page.assembly.resetColumnWidths') }}
+                </el-button>
               </div>
             </el-popover>
           </div>
@@ -93,9 +97,11 @@
           class="assembly-table"
           :empty-text="emptyText"
           :aria-label="$t('page.assembly.listTitle')"
+          border
+          @header-dragend="handleHeaderDragEnd"
           @row-click="openAssembly"
         >
-          <el-table-column prop="accession" :label="$t('page.assembly.columns.accession')" min-width="110">
+          <el-table-column prop="accession" :label="$t('page.assembly.columns.accession')" :width="columnWidth('accession')">
             <template #default="{ row }">
               <button
                 type="button"
@@ -107,7 +113,7 @@
               </button>
             </template>
           </el-table-column>
-          <el-table-column prop="assembly" :label="$t('page.assembly.columns.assembly')" min-width="150">
+          <el-table-column prop="assembly" :label="$t('page.assembly.columns.assembly')" :width="columnWidth('assembly')">
             <template #default="{ row }">
               <button
                 type="button"
@@ -119,7 +125,32 @@
               </button>
             </template>
           </el-table-column>
-          <el-table-column prop="assembly_accession" :label="$t('page.assembly.columns.assemblyAccession')" min-width="180">
+          <el-table-column
+            v-if="selectedColumns.includes('species')"
+            prop="species"
+            :label="$t('page.assembly.columns.species')"
+            :width="columnWidth('species')"
+          >
+            <template #default="{ row }">
+              <em>{{ displayValue(row.species) }}</em>
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="selectedColumns.includes('assembly_level')"
+            prop="assembly_level"
+            :label="$t('page.assembly.columns.level')"
+            :width="columnWidth('assembly_level')"
+          >
+            <template #default="{ row }">
+              {{ formatLevel(row.assembly_level) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            v-if="selectedColumns.includes('assembly_accession')"
+            prop="assembly_accession"
+            :label="$t('page.assembly.columns.assemblyAccession')"
+            :width="columnWidth('assembly_accession')"
+          >
             <template #default="{ row }">
               <button
                 v-if="row.assembly_accession"
@@ -133,22 +164,12 @@
               <span v-else>{{ emptyMark }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="assembly_level" :label="$t('page.assembly.columns.level')" min-width="130">
-            <template #default="{ row }">
-              {{ formatLevel(row.assembly_level) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="species" :label="$t('page.assembly.columns.species')" min-width="150">
-            <template #default="{ row }">
-              <em>{{ displayValue(row.species) }}</em>
-            </template>
-          </el-table-column>
           <el-table-column
             v-for="column in visibleStatisticColumns"
             :key="column.key"
             :prop="column.key"
             :label="$t(column.labelKey)"
-            :min-width="column.minWidth"
+            :width="columnWidth(column.key)"
           >
             <template #default="{ row }">
               {{ formatStatistic(row[column.key], column.key) }}
@@ -246,10 +267,19 @@ import {
   recordRecentAssembly,
   removeRecentAssembly
 } from '@/services/assemblyPreferences.js';
+import {
+  loadColumnWidths,
+  resetColumnWidths,
+  resizeColumn,
+  saveColumnWidths
+} from '@/services/tableColumnWidths.mjs';
 
 const RECENT_PANEL_LIMIT = 5;
 const DEFAULT_PAGE_SIZE = 20;
+const ASSEMBLY_COLUMNS_STORAGE_KEY = 'genedata:assembly-columns:v2';
+const ASSEMBLY_COLUMN_WIDTHS_STORAGE_KEY = 'genedata:assembly-column-widths:v1';
 const emptyMark = '—';
+const requiredColumnKeys = ['accession', 'assembly'];
 const statisticColumnOptions = [
   { key: 'genome_size', labelKey: 'page.assembly.columns.genomeSize', minWidth: 140 },
   { key: 'chromosome_count', labelKey: 'page.assembly.columns.chromosomeCount', minWidth: 150 },
@@ -257,6 +287,40 @@ const statisticColumnOptions = [
   { key: 'n50', labelKey: 'page.assembly.columns.n50', minWidth: 125 },
   { key: 'gc_content', labelKey: 'page.assembly.columns.gcContent', minWidth: 125 }
 ];
+const columnOptions = [
+  { key: 'accession', labelKey: 'page.assembly.columns.accession', required: true },
+  { key: 'assembly', labelKey: 'page.assembly.columns.assembly', required: true },
+  { key: 'species', labelKey: 'page.assembly.columns.species' },
+  { key: 'assembly_level', labelKey: 'page.assembly.columns.level' },
+  { key: 'assembly_accession', labelKey: 'page.assembly.columns.assemblyAccession' },
+  ...statisticColumnOptions
+];
+const defaultColumnWidths = {
+  accession: 130,
+  assembly: 220,
+  species: 180,
+  assembly_level: 130,
+  assembly_accession: 190,
+  genome_size: 150,
+  chromosome_count: 165,
+  contig_count: 135,
+  n50: 135,
+  gc_content: 135
+};
+const validColumnKeys = new Set(columnOptions.map(column => column.key));
+
+const loadSelectedColumns = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(ASSEMBLY_COLUMNS_STORAGE_KEY));
+    if (!Array.isArray(stored)) return [...requiredColumnKeys, 'species', 'assembly_level'];
+    return [...new Set([
+      ...requiredColumnKeys,
+      ...stored.filter(key => validColumnKeys.has(key) && !requiredColumnKeys.includes(key))
+    ])];
+  } catch (_) {
+    return [...requiredColumnKeys, 'species', 'assembly_level'];
+  }
+};
 
 const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
 
@@ -287,7 +351,11 @@ export default {
     const pageSize = ref(DEFAULT_PAGE_SIZE);
     const recentAssemblies = ref([]);
     const recentDrawerOpen = ref(false);
-    const selectedStatisticColumns = ref([]);
+    const selectedColumns = ref(loadSelectedColumns());
+    const columnWidths = ref(loadColumnWidths(
+      ASSEMBLY_COLUMN_WIDTHS_STORAGE_KEY,
+      defaultColumnWidths
+    ));
     let requestToken = 0;
     let drawerTrigger = null;
 
@@ -302,8 +370,20 @@ export default {
     ));
     const recentPanelItems = computed(() => recentAssemblies.value.slice(0, RECENT_PANEL_LIMIT));
     const visibleStatisticColumns = computed(() => statisticColumnOptions.filter(
-      (column) => selectedStatisticColumns.value.includes(column.key)
+      (column) => selectedColumns.value.includes(column.key)
     ));
+
+    const columnWidth = key => columnWidths.value[key] || defaultColumnWidths[key] || 120;
+    const handleHeaderDragEnd = (newWidth, oldWidth, column) => {
+      const key = column?.property;
+      if (!key || !(key in defaultColumnWidths)) return;
+      columnWidths.value = resizeColumn(columnWidths.value, key, newWidth, defaultColumnWidths);
+      saveColumnWidths(ASSEMBLY_COLUMN_WIDTHS_STORAGE_KEY, columnWidths.value);
+    };
+    const restoreColumnWidths = () => {
+      columnWidths.value = resetColumnWidths(defaultColumnWidths);
+      saveColumnWidths(ASSEMBLY_COLUMN_WIDTHS_STORAGE_KEY, columnWidths.value);
+    };
 
     const rangeStart = computed(() => (total.value ? ((currentPage.value - 1) * pageSize.value) + 1 : 0));
     const rangeEnd = computed(() => Math.min(currentPage.value * pageSize.value, total.value));
@@ -492,6 +572,18 @@ export default {
       { immediate: true }
     );
 
+    watch(selectedColumns, (value) => {
+      const normalized = [...new Set([
+        ...requiredColumnKeys,
+        ...value.filter(key => validColumnKeys.has(key) && !requiredColumnKeys.includes(key))
+      ])];
+      if (normalized.length !== value.length || normalized.some((key, index) => key !== value[index])) {
+        selectedColumns.value = normalized;
+        return;
+      }
+      try { localStorage.setItem(ASSEMBLY_COLUMNS_STORAGE_KEY, JSON.stringify(normalized)); } catch (_) { /* optional */ }
+    }, { deep: true });
+
     onMounted(loadRecent);
 
     return {
@@ -499,6 +591,8 @@ export default {
       changePage,
       clearRecent,
       clearSearch,
+      columnOptions,
+      columnWidth,
       currentPage,
       displayValue,
       emptyMark,
@@ -507,6 +601,7 @@ export default {
       fetchAssemblies,
       formatStatistic,
       formatLevel,
+      handleHeaderDragEnd,
       loading,
       openAccession,
       openAssembly,
@@ -519,11 +614,11 @@ export default {
       recentPanelItems,
       relativeTime,
       removeRecent,
+      restoreColumnWidths,
       restoreDrawerFocus,
       routeSearch,
       searchInput,
-      selectedStatisticColumns,
-      statisticColumnOptions,
+      selectedColumns,
       submitSearch,
       total,
       visibleStatisticColumns
@@ -703,6 +798,11 @@ export default {
 
 .column-picker :deep(.el-checkbox) {
   margin-right: 0;
+}
+
+.reset-widths-button {
+  width: 100%;
+  margin-top: 10px;
 }
 
 .total,

@@ -40,8 +40,10 @@ class AccessionAdmin(admin.ModelAdmin):
         'seq_data',
         'longitude',
         'latitude',
+        'view_count',
+        'last_viewed_at',
         'updated_at',
     )
     search_fields = ('accession', 'sub_population', 'seq_data')
     list_filter = ('sub_population',)
-    readonly_fields = ('created_at', 'updated_at')
+    readonly_fields = ('view_count', 'last_viewed_at', 'created_at', 'updated_at')

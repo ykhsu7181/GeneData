@@ -1,8 +1,7 @@
 from files.parsers.fasta import resolve_sequence_alias
 
 
-def parse_lines(lines, chromosome=None, chromosome_aliases=None):
-    results = []
+def iter_lines(lines, chromosome=None, chromosome_aliases=None):
     resolved_chromosome = resolve_sequence_alias(chromosome, chromosome_aliases)
     for index, line in enumerate(lines, 1):
         line = line.strip()
@@ -49,8 +48,7 @@ def parse_lines(lines, chromosome=None, chromosome_aliases=None):
 
         if resolved_chromosome and seqid != resolved_chromosome:
             continue
-        results.append(
-            {
+        yield {
                 "id": f"{seqid}:{start}-{end}:{index}",
                 "seqid": seqid,
                 "start": start,
@@ -62,8 +60,10 @@ def parse_lines(lines, chromosome=None, chromosome_aliases=None):
                 "phase": None,
                 "attributes": attributes,
             }
-        )
-    return results
+
+
+def parse_lines(lines, chromosome=None, chromosome_aliases=None):
+    return list(iter_lines(lines, chromosome, chromosome_aliases))
 
 
 def _is_integer(value):

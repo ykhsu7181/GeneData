@@ -15,3 +15,7 @@ test('empty dashboard payload exposes nullable portal metrics', () => {
 test('dashboard service no longer exposes legacy dashboard fields', () => {
   assert.doesNotMatch(source, /species_cards|resource_summary|geo_distribution/)
 })
+
+test('homepage keeps the established response key for popular accession compatibility', () => {
+  assert.match(source, /featured_accessions: \[\]/)
+})

@@ -52,6 +52,7 @@ test('Annotation provides an Accession to Assembly to Annotation cascade', () =>
   assert.match(source, /:annotation-id="selectedAnnotationId"/)
   assert.match(searchPanelSource, /v-for="item in assemblyOptions"/)
   assert.match(searchPanelSource, /v-for="item in annotationOptions"/)
+  assert.match(searchPanelSource, /:label="\$t\('page\.annotation\.allChromosomes'\)" value=""/)
   assert.match(source, /const handleAssemblyChange = async/)
   assert.match(source, /const handleAnnotationChange = async/)
   assert.match(source, /assemblyOptions\.value\.find/)
@@ -73,4 +74,8 @@ test('Annotation loads full filter metadata separately from filtered rows', () =
   assert.doesNotMatch(source, /chromosomeOptions\.value = data\.statistics\.chromosomes/)
   assert.match(summaryBarSource, /summary\?\.chromosome_count/)
   assert.match(summaryBarSource, /summary\?\.feature_type_count/)
+})
+
+test('Annotation chromosome All option omits the chromosome request filter', () => {
+  assert.match(source, /if \(chromosome\) \{\s*params\.chromosome = chromosome;/)
 })

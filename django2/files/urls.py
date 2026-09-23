@@ -45,6 +45,8 @@ from .accession_api_views import (
     accession_assemblies,
     accession_datasets,
     accession_files,
+    popular_accessions,
+    record_accession_view,
     accession_samples,
     accession_summary,
 )
@@ -55,6 +57,8 @@ from .assembly_api_views import assembly_list, assembly_summary
 urlpatterns = [
     path('assemblies/', assembly_list, name='assembly-list'),
     path('assemblies/<int:assembly_id>/summary/', assembly_summary, name='assembly-summary'),
+    path('accessions/popular/', popular_accessions, name='popular-accessions'),
+    path('accessions/<str:accession>/views/', record_accession_view, name='record-accession-view'),
     path('accessions/<str:accession>/', accession_detail, name='accession-detail'),
     path('accessions/<str:accession>/summary/', accession_summary, name='accession-summary'),
     path('accessions/<str:accession>/datasets/', accession_datasets, name='accession-datasets'),

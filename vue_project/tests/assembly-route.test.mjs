@@ -46,7 +46,7 @@ test('Assembly recently viewed is service-backed and exposes a clearable drawer'
   assert.match(recentDrawerSource, /page\.assembly\.removeRecent/)
 })
 
-test('Assembly list keeps five default columns and exposes optional statistics through More', () => {
+test('Assembly list fixes Accession and Assembly while exposing selectable metadata through More', () => {
   assert.match(portalSource, /import \{ ArrowDown, Clock, Collection, Search \} from '@element-plus\/icons-vue'/)
   assert.match(portalSource, /<Collection \/>/)
   assert.match(portalSource, /<Clock \/>/)
@@ -57,7 +57,10 @@ test('Assembly list keeps five default columns and exposes optional statistics t
   assert.match(portalSource, /prop="assembly_accession"/)
   assert.match(portalSource, /prop="assembly_level"/)
   assert.match(portalSource, /prop="species"/)
-  assert.match(portalSource, /const selectedStatisticColumns = ref\(\[\]\)/)
+  assert.match(portalSource, /requiredColumnKeys = \['accession', 'assembly'\]/)
+  assert.match(portalSource, /return \[\.\.\.requiredColumnKeys, 'species', 'assembly_level'\]/)
+  assert.match(portalSource, /:disabled="column\.required"/)
+  assert.match(portalSource, /@header-dragend="handleHeaderDragEnd"/)
   assert.match(portalSource, /v-for="column in visibleStatisticColumns"/)
   for (const key of ['genome_size', 'chromosome_count', 'contig_count', 'n50', 'gc_content']) {
     assert.match(portalSource, new RegExp(`key: '${key}'`))

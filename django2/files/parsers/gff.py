@@ -16,8 +16,7 @@ def parse_attributes(raw_attributes):
     return attributes
 
 
-def parse_lines(lines, chromosome=None, feature_type=None, chromosome_aliases=None):
-    results = []
+def iter_lines(lines, chromosome=None, feature_type=None, chromosome_aliases=None):
     resolved_chromosome = resolve_sequence_alias(chromosome, chromosome_aliases)
     for line_number, line in enumerate(lines, 1):
         line = line.strip()
@@ -35,8 +34,7 @@ def parse_lines(lines, chromosome=None, feature_type=None, chromosome_aliases=No
         start = int(parts[3])
         end = int(parts[4])
         attributes = parse_attributes(parts[8])
-        results.append(
-            {
+        yield {
                 "seqid": seqid,
                 "source": parts[1],
                 "feature": feature,
@@ -51,5 +49,7 @@ def parse_lines(lines, chromosome=None, feature_type=None, chromosome_aliases=No
                 "sequence_ontology": feature,
                 "name": attributes.get("Name") or attributes.get("ID"),
             }
-        )
-    return results
+
+
+def parse_lines(lines, chromosome=None, feature_type=None, chromosome_aliases=None):
+    return list(iter_lines(lines, chromosome, feature_type, chromosome_aliases))

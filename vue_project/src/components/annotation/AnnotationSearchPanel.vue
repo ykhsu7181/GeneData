@@ -77,6 +77,7 @@
             clearable
             @change="$emit('chromosome-change', $event)"
           >
+            <el-option :label="$t('page.annotation.allChromosomes')" value="" />
             <el-option
               v-for="item in chromosomeOptions"
               :key="item"

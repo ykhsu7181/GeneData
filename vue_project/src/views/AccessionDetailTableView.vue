@@ -129,6 +129,7 @@ import {
   recordRecentAccession,
   toggleFavoriteAccession
 } from '@/services/accessionPreferences.js';
+import { recordAccessionView } from '@/services/accessionViews.js';
 import { normalizeAccessionMapReturnPath } from '@/services/accessionMapRoute.mjs';
 
 const tabs = [
@@ -213,6 +214,9 @@ export default {
         summaryData.value = response.data.data || {};
         const loadedAccession = summaryData.value.accession?.accession || requestedAccession;
         favorite.value = isFavoriteAccession(loadedAccession);
+        recordAccessionView(loadedAccession).catch(() => {
+          // Popularity analytics must never make a valid detail page fail.
+        });
         if (recordedRouteAccession.value !== requestedAccession) {
           const result = recordRecentAccession(loadedAccession);
           if (result.persisted) recordedRouteAccession.value = requestedAccession;

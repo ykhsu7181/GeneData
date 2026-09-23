@@ -15,6 +15,8 @@ COMMAND_LIFECYCLE = {
     "backfill_assembly_from_genome_relations": LEGACY_REPAIR,
     "backfill_genomefile_to_datafile": LEGACY_REPAIR,
     "bind_manual_files": ACTIVE,
+    "build_annotation_feature_indexes": ACTIVE,
+    "build_fasta_indexes": ACTIVE,
     "cleanup_data": RETIRE_PENDING_USAGE_CONFIRMATION,
     "cleanup_placeholder_hierarchy": LEGACY_REPAIR,
     "compare_accession_files": RETAIN_AUDIT,

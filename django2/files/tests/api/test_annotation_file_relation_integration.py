@@ -6,6 +6,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
+from files.services.annotation_feature_index_service import build_annotation_feature_index
 
 
 class AnnotationFileRelationIntegrationTestCase(TestCase):
@@ -48,6 +49,7 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
             related_id=str(self.annotation.id),
             file_role="annotation",
         )
+        build_annotation_feature_index(self.annotation)
         GenomeFile.objects.create(
             name="annotation.old.IR64.gff3",
             organism="IR64",
@@ -103,6 +105,7 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
             related_id=str(self.annotation.id),
             file_role="annotation",
         )
+        build_annotation_feature_index(self.annotation)
 
         options_response = self.client.get(
             f"/gd/api/files/query/annotation-options/?annotation_id={self.annotation.id}"
@@ -142,6 +145,37 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertIn("未找到", response.json()["error"])
+
+    def test_annotation_endpoint_requires_a_fresh_offline_index(self):
+        file_path = self.create_annotation_file("annotation.unindexed.IR64.gff3")
+        data_file = DataFile.objects.create(
+            file_code="FILE000023",
+            file_name="annotation.unindexed.IR64.gff3",
+            file_path=file_path,
+            file_size=os.path.getsize(file_path),
+        )
+        FileRelation.objects.create(
+            file=data_file,
+            related_type="annotation",
+            related_id=str(self.annotation.id),
+            file_role="annotation",
+        )
+
+        response = self.client.get(
+            f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
+        )
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["code"], "annotation_index_unavailable")
+        self.assertEqual(response.json()["index_status"], "missing")
+
+        build_annotation_feature_index(self.annotation)
+        with open(file_path, "a", encoding="utf-8") as handle:
+            handle.write("chr2\tsource\tgene\t20\t30\t.\t+\t.\tID=gene2\n")
+        stale_response = self.client.get(
+            f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
+        )
+        self.assertEqual(stale_response.status_code, 503)
+        self.assertEqual(stale_response.json()["index_status"], "stale")
 
     def test_annotation_endpoint_does_not_fallback_to_genomefile(self):
         legacy_path = self.create_annotation_file("annotation.legacy.IR64.gff3")

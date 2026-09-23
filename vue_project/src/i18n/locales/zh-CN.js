@@ -113,13 +113,16 @@ const zhCN = {
       portalSearchPlaceholder: '搜索 Accession / 物种 / 数据资源',
       portalSearchLabel: '搜索 Accession、物种或数据资源',
       searchExamplesLabel: '搜索示例',
-      featuredAccessions: '推荐 Accession',
-      featuredLoading: '正在加载推荐 Accession',
-      featuredEmpty: '暂无推荐 Accession。',
+      featuredAccessions: '热门品种',
+      featuredLoading: '正在加载热门品种',
+      featuredEmpty: '暂无热门品种。',
       species: '物种',
       commonName: '常用名',
+      country: '国家',
       assembly: '组装',
       annotation: '注释',
+      annotationDatasets: '注释',
+      popularScroll: '热门品种列表，可上下滑动查看更多',
       examples: {
         accession: 'IR64',
         species: 'Oryza sativa',
@@ -151,6 +154,7 @@ const zhCN = {
       totalAssemblies: '总计：{count}',
       moreColumns: 'More',
       chooseColumns: '选择 Assembly 列表统计字段',
+      resetColumnWidths: '恢复默认列宽',
       recent: '最近浏览',
       viewAllRecent: '查看全部最近浏览的 Assembly',
       noRecent: '暂无最近浏览的 Assembly',
@@ -283,7 +287,14 @@ const zhCN = {
       topRegions: '主要分布地区',
       noClusterAccessions: '该聚合区域暂无品种',
       moreItems: '更多',
-      accessions: '个品种'
+      accessions: '个品种',
+      drawerColumns: {
+        species: '物种',
+        longitude: '经度',
+        latitude: '纬度',
+        country: '国家',
+        region: '地区'
+      }
     },
     accessionDetail: {
       breadcrumb: '首页 / 品种信息 / {accession}',
@@ -455,6 +466,8 @@ const zhCN = {
       columnSettings: '列设置',
       moreColumns: '更多',
       chooseColumns: '选择数据列表显示字段',
+      resetColumnWidths: '恢复默认列宽',
+      resizeColumn: '调整{column}列宽',
       detail: {
         title: '数据文件详情',
         basic: '基本信息',

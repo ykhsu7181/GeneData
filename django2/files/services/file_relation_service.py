@@ -26,7 +26,13 @@ def get_files_for_assembly(assembly_id, file_role=None):
 
 
 def get_files_for_annotation(annotation_id, file_role=None):
-    return get_files_for_object("annotation", annotation_id, file_role=file_role)
+    return _get_relation_files(
+        "annotation",
+        annotation_id,
+        file_role=file_role,
+        primary_first=True,
+        current_only=True,
+    )
 
 
 def get_primary_file(related_type, related_id, file_role=None):
@@ -97,13 +103,17 @@ def _is_compatible_genome_fasta(file_name):
     return normalized.startswith("genome.") and normalized.endswith(".fasta")
 
 
-def _get_relation_files(related_type, related_id, file_role=None, primary_first=False):
+def _get_relation_files(
+    related_type, related_id, file_role=None, primary_first=False, current_only=False
+):
     queryset = FileRelation.objects.select_related("file").filter(
         related_type=related_type,
         related_id=str(related_id),
     )
     if file_role:
         queryset = queryset.filter(file_role=file_role)
+    if current_only:
+        queryset = queryset.filter(file__is_current=True)
 
     if primary_first:
         queryset = queryset.order_by("-is_primary", "id")

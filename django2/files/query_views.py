@@ -15,12 +15,18 @@ from files.models import Accession, FileRelation
 from files.parsers.archive import parse_feature_file as _parse_feature_file
 from files.parsers.codon import load_payload as _load_codon_payload
 from files.parsers.fasta import (
-    FastaScanLimitExceeded,
     build_sequence_aliases as _build_fasta_sequence_aliases,
     list_sequence_ids,
     sequence_length,
 )
-from files.services.fasta_index_service import find_current_fasta_index
+from files.services.fasta_index_service import FastaIndexUnavailable, find_current_fasta_index
+from files.services.annotation_feature_index_service import (
+    AnnotationIndexUnavailable,
+    annotation_cache_key,
+    cached_value,
+    get_ready_annotation_index,
+    serialize_feature,
+)
 from files.services.accession_context import (
     AmbiguousContextError,
     classify_file_scope,
@@ -64,11 +70,11 @@ def _fasta_read_options(genome_file, accession_obj, assembly):
             related_id=related_id,
         )
     if not index_path:
-        logger.warning("No usable related FASTA index; using bounded scan: %s", genome_file.file_path)
+        raise FastaIndexUnavailable(
+            f"No fresh .fai index is registered for {genome_file.name}"
+        )
     return {
         "index_path": index_path,
-        "max_bytes": getattr(settings, "FASTA_FALLBACK_MAX_BYTES", 512 * 1024 * 1024),
-        "timeout_seconds": getattr(settings, "FASTA_FALLBACK_TIMEOUT_SECONDS", 5),
     }
 
 
@@ -90,9 +96,23 @@ def reject_ambiguous_context(view_func):
                 },
                 status=status.HTTP_409_CONFLICT,
             )
-        except FastaScanLimitExceeded as exc:
+        except FastaIndexUnavailable as exc:
             return Response(
-                {"error": str(exc), "code": "fasta_scan_limit_exceeded"},
+                {
+                    "error": str(exc),
+                    "code": "fasta_index_unavailable",
+                    "rebuild_command": "python manage.py build_fasta_indexes",
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except AnnotationIndexUnavailable as exc:
+            return Response(
+                {
+                    "error": str(exc),
+                    "code": "annotation_index_unavailable",
+                    "index_status": exc.index_status,
+                    "rebuild_command": "python manage.py build_annotation_feature_indexes",
+                },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
@@ -525,29 +545,23 @@ def query_annotation_options(request):
     if not service_file:
         return Response({"error": f"未找到 {organism} 的注释文件"}, status=status.HTTP_404_NOT_FOUND)
 
-    chromosome_aliases = _build_context_chromosome_aliases(
-        accession_obj=accession_obj,
-        assembly=assembly,
-        organism=organism,
-    )
-    rows = _parse_feature_file(
-        service_file["file_path"],
-        chromosome_aliases=chromosome_aliases,
-    )
-    chromosomes = sorted({row["seqid"] for row in rows})
-    feature_types = sorted({row["feature"] for row in rows if row.get("feature")})
-    return Response(
-        {
+    feature_index = get_ready_annotation_index(annotation, service_file)
+    cache_key = annotation_cache_key("options", feature_index)
+    payload = cached_value(
+        cache_key,
+        lambda: {
             "annotation_id": annotation.id if annotation else None,
-            "chromosomes": chromosomes,
-            "feature_types": feature_types,
+            "chromosomes": feature_index.chromosomes,
+            "feature_types": feature_index.feature_types,
             "summary": {
-                "total_features": len(rows),
-                "chromosome_count": len(chromosomes),
-                "feature_type_count": len(feature_types),
+                "total_features": feature_index.feature_count,
+                "chromosome_count": len(feature_index.chromosomes),
+                "feature_type_count": len(feature_index.feature_types),
             },
-        }
+        },
+        getattr(settings, "ANNOTATION_OPTIONS_CACHE_SECONDS", 3600),
     )
+    return Response(payload)
 
 
 @api_view(["GET"])
@@ -565,6 +579,7 @@ def query_annotation_data(request):
         return Response({"error": "缺少必要的参数: organism"}, status=status.HTTP_400_BAD_REQUEST)
 
     page, page_size = _get_page_params(params, default_page_size=50)
+    page_size = min(page_size, getattr(settings, "ANNOTATION_MAX_PAGE_SIZE", 10000))
     chromosome = params.get("chromosome")
     feature_type = params.get("feature_type", "all")
 
@@ -572,39 +587,67 @@ def query_annotation_data(request):
     if not service_file:
         return Response({"error": f"未找到 {organism} 的注释文件"}, status=status.HTTP_404_NOT_FOUND)
 
-    chromosome_aliases = _build_context_chromosome_aliases(
-        accession_obj=accession_obj,
-        assembly=assembly,
-        organism=organism,
+    feature_index = get_ready_annotation_index(annotation, service_file)
+    cache_key = annotation_cache_key(
+        "data", feature_index, chromosome, feature_type, page, page_size
     )
-    filtered_rows = _parse_feature_file(
-        service_file["file_path"],
-        chromosome=chromosome,
-        feature_type=None if feature_type == "all" else feature_type,
-        chromosome_aliases=chromosome_aliases,
-    )
-    chromosomes = sorted({row["seqid"] for row in filtered_rows})
-    feature_types = sorted({row["feature"] for row in filtered_rows if row.get("feature")})
-    filtered_statistics = {
-        "chromosomes": chromosomes,
-        "feature_types": feature_types,
-        "total_features": len(filtered_rows),
-    }
-    return Response(
-        {
-            "results": filtered_rows[(page - 1) * page_size: page * page_size],
-            "count": len(filtered_rows),
-            "filtered_count": len(filtered_rows),
+
+    def build_payload():
+        queryset = feature_index.features.all()
+        if chromosome:
+            queryset = queryset.filter(seqid=chromosome)
+        if feature_type and feature_type != "all":
+            queryset = queryset.filter(feature=feature_type)
+        count = queryset.count()
+        if chromosome:
+            chromosomes = [chromosome] if count else []
+        else:
+            chromosomes = (
+                feature_index.chromosomes
+                if feature_type == "all"
+                else sorted(queryset.order_by().values_list("seqid", flat=True).distinct())
+            )
+        if feature_type and feature_type != "all":
+            feature_types = [feature_type] if count else []
+        else:
+            feature_types = (
+                feature_index.feature_types
+                if not chromosome
+                else sorted(
+                    queryset.exclude(feature__isnull=True)
+                    .exclude(feature="")
+                    .order_by()
+                    .values_list("feature", flat=True)
+                    .distinct()
+                )
+            )
+        start = (page - 1) * page_size
+        results = [
+            serialize_feature(row)
+            for row in queryset.order_by("id")[start:start + page_size]
+        ]
+        filtered_statistics = {
+            "chromosomes": chromosomes,
+            "feature_types": feature_types,
+            "total_features": count,
+        }
+        return {
+            "results": results,
+            "count": count,
+            "filtered_count": count,
             "page": page,
             "page_size": page_size,
-            "total_pages": (len(filtered_rows) + page_size - 1) // page_size,
+            "total_pages": (count + page_size - 1) // page_size,
             "annotation_file": _adapt_annotation_file_service_result(service_file),
             "filtered_statistics": filtered_statistics,
-            # Compatibility field for existing callers. New clients should use
-            # filtered_statistics and query annotation-options for full totals.
             "statistics": filtered_statistics,
         }
-    )
+
+    return Response(cached_value(
+        cache_key,
+        build_payload,
+        getattr(settings, "ANNOTATION_DATA_CACHE_SECONDS", 300),
+    ))
 
 
 @api_view(["GET"])

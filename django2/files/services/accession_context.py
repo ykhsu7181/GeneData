@@ -1,7 +1,10 @@
 from types import SimpleNamespace
 
 from files.models import Accession, Annotation, Assembly
-from files.services.file_relation_service import get_primary_file
+from files.services.file_relation_service import (
+    get_primary_file,
+    get_primary_genome_file_for_assembly,
+)
 
 
 DEFAULT_ASSEMBLY_NAME = 'default'
@@ -172,7 +175,7 @@ def get_context_genome_file(*, assembly_id=None, accession=None, organism=None):
 
     if assembly:
         genome_file = _service_file_to_context_file(
-            get_primary_file('assembly', assembly.id, file_role='genome')
+            get_primary_genome_file_for_assembly(assembly.id)
         )
         return accession_obj, assembly, genome_file
 

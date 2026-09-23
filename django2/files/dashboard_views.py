@@ -3,10 +3,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from files.services.dashboard_service import build_dashboard_payload
+from files.services.dashboard_service import DASHBOARD_CACHE_KEY, build_dashboard_payload
 
 
-DASHBOARD_CACHE_KEY = "warehouse_dashboard_payload_v2"
 DASHBOARD_CACHE_TIMEOUT = 60 * 10
 
 

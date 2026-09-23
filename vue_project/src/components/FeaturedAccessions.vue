@@ -17,35 +17,41 @@
     <div v-else-if="!items.length" class="featured-state">{{ $t('page.home.featuredEmpty') }}</div>
 
     <div v-else class="table-wrap">
-      <table>
+      <div class="featured-scroll" tabindex="0" :aria-label="$t('page.home.popularScroll')">
+        <table>
         <thead>
           <tr>
             <th scope="col">Accession</th>
             <th scope="col">{{ $t('page.home.species') }}</th>
-            <th scope="col">{{ $t('page.home.commonName') }}</th>
+            <th scope="col">{{ $t('page.home.country') }}</th>
             <th scope="col">{{ $t('page.home.assembly') }}</th>
-            <th scope="col">{{ $t('page.home.annotation') }}</th>
+            <th scope="col">{{ $t('page.home.annotationDatasets') }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in items" :key="item.accession">
+          <tr v-for="item in limitedItems" :key="item.accession">
             <td data-label="Accession">
               <button type="button" class="accession-link" @click="$emit('select', item)">
                 {{ displayValue(item.accession) }}
               </button>
             </td>
             <td :data-label="$t('page.home.species')"><em>{{ displayValue(item.species_scientific_name) }}</em></td>
-            <td :data-label="$t('page.home.commonName')">{{ displayValue(item.species_common_name) }}</td>
+            <td :data-label="$t('page.home.country')">{{ displayValue(item.country) }}</td>
             <td :data-label="$t('page.home.assembly')">{{ displayValue(item.assembly) }}</td>
-            <td :data-label="$t('page.home.annotation')">{{ displayValue(item.annotation) }}</td>
+            <td :data-label="$t('page.home.annotationDatasets')">{{ annotationDatasets(item) }}</td>
           </tr>
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   </section>
 </template>
 
 <script>
+import { computed } from 'vue'
+
+const MAX_ITEMS = 10
+
 export default {
   name: 'FeaturedAccessions',
   props: {
@@ -54,12 +60,18 @@ export default {
     error: { type: String, default: '' }
   },
   emits: ['select', 'view-all', 'retry'],
-  setup() {
+  setup(props) {
+    const limitedItems = computed(() => props.items.slice(0, MAX_ITEMS))
     const displayValue = (value) => {
-      if (value === null || value === undefined || String(value).trim() === '') return '—'
+      if (value === null || value === undefined || String(value).trim() === '') return ''
       return value
     }
-    return { displayValue }
+    const annotationDatasets = item => (
+      Array.isArray(item?.annotation_datasets)
+        ? item.annotation_datasets.filter(Boolean).join(', ')
+        : displayValue(item?.annotation)
+    )
+    return { annotationDatasets, displayValue, limitedItems }
   }
 }
 </script>
@@ -108,8 +120,17 @@ export default {
 .accession-link:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
 
 .table-wrap { overflow-x: auto; }
+.featured-scroll {
+  max-height: 234px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.featured-scroll::-webkit-scrollbar { width: 0; height: 0; }
+.featured-scroll:focus-visible { outline: 2px solid #0e70d9; outline-offset: 2px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-thead { background: #edf4fa; }
+thead { position: sticky; top: 0; z-index: 1; background: #edf4fa; }
 th, td { padding: 11px 13px; border-bottom: 1px solid #e0e9f3; text-align: left; white-space: nowrap; }
 th { color: #375170; font-weight: 700; }
 td { color: #304661; }
@@ -138,6 +159,7 @@ tbody tr:hover { background: #f8fbff; }
 @media (max-width: 680px) {
   .featured-card { width: calc(100% - 24px); padding: 18px 14px; }
   .table-wrap { overflow: visible; }
+  .featured-scroll { max-height: 570px; overflow-y: auto; }
   table, tbody, tr, td { display: block; width: 100%; }
   thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
   tbody { display: grid; gap: 12px; }
