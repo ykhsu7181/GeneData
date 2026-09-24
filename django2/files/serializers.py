@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from .models import Accession, Annotation, Assembly, FileCategory, FileType, GenomeFile, Organism
 from .services.accession_context import classify_file_scope
+from .services.assembly_visibility import filter_visible_assemblies
 
 
 class FileTypeSerializer(serializers.ModelSerializer):
@@ -237,4 +238,5 @@ class AccessionDetailSerializer(serializers.ModelSerializer):
         assemblies = getattr(obj, 'prefetched_assemblies', None)
         if assemblies is None:
             assemblies = obj.assemblies.all().order_by('-is_default', 'name', 'id')
+        assemblies = filter_visible_assemblies(assemblies)
         return AssemblyDetailSerializer(assemblies, many=True).data

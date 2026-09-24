@@ -3,21 +3,25 @@
 from urllib.parse import quote
 
 from files.models import Assembly
+from files.services.assembly_visibility import visible_assembly_queryset
 from files.services.file_relation_service import get_primary_genome_file_for_assembly
 from files.services.resource_serializers import serialize_annotation, serialize_assembly
 
 
 def get_assembly_detail(assembly_id):
     assembly = (
-        Assembly.objects
-        .select_related("accession", "accession__species")
+        visible_assembly_queryset(
+            Assembly.objects.select_related("accession", "accession__species")
+        )
         .get(id=assembly_id)
     )
     accession = assembly.accession
     species = accession.species
 
     annotations = assembly.annotations.all().order_by("-is_default", "name", "id")
-    related_assemblies = accession.assemblies.all().order_by("-is_default", "name", "id")
+    related_assemblies = visible_assembly_queryset(
+        accession.assemblies.all()
+    ).order_by("-is_default", "name", "id")
     primary_genome_file = get_primary_genome_file_for_assembly(assembly.id)
 
     assembly_payload = serialize_assembly(assembly, include_detail=True)

@@ -1,4 +1,5 @@
 from files.models import Accession, Annotation, Assembly, Species
+from files.services.assembly_visibility import filter_visible_assemblies, visible_assembly_queryset
 
 
 DASHBOARD_CACHE_KEY = "warehouse_dashboard_payload_v3"
@@ -8,7 +9,7 @@ POPULAR_ACCESSIONS_LIMIT = 10
 def build_dashboard_payload():
     return {
         "summary": {
-            "assembly_count": Assembly.objects.count(),
+            "assembly_count": visible_assembly_queryset().count(),
             "species_count": Species.objects.count(),
             "annotation_count": Annotation.objects.count(),
             "accession_count": Accession.objects.count(),
@@ -59,7 +60,7 @@ def build_popular_accessions(limit=POPULAR_ACCESSIONS_LIMIT):
 
     for accession in accessions:
         assemblies = sorted(
-            accession.assemblies.all(),
+            filter_visible_assemblies(accession.assemblies.all()),
             key=lambda item: (not item.is_default, item.id),
         )
         assembly = assemblies[0] if assemblies else None

@@ -72,6 +72,26 @@ class DashboardApiTestCase(TestCase):
         self.assertEqual(featured[1]["annotation_datasets"], ["v1.0"])
         self.assertEqual(featured[1]["annotation_dataset_count"], 1)
 
+    def test_dashboard_hides_replaced_default_placeholder(self):
+        self.rice_assembly.assembly_code = "ASM_IR64"
+        self.rice_assembly.save(update_fields=["assembly_code"])
+        Assembly.objects.create(
+            accession=self.rice,
+            name="default",
+            display_name="migration placeholder",
+            assembly_code=None,
+            is_default=False,
+        )
+        self.rice.view_count = 1
+        self.rice.save(update_fields=["view_count"])
+
+        response = self.client.get("/gd/api/warehouse/dashboard/")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["summary"]["assembly_count"], 1)
+        self.assertEqual(payload["featured_accessions"][0]["assembly"], "IRGSP-1.0")
+
     def test_featured_accessions_fall_back_to_first_related_records(self):
         self.maize.view_count = 1
         self.maize.save(update_fields=["view_count"])

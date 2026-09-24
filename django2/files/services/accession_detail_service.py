@@ -5,6 +5,7 @@ from collections import defaultdict
 from django.db.models import Q
 
 from files.models import Accession, DataFile, DatasetAccession, FileRelation
+from files.services.assembly_visibility import filter_visible_assemblies
 from files.services.resource_serializers import serialize_annotation, serialize_assembly
 
 
@@ -105,13 +106,18 @@ def _file_rows(accession):
 def _assembly_rows(accession):
     return [
         serialize_assembly(assembly)
-        for assembly in accession.assemblies.all().order_by("-is_default", "name", "id")
+        for assembly in filter_visible_assemblies(
+            accession.assemblies.all().order_by("-is_default", "name", "id")
+        )
     ]
 
 
 def _annotation_rows(accession):
     rows = []
-    for assembly in accession.assemblies.all().order_by("-is_default", "name", "id"):
+    assemblies = filter_visible_assemblies(
+        accession.assemblies.all().order_by("-is_default", "name", "id")
+    )
+    for assembly in assemblies:
         for annotation in assembly.annotations.all().order_by("-is_default", "name", "id"):
             rows.append(serialize_annotation(annotation, assembly=assembly))
     return rows

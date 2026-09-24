@@ -35,6 +35,7 @@ from files.services.accession_context import (
     resolve_preferred_annotation,
     resolve_preferred_assembly,
 )
+from files.services.assembly_visibility import filter_visible_assemblies
 from files.services.file_relation_service import (
     get_files_for_accession,
     get_files_for_annotation,
@@ -370,7 +371,7 @@ def query_paginated_overview(request):
             if normalized_sub_population not in selected:
                 continue
 
-        assemblies = list(accession_obj.assemblies.all())
+        assemblies = filter_visible_assemblies(accession_obj.assemblies.all())
         default_assembly = resolve_preferred_assembly(accession_obj)
         default_annotation = resolve_preferred_annotation(default_assembly)
 

@@ -38,6 +38,7 @@ COMMAND_LIFECYCLE = {
     "import_raw_data_manifest": ACTIVE,
     "import_sample_manifest": ACTIVE,
     "link_genomefiles_to_accessions": LEGACY_REPAIR,
+    "migrate_placeholder_hierarchy": LEGACY_REPAIR,
     "reconcile_assembly_annotation_context": LEGACY_REPAIR,
     "refresh_dashboard_cache": ACTIVE,
     "quarantine_invalid_manual_files": LEGACY_REPAIR,

@@ -47,6 +47,7 @@ from .services.accession_context import (
     resolve_preferred_annotation,
     resolve_preferred_assembly,
 )
+from .services.assembly_visibility import filter_visible_assemblies
 from .services.file_relation_service import get_files_for_accession, get_files_for_annotation
 from .parsers.archive import safe_extract_zip
 
@@ -4167,7 +4168,7 @@ def accession_detail(request, accession):
                 'message': f'Accession "{accession}" 不存在'
             }, status=status.HTTP_404_NOT_FOUND)
 
-        assemblies = list(
+        assemblies = filter_visible_assemblies(
             accession_obj.assemblies.all().order_by('-is_default', 'name', 'id')
         )
         annotation_map = {}

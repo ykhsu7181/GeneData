@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from files.models import Assembly
 from files.serializers import AssemblyListSerializer
 from files.services.assembly_detail_service import get_assembly_detail
+from files.services.assembly_visibility import public_assembly_list_queryset
 from files.services.file_relation_service import GenomeFileSelectionError
 
 
@@ -38,7 +39,9 @@ def _search_term(request):
 
 
 def _assembly_queryset(keyword):
-    queryset = Assembly.objects.select_related("accession", "accession__species").all()
+    queryset = public_assembly_list_queryset(
+        Assembly.objects.select_related("accession", "accession__species").all()
+    )
     if not keyword:
         return queryset
 

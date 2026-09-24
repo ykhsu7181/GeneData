@@ -64,6 +64,13 @@ class AssemblyListApiTestCase(TestCase):
             species_code="OG_MANIFEST",
             assembly_level="Scaffold",
         )
+        self.ir64_placeholder = Assembly.objects.create(
+            accession=self.ir64,
+            name="default",
+            display_name="IR64 migration placeholder",
+            assembly_code=None,
+            is_default=False,
+        )
 
     def test_list_returns_lightweight_paginated_payload(self):
         response = self.client.get("/gd/api/files/assemblies/")
@@ -103,6 +110,32 @@ class AssemblyListApiTestCase(TestCase):
         self.assertEqual(ir64_row["contig_count"], 19)
         self.assertEqual(ir64_row["n50"], 27000000)
         self.assertEqual(float(ir64_row["gc_content"]), 43.5)
+        self.assertNotIn(
+            self.ir64_placeholder.id,
+            {row["id"] for row in payload["results"]},
+        )
+
+    def test_list_hides_a_sole_uncoded_placeholder_for_unmigrated_accession(self):
+        accession = Accession.objects.create(
+            accession="LEGACY-ONLY",
+            species=self.species,
+        )
+        placeholder = Assembly.objects.create(
+            accession=accession,
+            name="default",
+            assembly_code=None,
+            is_default=True,
+        )
+
+        response = self.client.get(
+            "/gd/api/files/assemblies/",
+            {"search": "LEGACY-ONLY"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["count"], 0)
+        self.assertEqual(payload["results"], [])
 
     def test_search_matches_accession_assembly_accession_and_species(self):
         by_accession = self.client.get("/gd/api/files/assemblies/", {"search": "IR64"}).json()
