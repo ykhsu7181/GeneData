@@ -2,10 +2,11 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .archive_views import ArchivedGenomeFileViewSet
 from .download_views import download_datafile
+from .datafile_api_views import datafile_detail
 from .views import (
     FileTypeViewSet, GenomeFileViewSet,
     OrganismViewSet, FileCategoryViewSet,
-    admin_login, admin_files_list, admin_delete_file,
+    admin_session, admin_login, admin_logout, admin_files_list, admin_delete_file,
     admin_batch_delete, admin_batch_download, admin_upload_file, admin_statistics,
     admin_rescan_files, admin_create_accession, admin_update_accession,
     admin_delete_accession, admin_data_management_list,
@@ -15,6 +16,7 @@ from .views import (
 )
 from .query_views import (
     query_annotation_data,
+    query_annotation_options,
     query_annotation_organisms,
     query_centromere,
     query_chromosome_length,
@@ -43,13 +45,20 @@ from .accession_api_views import (
     accession_assemblies,
     accession_datasets,
     accession_files,
+    popular_accessions,
+    record_accession_view,
     accession_samples,
     accession_summary,
 )
+from .assembly_api_views import assembly_list, assembly_summary
 
 
 # 先定义自定义路径，避免与router冲突
 urlpatterns = [
+    path('assemblies/', assembly_list, name='assembly-list'),
+    path('assemblies/<int:assembly_id>/summary/', assembly_summary, name='assembly-summary'),
+    path('accessions/popular/', popular_accessions, name='popular-accessions'),
+    path('accessions/<str:accession>/views/', record_accession_view, name='record-accession-view'),
     path('accessions/<str:accession>/', accession_detail, name='accession-detail'),
     path('accessions/<str:accession>/summary/', accession_summary, name='accession-summary'),
     path('accessions/<str:accession>/datasets/', accession_datasets, name='accession-datasets'),
@@ -58,6 +67,7 @@ urlpatterns = [
     path('accessions/<str:accession>/annotations/', accession_annotations, name='accession-annotations'),
     path('accessions/<str:accession>/files/', accession_files, name='accession-files'),
     path('data-files/<int:file_id>/download/', download_datafile, name='datafile-download'),
+    path('data-files/<int:file_id>/detail/', datafile_detail, name='datafile-detail'),
     path('query/organisms/', query_organisms, name='query-organisms'),
     path('query/annotation-organisms/', query_annotation_organisms, name='query-annotation-organisms'),
     path('query/sub-populations/', query_sub_populations, name='query-sub-populations'),
@@ -73,6 +83,7 @@ urlpatterns = [
     path('query/paginated-transcriptome-overview/', query_paginated_transcriptome_overview, name='query-paginated-transcriptome-overview'),
     path('query/download-transcriptome/', query_download_transcriptome, name='query-download-transcriptome'),
     path('query/annotation-data/', query_annotation_data, name='query-annotation-data'),
+    path('query/annotation-options/', query_annotation_options, name='query-annotation-options'),
     path('query/chromosomes/', query_chromosomes, name='query-chromosomes'),
     path('query/chromosome-length/', query_chromosome_length, name='query-chromosome-length'),
     path('query/tes/', query_tes, name='query-tes'),
@@ -105,7 +116,9 @@ urlpatterns = [
     path('genome-files/sub_populations/', ArchivedGenomeFileViewSet.as_view({'get': 'sub_populations'}), name='sub-populations'),
 
     # 管理后台API路由
+    path('session/', admin_session, name='admin-session'),
     path('login/', admin_login, name='admin-login'),
+    path('logout/', admin_logout, name='admin-logout'),
     path('files/', admin_files_list, name='admin-files-list'),
     path('files/<int:file_id>/delete/', admin_delete_file, name='admin-delete-file'),
     path('files/batch-delete/', admin_batch_delete, name='admin-batch-delete'),

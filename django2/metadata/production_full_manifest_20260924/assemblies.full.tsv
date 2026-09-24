@@ -1,0 +1,608 @@
+﻿assembly_code	accession	assembly_accession	assembly_name	species_code	assembly_level	biosample_accession	assembly_type	assembly_method	sequencing_technology	genome_size	chromosome_count	contig_count	n50	gc_content	reference	source_database	external_project	file_name	file_type	description
+ASM_02428	02428		02428 genome assembly	ORYZA_SATIVA														genome.02428.fasta	FASTA	
+ASM_117425	117425		117425 genome assembly	ORYZA_SATIVA														genome.117425.fasta	FASTA	
+ASM_117534	117534		117534 genome assembly	ORYZA_SATIVA														genome.117534.fasta	FASTA	
+ASM_117534_N22_18ng	117534_N22_18ng		117534_N22_18ng genome assembly	ORYZA_SATIVA														genome.117534_N22_18ng.fasta	FASTA	
+ASM_125619	125619		125619 genome assembly	ORYZA_SATIVA														genome.125619.fasta	FASTA	
+ASM_125827	125827		125827 genome assembly	ORYZA_SATIVA														genome.125827.fasta	FASTA	
+ASM_127518	127518		127518 genome assembly	ORYZA_SATIVA														genome.127518.fasta	FASTA	
+ASM_127564	127564		127564 genome assembly	ORYZA_SATIVA														genome.127564.fasta	FASTA	
+ASM_127652	127652		127652 genome assembly	ORYZA_SATIVA														genome.127652.fasta	FASTA	
+ASM_127742	127742		127742 genome assembly	ORYZA_SATIVA														genome.127742.fasta	FASTA	
+ASM_128077	128077		128077 genome assembly	ORYZA_SATIVA														genome.128077.fasta	FASTA	
+ASM_13-65	13-65		13-65 genome assembly	ORYZA_SATIVA														genome.13-65.fasta	FASTA	
+ASM_132278	132278		132278 genome assembly	ORYZA_SATIVA														genome.132278.fasta	FASTA	
+ASM_132424	132424		132424 genome assembly	ORYZA_SATIVA														genome.132424.fasta	FASTA	
+ASM_17S	17S		17S genome assembly	ORYZA_SATIVA														genome.17S.fasta	FASTA	
+ASM_18WR-118	18WR-118		18WR-118 genome assembly	ORYZA_SATIVA														genome.18WR-118.fasta	FASTA	
+ASM_18XHB-49	18XHB-49		18XHB-49 genome assembly	ORYZA_SATIVA														genome.18XHB-49.fasta	FASTA	
+ASM_18XHB-57	18XHB-57		18XHB-57 genome assembly	ORYZA_SATIVA														genome.18XHB-57.fasta	FASTA	
+ASM_18XHB-83	18XHB-83		18XHB-83 genome assembly	ORYZA_SATIVA														genome.18XHB-83.fasta	FASTA	
+ASM_201B	201B		201B genome assembly	ORYZA_SATIVA														genome.201B.fasta	FASTA	
+ASM_2037(Rajahamsal)	2037(Rajahamsal)		2037(Rajahamsal) genome assembly	ORYZA_SATIVA														genome.2037(Rajahamsal).fasta	FASTA	
+ASM_33S	33S		33S genome assembly	ORYZA_SATIVA														genome.33S.fasta	FASTA	
+ASM_3R11	3R11		3R11 genome assembly	ORYZA_SATIVA														genome.3R11.fasta	FASTA	
+ASM_3R17	3R17		3R17 genome assembly	ORYZA_SATIVA														genome.3R17.fasta	FASTA	
+ASM_3R25	3R25		3R25 genome assembly	ORYZA_SATIVA														genome.3R25.fasta	FASTA	
+ASM_3R30	3R30		3R30 genome assembly	ORYZA_SATIVA														genome.3R30.fasta	FASTA	
+ASM_3R34	3R34		3R34 genome assembly	ORYZA_SATIVA														genome.3R34.fasta	FASTA	
+ASM_66S	66S		66S genome assembly	ORYZA_SATIVA														genome.66S.fasta	FASTA	
+ASM_80050YR72136-43	80050YR72136-43		80050YR72136-43 genome assembly	ORYZA_SATIVA														genome.80050YR72136-43.fasta	FASTA	
+ASM_80A97YR303-304-1-3	80A97YR303-304-1-3		80A97YR303-304-1-3 genome assembly	ORYZA_SATIVA														genome.80A97YR303-304-1-3.fasta	FASTA	
+ASM_80B	80B		80B genome assembly	ORYZA_SATIVA														genome.80B.fasta	FASTA	
+ASM_923	923		923 genome assembly	ORYZA_SATIVA														genome.923.fasta	FASTA	
+ASM_9311_21cell	9311_21cell		9311_21cell genome assembly	ORYZA_SATIVA														genome.9311_21cell.fasta	FASTA	
+ASM_9311_22cr	9311_22cr		9311_22cr genome assembly	ORYZA_SATIVA														genome.9311_22cr.fasta	FASTA	
+ASM_A123	A123		A123 genome assembly	ORYZA_SATIVA														genome.A123.fasta	FASTA	
+ASM_Aerjituo	Aerjituo		Aerjituo genome assembly	ORYZA_SATIVA														genome.Aerjituo.fasta	FASTA	
+ASM_Aihechi	Aihechi		Aihechi genome assembly	ORYZA_SATIVA														genome.Aihechi.fasta	FASTA	
+ASM_Aijiaonante	Aijiaonante		Aijiaonante genome assembly	ORYZA_SATIVA														genome.Aijiaonante.fasta	FASTA	
+ASM_Aikoku	Aikoku		Aikoku genome assembly	ORYZA_SATIVA														genome.Aikoku.fasta	FASTA	
+ASM_Ailuyu	Ailuyu		Ailuyu genome assembly	ORYZA_SATIVA														genome.Ailuyu.fasta	FASTA	
+ASM_Aimakang	Aimakang		Aimakang genome assembly	ORYZA_SATIVA														genome.Aimakang.fasta	FASTA	
+ASM_Aituogu 151	Aituogu 151		Aituogu 151 genome assembly	ORYZA_SATIVA														genome.Aituogu 151.fasta	FASTA	
+ASM_Aizizhan	Aizizhan		Aizizhan genome assembly	ORYZA_SATIVA														genome.Aizizhan.fasta	FASTA	
+ASM_Akita	Akita		Akita genome assembly	ORYZA_SATIVA														genome.Akita.fasta	FASTA	
+ASM_Albania Rice	Albania Rice		Albania Rice genome assembly	ORYZA_SATIVA														genome.Albania Rice.fasta	FASTA	
+ASM_American Huangkedao	American Huangkedao		American Huangkedao genome assembly	ORYZA_SATIVA														genome.American Huangkedao.fasta	FASTA	
+ASM_AUS449	AUS449		AUS449 genome assembly	ORYZA_SATIVA														genome.AUS449.fasta	FASTA	
+ASM_Azucena	Azucena		Azucena genome assembly	ORYZA_SATIVA														genome.Azucena.fasta	FASTA	
+ASM_Baigedao	Baigedao		Baigedao genome assembly	ORYZA_SATIVA														genome.Baigedao.fasta	FASTA	
+ASM_Baikehanhe	Baikehanhe		Baikehanhe genome assembly	ORYZA_SATIVA														genome.Baikehanhe.fasta	FASTA	
+ASM_Balilla	Balilla		Balilla genome assembly	ORYZA_SATIVA														genome.Balilla.fasta	FASTA	
+ASM_Baoxie -7B	Baoxie -7B		Baoxie -7B genome assembly	ORYZA_SATIVA														genome.Baoxie -7B.fasta	FASTA	
+ASM_Baoxuan 21	Baoxuan 21		Baoxuan 21 genome assembly	ORYZA_SATIVA														genome.Baoxuan 21.fasta	FASTA	
+ASM_Basmati1	Basmati1		Basmati1 genome assembly	ORYZA_SATIVA														genome.Basmati1.fasta	FASTA	
+ASM_Basmati334	Basmati334		Basmati334 genome assembly	ORYZA_SATIVA														genome.Basmati334.fasta	FASTA	
+ASM_Bawangbian 1	Bawangbian 1		Bawangbian 1 genome assembly	ORYZA_SATIVA														genome.Bawangbian 1.fasta	FASTA	
+ASM_Baxiang	Baxiang		Baxiang genome assembly	ORYZA_SATIVA														genome.Baxiang.fasta	FASTA	
+ASM_Biwusheng	Biwusheng		Biwusheng genome assembly	ORYZA_SATIVA														genome.Biwusheng.fasta	FASTA	
+ASM_BRC 25-146-2-1	BRC 25-146-2-1		BRC 25-146-2-1 genome assembly	ORYZA_SATIVA														genome.BRC 25-146-2-1.fasta	FASTA	
+ASM_Buleida A-75	Buleida A-75		Buleida A-75 genome assembly	ORYZA_SATIVA														genome.Buleida A-75.fasta	FASTA	
+ASM_BW 293-2	BW 293-2		BW 293-2 genome assembly	ORYZA_SATIVA														genome.BW 293-2.fasta	FASTA	
+ASM_C 894-21	C 894-21		C 894-21 genome assembly	ORYZA_SATIVA														genome.C 894-21.fasta	FASTA	
+ASM_C62S	C62S		C62S assembly	ORYZA_SATIVA												Public database		genome.C62S.fasta	FASTA	Assembly context for validated manual_files coordinate data of C62S.
+ASM_C7	C7		C7 assembly	ORYZA_SATIVA												Public database		genome.C7.fasta	FASTA	Assembly context for validated manual_files coordinate data of C7.
+ASM_CarolinaGoldSelect	CarolinaGoldSelect		CarolinaGoldSelect genome assembly	ORYZA_SATIVA														genome.CarolinaGoldSelect.fasta	FASTA	
+ASM_CG14	CG14		CG14 assembly	ORYZA_SATIVA												Public database		genome.CG14.fasta	FASTA	Assembly context for validated manual_files coordinate data of CG14.
+ASM_CHANH 148	CHANH 148		CHANH 148 genome assembly	ORYZA_SATIVA														genome.CHANH 148.fasta	FASTA	
+ASM_Chaoyangyihao B	Chaoyangyihao B		Chaoyangyihao B genome assembly	ORYZA_SATIVA														genome.Chaoyangyihao B.fasta	FASTA	
+ASM_Chengduai 3	Chengduai 3		Chengduai 3 genome assembly	ORYZA_SATIVA														genome.Chengduai 3.fasta	FASTA	
+ASM_Chengnongshuijing	Chengnongshuijing		Chengnongshuijing genome assembly	ORYZA_SATIVA														genome.Chengnongshuijing.fasta	FASTA	
+ASM_Chenwan 3	Chenwan 3		Chenwan 3 genome assembly	ORYZA_SATIVA														genome.Chenwan 3.fasta	FASTA	
+ASM_Chimao	Chimao		Chimao genome assembly	ORYZA_SATIVA														genome.Chimao.fasta	FASTA	
+ASM_CISOKAN	CISOKAN		CISOKAN genome assembly	ORYZA_SATIVA														genome.CISOKAN.fasta	FASTA	
+ASM_CJS	CJS		CJS genome assembly	ORYZA_SATIVA														genome.CJS.fasta	FASTA	
+ASM_CN1	CN1		CN1 genome assembly	ORYZA_SATIVA														genome.CN1.fasta	FASTA	
+ASM_CO 22	CO 22		CO 22 genome assembly	ORYZA_SATIVA														genome.CO 22.fasta	FASTA	
+ASM_Cungunuo	Cungunuo		Cungunuo genome assembly	ORYZA_SATIVA														genome.Cungunuo.fasta	FASTA	
+ASM_Cunsanli	Cunsanli		Cunsanli genome assembly	ORYZA_SATIVA														genome.Cunsanli.fasta	FASTA	
+ASM_CW01	CW01		CW01 genome assembly	ORYZA_SATIVA														genome.CW01.fasta	FASTA	
+ASM_CW02	CW02		CW02 genome assembly	ORYZA_SATIVA														genome.CW02.fasta	FASTA	
+ASM_CW03	CW03		CW03 genome assembly	ORYZA_SATIVA														genome.CW03.fasta	FASTA	
+ASM_CW05	CW05		CW05 genome assembly	ORYZA_SATIVA														genome.CW05.fasta	FASTA	
+ASM_CW06	CW06		CW06 genome assembly	ORYZA_SATIVA														genome.CW06.fasta	FASTA	
+ASM_CW07	CW07		CW07 genome assembly	ORYZA_SATIVA														genome.CW07.fasta	FASTA	
+ASM_CW08	CW08		CW08 genome assembly	ORYZA_SATIVA														genome.CW08.fasta	FASTA	
+ASM_CW09	CW09		CW09 genome assembly	ORYZA_SATIVA														genome.CW09.fasta	FASTA	
+ASM_CW10	CW10		CW10 genome assembly	ORYZA_SATIVA														genome.CW10.fasta	FASTA	
+ASM_CW11	CW11		CW11 genome assembly	ORYZA_SATIVA														genome.CW11.fasta	FASTA	
+ASM_CW12	CW12		CW12 genome assembly	ORYZA_SATIVA														genome.CW12.fasta	FASTA	
+ASM_CW13	CW13		CW13 genome assembly	ORYZA_SATIVA														genome.CW13.fasta	FASTA	
+ASM_CW14	CW14		CW14 genome assembly	ORYZA_SATIVA														genome.CW14.fasta	FASTA	
+ASM_CW15	CW15		CW15 genome assembly	ORYZA_SATIVA														genome.CW15.fasta	FASTA	
+ASM_CW16	CW16		CW16 genome assembly	ORYZA_SATIVA														genome.CW16.fasta	FASTA	
+ASM_CW17	CW17		CW17 genome assembly	ORYZA_SATIVA														genome.CW17.fasta	FASTA	
+ASM_CW18	CW18		CW18 genome assembly	ORYZA_SATIVA														genome.CW18.fasta	FASTA	
+ASM_CW19	CW19		CW19 genome assembly	ORYZA_SATIVA														genome.CW19.fasta	FASTA	
+ASM_CW21	CW21		CW21 genome assembly	ORYZA_SATIVA														genome.CW21.fasta	FASTA	
+ASM_CW22	CW22		CW22 genome assembly	ORYZA_SATIVA														genome.CW22.fasta	FASTA	
+ASM_CW23	CW23		CW23 genome assembly	ORYZA_SATIVA														genome.CW23.fasta	FASTA	
+ASM_CW31	CW31		CW31 genome assembly	ORYZA_SATIVA														genome.CW31.fasta	FASTA	
+ASM_CW32	CW32		CW32 genome assembly	ORYZA_SATIVA														genome.CW32.fasta	FASTA	
+ASM_CW33	CW33		CW33 genome assembly	ORYZA_SATIVA														genome.CW33.fasta	FASTA	
+ASM_CW34	CW34		CW34 genome assembly	ORYZA_SATIVA														genome.CW34.fasta	FASTA	
+ASM_CW35	CW35		CW35 genome assembly	ORYZA_SATIVA														genome.CW35.fasta	FASTA	
+ASM_CW36	CW36		CW36 genome assembly	ORYZA_SATIVA														genome.CW36.fasta	FASTA	
+ASM_CW37	CW37		CW37 genome assembly	ORYZA_SATIVA														genome.CW37.fasta	FASTA	
+ASM_CX20	CX20		CX20 genome assembly	ORYZA_SATIVA														genome.CX20.fasta	FASTA	
+ASM_CX3	CX3		CX3 genome assembly	ORYZA_SATIVA														genome.CX3.fasta	FASTA	
+ASM_D62	D62		D62 genome assembly	ORYZA_SATIVA														genome.D62.fasta	FASTA	
+ASM_Dandongludao	Dandongludao		Dandongludao genome assembly	ORYZA_SATIVA														genome.Dandongludao.fasta	FASTA	
+ASM_Dangyu 5	Dangyu 5		Dangyu 5 genome assembly	ORYZA_SATIVA														genome.Dangyu 5.fasta	FASTA	
+ASM_DG	DG		DG genome assembly	ORYZA_SATIVA														genome.DG.fasta	FASTA	
+ASM_DGB	DGB		DGB genome assembly	ORYZA_SATIVA														genome.DGB.fasta	FASTA	
+ASM_DHX2	DHX2		DHX2 genome assembly	ORYZA_SATIVA														genome.DHX2.fasta	FASTA	
+ASM_Dianrui 409B	Dianrui 409B		Dianrui 409B genome assembly	ORYZA_SATIVA														genome.Dianrui 409B.fasta	FASTA	
+ASM_Djanda Mandja	Djanda Mandja		Djanda Mandja genome assembly	ORYZA_SATIVA														genome.Djanda Mandja.fasta	FASTA	
+ASM_DomSufid	DomSufid		DomSufid genome assembly	ORYZA_SATIVA														genome.DomSufid.fasta	FASTA	
+ASM_Dongtingwanxian	Dongtingwanxian		Dongtingwanxian genome assembly	ORYZA_SATIVA														genome.Dongtingwanxian.fasta	FASTA	
+ASM_DR1	DR1		DR1 genome assembly	ORYZA_SATIVA														genome.DR1.fasta	FASTA	
+ASM_DR11	DR11		DR11 genome assembly	ORYZA_SATIVA														genome.DR11.fasta	FASTA	
+ASM_DR12	DR12		DR12 genome assembly	ORYZA_SATIVA														genome.DR12.fasta	FASTA	
+ASM_DR13	DR13		DR13 genome assembly	ORYZA_SATIVA														genome.DR13.fasta	FASTA	
+ASM_DR14	DR14		DR14 genome assembly	ORYZA_SATIVA														genome.DR14.fasta	FASTA	
+ASM_DR15	DR15		DR15 genome assembly	ORYZA_SATIVA														genome.DR15.fasta	FASTA	
+ASM_DR16	DR16		DR16 genome assembly	ORYZA_SATIVA														genome.DR16.fasta	FASTA	
+ASM_DR17	DR17		DR17 genome assembly	ORYZA_SATIVA														genome.DR17.fasta	FASTA	
+ASM_DR18	DR18		DR18 genome assembly	ORYZA_SATIVA														genome.DR18.fasta	FASTA	
+ASM_DR2	DR2		DR2 genome assembly	ORYZA_SATIVA														genome.DR2.fasta	FASTA	
+ASM_DR20	DR20		DR20 genome assembly	ORYZA_SATIVA														genome.DR20.fasta	FASTA	
+ASM_DR3	DR3		DR3 genome assembly	ORYZA_SATIVA														genome.DR3.fasta	FASTA	
+ASM_DR4	DR4		DR4 genome assembly	ORYZA_SATIVA														genome.DR4.fasta	FASTA	
+ASM_DR5	DR5		DR5 genome assembly	ORYZA_SATIVA														genome.DR5.fasta	FASTA	
+ASM_DR6	DR6		DR6 genome assembly	ORYZA_SATIVA														genome.DR6.fasta	FASTA	
+ASM_DR7	DR7		DR7 genome assembly	ORYZA_SATIVA														genome.DR7.fasta	FASTA	
+ASM_DR8	DR8		DR8 genome assembly	ORYZA_SATIVA														genome.DR8.fasta	FASTA	
+ASM_DR9	DR9		DR9 genome assembly	ORYZA_SATIVA														genome.DR9.fasta	FASTA	
+ASM_Dular	Dular		Dular genome assembly	ORYZA_SATIVA														genome.Dular.fasta	FASTA	
+ASM_Dumai	Dumai		Dumai genome assembly	ORYZA_SATIVA														genome.Dumai.fasta	FASTA	
+ASM_DXCWR	DXCWR		DXCWR genome assembly	ORYZA_SATIVA														genome.DXCWR.fasta	FASTA	
+ASM_ECIA 179-S13	ECIA 179-S13		ECIA 179-S13 genome assembly	ORYZA_SATIVA														genome.ECIA 179-S13.fasta	FASTA	
+ASM_Esiniu	Esiniu		Esiniu genome assembly	ORYZA_SATIVA														genome.Esiniu.fasta	FASTA	
+ASM_Fanhaopi	Fanhaopi		Fanhaopi genome assembly	ORYZA_SATIVA														genome.Fanhaopi.fasta	FASTA	
+ASM_FH838	FH838		FH838 genome assembly	ORYZA_SATIVA														genome.FH838.fasta	FASTA	
+ASM_FS32	FS32		FS32 genome assembly	ORYZA_SATIVA														genome.FS32.fasta	FASTA	
+ASM_Funingzipigengzi	Funingzipigengzi		Funingzipigengzi genome assembly	ORYZA_SATIVA														genome.Funingzipigengzi.fasta	FASTA	
+ASM_G Zhenshan 97B	G Zhenshan 97B		G Zhenshan 97B genome assembly	ORYZA_SATIVA														genome.G Zhenshan 97B.fasta	FASTA	
+ASM_G46	G46		G46 genome assembly	ORYZA_SATIVA														genome.G46.fasta	FASTA	
+ASM_G630	G630		G630 genome assembly	ORYZA_SATIVA														genome.G630.fasta	FASTA	
+ASM_G8	G8		G8 genome assembly	ORYZA_SATIVA														genome.G8.fasta	FASTA	
+ASM_Gim	Gim		Gim genome assembly	ORYZA_SATIVA														genome.Gim.fasta	FASTA	
+ASM_GM4	GM4		GM4 genome assembly	ORYZA_SATIVA														genome.GM4.fasta	FASTA	
+ASM_Gongchengxiang	Gongchengxiang		Gongchengxiang genome assembly	ORYZA_SATIVA														genome.Gongchengxiang.fasta	FASTA	
+ASM_Gongju 73	Gongju 73		Gongju 73 genome assembly	ORYZA_SATIVA														genome.Gongju 73.fasta	FASTA	
+ASM_Guangluai 15-	Guangluai 15-		Guangluai 15- genome assembly	ORYZA_SATIVA														genome.Guangluai 15-.fasta	FASTA	
+ASM_Guangluai 4	Guangluai 4		Guangluai 4 genome assembly	ORYZA_SATIVA														genome.Guangluai 4.fasta	FASTA	
+ASM_Guizhao 2	Guizhao 2		Guizhao 2 genome assembly	ORYZA_SATIVA														genome.Guizhao 2.fasta	FASTA	
+ASM_GWX30	GWX30		GWX30 genome assembly	ORYZA_SATIVA														genome.GWX30.fasta	FASTA	
+ASM_GZ 1368-5-4	GZ 1368-5-4		GZ 1368-5-4 genome assembly	ORYZA_SATIVA														genome.GZ 1368-5-4.fasta	FASTA	
+ASM_Hanmadao4	Hanmadao4		Hanmadao4 genome assembly	ORYZA_SATIVA														genome.Hanmadao4.fasta	FASTA	
+ASM_Haobayong 1	Haobayong 1		Haobayong 1 genome assembly	ORYZA_SATIVA														genome.Haobayong 1.fasta	FASTA	
+ASM_Haomake (K)	Haomake (K)		Haomake (K) genome assembly	ORYZA_SATIVA														genome.Haomake (K).fasta	FASTA	
+ASM_Haoxiang	Haoxiang		Haoxiang genome assembly	ORYZA_SATIVA														genome.Haoxiang.fasta	FASTA	
+ASM_HBK	HBK		HBK genome assembly	ORYZA_SATIVA														genome.HBK.fasta	FASTA	
+ASM_HEG4	HEG4		HEG4 genome assembly	ORYZA_SATIVA														genome.HEG4.fasta	FASTA	
+ASM_Heibiao	Heibiao		Heibiao genome assembly	ORYZA_SATIVA														genome.Heibiao.fasta	FASTA	
+ASM_Heidu 4	Heidu 4		Heidu 4 genome assembly	ORYZA_SATIVA														genome.Heidu 4.fasta	FASTA	
+ASM_Heimangdao	Heimangdao		Heimangdao genome assembly	ORYZA_SATIVA														genome.Heimangdao.fasta	FASTA	
+ASM_HHZ	HHZ		HHZ genome assembly	ORYZA_SATIVA														genome.HHZ.fasta	FASTA	
+ASM_Hitomebore	Hitomebore		Hitomebore genome assembly	ORYZA_SATIVA														genome.Hitomebore.fasta	FASTA	
+ASM_HMXRS1	HMXRS1		HMXRS1 genome assembly	ORYZA_SATIVA														genome.HMXRS1.fasta	FASTA	
+ASM_HMZ	HMZ		HMZ genome assembly	ORYZA_SATIVA														genome.HMZ.fasta	FASTA	
+ASM_Hongainuo	Hongainuo		Hongainuo genome assembly	ORYZA_SATIVA														genome.Hongainuo.fasta	FASTA	
+ASM_Honggenghangu3	Honggenghangu3		Honggenghangu3 genome assembly	ORYZA_SATIVA														genome.Honggenghangu3.fasta	FASTA	
+ASM_Honggu	Honggu		Honggu genome assembly	ORYZA_SATIVA														genome.Honggu.fasta	FASTA	
+ASM_Hongmisandan	Hongmisandan		Hongmisandan genome assembly	ORYZA_SATIVA														genome.Hongmisandan.fasta	FASTA	
+ASM_Hongse 90	Hongse 90		Hongse 90 genome assembly	ORYZA_SATIVA														genome.Hongse 90.fasta	FASTA	
+ASM_Hongwan 1	Hongwan 1		Hongwan 1 genome assembly	ORYZA_SATIVA														genome.Hongwan 1.fasta	FASTA	
+ASM_HR-12	HR-12		HR-12 genome assembly	ORYZA_SATIVA														genome.HR-12.fasta	FASTA	
+ASM_Huangsiguizhan	Huangsiguizhan		Huangsiguizhan genome assembly	ORYZA_SATIVA														genome.Huangsiguizhan.fasta	FASTA	
+ASM_Huhui 91269	Huhui 91269		Huhui 91269 genome assembly	ORYZA_SATIVA														genome.Huhui 91269.fasta	FASTA	
+ASM_HZ	HZ		HZ genome assembly	ORYZA_SATIVA														genome.HZ.fasta	FASTA	
+ASM_II32	II32		II32 genome assembly	ORYZA_SATIVA														genome.II32.fasta	FASTA	
+ASM_IR 10179-23-1-3	IR 10179-23-1-3		IR 10179-23-1-3 genome assembly	ORYZA_SATIVA														genome.IR 10179-23-1-3.fasta	FASTA	
+ASM_IR 661-1	IR 661-1		IR 661-1 genome assembly	ORYZA_SATIVA														genome.IR 661-1.fasta	FASTA	
+ASM_IR24	IR24		IR24 genome assembly	ORYZA_SATIVA														genome.IR24.fasta	FASTA	
+ASM_IR26	IR26		IR26 genome assembly	ORYZA_SATIVA														genome.IR26.fasta	FASTA	
+ASM_IR64	IR64		IR64 genome assembly	ORYZA_SATIVA						386698898			31218896	43.627		Public database		genome.IR64.fasta	FASTA	IR64 genome assembly bound to manual_files/genome.IR64.fasta.
+ASM_IR64_20sd	IR64_20sd		IR64_20sd genome assembly	ORYZA_SATIVA														genome.IR64_20sd.fasta	FASTA	
+ASM_IR64_21cell	IR64_21cell		IR64_21cell genome assembly	ORYZA_SATIVA														genome.IR64_21cell.fasta	FASTA	
+ASM_IR64_22cr	IR64_22cr		IR64_22cr genome assembly	ORYZA_SATIVA														genome.IR64_22cr.fasta	FASTA	
+ASM_IR8	IR8		IR8 genome assembly	ORYZA_SATIVA														genome.IR8.fasta	FASTA	
+ASM_IRAT 10	IRAT 10		IRAT 10 genome assembly	ORYZA_SATIVA														genome.IRAT 10.fasta	FASTA	
+ASM_IRGC104165	IRGC104165		IRGC104165 genome assembly	ORYZA_SATIVA														genome.IRGC104165.fasta	FASTA	
+ASM_ITA 221	ITA 221		ITA 221 genome assembly	ORYZA_SATIVA														genome.ITA 221.fasta	FASTA	
+ASM_J34	J34		J34 genome assembly	ORYZA_SATIVA														genome.J34.fasta	FASTA	
+ASM_J4155	J4155		J4155 genome assembly	ORYZA_SATIVA														genome.J4155.fasta	FASTA	
+ASM_J4155S	J4155S		J4155S genome assembly	ORYZA_SATIVA														genome.J4155S.fasta	FASTA	
+ASM_Jaibattey	Jaibattey		Jaibattey genome assembly	ORYZA_SATIVA														genome.Jaibattey.fasta	FASTA	
+ASM_Jiabala	Jiabala		Jiabala genome assembly	ORYZA_SATIVA														genome.Jiabala.fasta	FASTA	
+ASM_Jianghuadao	Jianghuadao		Jianghuadao genome assembly	ORYZA_SATIVA														genome.Jianghuadao.fasta	FASTA	
+ASM_Jiangnongzao 1 B	Jiangnongzao 1 B		Jiangnongzao 1 B genome assembly	ORYZA_SATIVA														genome.Jiangnongzao 1 B.fasta	FASTA	
+ASM_Jiayu253	Jiayu253		Jiayu253 genome assembly	ORYZA_SATIVA														genome.Jiayu253.fasta	FASTA	
+ASM_Jiefangxian	Jiefangxian		Jiefangxian genome assembly	ORYZA_SATIVA														genome.Jiefangxian.fasta	FASTA	
+ASM_Jiienuo	Jiienuo		Jiienuo genome assembly	ORYZA_SATIVA														genome.Jiienuo.fasta	FASTA	
+ASM_Jinbaoyin	Jinbaoyin		Jinbaoyin genome assembly	ORYZA_SATIVA														genome.Jinbaoyin.fasta	FASTA	
+ASM_Jindao 1	Jindao 1		Jindao 1 genome assembly	ORYZA_SATIVA														genome.Jindao 1.fasta	FASTA	
+ASM_Jinghu3 B	Jinghu3 B		Jinghu3 B genome assembly	ORYZA_SATIVA														genome.Jinghu3 B.fasta	FASTA	
+ASM_Jinnante 43B	Jinnante 43B		Jinnante 43B genome assembly	ORYZA_SATIVA														genome.Jinnante 43B.fasta	FASTA	
+ASM_Jinxibai2	Jinxibai2		Jinxibai2 genome assembly	ORYZA_SATIVA														genome.Jinxibai2.fasta	FASTA	
+ASM_Jinzhinuo4	Jinzhinuo4		Jinzhinuo4 genome assembly	ORYZA_SATIVA														genome.Jinzhinuo4.fasta	FASTA	
+ASM_JR2031	JR2031		JR2031 genome assembly	ORYZA_SATIVA														genome.JR2031.fasta	FASTA	
+ASM_JWR 221	JWR 221		JWR 221 genome assembly	ORYZA_SATIVA														genome.JWR 221.fasta	FASTA	
+ASM_K 24	K 24		K 24 genome assembly	ORYZA_SATIVA														genome.K 24.fasta	FASTA	
+ASM_Kahamu	Kahamu		Kahamu genome assembly	ORYZA_SATIVA														genome.Kahamu.fasta	FASTA	
+ASM_Kasalath	Kasalath		Kasalath genome assembly	ORYZA_SATIVA														genome.Kasalath.fasta	FASTA	
+ASM_Keluoduo B	Keluoduo B		Keluoduo B genome assembly	ORYZA_SATIVA														genome.Keluoduo B.fasta	FASTA	
+ASM_KitaakeX	KitaakeX		KitaakeX genome assembly	ORYZA_SATIVA														genome.KitaakeX.fasta	FASTA	
+ASM_Kosh	Kosh		Kosh genome assembly	ORYZA_SATIVA														genome.Kosh.fasta	FASTA	
+ASM_KY131	KY131		KY131 genome assembly	ORYZA_SATIVA														genome.KY131.fasta	FASTA	
+ASM_L 301B	L 301B		L 301B genome assembly	ORYZA_SATIVA														genome.L 301B.fasta	FASTA	
+ASM_Lamujia	Lamujia		Lamujia genome assembly	ORYZA_SATIVA														genome.Lamujia.fasta	FASTA	
+ASM_LanSheng	LanSheng		LanSheng genome assembly	ORYZA_SATIVA														genome.LanSheng.fasta	FASTA	
+ASM_Laoguangtou 83	Laoguangtou 83		Laoguangtou 83 genome assembly	ORYZA_SATIVA														genome.Laoguangtou 83.fasta	FASTA	
+ASM_Laohongdao	Laohongdao		Laohongdao genome assembly	ORYZA_SATIVA														genome.Laohongdao.fasta	FASTA	
+ASM_Laozaogu	Laozaogu		Laozaogu genome assembly	ORYZA_SATIVA														genome.Laozaogu.fasta	FASTA	
+ASM_LDXZ	LDXZ		LDXZ genome assembly	ORYZA_SATIVA														genome.LDXZ.fasta	FASTA	
+ASM_Lemont	Lemont		Lemont genome assembly	ORYZA_SATIVA														genome.Lemont.fasta	FASTA	
+ASM_Lemont_21cell	Lemont_21cell		Lemont_21cell genome assembly	ORYZA_SATIVA														genome.Lemont_21cell.fasta	FASTA	
+ASM_lemont_22cr	lemont_22cr		lemont_22cr genome assembly	ORYZA_SATIVA														genome.lemont_22cr.fasta	FASTA	
+ASM_Lengshuigu 2	Lengshuigu 2		Lengshuigu 2 genome assembly	ORYZA_SATIVA														genome.Lengshuigu 2.fasta	FASTA	
+ASM_Lengshuinuo	Lengshuinuo		Lengshuinuo genome assembly	ORYZA_SATIVA														genome.Lengshuinuo.fasta	FASTA	
+ASM_LG31	LG31		LG31 genome assembly	ORYZA_SATIVA														genome.LG31.fasta	FASTA	
+ASM_LG5	LG5		LG5 genome assembly	ORYZA_SATIVA														genome.LG5.fasta	FASTA	
+ASM_Liming B	Liming B		Liming B genome assembly	ORYZA_SATIVA														genome.Liming B.fasta	FASTA	
+ASM_Linguo	Linguo		Linguo genome assembly	ORYZA_SATIVA														genome.Linguo.fasta	FASTA	
+ASM_Liusha 1	Liusha 1		Liusha 1 genome assembly	ORYZA_SATIVA														genome.Liusha 1.fasta	FASTA	
+ASM_Liushizao	Liushizao		Liushizao genome assembly	ORYZA_SATIVA														genome.Liushizao.fasta	FASTA	
+ASM_LJ	LJ		LJ genome assembly	ORYZA_SATIVA														genome.LJ.fasta	FASTA	
+ASM_LK638S	LK638S		LK638S genome assembly	ORYZA_SATIVA														genome.LK638S.fasta	FASTA	
+ASM_Longhuamaohu	Longhuamaohu		Longhuamaohu genome assembly	ORYZA_SATIVA														genome.Longhuamaohu.fasta	FASTA	
+ASM_LTH	LTH		LTH genome assembly	ORYZA_SATIVA														genome.LTH.fasta	FASTA	
+ASM_Lucaihao	Lucaihao		Lucaihao genome assembly	ORYZA_SATIVA														genome.Lucaihao.fasta	FASTA	
+ASM_Luke 3	Luke 3		Luke 3 genome assembly	ORYZA_SATIVA														genome.Luke 3.fasta	FASTA	
+ASM_Malaihong	Malaihong		Malaihong genome assembly	ORYZA_SATIVA														genome.Malaihong.fasta	FASTA	
+ASM_Mamagu	Mamagu		Mamagu genome assembly	ORYZA_SATIVA														genome.Mamagu.fasta	FASTA	
+ASM_Meihuanuo	Meihuanuo		Meihuanuo genome assembly	ORYZA_SATIVA														genome.Meihuanuo.fasta	FASTA	
+ASM_Menjiading 2	Menjiading 2		Menjiading 2 genome assembly	ORYZA_SATIVA														genome.Menjiading 2.fasta	FASTA	
+ASM_Menjiagao 1	Menjiagao 1		Menjiagao 1 genome assembly	ORYZA_SATIVA														genome.Menjiagao 1.fasta	FASTA	
+ASM_MH63RS3	MH63RS3		MH63RS3 genome assembly	ORYZA_SATIVA														genome.MH63RS3.fasta	FASTA	
+ASM_Minbeiwanxian	Minbeiwanxian		Minbeiwanxian genome assembly	ORYZA_SATIVA														genome.Minbeiwanxian.fasta	FASTA	
+ASM_Mitak	Mitak		Mitak genome assembly	ORYZA_SATIVA														genome.Mitak.fasta	FASTA	
+ASM_Miyang46	Miyang46		Miyang46 genome assembly	ORYZA_SATIVA														genome.Miyang46.fasta	FASTA	
+ASM_Momi	Momi		Momi genome assembly	ORYZA_SATIVA														genome.Momi.fasta	FASTA	
+ASM_Mowangguneiza	Mowangguneiza		Mowangguneiza genome assembly	ORYZA_SATIVA														genome.Mowangguneiza.fasta	FASTA	
+ASM_Muguanuo	Muguanuo		Muguanuo genome assembly	ORYZA_SATIVA														genome.Muguanuo.fasta	FASTA	
+ASM_Muxiqiu	Muxiqiu		Muxiqiu genome assembly	ORYZA_SATIVA														genome.Muxiqiu.fasta	FASTA	
+ASM_N22_21cell	N22_21cell		N22_21cell genome assembly	ORYZA_SATIVA														genome.N22_21cell.fasta	FASTA	
+ASM_N22_22cr	N22_22cr		N22_22cr genome assembly	ORYZA_SATIVA														genome.N22_22cr.fasta	FASTA	
+ASM_Nabated A Smar	Nabated A Smar		Nabated A Smar genome assembly	ORYZA_SATIVA														genome.Nabated A Smar.fasta	FASTA	
+ASM_NamRoo	NamRoo		NamRoo genome assembly	ORYZA_SATIVA														genome.NamRoo.fasta	FASTA	
+ASM_Nangaogu	Nangaogu		Nangaogu genome assembly	ORYZA_SATIVA														genome.Nangaogu.fasta	FASTA	
+ASM_Nanjing 11	Nanjing 11		Nanjing 11 genome assembly	ORYZA_SATIVA														genome.Nanjing 11.fasta	FASTA	
+ASM_Nanoay P.A	Nanoay P.A		Nanoay P.A genome assembly	ORYZA_SATIVA														genome.Nanoay P.A.fasta	FASTA	
+ASM_Nantehao	Nantehao		Nantehao genome assembly	ORYZA_SATIVA														genome.Nantehao.fasta	FASTA	
+ASM_Nanxiongzaoyouzhan	Nanxiongzaoyouzhan		Nanxiongzaoyouzhan genome assembly	ORYZA_SATIVA														genome.Nanxiongzaoyouzhan.fasta	FASTA	
+ASM_NG39	NG39		NG39 genome assembly	ORYZA_SATIVA														genome.NG39.fasta	FASTA	
+ASM_NH265	NH265		NH265 genome assembly	ORYZA_SATIVA														genome.NH265.fasta	FASTA	
+ASM_NH266	NH266		NH266 genome assembly	ORYZA_SATIVA														genome.NH266.fasta	FASTA	
+ASM_NH267	NH267		NH267 genome assembly	ORYZA_SATIVA														genome.NH267.fasta	FASTA	
+ASM_NH268	NH268		NH268 genome assembly	ORYZA_SATIVA														genome.NH268.fasta	FASTA	
+ASM_NH269	NH269		NH269 genome assembly	ORYZA_SATIVA														genome.NH269.fasta	FASTA	
+ASM_NH270	NH270		NH270 genome assembly	ORYZA_SATIVA														genome.NH270.fasta	FASTA	
+ASM_NH271	NH271		NH271 genome assembly	ORYZA_SATIVA														genome.NH271.fasta	FASTA	
+ASM_NH272	NH272		NH272 genome assembly	ORYZA_SATIVA														genome.NH272.fasta	FASTA	
+ASM_NH273	NH273		NH273 genome assembly	ORYZA_SATIVA														genome.NH273.fasta	FASTA	
+ASM_NH274	NH274		NH274 genome assembly	ORYZA_SATIVA														genome.NH274.fasta	FASTA	
+ASM_NH275	NH275		NH275 genome assembly	ORYZA_SATIVA														genome.NH275.fasta	FASTA	
+ASM_NH277	NH277		NH277 genome assembly	ORYZA_SATIVA														genome.NH277.fasta	FASTA	
+ASM_NH278	NH278		NH278 genome assembly	ORYZA_SATIVA														genome.NH278.fasta	FASTA	
+ASM_NH279	NH279		NH279 genome assembly	ORYZA_SATIVA														genome.NH279.fasta	FASTA	
+ASM_NH280	NH280		NH280 genome assembly	ORYZA_SATIVA														genome.NH280.fasta	FASTA	
+ASM_NH281	NH281		NH281 genome assembly	ORYZA_SATIVA														genome.NH281.fasta	FASTA	
+ASM_NH282	NH282		NH282 genome assembly	ORYZA_SATIVA														genome.NH282.fasta	FASTA	
+ASM_NH283	NH283		NH283 genome assembly	ORYZA_SATIVA														genome.NH283.fasta	FASTA	
+ASM_NH284	NH284		NH284 genome assembly	ORYZA_SATIVA														genome.NH284.fasta	FASTA	
+ASM_NH285	NH285		NH285 genome assembly	ORYZA_SATIVA														genome.NH285.fasta	FASTA	
+ASM_NH286	NH286		NH286 genome assembly	ORYZA_SATIVA														genome.NH286.fasta	FASTA	
+ASM_Ninghui 21	Ninghui 21		Ninghui 21 genome assembly	ORYZA_SATIVA														genome.Ninghui 21.fasta	FASTA	
+ASM_Nipponbare	Nipponbare		Nipponbare genome assembly	ORYZA_SATIVA														genome.Nipponbare.fasta	FASTA	
+ASM_NJ11	NJ11		NJ11 genome assembly	ORYZA_SATIVA														genome.NJ11.fasta	FASTA	
+ASM_NJ6	NJ6		NJ6 genome assembly	ORYZA_SATIVA														genome.NJ6.fasta	FASTA	
+ASM_No8	No8		No8 genome assembly	ORYZA_SATIVA														genome.No8.fasta	FASTA	
+ASM_Npb-MSU	Npb-MSU		Npb-MSU genome assembly	ORYZA_SATIVA														genome.Npb-MSU.fasta	FASTA	
+ASM_Npb-T2T	Npb-T2T		Npb-T2T genome assembly	ORYZA_SATIVA														genome.Npb-T2T.fasta	FASTA	
+ASM_ObarRS3	ObarRS3		ObarRS3 genome assembly	ORYZA_SATIVA														genome.ObarRS3.fasta	FASTA	
+ASM_OglaRS2	OglaRS2		OglaRS2 genome assembly	ORYZA_SATIVA														genome.OglaRS2.fasta	FASTA	
+ASM_OgluRS3	OgluRS3		OgluRS3 genome assembly	ORYZA_SATIVA														genome.OgluRS3.fasta	FASTA	
+ASM_OmerRS3	OmerRS3		OmerRS3 genome assembly	ORYZA_SATIVA														genome.OmerRS3.fasta	FASTA	
+ASM_OnivRS2	OnivRS2		OnivRS2 genome assembly	ORYZA_SATIVA														genome.OnivRS2.fasta	FASTA	
+ASM_OrufRS1	OrufRS1		OrufRS1 genome assembly	ORYZA_SATIVA														genome.OrufRS1.fasta	FASTA	
+ASM_P1790-5-1M-4-5M-1B-3M-B	P1790-5-1M-4-5M-1B-3M-B		P1790-5-1M-4-5M-1B-3M-B genome assembly	ORYZA_SATIVA														genome.P1790-5-1M-4-5M-1B-3M-B.fasta	FASTA	
+ASM_P64S	P64S		P64S genome assembly	ORYZA_SATIVA														genome.P64S.fasta	FASTA	
+ASM_PA64S	PA64S		PA64S genome assembly	ORYZA_SATIVA														genome.PA64S.fasta	FASTA	
+ASM_Pei C122	Pei C122		Pei C122 genome assembly	ORYZA_SATIVA														genome.Pei C122.fasta	FASTA	
+ASM_PI653432	PI653432		PI653432 genome assembly	ORYZA_SATIVA														genome.PI653432.fasta	FASTA	
+ASM_PI653439	PI653439		PI653439 genome assembly	ORYZA_SATIVA														genome.PI653439.fasta	FASTA	
+ASM_PMS 10B	PMS 10B		PMS 10B genome assembly	ORYZA_SATIVA														genome.PMS 10B.fasta	FASTA	
+ASM_PPR1	PPR1		PPR1 genome assembly	ORYZA_SATIVA														genome.PPR1.fasta	FASTA	
+ASM_Qianchonglang2	Qianchonglang2		Qianchonglang2 genome assembly	ORYZA_SATIVA														genome.Qianchonglang2.fasta	FASTA	
+ASM_Qingke	Qingke		Qingke genome assembly	ORYZA_SATIVA														genome.Qingke.fasta	FASTA	
+ASM_Qingnuo Kyohatamochi	Qingnuo Kyohatamochi		Qingnuo Kyohatamochi genome assembly	ORYZA_SATIVA														genome.Qingnuo Kyohatamochi.fasta	FASTA	
+ASM_Qingsiai 16B	Qingsiai 16B		Qingsiai 16B genome assembly	ORYZA_SATIVA														genome.Qingsiai 16B.fasta	FASTA	
+ASM_Qitoubaigu3	Qitoubaigu3		Qitoubaigu3 genome assembly	ORYZA_SATIVA														genome.Qitoubaigu3.fasta	FASTA	
+ASM_Qitougu	Qitougu		Qitougu genome assembly	ORYZA_SATIVA														genome.Qitougu.fasta	FASTA	
+ASM_Qiuqianbai	Qiuqianbai		Qiuqianbai genome assembly	ORYZA_SATIVA														genome.Qiuqianbai.fasta	FASTA	
+ASM_Qiutianxiaoting	Qiutianxiaoting		Qiutianxiaoting genome assembly	ORYZA_SATIVA														genome.Qiutianxiaoting.fasta	FASTA	
+ASM_QUAN	QUAN		QUAN genome assembly	ORYZA_SATIVA														genome.QUAN.fasta	FASTA	
+ASM_R42	R42		R42 genome assembly	ORYZA_SATIVA														genome.R42.fasta	FASTA	
+ASM_R498	R498		R498 genome assembly	ORYZA_SATIVA														genome.R498.fasta	FASTA	
+ASM_R527	R527		R527 genome assembly	ORYZA_SATIVA														genome.R527.fasta	FASTA	
+ASM_R600	R600		R600 genome assembly	ORYZA_SATIVA														genome.R600.fasta	FASTA	
+ASM_R70	R70		R70 genome assembly	ORYZA_SATIVA														genome.R70.fasta	FASTA	
+ASM_R9311	R9311		R9311 genome assembly	ORYZA_SATIVA														genome.R9311.fasta	FASTA	
+ASM_RD23	RD23		RD23 genome assembly	ORYZA_SATIVA														genome.RD23.fasta	FASTA	
+ASM_Rohini	Rohini		Rohini genome assembly	ORYZA_SATIVA														genome.Rohini.fasta	FASTA	
+ASM_RP 1570-44-1	RP 1570-44-1		RP 1570-44-1 genome assembly	ORYZA_SATIVA														genome.RP 1570-44-1.fasta	FASTA	
+ASM_RP-Bio-226	RP-Bio-226		RP-Bio-226 genome assembly	ORYZA_SATIVA														genome.RP-Bio-226.fasta	FASTA	
+ASM_RY2	RY2		RY2 genome assembly	ORYZA_SATIVA														genome.RY2.fasta	FASTA	
+ASM_S548	S548		S548 genome assembly	ORYZA_SATIVA														genome.S548.fasta	FASTA	
+ASM_Sanbaili	Sanbaili		Sanbaili genome assembly	ORYZA_SATIVA														genome.Sanbaili.fasta	FASTA	
+ASM_SanQishiluo	SanQishiluo		SanQishiluo genome assembly	ORYZA_SATIVA														genome.SanQishiluo.fasta	FASTA	
+ASM_Sansuijin	Sansuijin		Sansuijin genome assembly	ORYZA_SATIVA														genome.Sansuijin.fasta	FASTA	
+ASM_Sasa	Sasa		Sasa genome assembly	ORYZA_SATIVA														genome.Sasa.fasta	FASTA	
+ASM_Seln 244A6-20	Seln 244A6-20		Seln 244A6-20 genome assembly	ORYZA_SATIVA														genome.Seln 244A6-20.fasta	FASTA	
+ASM_Shufeng 101	Shufeng 101		Shufeng 101 genome assembly	ORYZA_SATIVA														genome.Shufeng 101.fasta	FASTA	
+ASM_SLK 2-18-2	SLK 2-18-2		SLK 2-18-2 genome assembly	ORYZA_SATIVA														genome.SLK 2-18-2.fasta	FASTA	
+ASM_SN265	SN265		SN265 genome assembly	ORYZA_SATIVA														genome.SN265.fasta	FASTA	
+ASM_Sri Lanka 1	Sri Lanka 1		Sri Lanka 1 genome assembly	ORYZA_SATIVA														genome.Sri Lanka 1.fasta	FASTA	
+ASM_Taidongludao	Taidongludao		Taidongludao genome assembly	ORYZA_SATIVA														genome.Taidongludao.fasta	FASTA	
+ASM_Taishannuo	Taishannuo		Taishannuo genome assembly	ORYZA_SATIVA														genome.Taishannuo.fasta	FASTA	
+ASM_Taizhongzailai 1	Taizhongzailai 1		Taizhongzailai 1 genome assembly	ORYZA_SATIVA														genome.Taizhongzailai 1.fasta	FASTA	
+ASM_Teqingxuanhui	Teqingxuanhui		Teqingxuanhui genome assembly	ORYZA_SATIVA														genome.Teqingxuanhui.fasta	FASTA	
+ASM_Tetep	Tetep		Tetep genome assembly	ORYZA_SATIVA														genome.Tetep.fasta	FASTA	
+ASM_TF	TF		TF genome assembly	ORYZA_SATIVA														genome.TF.fasta	FASTA	
+ASM_TG1	TG1		TG1 genome assembly	ORYZA_SATIVA														genome.TG1.fasta	FASTA	
+ASM_TG10	TG10		TG10 genome assembly	ORYZA_SATIVA														genome.TG10.fasta	FASTA	
+ASM_TG11	TG11		TG11 genome assembly	ORYZA_SATIVA														genome.TG11.fasta	FASTA	
+ASM_TG12	TG12		TG12 genome assembly	ORYZA_SATIVA														genome.TG12.fasta	FASTA	
+ASM_TG13	TG13		TG13 genome assembly	ORYZA_SATIVA														genome.TG13.fasta	FASTA	
+ASM_TG14	TG14		TG14 genome assembly	ORYZA_SATIVA														genome.TG14.fasta	FASTA	
+ASM_TG15	TG15		TG15 genome assembly	ORYZA_SATIVA														genome.TG15.fasta	FASTA	
+ASM_TG16	TG16		TG16 genome assembly	ORYZA_SATIVA														genome.TG16.fasta	FASTA	
+ASM_TG17	TG17		TG17 genome assembly	ORYZA_SATIVA														genome.TG17.fasta	FASTA	
+ASM_TG18	TG18		TG18 genome assembly	ORYZA_SATIVA														genome.TG18.fasta	FASTA	
+ASM_TG19	TG19		TG19 genome assembly	ORYZA_SATIVA														genome.TG19.fasta	FASTA	
+ASM_TG2	TG2		TG2 genome assembly	ORYZA_SATIVA														genome.TG2.fasta	FASTA	
+ASM_TG21	TG21		TG21 genome assembly	ORYZA_SATIVA														genome.TG21.fasta	FASTA	
+ASM_TG22	TG22		TG22 genome assembly	ORYZA_SATIVA														genome.TG22.fasta	FASTA	
+ASM_TG24	TG24		TG24 genome assembly	ORYZA_SATIVA														genome.TG24.fasta	FASTA	
+ASM_TG27	TG27		TG27 genome assembly	ORYZA_SATIVA														genome.TG27.fasta	FASTA	
+ASM_TG28	TG28		TG28 genome assembly	ORYZA_SATIVA														genome.TG28.fasta	FASTA	
+ASM_TG29	TG29		TG29 genome assembly	ORYZA_SATIVA														genome.TG29.fasta	FASTA	
+ASM_TG3	TG3		TG3 genome assembly	ORYZA_SATIVA														genome.TG3.fasta	FASTA	
+ASM_TG30	TG30		TG30 genome assembly	ORYZA_SATIVA														genome.TG30.fasta	FASTA	
+ASM_TG31	TG31		TG31 genome assembly	ORYZA_SATIVA														genome.TG31.fasta	FASTA	
+ASM_TG32	TG32		TG32 genome assembly	ORYZA_SATIVA														genome.TG32.fasta	FASTA	
+ASM_TG33	TG33		TG33 genome assembly	ORYZA_SATIVA														genome.TG33.fasta	FASTA	
+ASM_TG34	TG34		TG34 genome assembly	ORYZA_SATIVA														genome.TG34.fasta	FASTA	
+ASM_TG4	TG4		TG4 genome assembly	ORYZA_SATIVA														genome.TG4.fasta	FASTA	
+ASM_TG42	TG42		TG42 genome assembly	ORYZA_SATIVA														genome.TG42.fasta	FASTA	
+ASM_TG43	TG43		TG43 genome assembly	ORYZA_SATIVA														genome.TG43.fasta	FASTA	
+ASM_TG45	TG45		TG45 genome assembly	ORYZA_SATIVA														genome.TG45.fasta	FASTA	
+ASM_TG46	TG46		TG46 genome assembly	ORYZA_SATIVA														genome.TG46.fasta	FASTA	
+ASM_TG49	TG49		TG49 genome assembly	ORYZA_SATIVA														genome.TG49.fasta	FASTA	
+ASM_TG5	TG5		TG5 genome assembly	ORYZA_SATIVA														genome.TG5.fasta	FASTA	
+ASM_TG50	TG50		TG50 genome assembly	ORYZA_SATIVA														genome.TG50.fasta	FASTA	
+ASM_TG51	TG51		TG51 genome assembly	ORYZA_SATIVA														genome.TG51.fasta	FASTA	
+ASM_TG53	TG53		TG53 genome assembly	ORYZA_SATIVA														genome.TG53.fasta	FASTA	
+ASM_TG54	TG54		TG54 genome assembly	ORYZA_SATIVA														genome.TG54.fasta	FASTA	
+ASM_TG55	TG55		TG55 genome assembly	ORYZA_SATIVA														genome.TG55.fasta	FASTA	
+ASM_TG56	TG56		TG56 genome assembly	ORYZA_SATIVA														genome.TG56.fasta	FASTA	
+ASM_TG58	TG58		TG58 genome assembly	ORYZA_SATIVA														genome.TG58.fasta	FASTA	
+ASM_TG59	TG59		TG59 genome assembly	ORYZA_SATIVA														genome.TG59.fasta	FASTA	
+ASM_TG6	TG6		TG6 genome assembly	ORYZA_SATIVA														genome.TG6.fasta	FASTA	
+ASM_TG60	TG60		TG60 genome assembly	ORYZA_SATIVA														genome.TG60.fasta	FASTA	
+ASM_TG61	TG61		TG61 genome assembly	ORYZA_SATIVA														genome.TG61.fasta	FASTA	
+ASM_TG62	TG62		TG62 genome assembly	ORYZA_SATIVA														genome.TG62.fasta	FASTA	
+ASM_TG63	TG63		TG63 genome assembly	ORYZA_SATIVA														genome.TG63.fasta	FASTA	
+ASM_TG65	TG65		TG65 genome assembly	ORYZA_SATIVA														genome.TG65.fasta	FASTA	
+ASM_TG68	TG68		TG68 genome assembly	ORYZA_SATIVA														genome.TG68.fasta	FASTA	
+ASM_TG7	TG7		TG7 genome assembly	ORYZA_SATIVA														genome.TG7.fasta	FASTA	
+ASM_TG70	TG70		TG70 genome assembly	ORYZA_SATIVA														genome.TG70.fasta	FASTA	
+ASM_TG75	TG75		TG75 genome assembly	ORYZA_SATIVA														genome.TG75.fasta	FASTA	
+ASM_TG76	TG76		TG76 genome assembly	ORYZA_SATIVA														genome.TG76.fasta	FASTA	
+ASM_TG77	TG77		TG77 genome assembly	ORYZA_SATIVA														genome.TG77.fasta	FASTA	
+ASM_TG78	TG78		TG78 genome assembly	ORYZA_SATIVA														genome.TG78.fasta	FASTA	
+ASM_TG8	TG8		TG8 genome assembly	ORYZA_SATIVA														genome.TG8.fasta	FASTA	
+ASM_TG80	TG80		TG80 genome assembly	ORYZA_SATIVA														genome.TG80.fasta	FASTA	
+ASM_TG81	TG81		TG81 genome assembly	ORYZA_SATIVA														genome.TG81.fasta	FASTA	
+ASM_TG82	TG82		TG82 genome assembly	ORYZA_SATIVA														genome.TG82.fasta	FASTA	
+ASM_TG83	TG83		TG83 genome assembly	ORYZA_SATIVA														genome.TG83.fasta	FASTA	
+ASM_TG84	TG84		TG84 genome assembly	ORYZA_SATIVA														genome.TG84.fasta	FASTA	
+ASM_TG86	TG86		TG86 genome assembly	ORYZA_SATIVA														genome.TG86.fasta	FASTA	
+ASM_TG87	TG87		TG87 genome assembly	ORYZA_SATIVA														genome.TG87.fasta	FASTA	
+ASM_TG88	TG88		TG88 genome assembly	ORYZA_SATIVA														genome.TG88.fasta	FASTA	
+ASM_TG9	TG9		TG9 genome assembly	ORYZA_SATIVA														genome.TG9.fasta	FASTA	
+ASM_TG90	TG90		TG90 genome assembly	ORYZA_SATIVA														genome.TG90.fasta	FASTA	
+ASM_Tjantajan	Tjantajan		Tjantajan genome assembly	ORYZA_SATIVA														genome.Tjantajan.fasta	FASTA	
+ASM_TM	TM		TM genome assembly	ORYZA_SATIVA														genome.TM.fasta	FASTA	
+ASM_TN1	TN1		TN1 genome assembly	ORYZA_SATIVA														genome.TN1.fasta	FASTA	
+ASM_Toyo	Toyo		Toyo genome assembly	ORYZA_SATIVA														genome.Toyo.fasta	FASTA	
+ASM_TQ	TQ		TQ genome assembly	ORYZA_SATIVA														genome.TQ.fasta	FASTA	
+ASM_Tumba	Tumba		Tumba genome assembly	ORYZA_SATIVA														genome.Tumba.fasta	FASTA	
+ASM_Vietnam Zaodao	Vietnam Zaodao		Vietnam Zaodao genome assembly	ORYZA_SATIVA														genome.Vietnam Zaodao.fasta	FASTA	
+ASM_W0103_PRJEB73710	W0103		W0103 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0103.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0107_PRJEB73710	W0107		W0107 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0107.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0108_PRJEB73710	W0108		W0108 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0108.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0133_PRJEB73710	W0133		W0133 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0133.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0135_PRJEB73710	W0135		W0135 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0135.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0136_PRJEB73710	W0136		W0136 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0136.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0137_PRJEB73710	W0137		W0137 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0137.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0143_PRJEB73710	W0143		W0143 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0143.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0145_PRJEB73710	W0145		W0145 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0145.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0147_PRJEB73710	W0147		W0147 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0147.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0149_PRJEB73710	W0149		W0149 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0149.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0157_PRJEB73710	W0157		W0157 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0157.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0164_PRJEB73710	W0164		W0164 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0164.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0166_PRJEB73710	W0166		W0166 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0166.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0169_PRJEB73710	W0169		W0169 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0169.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0171_PRJEB73710	W0171		W0171 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0171.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0179_PRJEB73710	W0179		W0179 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0179.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0180_PRJEB73710	W0180		W0180 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0180.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0234_PRJEB73710	W0234		W0234 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0234.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0573_PRJEB73710	W0573		W0573 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0573.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0590_PRJEB73710	W0590		W0590 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0590.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0594_PRJEB73710	W0594		W0594 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0594.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0596_PRJEB73710	W0596		W0596 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0596.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0600_PRJEB73710	W0600		W0600 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0600.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0627_PRJEB73710	W0627		W0627 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0627.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0630_PRJEB73710	W0630		W0630 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0630.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0632_PRJEB73710	W0632		W0632 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0632.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0634_PRJEB73710	W0634		W0634 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0634.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W0639_PRJEB73710	W0639		W0639 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W0639.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1080_PRJEB73710	W1080		W1080 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1080.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1084_PRJEB73710	W1084		W1084 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1084.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1093_PRJEB73710	W1093		W1093 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1093.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1107_PRJEB73710	W1107		W1107 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1107.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1117_PRJEB73710	W1117		W1117 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1117.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1126_PRJEB73710	W1126		W1126 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1126.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1142_PRJEB73710	W1142		W1142 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1142.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1214_PRJEB73710	W1214		W1214 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1214.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1236_PRJEB73710	W1236		W1236 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1236.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1292_PRJEB73710	W1292		W1292 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1292.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1411	W1411		W1411 genome assembly	ORYZA_SATIVA														genome.W1411.fasta	FASTA	
+ASM_W1536_PRJEB73710	W1536		W1536 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1536.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1547_PRJEB73710	W1547		W1547 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1547.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1550_PRJEB73710	W1550		W1550 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1550.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1552_PRJEB73710	W1552		W1552 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1552.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1553_PRJEB73710	W1553		W1553 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1553.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1556_PRJEB73710	W1556		W1556 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1556.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1557_PRJEB73710	W1557		W1557 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1557.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1559_PRJEB73710	W1559		W1559 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1559.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1619_PRJEB73710	W1619		W1619 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1619.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1666_PRJEB73710	W1666		W1666 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1666.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1668_PRJEB73710	W1668		W1668 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1668.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1677_PRJEB73710	W1677		W1677 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1677.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1679_PRJEB73710	W1679		W1679 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1679.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1718_PRJEB73710	W1718		W1718 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1718.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1719_PRJEB73710	W1719		W1719 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1719.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1723_PRJEB73710	W1723		W1723 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1723.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1725_PRJEB73710	W1725		W1725 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1725.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1726_PRJEB73710	W1726		W1726 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1726.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1731_PRJEB73710	W1731		W1731 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1731.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1732_PRJEB73710	W1732		W1732 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1732.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1735_PRJEB73710	W1735		W1735 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1735.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1736_PRJEB73710	W1736		W1736 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1736.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1737_PRJEB73710	W1737		W1737 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1737.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1742_PRJEB73710	W1742		W1742 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1742.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1748_PRJEB73710	W1748		W1748 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1748.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1750_PRJEB73710	W1750		W1750 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1750.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1777_PRJEB73710	W1777		W1777 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1777.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1783_PRJEB73710	W1783		W1783 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1783.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1787_PRJEB73710	W1787		W1787 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1787.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1809_PRJEB73710	W1809		W1809 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1809.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1810_PRJEB73710	W1810		W1810 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1810.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1825_PRJEB73710	W1825		W1825 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1825.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1839_PRJEB73710	W1839		W1839 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1839.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1859_PRJEB73710	W1859		W1859 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1859.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1865_PRJEB73710	W1865		W1865 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1865.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1880_PRJEB73710	W1880		W1880 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1880.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1890_PRJEB73710	W1890		W1890 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1890.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1895_PRJEB73710	W1895		W1895 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1895.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1919_PRJEB73710	W1919		W1919 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1919.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1943_PRJEB73710	W1943		W1943 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1943.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1970_PRJEB73710	W1970		W1970 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1970.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W1976_PRJEB73710	W1976		W1976 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W1976.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2005_PRJEB73710	W2005		W2005 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2005.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2014	W2014		W2014 genome assembly	ORYZA_SATIVA														genome.W2014.fasta	FASTA	
+ASM_W2022_PRJEB73710	W2022		W2022 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2022.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2036_PRJEB73710	W2036		W2036 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2036.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2051_PRJEB73710	W2051		W2051 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2051.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2053_PRJEB73710	W2053		W2053 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2053.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2064_PRJEB73710	W2064		W2064 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2064.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2066_PRJEB73710	W2066		W2066 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2066.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2099_PRJEB73710	W2099		W2099 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2099.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2108_PRJEB73710	W2108		W2108 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2108.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2197_PRJEB73710	W2197		W2197 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2197.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2267_PRJEB73710	W2267		W2267 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2267.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2275_PRJEB73710	W2275		W2275 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2275.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2283_PRJEB73710	W2283		W2283 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2283.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2305_PRJEB73710	W2305		W2305 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2305.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2308_PRJEB73710	W2308		W2308 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2308.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2310_PRJEB73710	W2310		W2310 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2310.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2311_PRJEB73710	W2311		W2311 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2311.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2318_PRJEB73710	W2318		W2318 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2318.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2319_PRJEB73710	W2319		W2319 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2319.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2320_PRJEB73710	W2320		W2320 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2320.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2321_PRJEB73710	W2321		W2321 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2321.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W2332_PRJEB73710	W2332		W2332 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W2332.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3000_PRJEB73710	W3000		W3000 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3000.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3007_PRJEB73710	W3007		W3007 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3007.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3009_PRJEB73710	W3009		W3009 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3009.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3012_PRJEB73710	W3012		W3012 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3012.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3029_PRJEB73710	W3029		W3029 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3029.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3033_PRJEB73710	W3033		W3033 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3033.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3035_PRJEB73710	W3035		W3035 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3035.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3037_PRJEB73710	W3037		W3037 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3037.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3038_PRJEB73710	W3038		W3038 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3038.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3040_PRJEB73710	W3040		W3040 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3040.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3046_PRJEB73710	W3046		W3046 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3046.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3047_PRJEB73710	W3047		W3047 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3047.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3051_PRJEB73710	W3051		W3051 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3051.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3052_PRJEB73710	W3052		W3052 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3052.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3054_PRJEB73710	W3054		W3054 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3054.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3055_PRJEB73710	W3055		W3055 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3055.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3063_PRJEB73710	W3063		W3063 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3063.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3066_PRJEB73710	W3066		W3066 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3066.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3071_PRJEB73710	W3071		W3071 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3071.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3074_PRJEB73710	W3074		W3074 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3074.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3082_PRJEB73710	W3082		W3082 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3082.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3086_PRJEB73710	W3086		W3086 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3086.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3088_PRJEB73710	W3088		W3088 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3088.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3090_PRJEB73710	W3090		W3090 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3090.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3092_PRJEB73710	W3092		W3092 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3092.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_W3096_PRJEB73710	W3096		W3096 genome assembly	ORYZA_RUFIPOGON	chromosome										Nipponbare (日本晴)	Figshare	PRJEB73710	genome.W3096.fasta	FASTA	Wild and cultivated rice pangenome genome assembly
+ASM_Wanlixian	Wanlixian		Wanlixian genome assembly	ORYZA_SATIVA														genome.Wanlixian.fasta	FASTA	
+ASM_Wanshi	Wanshi		Wanshi genome assembly	ORYZA_SATIVA														genome.Wanshi.fasta	FASTA	
+ASM_Weiguo	Weiguo		Weiguo genome assembly	ORYZA_SATIVA														genome.Weiguo.fasta	FASTA	
+ASM_Wenxiangnuo	Wenxiangnuo		Wenxiangnuo genome assembly	ORYZA_SATIVA														genome.Wenxiangnuo.fasta	FASTA	
+ASM_wild111	wild111		wild111 genome assembly	ORYZA_SATIVA														genome.wild111.fasta	FASTA	
+ASM_wild12	wild12		wild12 genome assembly	ORYZA_SATIVA														genome.wild12.fasta	FASTA	
+ASM_wild131	wild131		wild131 genome assembly	ORYZA_SATIVA														genome.wild131.fasta	FASTA	
+ASM_wild219	wild219		wild219 genome assembly	ORYZA_SATIVA														genome.wild219.fasta	FASTA	
+ASM_wild273	wild273		wild273 genome assembly	ORYZA_SATIVA														genome.wild273.fasta	FASTA	
+ASM_wild65	wild65		wild65 genome assembly	ORYZA_SATIVA														genome.wild65.fasta	FASTA	
+ASM_WSSM	WSSM		WSSM genome assembly	ORYZA_SATIVA														genome.WSSM.fasta	FASTA	
+ASM_Wuziluosi 215	Wuziluosi 215		Wuziluosi 215 genome assembly	ORYZA_SATIVA														genome.Wuziluosi 215.fasta	FASTA	
+ASM_WW8	WW8		WW8 genome assembly	ORYZA_SATIVA														genome.WW8.fasta	FASTA	
+ASM_WYG3	WYG3		WYG3 genome assembly	ORYZA_SATIVA														genome.WYG3.fasta	FASTA	
+ASM_WYJ3	WYJ3		WYJ3 genome assembly	ORYZA_SATIVA														genome.WYJ3.fasta	FASTA	
+ASM_WYJ7	WYJ7		WYJ7 genome assembly	ORYZA_SATIVA														genome.WYJ7.fasta	FASTA	
+ASM_Xiangai B	Xiangai B		Xiangai B genome assembly	ORYZA_SATIVA														genome.Xiangai B.fasta	FASTA	
+ASM_Xiangaizao 10hao	Xiangaizao 10hao		Xiangaizao 10hao genome assembly	ORYZA_SATIVA														genome.Xiangaizao 10hao.fasta	FASTA	
+ASM_Xiangdao	Xiangdao		Xiangdao genome assembly	ORYZA_SATIVA														genome.Xiangdao.fasta	FASTA	
+ASM_Xianggu	Xianggu		Xianggu genome assembly	ORYZA_SATIVA														genome.Xianggu.fasta	FASTA	
+ASM_Xiangwanxian 3	Xiangwanxian 3		Xiangwanxian 3 genome assembly	ORYZA_SATIVA														genome.Xiangwanxian 3.fasta	FASTA	
+ASM_Xiangzaoxian 7	Xiangzaoxian 7		Xiangzaoxian 7 genome assembly	ORYZA_SATIVA														genome.Xiangzaoxian 7.fasta	FASTA	
+ASM_Xianluosichi	Xianluosichi		Xianluosichi genome assembly	ORYZA_SATIVA														genome.Xianluosichi.fasta	FASTA	
+ASM_Xiaobaimi	Xiaobaimi		Xiaobaimi genome assembly	ORYZA_SATIVA														genome.Xiaobaimi.fasta	FASTA	
+ASM_Xiaohonggu	Xiaohonggu		Xiaohonggu genome assembly	ORYZA_SATIVA														genome.Xiaohonggu.fasta	FASTA	
+ASM_Xishi 15	Xishi 15		Xishi 15 genome assembly	ORYZA_SATIVA														genome.Xishi 15.fasta	FASTA	
+ASM_XL628S	XL628S		XL628S genome assembly	ORYZA_SATIVA														genome.XL628S.fasta	FASTA	
+ASM_XS134	XS134		XS134 genome assembly	ORYZA_SATIVA														genome.XS134.fasta	FASTA	
+ASM_Xuanenchangtanqingzhan	Xuanenchangtanqingzhan		Xuanenchangtanqingzhan genome assembly	ORYZA_SATIVA														genome.Xuanenchangtanqingzhan.fasta	FASTA	
+ASM_Xugunuo	Xugunuo		Xugunuo genome assembly	ORYZA_SATIVA														genome.Xugunuo.fasta	FASTA	
+ASM_XYXZ	XYXZ		XYXZ genome assembly	ORYZA_SATIVA														genome.XYXZ.fasta	FASTA	
+ASM_Y3551	Y3551		Y3551 genome assembly	ORYZA_SATIVA														genome.Y3551.fasta	FASTA	
+ASM_Y4B	Y4B		Y4B genome assembly	ORYZA_SATIVA														genome.Y4B.fasta	FASTA	
+ASM_Y58S	Y58S		Y58S genome assembly	ORYZA_SATIVA														genome.Y58S.fasta	FASTA	
+ASM_Yangkenuo	Yangkenuo		Yangkenuo genome assembly	ORYZA_SATIVA														genome.Yangkenuo.fasta	FASTA	
+ASM_Yanshuichi	Yanshuichi		Yanshuichi genome assembly	ORYZA_SATIVA														genome.Yanshuichi.fasta	FASTA	
+ASM_YCW03	YCW03		YCW03 genome assembly	ORYZA_SATIVA														genome.YCW03.fasta	FASTA	
+ASM_Yelicanghua	Yelicanghua		Yelicanghua genome assembly	ORYZA_SATIVA														genome.Yelicanghua.fasta	FASTA	
+ASM_YF47	YF47		YF47 genome assembly	ORYZA_SATIVA														genome.YF47.fasta	FASTA	
+ASM_Yikong	Yikong		Yikong genome assembly	ORYZA_SATIVA														genome.Yikong.fasta	FASTA	
+ASM_YJSM	YJSM		YJSM genome assembly	ORYZA_SATIVA														genome.YJSM.fasta	FASTA	
+ASM_Younian	Younian		Younian genome assembly	ORYZA_SATIVA														genome.Younian.fasta	FASTA	
+ASM_YR196	YR196		YR196 genome assembly	ORYZA_SATIVA														genome.YR196.fasta	FASTA	
+ASM_Yuyannuo	Yuyannuo		Yuyannuo genome assembly	ORYZA_SATIVA														genome.Yuyannuo.fasta	FASTA	
+ASM_YX1	YX1		YX1 genome assembly	ORYZA_SATIVA														genome.YX1.fasta	FASTA	
+ASM_YZ-2	YZ-2		YZ-2 genome assembly	ORYZA_SATIVA														genome.YZ-2.fasta	FASTA	
+ASM_YZX	YZX		YZX genome assembly	ORYZA_SATIVA														genome.YZX.fasta	FASTA	
+ASM_Z9311S	Z9311S		Z9311S genome assembly	ORYZA_SATIVA														genome.Z9311S.fasta	FASTA	
+ASM_Zaoshengbai	Zaoshengbai		Zaoshengbai genome assembly	ORYZA_SATIVA														genome.Zaoshengbai.fasta	FASTA	
+ASM_Zaoshunonghu 6	Zaoshunonghu 6		Zaoshunonghu 6 genome assembly	ORYZA_SATIVA														genome.Zaoshunonghu 6.fasta	FASTA	
+ASM_Zaoshuxiangheimi	Zaoshuxiangheimi		Zaoshuxiangheimi genome assembly	ORYZA_SATIVA														genome.Zaoshuxiangheimi.fasta	FASTA	
+ASM_Zaoxian 240	Zaoxian 240		Zaoxian 240 genome assembly	ORYZA_SATIVA														genome.Zaoxian 240.fasta	FASTA	
+ASM_ZCD	ZCD		ZCD genome assembly	ORYZA_SATIVA														genome.ZCD.fasta	FASTA	
+ASM_ZH11	ZH11		ZH11 genome assembly	ORYZA_SATIVA														genome.ZH11.fasta	FASTA	
+ASM_Zhendao 232	Zhendao 232		Zhendao 232 genome assembly	ORYZA_SATIVA														genome.Zhendao 232.fasta	FASTA	
+ASM_Zhenfu 8	Zhenfu 8		Zhenfu 8 genome assembly	ORYZA_SATIVA														genome.Zhenfu 8.fasta	FASTA	
+ASM_Zhengdao 5	Zhengdao 5		Zhengdao 5 genome assembly	ORYZA_SATIVA														genome.Zhengdao 5.fasta	FASTA	
+ASM_Zhuyuan	Zhuyuan		Zhuyuan genome assembly	ORYZA_SATIVA														genome.Zhuyuan.fasta	FASTA	
+ASM_Zhuzhen B	Zhuzhen B		Zhuzhen B genome assembly	ORYZA_SATIVA														genome.Zhuzhen B.fasta	FASTA	
+ASM_Zimangfeie	Zimangfeie		Zimangfeie genome assembly	ORYZA_SATIVA														genome.Zimangfeie.fasta	FASTA	
+ASM_Zinuo	Zinuo		Zinuo genome assembly	ORYZA_SATIVA														genome.Zinuo.fasta	FASTA	
+ASM_ZS97RS3	ZS97RS3		ZS97RS3 genome assembly	ORYZA_SATIVA														genome.ZS97RS3.fasta	FASTA	

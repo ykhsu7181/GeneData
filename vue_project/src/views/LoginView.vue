@@ -1,13 +1,13 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <h2>基因组数据仓库</h2>
+      <h2>{{ $t('page.login.title') }}</h2>
       <div class="login-form">
         <el-form :model="loginForm" :rules="loginRules" ref="loginFormRef">
           <el-form-item prop="username">
             <el-input 
               v-model="loginForm.username" 
-              placeholder="用户名" 
+              :placeholder="$t('page.login.username')"
               prefix-icon="el-icon-user">
             </el-input>
           </el-form-item>
@@ -15,7 +15,7 @@
             <el-input 
               v-model="loginForm.password" 
               type="password" 
-              placeholder="密码" 
+              :placeholder="$t('page.login.password')"
               prefix-icon="el-icon-lock" 
               show-password>
             </el-input>
@@ -26,7 +26,7 @@
               :loading="loading" 
               @click="handleLogin" 
               style="width: 100%">
-              登录
+              {{ $t('page.login.login') }}
             </el-button>
           </el-form-item>
         </el-form>
@@ -39,11 +39,13 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'LoginView',
   setup() {
     const router = useRouter()
+    const { t } = useI18n()
     const loginFormRef = ref(null)
     const loading = ref(false)
     
@@ -53,8 +55,8 @@ export default {
     })
     
     const loginRules = {
-      username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-      password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+      username: [{ required: true, message: t('page.login.usernameRequired'), trigger: 'blur' }],
+      password: [{ required: true, message: t('page.login.passwordRequired'), trigger: 'blur' }]
     }
     
     const handleLogin = () => {
@@ -69,14 +71,14 @@ export default {
             
             // 登录成功提示
             ElMessage({
-              message: '登录成功',
+              message: t('messages.loginSuccess'),
               type: 'success'
             })
             
             // 跳转到首页
             router.push('/dashboard')
           } else {
-            ElMessage.error('用户名或密码错误')
+            ElMessage.error(t('page.login.invalidCredentials'))
           }
           
           loading.value = false

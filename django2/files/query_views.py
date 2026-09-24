@@ -5,7 +5,7 @@ from functools import wraps
 
 from django.conf import settings
 from django.http import FileResponse
-from django.db.models import Q
+from django.db.models import Case, IntegerField, Q, Value, When
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -15,12 +15,18 @@ from files.models import Accession, FileRelation
 from files.parsers.archive import parse_feature_file as _parse_feature_file
 from files.parsers.codon import load_payload as _load_codon_payload
 from files.parsers.fasta import (
-    FastaScanLimitExceeded,
     build_sequence_aliases as _build_fasta_sequence_aliases,
     list_sequence_ids,
     sequence_length,
 )
-from files.services.fasta_index_service import find_current_fasta_index
+from files.services.fasta_index_service import FastaIndexUnavailable, find_current_fasta_index
+from files.services.annotation_feature_index_service import (
+    AnnotationIndexUnavailable,
+    annotation_cache_key,
+    cached_value,
+    get_ready_annotation_index,
+    serialize_feature,
+)
 from files.services.accession_context import (
     AmbiguousContextError,
     classify_file_scope,
@@ -29,6 +35,7 @@ from files.services.accession_context import (
     resolve_preferred_annotation,
     resolve_preferred_assembly,
 )
+from files.services.assembly_visibility import filter_visible_assemblies
 from files.services.file_relation_service import (
     get_files_for_accession,
     get_files_for_annotation,
@@ -64,11 +71,11 @@ def _fasta_read_options(genome_file, accession_obj, assembly):
             related_id=related_id,
         )
     if not index_path:
-        logger.warning("No usable related FASTA index; using bounded scan: %s", genome_file.file_path)
+        raise FastaIndexUnavailable(
+            f"No fresh .fai index is registered for {genome_file.name}"
+        )
     return {
         "index_path": index_path,
-        "max_bytes": getattr(settings, "FASTA_FALLBACK_MAX_BYTES", 512 * 1024 * 1024),
-        "timeout_seconds": getattr(settings, "FASTA_FALLBACK_TIMEOUT_SECONDS", 5),
     }
 
 
@@ -90,9 +97,23 @@ def reject_ambiguous_context(view_func):
                 },
                 status=status.HTTP_409_CONFLICT,
             )
-        except FastaScanLimitExceeded as exc:
+        except FastaIndexUnavailable as exc:
             return Response(
-                {"error": str(exc), "code": "fasta_scan_limit_exceeded"},
+                {
+                    "error": str(exc),
+                    "code": "fasta_index_unavailable",
+                    "rebuild_command": "python manage.py build_fasta_indexes",
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except AnnotationIndexUnavailable as exc:
+            return Response(
+                {
+                    "error": str(exc),
+                    "code": "annotation_index_unavailable",
+                    "index_status": exc.index_status,
+                    "rebuild_command": "python manage.py build_annotation_feature_indexes",
+                },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
@@ -220,9 +241,52 @@ def query_organisms(request):
     params = _request_params(request)
     search = (params.get("search") or "").strip()
     queryset = Accession.objects.all().order_by("accession")
-    if search:
-        queryset = queryset.filter(accession__icontains=search)
-    return Response(list(queryset.values_list("accession", flat=True)))
+    if not search:
+        return Response(list(queryset.values_list("accession", flat=True)))
+
+    if len(search) > 100:
+        return Response(
+            {
+                "error": "search must not exceed 100 characters",
+                "code": "invalid_search",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    raw_limit = params.get("limit", "20")
+    try:
+        limit = int(raw_limit)
+    except (TypeError, ValueError):
+        limit = 0
+    if limit < 1:
+        return Response(
+            {"error": "limit must be a positive integer", "code": "invalid_limit"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    limit = min(limit, 50)
+
+    queryset = (
+        queryset.filter(
+            Q(accession__icontains=search)
+            | Q(species__species_code__icontains=search)
+            | Q(species__scientific_name__icontains=search)
+            | Q(species__chinese_name__icontains=search)
+            | Q(species__common_name__icontains=search)
+            | Q(sub_population__icontains=search)
+        )
+        .annotate(
+            search_rank=Case(
+                When(accession__iexact=search, then=Value(0)),
+                When(accession__istartswith=search, then=Value(1)),
+                When(accession__icontains=search, then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField(),
+            )
+        )
+        .order_by("search_rank", "accession")
+        .distinct()
+    )
+    return Response(list(queryset.values_list("accession", flat=True)[:limit]))
 
 
 @api_view(["GET"])
@@ -261,8 +325,13 @@ def query_sub_populations(request):
 @permission_classes([AllowAny])
 def query_supplementary_data(request):
     payload = {}
-    for accession in Accession.objects.all().order_by("accession"):
+    for accession in Accession.objects.select_related("species").order_by("accession"):
+        species = accession.species
         payload[accession.accession] = {
+            "species_code": species.species_code if species else None,
+            "scientific_name": species.scientific_name if species else None,
+            "chinese_name": species.chinese_name if species else None,
+            "common_name": species.common_name if species else None,
             "sub_population": accession.sub_population,
             "seq_data": accession.seq_data,
             "country": accession.country,
@@ -302,7 +371,7 @@ def query_paginated_overview(request):
             if normalized_sub_population not in selected:
                 continue
 
-        assemblies = list(accession_obj.assemblies.all())
+        assemblies = filter_visible_assemblies(accession_obj.assemblies.all())
         default_assembly = resolve_preferred_assembly(accession_obj)
         default_annotation = resolve_preferred_annotation(default_assembly)
 
@@ -462,6 +531,43 @@ def query_download_transcriptome(request):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @reject_ambiguous_context
+def query_annotation_options(request):
+    params = _request_params(request)
+    organism, accession_obj, assembly, annotation = get_context_organism(
+        annotation_id=params.get("annotation_id"),
+        assembly_id=params.get("assembly_id"),
+        accession=params.get("accession"),
+        organism=params.get("organism"),
+    )
+    if not organism:
+        return Response({"error": "缺少必要的参数: organism"}, status=status.HTTP_400_BAD_REQUEST)
+
+    service_file = _existing_service_file(get_files_for_annotation(annotation.id, file_role="annotation")) if annotation else None
+    if not service_file:
+        return Response({"error": f"未找到 {organism} 的注释文件"}, status=status.HTTP_404_NOT_FOUND)
+
+    feature_index = get_ready_annotation_index(annotation, service_file)
+    cache_key = annotation_cache_key("options", feature_index)
+    payload = cached_value(
+        cache_key,
+        lambda: {
+            "annotation_id": annotation.id if annotation else None,
+            "chromosomes": feature_index.chromosomes,
+            "feature_types": feature_index.feature_types,
+            "summary": {
+                "total_features": feature_index.feature_count,
+                "chromosome_count": len(feature_index.chromosomes),
+                "feature_type_count": len(feature_index.feature_types),
+            },
+        },
+        getattr(settings, "ANNOTATION_OPTIONS_CACHE_SECONDS", 3600),
+    )
+    return Response(payload)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@reject_ambiguous_context
 def query_annotation_data(request):
     params = _request_params(request)
     organism, accession_obj, assembly, annotation = get_context_organism(
@@ -474,6 +580,7 @@ def query_annotation_data(request):
         return Response({"error": "缺少必要的参数: organism"}, status=status.HTTP_400_BAD_REQUEST)
 
     page, page_size = _get_page_params(params, default_page_size=50)
+    page_size = min(page_size, getattr(settings, "ANNOTATION_MAX_PAGE_SIZE", 10000))
     chromosome = params.get("chromosome")
     feature_type = params.get("feature_type", "all")
 
@@ -481,34 +588,67 @@ def query_annotation_data(request):
     if not service_file:
         return Response({"error": f"未找到 {organism} 的注释文件"}, status=status.HTTP_404_NOT_FOUND)
 
-    chromosome_aliases = _build_context_chromosome_aliases(
-        accession_obj=accession_obj,
-        assembly=assembly,
-        organism=organism,
+    feature_index = get_ready_annotation_index(annotation, service_file)
+    cache_key = annotation_cache_key(
+        "data", feature_index, chromosome, feature_type, page, page_size
     )
-    all_rows = _parse_feature_file(
-        service_file["file_path"],
-        chromosome=chromosome,
-        feature_type=None if feature_type == "all" else feature_type,
-        chromosome_aliases=chromosome_aliases,
-    )
-    chromosomes = sorted({row["seqid"] for row in all_rows})
-    feature_types = sorted({row["feature"] for row in all_rows if row.get("feature")})
-    return Response(
-        {
-            "results": all_rows[(page - 1) * page_size: page * page_size],
-            "count": len(all_rows),
+
+    def build_payload():
+        queryset = feature_index.features.all()
+        if chromosome:
+            queryset = queryset.filter(seqid=chromosome)
+        if feature_type and feature_type != "all":
+            queryset = queryset.filter(feature=feature_type)
+        count = queryset.count()
+        if chromosome:
+            chromosomes = [chromosome] if count else []
+        else:
+            chromosomes = (
+                feature_index.chromosomes
+                if feature_type == "all"
+                else sorted(queryset.order_by().values_list("seqid", flat=True).distinct())
+            )
+        if feature_type and feature_type != "all":
+            feature_types = [feature_type] if count else []
+        else:
+            feature_types = (
+                feature_index.feature_types
+                if not chromosome
+                else sorted(
+                    queryset.exclude(feature__isnull=True)
+                    .exclude(feature="")
+                    .order_by()
+                    .values_list("feature", flat=True)
+                    .distinct()
+                )
+            )
+        start = (page - 1) * page_size
+        results = [
+            serialize_feature(row)
+            for row in queryset.order_by("id")[start:start + page_size]
+        ]
+        filtered_statistics = {
+            "chromosomes": chromosomes,
+            "feature_types": feature_types,
+            "total_features": count,
+        }
+        return {
+            "results": results,
+            "count": count,
+            "filtered_count": count,
             "page": page,
             "page_size": page_size,
-            "total_pages": (len(all_rows) + page_size - 1) // page_size,
+            "total_pages": (count + page_size - 1) // page_size,
             "annotation_file": _adapt_annotation_file_service_result(service_file),
-            "statistics": {
-                "chromosomes": chromosomes,
-                "feature_types": feature_types,
-                "total_features": len(all_rows),
-            },
+            "filtered_statistics": filtered_statistics,
+            "statistics": filtered_statistics,
         }
-    )
+
+    return Response(cached_value(
+        cache_key,
+        build_payload,
+        getattr(settings, "ANNOTATION_DATA_CACHE_SECONDS", 300),
+    ))
 
 
 @api_view(["GET"])

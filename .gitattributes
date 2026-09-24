@@ -1,0 +1,3 @@
+# Keep frozen production-manifest bytes stable across Windows and Linux checkouts.
+django2/metadata/production_full_manifest_20260922/*.tsv -text whitespace=-blank-at-eol
+django2/metadata/production_full_manifest_20260922/*.txt -text whitespace=-blank-at-eol

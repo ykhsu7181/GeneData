@@ -88,13 +88,14 @@ class QueryContextAmbiguityTests(TestCase):
 
         self.assert_ambiguous(response)
 
-    def test_data_overview_reports_ambiguous_context(self):
+    def test_data_overview_does_not_require_a_default_assembly(self):
         response = self.client.get(
             "/gd/api/files/query/data-overview/",
             {"search": self.accession.accession},
         )
 
-        self.assert_ambiguous(response)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["count"], 0)
 
     def test_accession_detail_exposes_ambiguity_without_guessing(self):
         response = self.client.get(

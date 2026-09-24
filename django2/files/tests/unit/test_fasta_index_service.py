@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from django.test import TestCase
 
 from files.models import DataFile, FileRelation
-from files.services.fasta_index_service import find_current_fasta_index
+from files.services.fasta_index_service import build_and_link_fasta_index, find_current_fasta_index
 
 
 class FastaIndexServiceTests(TestCase):
@@ -77,3 +77,30 @@ class FastaIndexServiceTests(TestCase):
         )
 
         self.assertIsNone(resolved)
+
+    def test_builds_and_registers_fasta_sidecar(self):
+        genome_file = DataFile.objects.create(
+            file_code=f"GENOME_{self.suffix}",
+            file_name="genome.IR64.fasta",
+            file_path=self.genome_path,
+            is_current=True,
+        )
+
+        index_file, sequence_count = build_and_link_fasta_index(
+            genome_file=genome_file,
+            related_type="assembly",
+            related_id=42,
+            related_code="IR64",
+        )
+
+        self.assertEqual(sequence_count, 1)
+        self.assertTrue(os.path.isfile(index_file.file_path))
+        with open(index_file.file_path, "r", encoding="utf-8") as handle:
+            columns = handle.read().strip().split("\t")
+        self.assertEqual(columns[:2], ["Chr1", "4"])
+        self.assertTrue(FileRelation.objects.filter(
+            file=index_file,
+            related_type="assembly",
+            related_id="42",
+            file_role="genome_index",
+        ).exists())

@@ -129,6 +129,7 @@ build/
 /django2/.pydeps_manual/
 /django2/.pydeps_runtime/
 /django2/.pydeps_stage1/
+/django2/audit_reports/
 /django2/media/
 /vue_project/dist/
 /vue_project/dist.zip
@@ -139,4 +140,3 @@ build/
 /django2-bake.zip
 /生产环境总部署流程.pdf
 /基因仓库近期工作记录.md
-/开发环境启动流程.md
