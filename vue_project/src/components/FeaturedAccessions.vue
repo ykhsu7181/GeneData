@@ -134,7 +134,7 @@ thead { position: sticky; top: 0; z-index: 1; background: #edf4fa; }
 th, td { padding: 11px 13px; border-bottom: 1px solid #e0e9f3; text-align: left; white-space: nowrap; }
 th { color: #375170; font-weight: 700; }
 td { color: #304661; }
-td em { font-style: normal; }
+td em { font-style: italic; }
 tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: #f8fbff; }
 .accession-link { margin: -4px; }

@@ -40,7 +40,8 @@ test('cluster colors follow the shared accession-count thresholds', () => {
   assert.equal(getGeographicClusterColor(19), '#f07818')
   assert.equal(getGeographicClusterColor(20), '#eab308')
   assert.equal(getGeographicClusterColor(50), '#eab308')
-  assert.equal(getGeographicClusterColor(100), '#eab308')
+  assert.equal(getGeographicClusterColor(51), '#ef4444')
+  assert.equal(getGeographicClusterColor(100), '#ef4444')
   assert.equal(getGeographicClusterColor(101), '#ec4899')
 })
 

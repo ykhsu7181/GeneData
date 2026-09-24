@@ -17,7 +17,7 @@
         <el-button type="primary" @click="applyFilters">{{ $t('common.search') }}</el-button>
       </div>
       <label class="filter-field"><el-select v-model="draft.category" :aria-label="$t('page.dataOverview.filters.dataType')" :placeholder="$t('page.dataOverview.filters.dataType')" clearable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in categories" :key="item.key" :label="categoryLabel(item)" :value="item.key" /></el-select></label>
-      <label class="filter-field"><el-select v-model="draft.species" :aria-label="$t('page.dataOverview.filters.species')" :placeholder="$t('page.dataOverview.filters.species')" clearable filterable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in filters.species" :key="item.key" :label="speciesOptionLabel(item)" :value="item.key" /></el-select></label>
+      <label class="filter-field"><el-select v-model="draft.species" :aria-label="$t('page.dataOverview.filters.species')" :placeholder="$t('page.dataOverview.filters.species')" clearable filterable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in filters.species" :key="item.key" :label="item.label" :value="item.key"><SpeciesName :common-name="item.label" :scientific-name="item.latin_name" /></el-option></el-select></label>
       <label class="filter-field"><el-select v-model="draft.accession" :aria-label="$t('page.dataOverview.accession')" :placeholder="$t('page.dataOverview.accession')" clearable filterable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in filters.accessions" :key="item.key" :label="item.label" :value="item.key" /></el-select></label>
       <label class="filter-field"><el-select v-model="draft.dataset" :aria-label="$t('page.dataOverview.columns.dataset')" :placeholder="$t('page.dataOverview.columns.dataset')" clearable filterable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in filters.datasets" :key="item.key" :label="item.label" :value="item.key" /></el-select></label>
       <el-button class="reset-button" @click="resetFilters"><el-icon><RefreshLeft /></el-icon>{{ $t('common.reset') }}</el-button>
@@ -79,9 +79,14 @@
               <td v-for="column in visibleColumns" :key="column.key" :class="`cell-${column.key}`">
                 <span v-if="column.key === 'category'" :class="['category-tag', `category-${row.category}`]">{{ categoryLabel(row.category) }}</span>
                 <span v-else-if="column.key === 'file_name'" class="file-name" :title="row.file_name">{{ row.file_name || '-' }}</span>
-                <em v-else-if="column.key === 'species_name'">{{ row.species_name || '-' }}</em>
+                <SpeciesName
+                  v-else-if="column.key === 'species_name' && row.species?.length === 1"
+                  :common-name="row.species[0].name"
+                  :scientific-name="row.species[0].scientific_name"
+                />
+                <span v-else-if="column.key === 'species_name'">{{ row.species_name || '-' }}</span>
                 <router-link v-else-if="column.key === 'accession' && row.accession && row.accession !== 'Multiple'" class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link>
-                <span v-else-if="column.key === 'description'" class="truncate" :title="row.description">{{ row.description || '-' }}</span>
+                <span v-else-if="column.key === 'description'" class="truncate" :title="displayDescription(row)">{{ displayDescription(row) }}</span>
                 <code v-else-if="column.key === 'md5'" class="truncate" :title="row.md5">{{ row.md5 || '-' }}</code>
                 <span v-else>{{ row[column.key] || '-' }}</span>
               </td>
@@ -117,6 +122,7 @@ import { useRoute, useRouter } from 'vue-router'
 import DataFileDetailDrawer from '@/components/data-overview/DataFileDetailDrawer.vue'
 import DataOverviewColumnSettings from '@/components/data-overview/DataOverviewColumnSettings.vue'
 import DataOverviewStats from '@/components/data-overview/DataOverviewStats.vue'
+import SpeciesName from '@/components/common/SpeciesName.vue'
 import { fetchDataFileDetail, fetchDataOverview } from '@/services/dataOverview'
 import {
   loadColumnWidths,
@@ -186,7 +192,7 @@ const categoryLabel = category => {
   if (typeof category === 'object') return locale.value === 'en' ? category.en_label || category.label : category.label || category.en_label
   return key || '-'
 }
-const speciesOptionLabel = item => item.latin_name && item.latin_name !== item.label ? `${item.label} (${item.latin_name})` : item.label
+const displayDescription = row => row?.category === 'raw_data' ? '-' : row?.description || '-'
 const categories = computed(() => filters.value.data_categories || [])
 const columnOptions = computed(() => [
   { key: 'category', label: t('common.dataType'), required: true },

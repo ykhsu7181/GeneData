@@ -90,14 +90,16 @@ export default {
 .cluster-panel-header h2 { margin:0; color:#1455c8; font-size:14px; }
 .cluster-panel-close { display:grid; width:26px; height:26px; padding:0; place-items:center; border:0; border-radius:6px; color:#34465e; background:transparent; font-size:20px; line-height:1; cursor:pointer; }
 .cluster-panel-close:hover,.cluster-panel-close:focus-visible { color:#086cde; background:#eef5ff; outline:2px solid #75aef1; outline-offset:1px; }
-.cluster-table-wrap { min-height:0; overflow:auto; overscroll-behavior:contain; }
-.cluster-table { width:100%; min-width:500px; border-collapse:collapse; table-layout:fixed; }
-.cluster-table th,.cluster-table td { padding:7px 6px; border-right:1px solid #e3ebf5; border-bottom:1px solid #e3ebf5; color:#526b91; text-align:left; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cluster-table-wrap { min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; }
+.cluster-table-wrap::-webkit-scrollbar { display:none; }
+.cluster-table { width:100%; min-width:0; border-collapse:collapse; table-layout:fixed; }
+.cluster-table th,.cluster-table td { box-sizing:border-box; padding:7px 4px; border-right:1px solid #e3ebf5; border-bottom:1px solid #e3ebf5; color:#526b91; text-align:left; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .cluster-table th { position:sticky; top:0; z-index:1; color:#173d7c; background:#edf5ff; font-weight:700; }
-.cluster-table th:nth-child(1) { width:76px; }
-.cluster-table th:nth-child(2) { width:108px; }
-.cluster-table th:nth-child(3),.cluster-table th:nth-child(4) { width:70px; }
-.cluster-table th:nth-child(5),.cluster-table th:nth-child(6) { width:82px; }
+.cluster-table th:nth-child(1) { width:16%; }
+.cluster-table th:nth-child(2) { width:23%; }
+.cluster-table th:nth-child(3),.cluster-table th:nth-child(4) { width:15%; }
+.cluster-table th:nth-child(5) { width:15%; }
+.cluster-table th:nth-child(6) { width:16%; }
 .cluster-table th:last-child,.cluster-table td:last-child { border-right:0; }
 .cluster-table tbody tr:last-child td { border-bottom:0; }
 .cluster-table tbody tr:hover { background:#f7fbff; }

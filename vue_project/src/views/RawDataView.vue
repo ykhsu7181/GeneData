@@ -125,7 +125,7 @@
                 <td><span class="text-ellipsis" :title="row.sample_id">{{ row.sample_id || '-' }}</span></td>
                 <td class="species-cell">
                   {{ row.species_name || '-' }}
-                  <small>{{ row.latin_name || '-' }}</small>
+                  <small><em>{{ row.latin_name || '-' }}</em></small>
                 </td>
                 <td><span class="type-tag">{{ row.raw_data_type || '-' }}</span></td>
                 <td><span class="text-ellipsis" :title="row.sequencing_platform">{{ row.sequencing_platform || '-' }}</span></td>
@@ -174,7 +174,8 @@
             <dl>
               <dt>Accession</dt><dd>{{ selectedRow.accession || '-' }}</dd>
               <dt>Sample ID</dt><dd>{{ selectedRow.sample_id || '-' }}</dd>
-              <dt>{{ $t('common.species') }}</dt><dd>{{ selectedRow.species_name || '-' }} ({{ selectedRow.latin_name || '-' }})</dd>
+              <dt>{{ $t('common.species') }}</dt>
+              <dd><SpeciesName :common-name="selectedRow.species_name" :scientific-name="selectedRow.latin_name" /></dd>
               <dt>{{ $t('common.dataType') }}</dt><dd>{{ selectedRow.raw_data_type || '-' }}</dd>
               <dt>{{ $t('page.rawData.sequencingPlatform') }}</dt><dd>{{ selectedRow.sequencing_platform || '-' }}</dd>
               <dt>{{ $t('common.fileRole') }}</dt><dd>{{ fileRoleLabel(selectedRow.file_role) }}</dd>
@@ -211,6 +212,7 @@ import { computed, onMounted, ref } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import SpeciesName from '@/components/common/SpeciesName.vue'
 
 const statusMap = {
   verified: { key: 'verified', className: 'verified' },
@@ -246,6 +248,7 @@ const fileRoleMap = {
 
 export default {
   name: 'RawDataView',
+  components: { SpeciesName },
   setup() {
     const { t, te } = useI18n()
     const loading = ref(false)

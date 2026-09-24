@@ -34,6 +34,7 @@ COMMAND_LIFECYCLE = {
     "import_dataset_accession_manifest": ACTIVE,
     "import_dataset_manifest": ACTIVE,
     "import_incremental_hierarchy_manifest": ACTIVE,
+    "import_hierarchy_file_manifest": ACTIVE,
     "import_raw_data_manifest": ACTIVE,
     "import_sample_manifest": ACTIVE,
     "link_genomefiles_to_accessions": LEGACY_REPAIR,

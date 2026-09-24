@@ -16,7 +16,7 @@
         @click="$emit('select', item.accession)"
       >
         <strong :title="item.accession">{{ item.accession }}</strong>
-        <span :title="item.scientific_name || ''">{{ item.scientific_name || '—' }}</span>
+        <SpeciesName :scientific-name="item.scientific_name" empty-text="—" :title="item.scientific_name || ''" />
         <span :title="item.sub_population || ''">{{ item.sub_population || '—' }}</span>
         <time :datetime="item.viewed_at || undefined">{{ formatRelativeTime(item.viewed_at) }}</time>
       </button>
@@ -28,10 +28,11 @@
 <script>
 import { useI18n } from 'vue-i18n';
 import { Clock } from '@element-plus/icons-vue';
+import SpeciesName from '@/components/common/SpeciesName.vue';
 
 export default {
   name: 'RecentAccessions',
-  components: { Clock },
+  components: { Clock, SpeciesName },
   props: {
     items: { type: Array, default: () => [] }
   },

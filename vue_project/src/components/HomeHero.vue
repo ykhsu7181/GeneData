@@ -60,11 +60,12 @@
         <span>{{ $t('common.examples') }}:</span>
         <button
           v-for="example in searchExamples"
-          :key="example"
+          :key="example.value"
           type="button"
-          @click="submitExample(example)"
+          @click="submitExample(example.value)"
         >
-          {{ example }}
+          <em v-if="example.scientific">{{ example.value }}</em>
+          <template v-else>{{ example.value }}</template>
         </button>
       </div>
     </div>
@@ -82,10 +83,10 @@ export default {
     const { t } = useI18n()
     const queryText = ref('')
     const searchExamples = computed(() => [
-      t('page.home.examples.accession'),
-      t('page.home.examples.species'),
-      t('page.home.examples.genome'),
-      t('page.home.examples.annotation')
+      { value: t('page.home.examples.accession'), scientific: false },
+      { value: t('page.home.examples.species'), scientific: true },
+      { value: t('page.home.examples.genome'), scientific: false },
+      { value: t('page.home.examples.annotation'), scientific: false }
     ])
     const dnaRungs = [48, 92, 138, 184, 230, 276, 322, 368, 414, 460, 506, 552]
     const networkPoints = [

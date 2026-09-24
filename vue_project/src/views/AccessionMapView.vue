@@ -150,7 +150,7 @@
           <span><i class="bubble cluster-medium" />6–10</span>
           <span><i class="bubble cluster-large" />11–19</span>
           <span><i class="bubble cluster-extra-large" />20–50</span>
-          <span><i class="bubble cluster-extra-large" />51–100</span>
+          <span><i class="bubble cluster-very-large" />51–100</span>
           <span><i class="bubble cluster-extreme" />&gt;100</span>
         </div>
       </footer>
@@ -524,6 +524,7 @@ export default {
 .cluster-large { background: #f07818; }
 .cluster-medium { background: #7c3aed; }
 .cluster-extra-large { background: #eab308; }
+.cluster-very-large { background: #ef4444; }
 .cluster-extreme { background: #ec4899; }
 
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 16px; overflow: hidden; }

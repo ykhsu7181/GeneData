@@ -53,7 +53,7 @@
         <span><i class="dot cluster-medium"></i>6–10</span>
         <span><i class="dot cluster-large"></i>11–19</span>
         <span><i class="dot cluster-extra-large"></i>20–50</span>
-        <span><i class="dot cluster-extra-large"></i>51–100</span>
+        <span><i class="dot cluster-very-large"></i>51–100</span>
         <span><i class="dot cluster-extreme"></i>&gt;100</span>
       </div>
       <div v-if="topRegions.length" class="top-regions">
@@ -118,7 +118,7 @@ export default {
         const item = cluster.accessions[0];
         return [
           item.accession,
-          item.scientific_name || '—',
+          `<em>${item.scientific_name || '—'}</em>`,
           item.sub_population || '—',
           item.country || item.region || '—',
           `${item.latitude.toFixed(2)}, ${item.longitude.toFixed(2)}`
@@ -286,6 +286,7 @@ export default {
 .cluster-large { background:#f07818; }
 .cluster-medium { background:#7c3aed; }
 .cluster-extra-large { background:#eab308; }
+.cluster-very-large { background:#ef4444; }
 .cluster-extreme { background:#ec4899; }
 @media (max-width:700px) {
   .card-heading { align-items:flex-start; }

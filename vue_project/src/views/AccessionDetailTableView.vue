@@ -12,7 +12,11 @@
         <div class="heading-main">
           <h1>{{ $t('page.accessionDetail.title', { accession: accession?.accession || routeAccession || '-' }) }}</h1>
           <div v-if="accession" class="heading-tags">
-            <span class="heading-tag species-tag">{{ $t('page.accessionDetail.species', { value: speciesLabel }) }}</span>
+            <i18n-t keypath="page.accessionDetail.species" tag="span" class="heading-tag species-tag">
+              <template #value>
+                <SpeciesName :common-name="speciesCommonName" :scientific-name="speciesScientificName" />
+              </template>
+            </i18n-t>
             <span class="heading-tag population-tag">{{ $t('page.accessionDetail.subPopulation', { value: accession.sub_population || '-' }) }}</span>
           </div>
         </div>
@@ -62,6 +66,12 @@
               <div v-for="row in basicInfoRows" :key="row.label" :class="['basic-info-row', { 'full-width': row.fullWidth }]">
                 <span class="field-label">{{ row.label }}</span>
                 <a v-if="row.link && row.value !== '-'" :href="row.value" target="_blank" rel="noopener noreferrer" class="field-link">{{ row.value }}</a>
+                <SpeciesName
+                  v-else-if="row.species"
+                  class="field-value"
+                  :common-name="speciesCommonName"
+                  :scientific-name="speciesScientificName"
+                />
                 <span v-else class="field-value">{{ row.value }}</span>
               </div>
             </div>
@@ -124,6 +134,7 @@ import axios from 'axios';
 import AnnotationVersionTable from '@/components/accession/AnnotationVersionTable.vue';
 import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
 import CompactAccessionMap from '@/components/accession/CompactAccessionMap.vue';
+import SpeciesName from '@/components/common/SpeciesName.vue';
 import {
   isFavoriteAccession,
   recordRecentAccession,
@@ -141,7 +152,7 @@ const tabs = [
 
 export default {
   name: 'AccessionDetailTableView',
-  components: { AnnotationVersionTable, AssemblyVersionTable, CompactAccessionMap, Refresh, Search, Star, StarFilled },
+  components: { AnnotationVersionTable, AssemblyVersionTable, CompactAccessionMap, SpeciesName, Refresh, Search, Star, StarFilled },
   props: { embedded: { type: Boolean, default: false } },
   setup() {
     const route = useRoute();
@@ -173,19 +184,19 @@ export default {
       const labelKey = tabs.find((item) => item.key === activeTab.value)?.labelKey;
       return labelKey ? t(labelKey) : '';
     });
-    const speciesLabel = computed(() => {
+    const speciesCommonName = computed(() => {
       const species = accession.value?.species;
-      if (!species) return '-';
-      const name = locale.value === 'zh'
+      if (!species) return '';
+      return locale.value === 'zh'
         ? species.chinese_name || species.common_name || species.species_code
         : species.common_name || species.species_code || species.chinese_name;
-      return species.scientific_name ? `${name} (${species.scientific_name})` : name;
     });
+    const speciesScientificName = computed(() => accession.value?.species?.scientific_name || '');
     const basicInfoRows = computed(() => {
       const data = accession.value || {};
       return [
         { label: t('page.accessionDetail.fields.accession'), value: data.accession || '-' },
-        { label: t('page.accessionDetail.fields.species'), value: speciesLabel.value },
+        { label: t('page.accessionDetail.fields.species'), species: true },
         { label: t('page.accessionDetail.fields.subPopulation'), value: data.sub_population || '-' },
         { label: t('page.accessionDetail.fields.longitude'), value: data.longitude ?? '-' },
         { label: t('page.accessionDetail.fields.region'), value: data.region || '-' },
@@ -277,7 +288,7 @@ export default {
       recordedRouteAccession.value = '';
       fetchSummary();
     }, { immediate: true });
-    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAnnotation, openAssembly, openFiles, parentBreadcrumbLabel, parentLocation, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesLabel, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
+    return { accession, activeTab, activeTabLabel, annotationsForAssembly, basicInfoRows, downloadFile, errorMessage, favorite, filteredFiles, geography, loading, openAnnotation, openAssembly, openFiles, parentBreadcrumbLabel, parentLocation, refreshPage, relationship, routeAccession, searchQuery, selectTab, speciesCommonName, speciesScientificName, submitSearch, tabLoading, tabPagination, tabRows, tabs, toggleFavorite };
   }
 };
 </script>

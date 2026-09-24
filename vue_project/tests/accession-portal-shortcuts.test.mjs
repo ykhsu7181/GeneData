@@ -8,6 +8,7 @@ const cardSource = readSource(['views', 'AccessionCard.vue'])
 const recentSource = readSource(['components', 'accession', 'RecentAccessions.vue'])
 const favoriteSource = readSource(['components', 'accession', 'FavoriteAccessions.vue'])
 const drawerSource = readSource(['components', 'accession', 'AccessionListDrawer.vue'])
+const speciesNameSource = readSource(['components', 'common', 'SpeciesName.vue'])
 
 test('accession portal composes recent favorites and one shared drawer', () => {
   assert.match(cardSource, /<RecentAccessions/)
@@ -28,14 +29,16 @@ test('portal hydrates preferences with one supplementary metadata request', () =
 })
 
 test('recent and favorites preserve accessions when metadata is missing', () => {
-  assert.match(recentSource, /item\.scientific_name \|\| '—'/)
-  assert.match(favoriteSource, /item\.scientific_name \|\| '—'/)
+  assert.match(recentSource, /:scientific-name="item\.scientific_name" empty-text="—"/)
+  assert.match(favoriteSource, /:scientific-name="item\.scientific_name" empty-text="—"/)
   assert.match(recentSource, /items\.slice\(0, 5\)/)
   assert.match(favoriteSource, /max-height:190px/)
   assert.match(favoriteSource, /overflow-y:auto/)
   assert.match(recentSource, /import \{ Clock \} from '@element-plus\/icons-vue'/)
   assert.match(favoriteSource, /import \{ StarFilled \} from '@element-plus\/icons-vue'/)
   assert.match(drawerSource, /import \{ Delete \} from '@element-plus\/icons-vue'/)
+  assert.match(speciesNameSource, /<em v-else-if="scientificText">/)
+  assert.match(speciesNameSource, /font-style:italic/)
 })
 
 test('shared drawer supports recent and favorite modes with focus restoration', () => {

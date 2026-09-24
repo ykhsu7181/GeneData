@@ -14,13 +14,24 @@
             <div><dt>{{ $t('common.dataType') }}</dt><dd>{{ categoryLabel(detail.category) }}</dd></div>
             <div><dt>{{ $t('common.fileType') }}</dt><dd>{{ detail.file_type || '-' }}</dd></div>
             <div><dt>{{ $t('common.fileSize') }}</dt><dd>{{ detail.file_size_display || '-' }}</dd></div>
-            <div class="wide"><dt>{{ $t('page.dataOverview.columns.description') }}</dt><dd>{{ detail.description || '-' }}</dd></div>
+            <div v-if="detail.category !== 'raw_data'" class="wide"><dt>{{ $t('page.dataOverview.columns.description') }}</dt><dd>{{ detail.description || '-' }}</dd></div>
           </dl>
         </section>
         <section class="detail-section">
           <h3>{{ $t('page.dataOverview.detail.relationship') }}</h3>
           <dl class="detail-grid">
-            <div><dt>{{ $t('common.species') }}</dt><dd>{{ join(detail.species) }}</dd></div>
+            <div>
+              <dt>{{ $t('common.species') }}</dt>
+              <dd>
+                <template v-if="detail.species?.length">
+                  <template v-for="(species, index) in detail.species" :key="species.code || index">
+                    <span v-if="index">, </span>
+                    <SpeciesName :common-name="species.name" :scientific-name="species.scientific_name" />
+                  </template>
+                </template>
+                <template v-else>-</template>
+              </dd>
+            </div>
             <div><dt>{{ $t('page.dataOverview.accession') }}</dt><dd>{{ join(detail.accessions) }}</dd></div>
             <div><dt>{{ $t('page.dataOverview.columns.dataset') }}</dt><dd>{{ detail.dataset?.dataset_name || detail.dataset?.dataset_code || '-' }}</dd></div>
             <div><dt>{{ $t('page.dataOverview.columns.dataSource') }}</dt><dd>{{ detail.data_source || '-' }}</dd></div>
@@ -54,6 +65,7 @@
 import { CopyDocument, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import SpeciesName from '@/components/common/SpeciesName.vue'
 const props = defineProps({ modelValue: Boolean, loading: Boolean, error: Boolean, detail: { type: Object, default: null }, categoryLabel: { type: Function, required: true } })
 defineEmits(['close', 'retry'])
 const { t } = useI18n()

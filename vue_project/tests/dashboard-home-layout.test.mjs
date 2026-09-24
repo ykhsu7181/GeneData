@@ -44,6 +44,8 @@ test('featured accessions use the canonical accession route query', () => {
   assert.match(featuredSource, /<th scope="col">Accession<\/th>/)
   assert.match(featuredSource, /page\.home\.country/)
   assert.match(featuredSource, /page\.home\.annotationDatasets/)
+  assert.match(featuredSource, /species_scientific_name/)
+  assert.match(featuredSource, /td em \{ font-style: italic; \}/)
   assert.match(featuredSource, /const MAX_ITEMS = 10/)
   assert.match(featuredSource, /v-for="item in limitedItems"/)
   assert.match(featuredSource, /class="featured-scroll"/)

@@ -24,7 +24,8 @@ test('portal hero exposes only working search examples', () => {
   assert.match(source, /t\('page\.home\.examples\.species'\)/)
   assert.match(source, /t\('page\.home\.examples\.genome'\)/)
   assert.match(source, /t\('page\.home\.examples\.annotation'\)/)
-  assert.match(source, /@click="submitExample\(example\)"/)
+  assert.match(source, /@click="submitExample\(example\.value\)"/)
+  assert.match(source, /<em v-if="example\.scientific">/)
   assert.match(source, /queryText\.value = example/)
 })
 

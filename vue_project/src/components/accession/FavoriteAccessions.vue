@@ -17,7 +17,7 @@
         ><el-icon aria-hidden="true"><StarFilled /></el-icon></button>
         <button type="button" class="favorite-link" @click="$emit('select', item.accession)">
           <strong :title="item.accession">{{ item.accession }}</strong>
-          <span :title="item.scientific_name || ''">{{ item.scientific_name || '—' }}</span>
+          <SpeciesName :scientific-name="item.scientific_name" empty-text="—" :title="item.scientific_name || ''" />
           <span :title="item.sub_population || ''">{{ item.sub_population || '—' }}</span>
         </button>
       </div>
@@ -28,10 +28,11 @@
 
 <script>
 import { StarFilled } from '@element-plus/icons-vue';
+import SpeciesName from '@/components/common/SpeciesName.vue';
 
 export default {
   name: 'FavoriteAccessions',
-  components: { StarFilled },
+  components: { StarFilled, SpeciesName },
   props: {
     items: { type: Array, default: () => [] }
   },

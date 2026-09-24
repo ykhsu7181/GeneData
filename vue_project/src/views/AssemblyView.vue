@@ -38,7 +38,11 @@
           <div class="heading-main">
           <h1>{{ $t('page.assemblyDetail.title', { accession: assembly.accession || '-', assembly: assemblyDisplayName }) }}</h1>
             <div class="heading-tags">
-              <span class="heading-tag species-tag">{{ $t('page.assemblyDetail.species', { value: speciesLabel }) }}</span>
+              <i18n-t keypath="page.assemblyDetail.species" tag="span" class="heading-tag species-tag">
+                <template #value>
+                  <SpeciesName :common-name="speciesCommonName" :scientific-name="speciesScientificName" />
+                </template>
+              </i18n-t>
               <span class="heading-tag population-tag">{{ $t('page.assemblyDetail.subPopulation', { value: detail.sub_population || '-' }) }}</span>
             </div>
           </div>
@@ -164,6 +168,7 @@ import { Download, FolderOpened, Refresh, Search } from '@element-plus/icons-vue
 import AnnotationVersionTable from '@/components/accession/AnnotationVersionTable.vue';
 import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
 import RelatedFilesDrawer from '@/components/assembly/RelatedFilesDrawer.vue';
+import SpeciesName from '@/components/common/SpeciesName.vue';
 
 const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
 
@@ -178,6 +183,7 @@ export default {
     AnnotationVersionTable,
     AssemblyVersionTable,
     RelatedFilesDrawer,
+    SpeciesName,
     Download,
     FolderOpened,
     Refresh,
@@ -222,17 +228,14 @@ export default {
     const assemblyDisplayName = computed(() => (
       assembly.value.display_name || assembly.value.assembly_name || assembly.value.name || '-'
     ));
-    const speciesLabel = computed(() => {
+    const speciesCommonName = computed(() => {
       const species = detail.value?.species;
-      if (!species) return '-';
-      const name = String(locale.value).startsWith('zh')
+      if (!species) return '';
+      return String(locale.value).startsWith('zh')
         ? species.chinese_name || species.common_name || species.species_code
         : species.common_name || species.species_code || species.chinese_name;
-      if (!name) return species.scientific_name || '-';
-      return species.scientific_name && species.scientific_name !== name
-        ? `${name} (${species.scientific_name})`
-        : name;
     });
+    const speciesScientificName = computed(() => detail.value?.species?.scientific_name || '');
     const errorMessage = computed(() => (errorKey.value ? t(errorKey.value) : ''));
     const drawerErrorMessage = computed(() => (drawerErrorKey.value ? t(drawerErrorKey.value) : ''));
     const drawerTitle = computed(() => (
@@ -472,7 +475,8 @@ export default {
       annotations,
       relatedAssemblies,
       assemblyDisplayName,
-      speciesLabel,
+      speciesCommonName,
+      speciesScientificName,
       basicRows,
       statisticColumns,
       drawerVisible,

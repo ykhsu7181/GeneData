@@ -49,7 +49,7 @@
       <div v-for="item in items" :key="item.accession" class="drawer-row">
         <button type="button" class="drawer-accession" @click="$emit('select', item.accession)">
           <strong>{{ item.accession }}</strong>
-          <span>{{ item.scientific_name || '—' }}</span>
+          <SpeciesName :scientific-name="item.scientific_name" empty-text="—" />
           <span>{{ item.sub_population || '—' }}</span>
           <time v-if="mode === 'recent'" :datetime="item.viewed_at || undefined">
             {{ formatRelativeTime(item.viewed_at) }}
@@ -83,10 +83,11 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Delete } from '@element-plus/icons-vue';
+import SpeciesName from '@/components/common/SpeciesName.vue';
 
 export default {
   name: 'AccessionListDrawer',
-  components: { Delete },
+  components: { Delete, SpeciesName },
   props: {
     modelValue: { type: Boolean, default: false },
     mode: { type: String, default: 'recent' },

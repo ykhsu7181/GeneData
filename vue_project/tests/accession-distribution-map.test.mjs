@@ -31,6 +31,7 @@ test('overview bubbles and legend use shared count colors', () => {
   assert.match(mapSource, /label: \{ show: false \}/)
   assert.doesNotMatch(mapSource, /String\(params\.data\.cluster\.count\)/)
   assert.match(mapSource, /cluster-single/)
+  assert.match(mapSource, /cluster-very-large/)
   assert.match(mapSource, /cluster-extreme/)
 })
 

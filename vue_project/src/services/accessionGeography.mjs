@@ -6,6 +6,7 @@ export const GEOGRAPHIC_CLUSTER_COLORS = Object.freeze({
   medium: '#7c3aed',
   large: '#f07818',
   extraLarge: '#eab308',
+  veryLarge: '#ef4444',
   extreme: '#ec4899'
 });
 
@@ -179,6 +180,7 @@ export const getGeographicClusterColor = (count) => {
   if (normalizedCount <= 5) return GEOGRAPHIC_CLUSTER_COLORS.small;
   if (normalizedCount <= 10) return GEOGRAPHIC_CLUSTER_COLORS.medium;
   if (normalizedCount < 20) return GEOGRAPHIC_CLUSTER_COLORS.large;
-  if (normalizedCount <= 100) return GEOGRAPHIC_CLUSTER_COLORS.extraLarge;
+  if (normalizedCount <= 50) return GEOGRAPHIC_CLUSTER_COLORS.extraLarge;
+  if (normalizedCount <= 100) return GEOGRAPHIC_CLUSTER_COLORS.veryLarge;
   return GEOGRAPHIC_CLUSTER_COLORS.extreme;
 };
