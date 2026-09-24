@@ -5,6 +5,7 @@ import test from 'node:test'
 
 const readSource = (relativePath) => readFileSync(join(process.cwd(), 'src', ...relativePath), 'utf8')
 const drawerSource = readSource(['components', 'accession', 'AccessionListDrawer.vue'])
+const clusterPanelSource = readSource(['components', 'accession', 'AccessionClusterPanel.vue'])
 const mapSource = readSource(['components', 'accession', 'AccessionDistributionMap.vue'])
 const cardSource = readSource(['views', 'AccessionCard.vue'])
 const detailSource = readSource(['views', 'AccessionDetailTableView.vue'])
@@ -13,7 +14,8 @@ test('final portal accessibility keeps map and drawer states named', () => {
   assert.match(mapSource, /role="img"/)
   assert.match(mapSource, /mapAriaLabel/)
   assert.doesNotMatch(mapSource, /class="map-summary"/)
-  assert.match(drawerSource, /noClusterAccessions/)
+  assert.match(clusterPanelSource, /role="dialog"/)
+  assert.match(clusterPanelSource, /common\.close/)
   assert.match(drawerSource, /:aria-label="\$t\('page\.accessionPortal\.removeItem'/)
 })
 

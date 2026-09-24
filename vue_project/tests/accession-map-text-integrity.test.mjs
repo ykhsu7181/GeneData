@@ -27,9 +27,9 @@ test('detailed map filters are shareable through the route query', () => {
   assert.match(source, /const resetFilters = async/)
 })
 
-test('detailed map opens a cluster drawer before accession navigation', () => {
-  assert.match(source, /<AccessionListDrawer/)
-  assert.match(source, /mode="cluster"/)
+test('detailed map opens an in-map cluster panel before accession navigation', () => {
+  assert.match(source, /<AccessionClusterPanel/)
+  assert.doesNotMatch(source, /<AccessionListDrawer|mode="cluster"/)
   assert.match(source, /if \(data\?\.cluster\) openCluster\(data\.cluster\)/)
   assert.match(source, /@change="openClusterByKey"/)
   assert.match(source, /const clusterOptions = computed/)

@@ -1,5 +1,6 @@
 const enUS = {
   common: {
+    close: 'Close',
     search: 'Search',
     refresh: 'Refresh',
     clear: 'Clear',

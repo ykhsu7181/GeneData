@@ -25,7 +25,7 @@
 
       <AccessionDistributionMap
         :items="geoItems"
-        @select-cluster="openClusterDrawer"
+        @select-accession="openAccession"
       />
 
       <AccessionListDrawer
@@ -91,7 +91,6 @@ export default {
     const metadataLoading = ref(false);
     const drawerOpen = ref(false);
     const drawerMode = ref('recent');
-    const clusterItems = ref([]);
     let metadataController = null;
     let drawerTrigger = null;
     const routeAccession = computed(() => (
@@ -111,9 +110,7 @@ export default {
     const drawerItems = computed(() => (
       drawerMode.value === 'favorites'
         ? favoriteItems.value
-        : drawerMode.value === 'cluster'
-          ? clusterItems.value
-          : recentItems.value
+        : recentItems.value
     ));
 
     const loadPreferences = () => {
@@ -160,13 +157,6 @@ export default {
     const openDrawer = (mode, trigger) => {
       drawerMode.value = mode;
       drawerTrigger = trigger || null;
-      drawerOpen.value = true;
-    };
-
-    const openClusterDrawer = (items) => {
-      clusterItems.value = items;
-      drawerMode.value = 'cluster';
-      drawerTrigger = null;
       drawerOpen.value = true;
     };
 
@@ -220,7 +210,6 @@ export default {
       geoItems,
       metadataError,
       openAccession,
-      openClusterDrawer,
       openDrawer,
       recentItems,
       removeDrawerItem,

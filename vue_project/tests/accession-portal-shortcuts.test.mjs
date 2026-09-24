@@ -38,10 +38,9 @@ test('recent and favorites preserve accessions when metadata is missing', () => 
   assert.match(drawerSource, /import \{ Delete \} from '@element-plus\/icons-vue'/)
 })
 
-test('shared drawer supports recent favorite and cluster modes with focus restoration', () => {
+test('shared drawer supports recent and favorite modes with focus restoration', () => {
   assert.match(drawerSource, /recent:/)
   assert.match(drawerSource, /favorites:/)
-  assert.match(drawerSource, /cluster:/)
   assert.match(drawerSource, /@closed="\$emit\('closed'\)"/)
   assert.match(cardSource, /drawerTrigger\?\.focus\?\.\(\)/)
   assert.match(drawerSource, /mode === 'recent'/)

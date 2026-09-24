@@ -135,6 +135,11 @@
             regions: filteredMetrics.geographicRegions
           })"
         />
+        <AccessionClusterPanel
+          v-model="drawerOpen"
+          :items="drawerItems"
+          @select="openAccession"
+        />
       </div>
 
       <footer class="map-footer">
@@ -170,12 +175,6 @@
       </article>
     </section>
 
-    <AccessionListDrawer
-      v-model="drawerOpen"
-      mode="cluster"
-      :items="drawerItems"
-      @select="openAccession"
-    />
   </main>
 </template>
 
@@ -194,7 +193,7 @@ import {
   Search,
   Warning
 } from '@element-plus/icons-vue';
-import AccessionListDrawer from '@/components/accession/AccessionListDrawer.vue';
+import AccessionClusterPanel from '@/components/accession/AccessionClusterPanel.vue';
 import { worldMapData } from '@/data/worldMapData.js';
 import {
   GEOGRAPHIC_GRID_SIZE,
@@ -214,7 +213,7 @@ import {
 export default {
   name: 'AccessionMapView',
   components: {
-    AccessionListDrawer,
+    AccessionClusterPanel,
     Aim,
     FullScreen,
     Loading,

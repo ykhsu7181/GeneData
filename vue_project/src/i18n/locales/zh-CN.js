@@ -1,5 +1,6 @@
 const zhCN = {
   common: {
+    close: '关闭',
     search: '搜索',
     refresh: '刷新',
     clear: '清除',

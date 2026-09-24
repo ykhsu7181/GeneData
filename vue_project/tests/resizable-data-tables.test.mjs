@@ -48,15 +48,15 @@ test('Data List exposes pointer and keyboard column resizing with persisted widt
   assert.match(settings, /\$emit\('reset-widths'\)/)
 })
 
-test('map cluster drawer shows species, coordinates, country, and region', () => {
-  const drawer = source('components/accession/AccessionListDrawer.vue')
+test('map cluster panel stays inside the map and scrolls overflowing content', () => {
+  const drawer = source('components/accession/AccessionClusterPanel.vue')
   for (const field of ['scientific_name', 'longitude', 'latitude', 'country', 'region']) {
     assert.match(drawer, new RegExp(`item\\.${field}`))
   }
-  assert.match(drawer, /mode === 'cluster'/)
   assert.match(drawer, /formatCoordinate/)
-  assert.match(drawer, /const drawerDirection = 'rtl'/)
-  assert.match(drawer, /min\(560px, 33\.333vw\)/)
-  assert.match(drawer, /min-width:620px/)
-  assert.match(drawer, /:modal="mode !== 'cluster'"/)
+  assert.match(drawer, /position:absolute/)
+  assert.match(drawer, /width:min\(560px, 33\.333%\)/)
+  assert.match(drawer, /max-height:calc\(100% - 24px\)/)
+  assert.match(drawer, /overflow:auto/)
+  assert.match(drawer, /min-width:500px/)
 })

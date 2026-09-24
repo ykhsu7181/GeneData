@@ -37,6 +37,11 @@
           {{ $t('page.accessionPortal.globalView') }}
         </button>
       </div>
+      <AccessionClusterPanel
+        v-model="clusterPanelOpen"
+        :items="clusterPanelItems"
+        @select="$emit('select-accession', $event)"
+      />
     </div>
     <p v-else class="map-empty">{{ $t('page.accessionPortal.mapEmpty') }}</p>
 
@@ -64,6 +69,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { FullScreen, Location } from '@element-plus/icons-vue';
 import * as echarts from 'echarts';
+import AccessionClusterPanel from '@/components/accession/AccessionClusterPanel.vue';
 import { worldMapData } from '@/data/worldMapData.js';
 import {
   aggregateGeographicItems,
@@ -83,15 +89,17 @@ const getBubbleSize = (count) => {
 
 export default {
   name: 'AccessionDistributionMap',
-  components: { FullScreen, Location },
+  components: { AccessionClusterPanel, FullScreen, Location },
   props: {
     items: { type: Array, default: () => [] }
   },
-  emits: ['select-cluster'],
-  setup(props, { emit }) {
+  emits: ['select-accession'],
+  setup(props) {
     const { t } = useI18n();
     const titleId = 'accession-distribution-title';
     const mapContainer = ref(null);
+    const clusterPanelOpen = ref(false);
+    const clusterPanelItems = ref([]);
     let mapInstance = null;
 
     const metrics = computed(() => buildGeographicMetrics(props.items));
@@ -186,7 +194,9 @@ export default {
     const handleMapClick = (params) => {
       const cluster = params.data?.cluster;
       if (!cluster) return;
-      emit('select-cluster', cluster.accessions);
+      clusterPanelItems.value = [...cluster.accessions]
+        .sort((a, b) => a.accession.localeCompare(b.accession));
+      clusterPanelOpen.value = true;
     };
 
     const resetGlobalView = () => {
@@ -237,6 +247,8 @@ export default {
     });
 
     return {
+      clusterPanelItems,
+      clusterPanelOpen,
       mapContainer,
       mappedAccessions,
       resetDataView,

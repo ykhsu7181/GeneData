@@ -34,11 +34,11 @@ test('overview bubbles and legend use shared count colors', () => {
   assert.match(mapSource, /cluster-extreme/)
 })
 
-test('distribution map opens the review drawer before navigating for every bubble', () => {
-  assert.match(mapSource, /emit\('select-cluster', cluster\.accessions\)/)
-  assert.match(cardSource, /@select-cluster="openClusterDrawer"/)
-  assert.doesNotMatch(cardSource, /:items="geoItems"\s*@select=/)
-  assert.match(cardSource, /drawerMode\.value = 'cluster'/)
+test('distribution map opens an in-map cluster panel before navigating', () => {
+  assert.match(mapSource, /<AccessionClusterPanel/)
+  assert.match(mapSource, /clusterPanelItems\.value = \[\.\.\.cluster\.accessions\]/)
+  assert.match(cardSource, /@select-accession="openAccession"/)
+  assert.doesNotMatch(cardSource, /openClusterDrawer|drawerMode\.value = 'cluster'/)
 })
 
 test('distribution map keeps accessible counts and cleans up echarts lifecycle', () => {
