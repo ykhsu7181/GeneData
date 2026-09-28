@@ -17,6 +17,7 @@ COMMAND_LIFECYCLE = {
     "bind_manual_files": ACTIVE,
     "build_annotation_feature_indexes": ACTIVE,
     "build_fasta_indexes": ACTIVE,
+    "build_jbrowse_indexes": ACTIVE,
     "cleanup_data": RETIRE_PENDING_USAGE_CONFIRMATION,
     "cleanup_placeholder_hierarchy": LEGACY_REPAIR,
     "compare_accession_files": RETAIN_AUDIT,

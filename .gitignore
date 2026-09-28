@@ -99,6 +99,7 @@ build/
 
 # Local ingestion batches and generated importer/reconcile reports
 /tmp/
+/.runtime/
 /django2/import_*_log_*.txt
 /django2/import_*_unmapped_*.tsv
 /django2/import_*_conflicts_*.tsv

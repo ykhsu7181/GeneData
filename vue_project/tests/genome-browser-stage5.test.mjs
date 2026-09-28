@@ -7,6 +7,7 @@ const read = (path) => readFileSync(join(process.cwd(), path), 'utf8')
 const router = read('src/router/index.js')
 const assemblyView = read('src/views/AssemblyView.vue')
 const browserView = read('src/views/GenomeBrowserView.vue')
+const vueConfig = read('vue.config.js')
 
 test('router exposes the assembly genome browser page', () => {
   assert.match(router, /path:\s*'\/assembly\/:assemblyId\/browser'/)
@@ -24,7 +25,17 @@ test('assembly detail gates its browser entry on readiness', () => {
 test('browser page launches same-origin JBrowse with dynamic config', () => {
   assert.match(browserView, /\/jbrowse2\/\?\$\{params\.toString\(\)\}/)
   assert.match(browserView, /jbrowse-config\//)
-  assert.match(browserView, /params\.set\('tracks'/)
+  assert.match(browserView, /new URLSearchParams\(\{ config: configUrl\.toString\(\) \}\)/)
+  assert.doesNotMatch(browserView, /params\.set\('tracks'/)
   assert.match(browserView, /<iframe/)
   assert.doesNotMatch(browserView, /file_path|manual_files|derived_data/)
+})
+
+test('development server routes JBrowse and protected assets through Nginx', () => {
+  assert.match(vueConfig, /GENEDATA_JBROWSE_PROXY_TARGET/)
+  assert.match(vueConfig, /GENEDATA_DJANGO_PROXY_TARGET/)
+  assert.match(vueConfig, /'\/jbrowse2'/)
+  assert.match(vueConfig, /'\/gd\/api\/files\/browser-assets'/)
+  assert.match(vueConfig, /target:\s*jbrowseProxyTarget/)
+  assert.match(vueConfig, /target:\s*djangoProxyTarget/)
 })

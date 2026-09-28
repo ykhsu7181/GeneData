@@ -197,13 +197,15 @@ ANNOTATION_MAX_PAGE_SIZE = 10000
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 文件路径配置
-# 根据操作系统选择不同的路径
+# 根据操作系统选择默认路径，并允许开发/部署环境显式覆盖。
 if platform.system() == 'Windows':
-    # Windows环境
-    MANUAL_FILES_DIR = r'D:\gene_manage_system\gene_manage_system\manual_files'
+    default_manual_files_dir = r'D:\gene_manage_system\gene_manage_system\manual_files'
 else:
-    # Linux环境
-    MANUAL_FILES_DIR = '/home/labuser/rdcheng/gd/manual_files'
+    default_manual_files_dir = '/home/labuser/rdcheng/gd/manual_files'
+MANUAL_FILES_DIR = os.environ.get(
+    'GENEDATA_MANUAL_FILES_DIR',
+    default_manual_files_dir,
+)
 
 GENEDATA_DERIVED_DATA_DIR = os.environ.get(
     'GENEDATA_DERIVED_DATA_DIR',

@@ -155,6 +155,15 @@ class JBrowseIndexDryRunTestCase(TestCase):
 
     def test_apply_builds_registers_and_sorts_artifacts(self):
         output_root = os.path.join(self.temporary_directory.name, "apply-derived")
+        legacy_fai_path = self._write("genome.IR64.fasta.fai", "Chr01\t4\t7\t4\t5\n")
+        legacy_fai = self._data_file("LEGACY_FAI_IR64", legacy_fai_path)
+        legacy_relation = FileRelation.objects.create(
+            file=legacy_fai,
+            related_type="assembly",
+            related_id=str(self.assembly.id),
+            file_role="genome_index",
+            is_primary=True,
+        )
 
         def fake_bgzip(_command, source_path, target_path):
             with open(source_path, "rb") as source, open(target_path, "wb") as target:
@@ -203,6 +212,20 @@ class JBrowseIndexDryRunTestCase(TestCase):
             ).count(),
             2,
         )
+        legacy_relation.refresh_from_db()
+        self.assertFalse(legacy_relation.is_primary)
+        for role in (
+            "genome_index",
+            "jbrowse_annotation_gff3",
+            "jbrowse_annotation_tabix",
+        ):
+            primary = FileRelation.objects.get(
+                file_role=role,
+                is_primary=True,
+            )
+            self.assertIn(primary.file.file_path, {
+                artifact["file_path"] for artifact in result["artifacts"]
+            })
 
         with patch(
             "files.services.jbrowse_index_service._resolve_tool",
@@ -228,7 +251,7 @@ class JBrowseIndexDryRunTestCase(TestCase):
                     "jbrowse_annotation_tabix",
                 )
             ).count(),
-            3,
+            4,
         )
 
     def test_missing_bgzip_fails_before_creating_output(self):

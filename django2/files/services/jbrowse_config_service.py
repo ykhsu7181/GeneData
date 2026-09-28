@@ -68,6 +68,18 @@ def get_jbrowse_config(assembly_id, annotation_id=None):
             "sequence": sequence_track,
         }],
         "tracks": tracks,
+        "defaultSession": {
+            "name": f"{_assembly_display_name(assembly)} browser",
+            "views": [{
+                "id": f"assembly-{assembly.id}-linear-view",
+                "type": "LinearGenomeView",
+                "init": {
+                    "assembly": assembly_name,
+                    "loc": public_status["default_location"],
+                    "tracks": [track["trackId"] for track in tracks],
+                },
+            }],
+        },
     }
     return config, public_status
 

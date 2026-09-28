@@ -134,6 +134,18 @@ class JBrowseConfigApiTestCase(TestCase):
         self.assertNotIn("status", payload)
         self.assertNotIn("defaultLocation", payload)
         self.assertEqual(len(payload["tracks"]), 1)
+        self.assertEqual(
+            payload["defaultSession"]["views"],
+            [{
+                "id": f"assembly-{self.assembly.id}-linear-view",
+                "type": "LinearGenomeView",
+                "init": {
+                    "assembly": f"assembly-{self.assembly.id}",
+                    "loc": "Chr01:1..4",
+                    "tracks": [f"annotation-{self.annotation.id}-features"],
+                },
+            }],
+        )
         serialized = config_response.content.decode("utf-8")
         self.assertNotIn(self.temporary_directory.name, serialized)
         self.assertIn(f"browser-assets/{self.genome.id}/", serialized)
@@ -150,6 +162,10 @@ class JBrowseConfigApiTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["tracks"], [])
+        self.assertEqual(
+            response.json()["defaultSession"]["views"][0]["init"]["tracks"],
+            [],
+        )
         self.assertEqual(
             response.json()["assemblies"][0]["name"],
             f"assembly-{self.assembly.id}",

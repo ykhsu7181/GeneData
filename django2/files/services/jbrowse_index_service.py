@@ -421,13 +421,22 @@ def _register_artifacts(preflight, targets):
             file_size=path.stat().st_size,
             is_current=True,
         )
-        create_or_get_file_relation(
+        relation, _, _ = create_or_get_file_relation(
             data_file=data_file,
             related_type=related_type,
             related_id=related_id,
             related_code=related_code,
             file_role=role,
         )
+        FileRelation.objects.filter(
+            related_type=related_type,
+            related_id=str(related_id),
+            file_role=role,
+            is_primary=True,
+        ).exclude(id=relation.id).update(is_primary=False)
+        if not relation.is_primary:
+            relation.is_primary = True
+            relation.save(update_fields=["is_primary", "updated_at"])
         registered.append(
             {
                 "file_id": data_file.id,

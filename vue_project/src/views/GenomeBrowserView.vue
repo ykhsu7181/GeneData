@@ -95,12 +95,7 @@ export default {
       const configPath = `/gd/api/files/assemblies/${encodeURIComponent(assemblyId.value)}/jbrowse-config/`;
       const configUrl = new URL(configPath, window.location.origin);
       if (annotationId.value) configUrl.searchParams.set('annotation_id', annotationId.value);
-      const params = new URLSearchParams({
-        config: configUrl.toString(),
-        assembly: payload.assembly_name,
-        loc: payload.default_location
-      });
-      if (payload.track_ids?.length) params.set('tracks', payload.track_ids.join(','));
+      const params = new URLSearchParams({ config: configUrl.toString() });
       return `/jbrowse2/?${params.toString()}`;
     });
 

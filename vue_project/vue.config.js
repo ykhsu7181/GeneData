@@ -1,4 +1,7 @@
 const { defineConfig } = require('@vue/cli-service')
+const jbrowseProxyTarget = process.env.GENEDATA_JBROWSE_PROXY_TARGET || 'http://localhost:18088'
+const djangoProxyTarget = process.env.GENEDATA_DJANGO_PROXY_TARGET || 'http://localhost:2025'
+
 module.exports = defineConfig({
   transpileDependencies: true,
   lintOnSave: false,
@@ -8,8 +11,16 @@ module.exports = defineConfig({
   productionSourceMap: false,
   devServer: {
     proxy: {
+      '/jbrowse2': {
+        target: jbrowseProxyTarget,
+        changeOrigin: true
+      },
+      '/gd/api/files/browser-assets': {
+        target: jbrowseProxyTarget,
+        changeOrigin: true
+      },
       '/gd/api': {
-        target: 'http://localhost:2025',
+        target: djangoProxyTarget,
         changeOrigin: true,
         pathRewrite: {
           '^/gd/api': '/gd/api'

@@ -314,24 +314,38 @@ JBrowse 构建服务必须复用现有主基因组确定性选择逻辑，不能
 
 ### 7.3 索引构建命令
 
-当前已经实现的单 Assembly 命令：
+当前已经实现单 Assembly 和全量分批两种模式：
 
 ```bash
 python manage.py build_jbrowse_indexes --assembly-id 123 --dry-run
 python manage.py build_jbrowse_indexes --assembly-id 123 --apply
 python manage.py build_jbrowse_indexes --assembly-id 123 --dry-run --output-dir /path/to/derived_data/jbrowse
+
+python manage.py build_jbrowse_indexes --all --dry-run \
+  --batch-size 20 --resume \
+  --report-dir /path/to/audit_reports/jbrowse
+
+python manage.py build_jbrowse_indexes --all --apply \
+  --batch-size 10 --resume \
+  --report-dir /path/to/audit_reports/jbrowse
 ```
 
 当前参数：
 
 | 参数 | 含义 |
 |---|---|
-| `--assembly-id` | 只处理指定 Assembly，当前为必填参数 |
+| `--assembly-id` | 只处理指定 Assembly；与 `--all` 二选一 |
+| `--all` | 按 ID 顺序处理公开 Assembly 列表中的对象并排除严格占位项；与 `--assembly-id` 二选一 |
 | `--dry-run` | 只检查，不创建文件或数据库记录 |
 | `--apply` | 预检通过后生成、提升并登记索引文件 |
 | `--output-dir` | 覆盖本次任务的衍生索引根目录 |
+| `--batch-size` | 限制本次最多处理的待处理 Assembly 数量 |
+| `--resume` | 从 `--report-dir` 中与模式对应的 checkpoint 继续 |
+| `--retry-failed` | 与 `--resume` 配合，只重试 checkpoint 中的失败项 |
+| `--report-dir` | 全量模式必填，保存 JSON、TSV 和 checkpoint |
+| `--fail-on-error` | 写完报告后，只要本批存在失败就返回非零状态 |
 
-`--dry-run` 和 `--apply` 必须且只能选择一个。全量生产构建前，后续还应补充 `--all`、`--annotation-id`、`--batch-size`、`--resume` 和 `--report-dir`；这些参数在实现和测试完成前不得写入生产执行命令。
+`--dry-run` 和 `--apply` 必须且只能选择一个。dry-run 与 apply 使用独立 checkpoint，不能互相跳过。每个 Assembly 完成后立即原子更新 checkpoint；单项失败会写入报告但默认不阻断后续项目。`remaining_count` 表示尚未尝试的数量，`failed_checkpoint_count` 表示 checkpoint 中仍未解决的失败数量；只有两者同时为 `0` 才表示该模式全量完成。需要让自动化任务在存在失败时返回非零状态，应显式增加 `--fail-on-error`。
 
 单个 Assembly 的处理流程：
 

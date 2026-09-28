@@ -79,6 +79,26 @@ cd /home/labuser/rdcheng/gd/django2
 
 生产进程依赖的环境变量（特别是 `DJANGO_SECRET_KEY`）不能通过截图、日志或文档输出；应由现有进程管理方式安全注入。
 
+IR64 验收通过后，先对生产可见 Assembly 分批执行全量 dry-run：
+
+```bash
+"$DJANGO_PYTHON" manage.py build_jbrowse_indexes \
+  --all --dry-run --batch-size 20 --resume \
+  --report-dir /home/labuser/rdcheng/gd/audit_reports/jbrowse \
+  --settings=filemanager.settings_production
+```
+
+重复执行同一命令直至报告中的 `remaining_count` 为 `0`。此时还必须确认 `failed_checkpoint_count` 为 `0`；如不为 `0`，修复对应源数据后使用 `--resume --retry-failed` 重试。审核全部 JSON/TSV 报告后，再以更小批次执行 apply：
+
+```bash
+"$DJANGO_PYTHON" manage.py build_jbrowse_indexes \
+  --all --apply --batch-size 10 --resume \
+  --report-dir /home/labuser/rdcheng/gd/audit_reports/jbrowse \
+  --settings=filemanager.settings_production
+```
+
+dry-run 和 apply 各自维护独立 checkpoint。单项失败默认记录后继续；修复源数据后使用 `--resume --retry-failed` 重试失败项。需要在任一失败时让调度任务返回非零状态，可增加 `--fail-on-error`。首次生产全量执行不得跳过 dry-run，也不得删除 checkpoint 或审计报告。
+
 ## 5. 验证顺序
 
 ### 5.1 静态应用
