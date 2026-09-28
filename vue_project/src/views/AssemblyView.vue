@@ -77,6 +77,16 @@
             <button
               class="primary-button"
               type="button"
+              :disabled="!browserReady || browserStatusLoading"
+              :title="browserStatusMessage"
+              @click="openGenomeBrowser"
+            >
+              <el-icon><View /></el-icon>
+              {{ browserButtonLabel }}
+            </button>
+            <button
+              class="primary-button"
+              type="button"
               :disabled="!detail.genome_download_url"
               @click="downloadGenome"
             >
@@ -164,7 +174,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-import { Download, FolderOpened, Refresh, Search } from '@element-plus/icons-vue';
+import { Download, FolderOpened, Refresh, Search, View } from '@element-plus/icons-vue';
 import AnnotationVersionTable from '@/components/accession/AnnotationVersionTable.vue';
 import AssemblyVersionTable from '@/components/accession/AssemblyVersionTable.vue';
 import RelatedFilesDrawer from '@/components/assembly/RelatedFilesDrawer.vue';
@@ -187,7 +197,8 @@ export default {
     Download,
     FolderOpened,
     Refresh,
-    Search
+    Search,
+    View
   },
   setup() {
     const route = useRoute();
@@ -203,6 +214,8 @@ export default {
     const drawerScope = ref(null);
     const searchQuery = ref('');
     const searchLoading = ref(false);
+    const browserStatusLoading = ref(false);
+    const browserStatus = ref(null);
 
     const assemblyId = computed(() => String(route.params.assemblyId || '').trim());
     const fromAccession = computed(() => (
@@ -238,6 +251,20 @@ export default {
     const speciesScientificName = computed(() => detail.value?.species?.scientific_name || '');
     const errorMessage = computed(() => (errorKey.value ? t(errorKey.value) : ''));
     const drawerErrorMessage = computed(() => (drawerErrorKey.value ? t(drawerErrorKey.value) : ''));
+    const browserReady = computed(() => ['ready', 'reference_only'].includes(browserStatus.value?.status));
+    const browserStatusMessage = computed(() => {
+      const status = browserStatus.value?.status;
+      if (!status) return t('page.assemblyDetail.browserStatus.unknown');
+      const key = `page.assemblyDetail.browserStatus.${status}`;
+      const translated = t(key);
+      return translated === key ? (browserStatus.value?.message || status) : translated;
+    });
+    const browserButtonLabel = computed(() => {
+      if (browserStatusLoading.value) return t('page.assemblyDetail.browserChecking');
+      return browserReady.value
+        ? t('page.assemblyDetail.openGenomeBrowser')
+        : t('page.assemblyDetail.genomeBrowserUnavailable');
+    });
     const drawerTitle = computed(() => (
       drawerScope.value
         ? t('page.assemblyDetail.annotationFilesTitle', { annotation: drawerScope.value.label || '-' })
@@ -330,12 +357,14 @@ export default {
       loading.value = true;
       errorKey.value = '';
       detail.value = null;
+      browserStatus.value = null;
       drawerVisible.value = false;
       try {
         const response = await axios.get(`/files/assemblies/${encodeURIComponent(assemblyId.value)}/summary/`);
         if (!response.data?.success) throw new Error('Assembly request failed');
         detail.value = response.data.data;
         searchQuery.value = detail.value?.assembly?.accession || '';
+        await fetchBrowserStatus();
       } catch (error) {
         const status = error.response?.status;
         if (status === 403) errorKey.value = 'page.assemblyDetail.forbidden';
@@ -344,6 +373,25 @@ export default {
         else errorKey.value = 'page.assemblyDetail.loadFailed';
       } finally {
         loading.value = false;
+      }
+    };
+
+    const fetchBrowserStatus = async () => {
+      if (!assemblyId.value) return;
+      browserStatusLoading.value = true;
+      browserStatus.value = null;
+      try {
+        const response = await axios.get(
+          `/files/assemblies/${encodeURIComponent(assemblyId.value)}/jbrowse-status/`
+        );
+        browserStatus.value = response.data || null;
+      } catch (error) {
+        browserStatus.value = {
+          status: 'unknown',
+          message: error.response?.data?.message || ''
+        };
+      } finally {
+        browserStatusLoading.value = false;
       }
     };
 
@@ -424,6 +472,18 @@ export default {
       file?.datafile_download_url,
       'messages.missingDatafileUrl'
     );
+    const openGenomeBrowser = () => {
+      if (!browserReady.value) return;
+      const query = { return_to: route.fullPath };
+      if (browserStatus.value?.annotation_id) {
+        query.annotation_id = String(browserStatus.value.annotation_id);
+      }
+      router.push({
+        name: 'assembly-browser',
+        params: { assemblyId: assemblyId.value },
+        query
+      });
+    };
     const selectAssembly = (item) => router.push({
       name: 'assembly-detail',
       params: { assemblyId: item.id },
@@ -496,7 +556,12 @@ export default {
       selectAssembly,
       searchQuery,
       searchLoading,
-      submitSearch
+      submitSearch,
+      browserStatusLoading,
+      browserReady,
+      browserStatusMessage,
+      browserButtonLabel,
+      openGenomeBrowser
     };
   }
 };

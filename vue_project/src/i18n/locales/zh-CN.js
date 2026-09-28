@@ -199,6 +199,17 @@ const zhCN = {
       relatedAssemblies: '相关组装版本',
       download: '下载',
       relatedFiles: '相关文件',
+      openGenomeBrowser: '打开基因组浏览器',
+      genomeBrowserUnavailable: '浏览器暂不可用',
+      browserChecking: '正在检查浏览器',
+      browserStatus: {
+        ready: '参考序列和注释轨道已就绪',
+        reference_only: '仅参考序列轨道可用',
+        missing_fasta_index: '参考序列索引尚未生成',
+        missing_annotation_index: '注释索引尚未生成',
+        stale_index: '浏览器索引已经过期',
+        unknown: '无法确认浏览器状态'
+      },
       viewFiles: '查看文件',
       viewAssembly: '查看基因组',
       current: '当前',
@@ -244,6 +255,34 @@ const zhCN = {
         scaffold: 'Scaffold 级',
         contig: 'Contig 级',
         completeGenome: '完整基因组'
+      }
+    },
+    genomeBrowser: {
+      breadcrumbLabel: '面包屑导航',
+      assemblyDetail: 'Assembly 详情',
+      title: '基因组浏览器',
+      titleWithAssembly: '基因组浏览器 · {assembly}',
+      description: '浏览参考序列、基因注释和基因组坐标。',
+      back: '返回 Assembly',
+      openNewWindow: '在新窗口打开',
+      retry: '重试',
+      loadingApplication: '正在加载 JBrowse 2……',
+      frameTitle: '{assembly} 的 JBrowse 2 基因组浏览器',
+      invalidAssembly: 'Assembly 参数无效。',
+      notFound: '未找到该 Assembly。',
+      loadFailed: '基因组浏览器状态加载失败。',
+      status: {
+        missing_genome: '当前 Assembly 没有可用的参考基因组。',
+        missing_fasta_index: '参考序列索引尚未生成。',
+        missing_annotation_source: '缺少注释源文件。',
+        missing_annotation_index: '注释索引尚未生成。',
+        stale_index: '浏览器索引已过期，需要重新构建。',
+        ambiguous_genome: '主基因组文件存在冲突。',
+        ambiguous_fasta_index: '参考序列索引存在冲突。',
+        ambiguous_annotation_source: '注释源文件存在冲突。',
+        ambiguous_annotation_index: '注释索引存在冲突。',
+        annotation_not_found: '未找到指定的注释版本。',
+        unknown: '基因组浏览器暂不可用。'
       }
     },
     accessionSearch: {

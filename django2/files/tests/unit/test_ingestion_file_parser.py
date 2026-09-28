@@ -46,7 +46,8 @@ class IngestionFileParserTestCase(SimpleTestCase):
 
     def test_registry_contains_phase_1a_roles(self):
         expected = {
-            "genome", "genome_fasta", "genome_index", "annotation", "centromere",
+            "genome", "genome_fasta", "genome_index", "annotation",
+            "jbrowse_annotation_gff3", "jbrowse_annotation_tabix", "centromere",
             "telomere", "codon", "coreBlocks",
             "variableBlocks", "miRNA", "tRNA", "rRNA", "TEs",
             "transcriptome.all", "transcriptome.root", "transcriptome.stem",

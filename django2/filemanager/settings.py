@@ -205,6 +205,25 @@ else:
     # Linux环境
     MANUAL_FILES_DIR = '/home/labuser/rdcheng/gd/manual_files'
 
+GENEDATA_DERIVED_DATA_DIR = os.environ.get(
+    'GENEDATA_DERIVED_DATA_DIR',
+    str(BASE_DIR / 'derived_data'),
+)
+GENEDATA_JBROWSE_DATA_DIR = os.environ.get(
+    'GENEDATA_JBROWSE_DATA_DIR',
+    os.path.join(GENEDATA_DERIVED_DATA_DIR, 'jbrowse'),
+)
+GENEDATA_BGZIP_COMMAND = os.environ.get('GENEDATA_BGZIP_COMMAND', 'bgzip')
+GENEDATA_TABIX_COMMAND = os.environ.get('GENEDATA_TABIX_COMMAND', 'tabix')
+GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX = os.environ.get(
+    'GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX',
+    '/_protected_manual_files/',
+)
+GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX = os.environ.get(
+    'GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX',
+    '/_protected_derived_data/',
+)
+
 # 文件上传配置
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 * 1024  # 10GB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 * 1024  # 10GB

@@ -51,10 +51,14 @@ from .accession_api_views import (
     accession_summary,
 )
 from .assembly_api_views import assembly_list, assembly_summary
+from .jbrowse_api_views import browser_asset, jbrowse_config, jbrowse_status
 
 
 # 先定义自定义路径，避免与router冲突
 urlpatterns = [
+    path('browser-assets/<int:file_id>/', browser_asset, name='jbrowse-browser-asset'),
+    path('assemblies/<int:assembly_id>/jbrowse-status/', jbrowse_status, name='jbrowse-status'),
+    path('assemblies/<int:assembly_id>/jbrowse-config/', jbrowse_config, name='jbrowse-config'),
     path('assemblies/', assembly_list, name='assembly-list'),
     path('assemblies/<int:assembly_id>/summary/', assembly_summary, name='assembly-summary'),
     path('accessions/popular/', popular_accessions, name='popular-accessions'),

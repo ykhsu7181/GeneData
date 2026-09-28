@@ -32,6 +32,14 @@ const routes = [
     }
   },
   {
+    path: '/assembly/:assemblyId/browser',
+    name: 'assembly-browser',
+    component: () => import('../views/GenomeBrowserView.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/assembly/:assemblyId',
     name: 'assembly-detail',
     component: () => import('../views/AssemblyView.vue'),

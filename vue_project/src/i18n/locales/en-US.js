@@ -199,6 +199,17 @@ const enUS = {
       relatedAssemblies: 'Related assemblies',
       download: 'Download',
       relatedFiles: 'Related Files',
+      openGenomeBrowser: 'Open Genome Browser',
+      genomeBrowserUnavailable: 'Browser unavailable',
+      browserChecking: 'Checking browser',
+      browserStatus: {
+        ready: 'Reference and annotation tracks are ready',
+        reference_only: 'Only the reference sequence track is available',
+        missing_fasta_index: 'The reference index has not been generated',
+        missing_annotation_index: 'The annotation index has not been generated',
+        stale_index: 'The browser index is stale',
+        unknown: 'Browser readiness could not be determined'
+      },
       viewFiles: 'View Files',
       viewAssembly: 'View Assembly',
       current: 'Current',
@@ -244,6 +255,34 @@ const enUS = {
         scaffold: 'Scaffold',
         contig: 'Contig',
         completeGenome: 'Complete Genome'
+      }
+    },
+    genomeBrowser: {
+      breadcrumbLabel: 'Breadcrumb',
+      assemblyDetail: 'Assembly details',
+      title: 'Genome Browser',
+      titleWithAssembly: 'Genome Browser · {assembly}',
+      description: 'Explore the reference sequence, gene annotations, and genomic coordinates.',
+      back: 'Back to Assembly',
+      openNewWindow: 'Open in new window',
+      retry: 'Retry',
+      loadingApplication: 'Loading JBrowse 2...',
+      frameTitle: 'JBrowse 2 genome browser for {assembly}',
+      invalidAssembly: 'The Assembly parameter is invalid.',
+      notFound: 'This Assembly was not found.',
+      loadFailed: 'Failed to load genome browser status.',
+      status: {
+        missing_genome: 'This Assembly has no available reference genome.',
+        missing_fasta_index: 'The reference sequence index has not been generated.',
+        missing_annotation_source: 'The annotation source file is missing.',
+        missing_annotation_index: 'The annotation index has not been generated.',
+        stale_index: 'The browser index is stale and must be rebuilt.',
+        ambiguous_genome: 'The primary genome file is ambiguous.',
+        ambiguous_fasta_index: 'The reference sequence index is ambiguous.',
+        ambiguous_annotation_source: 'The annotation source is ambiguous.',
+        ambiguous_annotation_index: 'The annotation index is ambiguous.',
+        annotation_not_found: 'The selected Annotation was not found.',
+        unknown: 'The genome browser is unavailable.'
       }
     },
     accessionSearch: {
