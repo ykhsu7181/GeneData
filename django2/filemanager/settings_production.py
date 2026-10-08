@@ -33,6 +33,24 @@ MANUAL_FILES_DIR = os.environ.get(
     "GENEDATA_MANUAL_FILES_DIR",
     "/home/labuser/rdcheng/gd/manual_files",
 )
+GENEDATA_DERIVED_DATA_DIR = os.environ.get(
+    "GENEDATA_DERIVED_DATA_DIR",
+    "/home/labuser/rdcheng/gd/derived_data",
+)
+GENEDATA_JBROWSE_DATA_DIR = os.environ.get(
+    "GENEDATA_JBROWSE_DATA_DIR",
+    os.path.join(GENEDATA_DERIVED_DATA_DIR, "jbrowse"),
+)
+GENEDATA_BGZIP_COMMAND = os.environ.get("GENEDATA_BGZIP_COMMAND", "bgzip")
+GENEDATA_TABIX_COMMAND = os.environ.get("GENEDATA_TABIX_COMMAND", "tabix")
+GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX = os.environ.get(
+    "GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX",
+    "/_protected_manual_files/",
+)
+GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX = os.environ.get(
+    "GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX",
+    "/_protected_derived_data/",
+)
 
 LOGGING = {
     "version": 1,

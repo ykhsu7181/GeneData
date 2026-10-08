@@ -14,6 +14,20 @@ def parse_ingestion_filename(filename):
     the file extension; a compression suffix removes one additional suffix.
     """
     basename = os.path.basename(filename)
+
+    # Samtools indexes conventionally append ``.fai`` to the complete FASTA
+    # name (for example ``genome.IR64.fasta.fai``).  Parse the FASTA name
+    # first so ``fasta`` is not mistaken for part of the accession code.
+    if basename.lower().endswith(".fai"):
+        fasta_name = basename[:-4]
+        parsed_fasta = parse_ingestion_filename(fasta_name)
+        if parsed_fasta and parsed_fasta["file_role"] in {"genome", "genome_fasta"}:
+            return {
+                "category": "genome_index",
+                "file_role": "genome_index",
+                "accession_code": parsed_fasta["accession_code"],
+                "extension": f"{parsed_fasta['extension']}.fai",
+            }
     role = next(
         (
             candidate

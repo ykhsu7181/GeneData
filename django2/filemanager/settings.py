@@ -132,6 +132,15 @@ DATABASES = {
     }
 }
 
+# Ordered accession identifiers promoted on the portal homepage. Unknown values
+# are ignored by the dashboard service, so deployments can manage this list
+# without coupling it to migrations.
+DASHBOARD_FEATURED_ACCESSIONS = tuple(
+    value.strip()
+    for value in os.environ.get('GENEDATA_FEATURED_ACCESSIONS', '').split(',')
+    if value.strip()
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -176,9 +185,11 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-# Unindexed FASTA reads are a compatibility fallback, not the primary path.
-FASTA_FALLBACK_MAX_BYTES = 512 * 1024 * 1024
-FASTA_FALLBACK_TIMEOUT_SECONDS = 5
+# Annotation source files are indexed offline. These caches only contain
+# database-backed API payloads and are versioned by the source-file fingerprint.
+ANNOTATION_OPTIONS_CACHE_SECONDS = 60 * 60
+ANNOTATION_DATA_CACHE_SECONDS = 5 * 60
+ANNOTATION_MAX_PAGE_SIZE = 10000
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -186,13 +197,34 @@ FASTA_FALLBACK_TIMEOUT_SECONDS = 5
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 文件路径配置
-# 根据操作系统选择不同的路径
+# 根据操作系统选择默认路径，并允许开发/部署环境显式覆盖。
 if platform.system() == 'Windows':
-    # Windows环境
-    MANUAL_FILES_DIR = r'D:\gene_manage_system\gene_manage_system\manual_files'
+    default_manual_files_dir = r'D:\gene_manage_system\gene_manage_system\manual_files'
 else:
-    # Linux环境
-    MANUAL_FILES_DIR = '/home/labuser/rdcheng/gd/manual_files'
+    default_manual_files_dir = '/home/labuser/rdcheng/gd/manual_files'
+MANUAL_FILES_DIR = os.environ.get(
+    'GENEDATA_MANUAL_FILES_DIR',
+    default_manual_files_dir,
+)
+
+GENEDATA_DERIVED_DATA_DIR = os.environ.get(
+    'GENEDATA_DERIVED_DATA_DIR',
+    str(BASE_DIR / 'derived_data'),
+)
+GENEDATA_JBROWSE_DATA_DIR = os.environ.get(
+    'GENEDATA_JBROWSE_DATA_DIR',
+    os.path.join(GENEDATA_DERIVED_DATA_DIR, 'jbrowse'),
+)
+GENEDATA_BGZIP_COMMAND = os.environ.get('GENEDATA_BGZIP_COMMAND', 'bgzip')
+GENEDATA_TABIX_COMMAND = os.environ.get('GENEDATA_TABIX_COMMAND', 'tabix')
+GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX = os.environ.get(
+    'GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX',
+    '/_protected_manual_files/',
+)
+GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX = os.environ.get(
+    'GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX',
+    '/_protected_derived_data/',
+)
 
 # 文件上传配置
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 * 1024  # 10GB

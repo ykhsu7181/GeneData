@@ -1,137 +1,101 @@
 <template>
   <div class="annotation-view">
-    <!-- 复用数据一览表的标题样式 -->
-    <div class="page-header">
-      <h2 class="title">{{ $t('page.annotation.title') }}</h2>
-      <div class="header-actions">
-        <el-tooltip :content="$t('page.annotation.refreshData')" placement="top">
-          <el-button circle size="small" @click="fetchFiles" :loading="loading">
-            <el-icon><Refresh /></el-icon>
-          </el-button>
-        </el-tooltip>
-      </div>
-    </div>
-    
-    <!-- 复用数据一览表的搜索下拉框 -->
-    <div class="search-container">
-      <div class="search-wrapper">
-        <el-icon class="search-icon"><Search /></el-icon>
-        <el-autocomplete
-          v-model="selectedOrganism"
-          :placeholder="$t('page.annotation.searchPlaceholder')"
-          :fetch-suggestions="queryAccessionSuggestions"
-          :trigger-on-focus="false"
-          clearable
-          @select="handleAccessionSelect"
-          @keyup.enter="handleAccessionSearch"
-          @clear="handleOrganismChange('')"
-          class="search-select"
-        />
-        <el-tooltip content="Search exact Accession" placement="top">
-          <el-button
-            class="accession-search-button"
-            :loading="loadingOrganisms"
-            @click="handleAccessionSearch"
-          >
-            <el-icon><Search /></el-icon>
-          </el-button>
-        </el-tooltip>
+    <section class="annotation-hero">
+      <nav class="breadcrumb" :aria-label="$t('page.annotation.breadcrumbLabel')">
+        <RouterLink to="/dashboard">{{ $t('nav.home') }}</RouterLink>
+        <span aria-hidden="true">/</span>
+        <button v-if="annotationReturnPath" type="button" @click="returnToAssembly">
+          {{ $t('page.annotation.assemblyBreadcrumb') }}
+        </button>
+        <span v-if="annotationReturnPath" aria-hidden="true">/</span>
+        <span>{{ $t('page.annotation.title') }}</span>
+      </nav>
+      <h1 id="annotation-page-title">{{ $t('page.annotation.title') }}</h1>
+    </section>
 
-        <div class="divider"></div>
+    <AnnotationSearchPanel
+      :accession="selectedOrganism"
+      :assembly-id="selectedAssemblyId"
+      :annotation-id="selectedAnnotationId"
+      :chromosome="selectedChromosome"
+      :feature-type="selectedFeatureType"
+      :view-mode="viewMode"
+      :assembly-options="assemblyOptions"
+      :annotation-options="annotationOptions"
+      :chromosome-options="chromosomeOptions"
+      :feature-type-options="featureTypeOptions"
+      :loading="loading"
+      :loading-organisms="loadingOrganisms"
+      :loading-hierarchy="loadingHierarchy"
+      :loading-options="loadingOptions"
+      :fetch-suggestions="queryAccessionSuggestions"
+      :assembly-label="getAssemblyLabel"
+      :annotation-label="getAnnotationLabel"
+      @update:accession="selectedOrganism = $event"
+      @accession-input="handleAccessionInput"
+      @accession-select="handleAccessionSelect"
+      @clear-accession="handleOrganismChange('')"
+      @assembly-change="handleAssemblyChange"
+      @annotation-change="handleAnnotationChange"
+      @chromosome-change="handleChromosomeChange"
+      @feature-change="handleFeatureTypeChange"
+      @search="handleAccessionSearch"
+      @reset="resetAnnotationFilters"
+      @view-change="handleViewModeChange"
+    />
 
-        <!-- 染色体选择框 -->
-        <div class="chromosome-select">
-          <span class="select-label">Chromosome:</span>
-          <el-select
-            v-model="selectedChromosome"
-            placeholder="Select chromosome"
-            class="chromosome-dropdown"
-            :loading="loadingChromosomes"
-            clearable
-            @change="handleChromosomeChange"
-          >
-            <el-option
-              v-for="item in chromosomeOptions"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </div>
+    <AnnotationSummaryBar :summary="annotationStatistics" :loading="loadingOptions" />
 
-        <div class="divider"></div>
-
-        <!-- 特征类型选择框 -->
-        <div class="feature-select">
-          <span class="select-label">Feature:</span>
-          <el-select
-            v-model="selectedFeatureType"
-            placeholder="Select feature type"
-            class="feature-dropdown"
-            clearable
-            :disabled="viewMode === 'chart'"
-            @change="handleFeatureTypeChange"
-          >
-            <el-option
-              v-for="item in featureTypeOptions"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- 图/表切换按钮 -->
-        <div class="view-toggle">
-          <el-button-group>
-            <el-button
-              :type="viewMode === 'table' ? 'primary' : 'default'"
-              @click="viewMode = 'table'"
-              size="small">
-              <el-icon><Grid /></el-icon>
-              {{ $t('page.annotation.tableView') }}
+    <div
+      class="data-card"
+      role="region"
+      :aria-label="$t('page.annotation.resultsRegionLabel')"
+      :aria-busy="String(loading || loadingAnnotation || loadingVisualization)"
+    >
+      <div class="data-card-header">
+        <h2 id="annotation-results-title">
+          <el-icon aria-hidden="true"><Collection /></el-icon>
+          {{ $t(viewMode === 'chart' ? 'page.annotation.chartTitle' : 'page.annotation.tableTitle') }}
+        </h2>
+        <div class="data-card-actions">
+          <span aria-live="polite">
+            {{ $t('page.annotation.resultCount', { count: displayedResultCount }) }}
+          </span>
+          <el-tooltip :content="$t('page.annotation.refreshData')" placement="top">
+            <el-button circle :aria-label="$t('page.annotation.refreshData')" @click="fetchFiles" :loading="loading">
+              <el-icon><Refresh /></el-icon>
             </el-button>
-            <el-button
-              :type="viewMode === 'chart' ? 'primary' : 'default'"
-              @click="viewMode = 'chart'"
-              size="small">
-              <el-icon><TrendCharts /></el-icon>
-              {{ $t('page.annotation.chartView') }}
-            </el-button>
-          </el-button-group>
+          </el-tooltip>
         </div>
       </div>
-    </div>
-
-    <!-- 内容区域 -->
-    <div class="data-card">
-      <div v-if="loading" class="loading">
-        <el-skeleton :rows="6" animated />
+      <div v-if="loading" class="loading" role="status" aria-live="polite">
+        <span class="sr-only">{{ $t('page.annotation.loadingData') }}</span>
+        <el-skeleton :rows="6" animated aria-hidden="true" />
       </div>
 
-      <div v-else-if="!selectedOrganism" class="empty-state">
+      <div v-else-if="contextErrorKey" class="context-error" role="alert">
+        <el-result icon="warning" :title="$t(contextErrorKey)">
+          <template #extra>
+            <el-button v-if="annotationReturnPath" @click="returnToAssembly">
+              {{ $t('page.annotation.backToAssembly') }}
+            </el-button>
+            <el-button type="primary" @click="useDefaultAnnotation">
+              {{ $t('page.annotation.viewDefaultAnnotation') }}
+            </el-button>
+          </template>
+        </el-result>
+      </div>
+
+      <div v-else-if="!selectedOrganism" class="empty-state" role="status">
         <el-empty :description="$t('page.annotation.selectOrganismPrompt')" />
       </div>
 
       <div v-else class="content-container">
-        <!-- 数据统计信息 - 仅在表格模式显示 -->
-        <div v-if="annotationStatistics && viewMode === 'table'" class="data-stats">
-          <div class="stats-grid">
-            <div class="stat-item">
-              <span class="stat-label">{{ $t('page.annotation.totalFeatures') }}</span>
-              <span class="stat-value">{{ annotationStatistics.total_features }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">{{ $t('page.annotation.chromosomes') }}</span>
-              <span class="stat-value">{{ annotationStatistics.chromosomes.length }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">{{ $t('page.annotation.featureTypes') }}</span>
-              <span class="stat-value">{{ annotationStatistics.feature_types.length }}</span>
-            </div>
-          </div>
+        <div v-if="viewMode === 'table' && dataErrorKey" class="data-error" role="alert">
+          <span>{{ $t(dataErrorKey) }}</span>
+          <el-button type="primary" plain @click="fetchAnnotationData">
+            {{ $t('page.annotation.retryData') }}
+          </el-button>
         </div>
 
         <!-- 表格模式 -->
@@ -143,16 +107,18 @@
             border
             height="600"
             style="width: 100%"
+            :aria-label="$t('page.annotation.tableTitle')"
+            :empty-text="$t('page.annotation.empty')"
           >
-            <el-table-column prop="seqid" label="Chromosome" width="120" />
-            <el-table-column prop="feature" label="Feature" width="100" />
-            <el-table-column prop="start" label="Start" width="100" sortable />
-            <el-table-column prop="end" label="End" width="100" sortable />
-            <el-table-column prop="length" label="Length" width="100" sortable />
-            <el-table-column prop="strand" label="Strand" width="80" />
-            <el-table-column prop="source" label="Source" width="100" />
-            <el-table-column prop="score" label="Score" width="80" />
-            <el-table-column label="Attributes" min-width="300">
+            <el-table-column prop="seqid" :label="$t('page.annotation.chromosome')" width="120" />
+            <el-table-column prop="feature" :label="$t('page.annotation.feature')" width="100" />
+            <el-table-column prop="start" :label="$t('page.annotation.start')" width="100" sortable />
+            <el-table-column prop="end" :label="$t('page.annotation.end')" width="100" sortable />
+            <el-table-column prop="length" :label="$t('page.annotation.length')" width="100" sortable />
+            <el-table-column prop="strand" :label="$t('page.annotation.strand')" width="80" />
+            <el-table-column prop="source" :label="$t('page.annotation.source')" width="100" />
+            <el-table-column prop="score" :label="$t('page.annotation.score')" width="80" />
+            <el-table-column :label="$t('page.annotation.attributes')" min-width="300">
               <template #default="scope">
                 <div class="attributes-container">
                   <div v-for="(value, key) in scope.row.attributes" :key="key" class="attribute-item">
@@ -171,6 +137,7 @@
               v-model:page-size="pageSize"
               :page-sizes="[20, 50, 100, 200]"
               :total="totalCount"
+              :aria-label="$t('page.annotation.paginationLabel')"
               layout="total, sizes, prev, pager, next, jumper"
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
@@ -180,24 +147,35 @@
 
         <!-- 图形模式 -->
         <div v-else-if="viewMode === 'chart'" class="annotation-visualization">
-          <div v-if="loadingVisualization" class="loading-visualization">
+          <div v-if="loadingVisualization" class="loading-visualization" role="status" aria-live="polite">
             <div class="loading-content">
               <el-icon class="is-loading"><Loading /></el-icon>
               <span>{{ $t('page.annotation.loadingVisualization') }}</span>
             </div>
           </div>
-          <div v-else-if="!selectedOrganism || !selectedChromosome" class="empty-state">
-            <el-empty description="请选择生物体和染色体以查看可视化" />
+          <div v-else-if="visualizationErrorKey" class="data-error" role="alert">
+            <span>{{ $t(visualizationErrorKey) }}</span>
+            <el-button type="primary" plain @click="fetchVisualizationData">
+              {{ $t('page.annotation.retryData') }}
+            </el-button>
+          </div>
+          <div v-else-if="!selectedOrganism || !selectedChromosome" class="empty-state" role="status">
+            <el-empty :description="$t('page.annotation.selectVisualization')" />
           </div>
           <div v-else class="chart-content">
             <!-- 可视化控制面板 -->
             <div class="visualization-controls">
               <div class="control-group">
-                <span class="control-label">显示特征类型:</span>
-                <el-checkbox-group v-model="displayFeatures" @change="updateVisualization" class="feature-checkboxes">
+                <span class="control-label">{{ $t('page.annotation.displayFeatureTypes') }}</span>
+                <el-checkbox-group
+                  v-model="displayFeatures"
+                  class="feature-checkboxes"
+                  :aria-label="$t('page.annotation.featureControlsLabel')"
+                  @change="updateVisualization"
+                >
                   <el-checkbox label="gene" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('gene') }"></span>
-                    基因
+                    {{ $t('page.annotation.gene') }}
                   </el-checkbox>
                   <el-checkbox label="mRNA" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('mRNA') }"></span>
@@ -205,11 +183,11 @@
                   </el-checkbox>
                   <el-checkbox label="CDS" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('CDS') }"></span>
-                    编码序列
+                    {{ $t('page.annotation.codingSequence') }}
                   </el-checkbox>
                   <el-checkbox label="exon" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('exon') }"></span>
-                    外显子
+                    {{ $t('page.annotation.exon') }}
                   </el-checkbox>
                   <el-checkbox label="five_prime_UTR" class="feature-checkbox">
                     <span class="feature-legend" :style="{ backgroundColor: getFeatureColor('five_prime_UTR') }"></span>
@@ -222,7 +200,9 @@
                 </el-checkbox-group>
               </div>
               <div class="control-group">
-                <span class="control-label">每行长度 (Mb):</span>
+                <span class="control-label">
+                  {{ $t('page.annotation.rowLength', { unit: segmentLengthUnit }) }}
+                </span>
                 <div class="segment-length-controls">
                   <el-button
                     size="small"
@@ -232,19 +212,21 @@
                     @touchstart="startDecrease"
                     @touchend="stopChange"
                     class="fast-control-btn"
+                    :aria-label="$t('page.annotation.decreaseRowLength')"
                   >
                     -
                   </el-button>
                   <el-input
-                    v-model.number="segmentLengthMb"
+                    v-model.number="segmentLengthDisplay"
                     type="number"
-                    :min="0.01"
-                    :max="50"
-                    :step="0.01"
+                    :min="segmentLengthMin"
+                    :max="segmentLengthMax"
+                    :step="segmentLengthStep"
                     size="small"
                     @change="handleSegmentLengthChange"
                     @blur="validateInput"
                     class="segment-input"
+                    :aria-label="$t('page.annotation.rowLengthInputLabel', { unit: segmentLengthUnit })"
                   />
                   <el-button
                     size="small"
@@ -254,6 +236,7 @@
                     @touchstart="startIncrease"
                     @touchend="stopChange"
                     class="fast-control-btn"
+                    :aria-label="$t('page.annotation.increaseRowLength')"
                   >
                     +
                   </el-button>
@@ -263,14 +246,19 @@
                     @click="resetSegmentLength"
                     class="reset-button"
                   >
-                    重置1Mb
+                    {{ segmentLengthResetLabel }}
                   </el-button>
                 </div>
               </div>
             </div>
 
             <!-- 可视化容器 -->
-            <div ref="annotationContainer" class="annotation-container"></div>
+            <div
+              ref="annotationContainer"
+              class="annotation-container"
+              role="img"
+              :aria-label="$t('page.annotation.visualizationLabel')"
+            ></div>
           </div>
         </div>
       </div>
@@ -279,12 +267,15 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, nextTick, computed } from 'vue';
+import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { Refresh, Search, Grid, TrendCharts, Loading } from '@element-plus/icons-vue';
+import { Collection, Refresh, Loading } from '@element-plus/icons-vue';
 import axios from 'axios';
 import * as d3 from 'd3';
+import { useI18n } from 'vue-i18n';
+import AnnotationSearchPanel from '@/components/annotation/AnnotationSearchPanel.vue';
+import AnnotationSummaryBar from '@/components/annotation/AnnotationSummaryBar.vue';
 
 const normalizeQueryValue = (value) => {
   if (Array.isArray(value)) {
@@ -300,62 +291,219 @@ const matchesId = (item, value) => {
   return String(item.id) === String(value);
 };
 
+const ANNOTATION_PAGE_SIZES = [20, 50, 100, 200];
+
+const normalizePositiveInteger = (value, fallback) => {
+  const parsed = Number.parseInt(normalizeQueryValue(value), 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const normalizePageSize = value => {
+  const parsed = normalizePositiveInteger(value, 50);
+  return ANNOTATION_PAGE_SIZES.includes(parsed) ? parsed : 50;
+};
+
+const normalizeViewMode = value => (normalizeQueryValue(value) === 'chart' ? 'chart' : 'table');
+
+const getSegmentLengthStepBp = (chromosomeLength) => {
+  const length = Number(chromosomeLength);
+  if (!Number.isFinite(length) || length <= 0 || length >= 1000000) return 10000;
+  return 10 ** Math.max(0, Math.floor(Math.log10(length)) - 1);
+};
+
+const getDefaultSegmentLengthBp = (chromosomeLength) => {
+  const length = Number(chromosomeLength);
+  if (!Number.isFinite(length) || length <= 0 || length >= 1000000) return 1000000;
+  const step = getSegmentLengthStepBp(length);
+  return Math.ceil(length / step) * step;
+};
+
+const isCanceledRequest = error => (
+  error?.code === 'ERR_CANCELED'
+  || error?.name === 'CanceledError'
+  || axios.isCancel?.(error)
+);
+
+const normalizeAssemblyReturnPath = (value) => {
+  const normalized = normalizeQueryValue(value);
+  if (!normalized || normalized.startsWith('//')) return '';
+  return /^\/assembly\/[^/?#]+(?:[/?#]|$)/.test(normalized) ? normalized : '';
+};
+
 export default {
   name: 'AnnotationView',
   components: {
+    AnnotationSearchPanel,
+    AnnotationSummaryBar,
+    Collection,
     Refresh,
-    Search,
-    Grid,
-    TrendCharts,
     Loading
   },
   setup() {
+    const { t } = useI18n();
     const route = useRoute();
     const router = useRouter();
     const loading = ref(true);
     const loadingOrganisms = ref(false);
     const loadingAnnotation = ref(false);
-    const loadingChromosomes = ref(false);
-    const selectedOrganism = ref('');
-    const selectedChromosome = ref('');
-    const selectedFeatureType = ref('all');
+    const loadingHierarchy = ref(false);
+    const loadingOptions = ref(false);
+    const draftQuery = reactive({
+      accession: '',
+      assemblyId: '',
+      annotationId: '',
+      chromosome: '',
+      featureType: 'all'
+    });
+    const appliedQuery = reactive({
+      accession: '',
+      assemblyId: '',
+      annotationId: '',
+      chromosome: '',
+      featureType: 'all'
+    });
+    const selectedOrganism = computed({
+      get: () => draftQuery.accession,
+      set: (value) => { draftQuery.accession = value || ''; }
+    });
+    const selectedAssemblyId = computed({
+      get: () => draftQuery.assemblyId,
+      set: (value) => { draftQuery.assemblyId = value ? String(value) : ''; }
+    });
+    const selectedAnnotationId = computed({
+      get: () => draftQuery.annotationId,
+      set: (value) => { draftQuery.annotationId = value ? String(value) : ''; }
+    });
+    const selectedChromosome = computed({
+      get: () => draftQuery.chromosome,
+      set: (value) => { draftQuery.chromosome = value || ''; }
+    });
+    const selectedFeatureType = computed({
+      get: () => draftQuery.featureType,
+      set: (value) => { draftQuery.featureType = value || 'all'; }
+    });
     const allOrganisms = ref([]);
     const organismOptions = ref([]);
+    const assemblyOptions = ref([]);
+    const annotationOptions = ref([]);
     const chromosomeOptions = ref([]);
     const featureTypeOptions = ref(['all']);
     const annotationData = ref([]);
     const annotationStatistics = ref(null);
+    const dataErrorKey = ref('');
+    const visualizationErrorKey = ref('');
+    const loadedOptionsAnnotationId = ref('');
+    const optionsRequestToken = ref(0);
     const currentPage = ref(1);
     const pageSize = ref(50);
     const totalCount = ref(0);
+    let componentDisposed = false;
+    let routeRequestToken = 0;
+    let organismsController = null;
+    let hierarchyController = null;
+    let optionsController = null;
+    let annotationDataController = null;
+    let visualizationController = null;
+    let segmentLengthContextKey = '';
+
+    const replaceRequestController = (currentController) => {
+      currentController?.abort();
+      return new AbortController();
+    };
 
     // 可视化相关数据
     const viewMode = ref('table'); // 'table' 或 'chart'
     const loadingVisualization = ref(false);
     const annotationContainer = ref(null);
-    const displayFeatures = ref([]); // 默认全部不勾选
+    const displayFeatures = ref([
+      'gene',
+      'mRNA',
+      'CDS',
+      'exon',
+      'five_prime_UTR',
+      'three_prime_UTR'
+    ]);
     const segmentLength = ref(1000000); // 默认1.0Mb
     const chromosomeLength = ref(0);
     const visualizationData = ref([]);
-    const contextAccession = ref('');
-    const contextAssemblyId = ref('');
-    const contextAnnotationId = ref('');
+    const displayedResultCount = computed(() => (
+      viewMode.value === 'chart' ? visualizationData.value.length : totalCount.value
+    ));
+    const contextAccession = computed({
+      get: () => appliedQuery.accession,
+      set: (value) => { appliedQuery.accession = value || ''; }
+    });
+    const contextAssemblyId = computed({
+      get: () => appliedQuery.assemblyId,
+      set: (value) => { appliedQuery.assemblyId = value ? String(value) : ''; }
+    });
+    const contextAnnotationId = computed({
+      get: () => appliedQuery.annotationId,
+      set: (value) => { appliedQuery.annotationId = value ? String(value) : ''; }
+    });
     const hierarchyAssemblies = ref([]);
     const loadedHierarchyAccession = ref('');
     const routeSyncInProgress = ref(false);
+    const hierarchyLoadFailed = ref(false);
+    const contextErrorKey = ref('');
+    const annotationReturnPath = computed(() => (
+      normalizeQueryValue(route.query.from) === 'assembly'
+        ? normalizeAssemblyReturnPath(route.query.return_to)
+        : ''
+    ));
 
-    // 计算属性：以Mb为单位的分段长度
-    const segmentLengthMb = computed({
+    const segmentLengthUnit = computed(() => {
+      if (chromosomeLength.value > 0 && chromosomeLength.value < 1000) return 'bp';
+      if (chromosomeLength.value > 0 && chromosomeLength.value < 1000000) return 'kb';
+      return 'Mb';
+    });
+    const segmentLengthDivisor = computed(() => (
+      segmentLengthUnit.value === 'bp' ? 1 : segmentLengthUnit.value === 'kb' ? 1000 : 1000000
+    ));
+    const segmentLengthStep = computed(() => (
+      getSegmentLengthStepBp(chromosomeLength.value) / segmentLengthDivisor.value
+    ));
+    const segmentLengthMin = computed(() => segmentLengthStep.value);
+    const segmentLengthMax = computed(() => {
+      if (segmentLengthUnit.value === 'Mb') return 50;
+      return Math.max(segmentLengthDisplay.value * 2, segmentLengthStep.value);
+    });
+    const segmentLengthDisplay = computed({
       get: () => {
-        const mbValue = segmentLength.value / 1000000;
-        return Math.round(mbValue * 100) / 100; // 始终保留两位小数
+        const value = segmentLength.value / segmentLengthDivisor.value;
+        return segmentLengthUnit.value === 'bp'
+          ? Math.round(value)
+          : Math.round(value * 100) / 100;
       },
       set: (value) => {
-        segmentLength.value = Math.round(value * 1000000); // 转换为bp并四舍五入
+        segmentLength.value = Math.max(1, Math.round(value * segmentLengthDivisor.value));
       }
     });
+    const segmentLengthResetLabel = computed(() => (
+      chromosomeLength.value > 0 && chromosomeLength.value < 1000000
+        ? t('page.annotation.fitSequence')
+        : t('page.annotation.resetOneMb')
+    ));
 
-    const buildNormalizedQuery = ({ accession, assembly, annotation }) => {
+    const initializeSegmentLength = (length) => {
+      const contextKey = `${contextAnnotationId.value}:${selectedChromosome.value}`;
+      if (segmentLengthContextKey === contextKey) return;
+      segmentLength.value = getDefaultSegmentLengthBp(length);
+      segmentLengthContextKey = contextKey;
+    };
+
+    const buildNormalizedQuery = ({
+      accession,
+      assembly,
+      annotation,
+      chromosome,
+      featureType,
+      view,
+      page,
+      pageSize: queryPageSize,
+      from,
+      returnTo
+    }) => {
       const query = {};
       if (accession) {
         query.accession = accession;
@@ -366,37 +514,73 @@ export default {
       if (annotation) {
         query.annotation = String(annotation);
       }
+      if (chromosome) {
+        query.chromosome = chromosome;
+      }
+      if (featureType && featureType !== 'all') {
+        query.feature = featureType;
+      }
+      if (view === 'chart') {
+        query.view = 'chart';
+      }
+      if (Number(page) > 1) {
+        query.page = String(page);
+      }
+      if (Number(queryPageSize) !== 50 && ANNOTATION_PAGE_SIZES.includes(Number(queryPageSize))) {
+        query.page_size = String(queryPageSize);
+      }
+      if (from === 'assembly') {
+        query.from = 'assembly';
+      }
+      const safeReturnPath = normalizeAssemblyReturnPath(returnTo);
+      if (safeReturnPath) {
+        query.return_to = safeReturnPath;
+      }
       return query;
     };
 
-    const replaceRouteQuery = async (query) => {
-      const currentAccession = normalizeQueryValue(route.query.accession);
-      const currentAssembly = normalizeQueryValue(route.query.assembly);
-      const currentAnnotation = normalizeQueryValue(route.query.annotation);
-      const targetAccession = normalizeQueryValue(query.accession);
-      const targetAssembly = normalizeQueryValue(query.assembly);
-      const targetAnnotation = normalizeQueryValue(query.annotation);
-      const routeHasLegacyOrganism = Boolean(normalizeQueryValue(route.query.organism));
+    const queryKeys = [
+      'accession', 'assembly', 'annotation', 'chromosome', 'feature',
+      'view', 'page', 'page_size', 'from', 'return_to'
+    ];
 
-      if (
-        currentAccession === targetAccession &&
-        currentAssembly === targetAssembly &&
-        currentAnnotation === targetAnnotation &&
-        !routeHasLegacyOrganism
-      ) {
-        return;
-      }
+    const routeQueryMatches = query => (
+      !normalizeQueryValue(route.query.organism)
+      && queryKeys.every(key => normalizeQueryValue(route.query[key]) === normalizeQueryValue(query[key]))
+      && Object.keys(route.query).every(key => queryKeys.includes(key) || !normalizeQueryValue(route.query[key]))
+    );
+
+    const writeRouteQuery = async (query, { replace = true } = {}) => {
+      if (routeQueryMatches(query)) return false;
 
       routeSyncInProgress.value = true;
       try {
-        await router.replace({
+        await router[replace ? 'replace' : 'push']({
           path: route.path,
           query
         });
       } finally {
         routeSyncInProgress.value = false;
       }
+      return true;
     };
+
+    const replaceRouteQuery = query => writeRouteQuery(query, { replace: true });
+    const pushRouteQuery = query => writeRouteQuery(query, { replace: false });
+
+    const buildCurrentRouteQuery = (overrides = {}) => buildNormalizedQuery({
+      accession: selectedOrganism.value,
+      assembly: selectedAssemblyId.value,
+      annotation: selectedAnnotationId.value,
+      chromosome: selectedChromosome.value,
+      featureType: selectedFeatureType.value,
+      view: viewMode.value,
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      from: normalizeQueryValue(route.query.from),
+      returnTo: route.query.return_to,
+      ...overrides
+    });
 
     const buildAnnotationContextParams = ({ featureType = null, chromosome = null, page = null, pageSizeValue = null, includeOrganismFallback = false } = {}) => {
       const params = {};
@@ -432,24 +616,49 @@ export default {
     };
 
     const fetchAccessionHierarchy = async (accession) => {
+      hierarchyController?.abort();
       if (!accession) {
         hierarchyAssemblies.value = [];
+        assemblyOptions.value = [];
+        annotationOptions.value = [];
         loadedHierarchyAccession.value = '';
-        return;
+        hierarchyLoadFailed.value = false;
+        return true;
       }
 
       if (loadedHierarchyAccession.value === accession && hierarchyAssemblies.value.length) {
-        return;
+        assemblyOptions.value = hierarchyAssemblies.value;
+        hierarchyLoadFailed.value = false;
+        return true;
       }
 
+      const controller = new AbortController();
+      hierarchyController = controller;
+      hierarchyLoadFailed.value = false;
+      loadingHierarchy.value = true;
       try {
-        const response = await axios.get(`/files/accessions/${accession}/`);
+        const response = await axios.get(`/files/accessions/${accession}/`, {
+          signal: controller.signal
+        });
+        if (componentDisposed || controller.signal.aborted) return false;
         hierarchyAssemblies.value = response.data?.data?.assemblies || [];
+        assemblyOptions.value = hierarchyAssemblies.value;
         loadedHierarchyAccession.value = accession;
+        return true;
       } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return false;
         console.error('获取 accession hierarchy 失败:', error);
         hierarchyAssemblies.value = [];
+        assemblyOptions.value = [];
+        annotationOptions.value = [];
         loadedHierarchyAccession.value = accession;
+        hierarchyLoadFailed.value = true;
+        return false;
+      } finally {
+        if (hierarchyController === controller) {
+          loadingHierarchy.value = false;
+          hierarchyController = null;
+        }
       }
     };
 
@@ -458,11 +667,10 @@ export default {
         return null;
       }
 
-      return (
-        hierarchyAssemblies.value.find((item) => matchesId(item, requestedAssemblyId)) ||
-        hierarchyAssemblies.value.find((item) => item.is_default) ||
-        hierarchyAssemblies.value[0]
-      );
+      if (requestedAssemblyId) {
+        return hierarchyAssemblies.value.find((item) => matchesId(item, requestedAssemblyId)) || null;
+      }
+      return hierarchyAssemblies.value.find((item) => item.is_default) || hierarchyAssemblies.value[0];
     };
 
     const pickAnnotation = (assembly, requestedAnnotationId) => {
@@ -470,83 +678,192 @@ export default {
         return null;
       }
 
-      return (
-        assembly.annotations.find((item) => matchesId(item, requestedAnnotationId)) ||
-        assembly.annotations.find((item) => item.is_default) ||
-        assembly.annotations[0]
-      );
+      if (requestedAnnotationId) {
+        return assembly.annotations.find((item) => matchesId(item, requestedAnnotationId)) || null;
+      }
+      return assembly.annotations.find((item) => item.is_default) || assembly.annotations[0];
+    };
+
+    const getAssemblyLabel = (assembly) => (
+      assembly?.display_name || assembly?.assembly_name || assembly?.name || '-'
+    );
+
+    const getAnnotationLabel = (annotation) => (
+      annotation?.display_name || annotation?.annotation_name || annotation?.name || '-'
+    );
+
+    const updateAnnotationOptions = (assembly) => {
+      annotationOptions.value = Array.isArray(assembly?.annotations) ? assembly.annotations : [];
     };
 
     // 获取有注释文件的生物体列表
     const fetchOrganisms = async () => {
+      organismsController = replaceRequestController(organismsController);
+      const controller = organismsController;
       try {
         loadingOrganisms.value = true;
-        const response = await axios.get('/files/query/annotation-organisms/');
+        const response = await axios.get('/files/query/annotation-organisms/', {
+          signal: controller.signal
+        });
+        if (componentDisposed || controller.signal.aborted) return;
         allOrganisms.value = response.data || [];
         organismOptions.value = allOrganisms.value;
       } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return;
         console.error('获取有注释文件的生物体列表失败:', error);
-        ElMessage.error('获取有注释文件的生物体列表失败');
+        ElMessage.error(t('page.annotation.organismLoadFailed'));
       } finally {
-        loadingOrganisms.value = false;
+        if (organismsController === controller) {
+          loadingOrganisms.value = false;
+          organismsController = null;
+        }
+      }
+    };
+
+    const fetchAnnotationOptions = async ({ force = false } = {}) => {
+      const annotationId = contextAnnotationId.value;
+      if (!annotationId) {
+        optionsController?.abort();
+        optionsController = null;
+        loadingOptions.value = false;
+        optionsRequestToken.value += 1;
+        loadedOptionsAnnotationId.value = '';
+        chromosomeOptions.value = [];
+        featureTypeOptions.value = ['all'];
+        annotationStatistics.value = null;
+        return false;
+      }
+      if (
+        !force
+        && loadedOptionsAnnotationId.value === annotationId
+        && annotationStatistics.value
+      ) {
+        return true;
+      }
+
+      const requestToken = optionsRequestToken.value + 1;
+      optionsRequestToken.value = requestToken;
+      optionsController = replaceRequestController(optionsController);
+      const controller = optionsController;
+      loadingOptions.value = true;
+      try {
+        const response = await axios.get('/files/query/annotation-options/', {
+          params: buildAnnotationContextParams(),
+          signal: controller.signal
+        });
+        if (
+          componentDisposed
+          || controller.signal.aborted
+          || requestToken !== optionsRequestToken.value
+          || contextAnnotationId.value !== annotationId
+        ) {
+          return false;
+        }
+        const data = response.data || {};
+        chromosomeOptions.value = Array.isArray(data.chromosomes) ? data.chromosomes : [];
+        featureTypeOptions.value = [
+          'all',
+          ...(Array.isArray(data.feature_types) ? data.feature_types : [])
+        ];
+        annotationStatistics.value = data.summary || null;
+        loadedOptionsAnnotationId.value = annotationId;
+        if (
+          selectedChromosome.value
+          && !chromosomeOptions.value.includes(selectedChromosome.value)
+        ) {
+          selectedChromosome.value = '';
+        }
+        if (
+          selectedFeatureType.value !== 'all'
+          && !featureTypeOptions.value.includes(selectedFeatureType.value)
+        ) {
+          selectedFeatureType.value = 'all';
+        }
+        return true;
+      } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return false;
+        if (requestToken !== optionsRequestToken.value) return false;
+        console.error('获取 Annotation 筛选元数据失败:', error);
+        loadedOptionsAnnotationId.value = '';
+        chromosomeOptions.value = [];
+        featureTypeOptions.value = ['all'];
+        annotationStatistics.value = null;
+        ElMessage.error(t('page.annotation.optionsLoadFailed'));
+        return false;
+      } finally {
+        if (requestToken === optionsRequestToken.value && optionsController === controller) {
+          loadingOptions.value = false;
+          optionsController = null;
+        }
       }
     };
 
     // 获取注释数据
     const fetchAnnotationData = async () => {
       if (!selectedOrganism.value) {
+        annotationDataController?.abort();
+        annotationDataController = null;
+        loadingAnnotation.value = false;
         return;
       }
 
+      annotationDataController = replaceRequestController(annotationDataController);
+      const controller = annotationDataController;
       try {
         loadingAnnotation.value = true;
+        dataErrorKey.value = '';
+        appliedQuery.chromosome = selectedChromosome.value;
+        appliedQuery.featureType = selectedFeatureType.value;
 
         const params = buildAnnotationContextParams({
-          featureType: selectedFeatureType.value,
-          chromosome: selectedChromosome.value || null,
+          featureType: appliedQuery.featureType,
+          chromosome: appliedQuery.chromosome || null,
           page: currentPage.value,
           pageSizeValue: pageSize.value
         });
 
-        const response = await axios.get('/files/query/annotation-data/', { params });
+        const response = await axios.get('/files/query/annotation-data/', {
+          params,
+          signal: controller.signal
+        });
+        if (componentDisposed || controller.signal.aborted) return;
         const data = response.data;
 
         annotationData.value = data.results || [];
         totalCount.value = data.count || 0;
-        annotationStatistics.value = data.statistics || null;
-
-        // 更新染色体选项
-        if (data.statistics && data.statistics.chromosomes) {
-          chromosomeOptions.value = data.statistics.chromosomes;
-          if (
-            selectedChromosome.value &&
-            !chromosomeOptions.value.includes(selectedChromosome.value)
-          ) {
-            selectedChromosome.value = '';
-          }
-        }
-
-        // 更新特征类型选项
-        if (data.statistics && data.statistics.feature_types) {
-          featureTypeOptions.value = ['all', ...data.statistics.feature_types];
-        }
 
       } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return;
         console.error('获取注释数据失败:', error);
-        ElMessage.error('获取注释数据失败');
+        annotationData.value = [];
+        totalCount.value = 0;
+        dataErrorKey.value = 'page.annotation.dataLoadFailed';
+        ElMessage.error(t('page.annotation.dataLoadFailed'));
       } finally {
-        loadingAnnotation.value = false;
+        if (annotationDataController === controller) {
+          loadingAnnotation.value = false;
+          annotationDataController = null;
+        }
       }
     };
 
     // 获取可视化数据（获取更多数据用于绘图）
     const fetchVisualizationData = async () => {
       if (!selectedOrganism.value || !selectedChromosome.value) {
+        visualizationController?.abort();
+        visualizationController = null;
+        loadingVisualization.value = false;
         return;
       }
 
+      visualizationController = replaceRequestController(visualizationController);
+      const controller = visualizationController;
+      let visualizationReady = false;
       try {
         loadingVisualization.value = true;
+        visualizationErrorKey.value = '';
+        appliedQuery.chromosome = selectedChromosome.value;
+        appliedQuery.featureType = selectedFeatureType.value;
 
         const params = buildAnnotationContextParams({
           featureType: 'all',
@@ -555,35 +872,49 @@ export default {
           pageSizeValue: 10000
         });
 
-        const response = await axios.get('/files/query/annotation-data/', { params });
+        const response = await axios.get('/files/query/annotation-data/', {
+          params,
+          signal: controller.signal
+        });
+        if (componentDisposed || controller.signal.aborted) return;
         const data = response.data;
 
         visualizationData.value = data.results || [];
 
-        console.log('可视化数据加载完成:', {
-          dataLength: visualizationData.value.length,
-          organism: selectedOrganism.value,
-          chromosome: selectedChromosome.value
-        });
-
         // 获取染色体的实际长度
-        await getChromosomeLength();
-
-        // 绘制可视化
-        await nextTick();
-        console.log('开始绘制可视化, 容器:', annotationContainer.value);
-        drawAnnotationVisualization();
+        await getChromosomeLength(controller.signal);
+        if (componentDisposed || controller.signal.aborted) return;
+        visualizationReady = true;
 
       } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return;
         console.error('获取可视化数据失败:', error);
-        ElMessage.error('获取可视化数据失败');
+        visualizationData.value = [];
+        visualizationErrorKey.value = 'page.annotation.visualizationLoadFailed';
+        ElMessage.error(t('page.annotation.visualizationLoadFailed'));
       } finally {
-        loadingVisualization.value = false;
+        if (visualizationController === controller) {
+          loadingVisualization.value = false;
+          if (visualizationReady) {
+            await nextTick();
+          }
+          if (
+            visualizationController === controller
+            && !componentDisposed
+            && !controller.signal.aborted
+            && visualizationReady
+          ) {
+            drawAnnotationVisualization();
+          }
+          if (visualizationController === controller) {
+            visualizationController = null;
+          }
+        }
       }
     };
 
     // 获取染色体长度
-    const getChromosomeLength = async () => {
+    const getChromosomeLength = async (signal) => {
       if (!selectedOrganism.value || !selectedChromosome.value) {
         return;
       }
@@ -593,40 +924,44 @@ export default {
           chromosome: selectedChromosome.value
         });
 
-        const response = await axios.get('/files/query/chromosome-length/', { params });
+        const response = await axios.get('/files/query/chromosome-length/', { params, signal });
+        if (componentDisposed || signal?.aborted) return;
         chromosomeLength.value = response.data.length;
-        console.log('染色体实际长度:', chromosomeLength.value, 'bp');
-        console.log('染色体实际长度:', (chromosomeLength.value / 1000000).toFixed(2), 'Mb');
+        initializeSegmentLength(chromosomeLength.value);
       } catch (error) {
+        if (isCanceledRequest(error) || signal?.aborted) throw error;
         console.error('获取染色体长度失败:', error);
         // 如果获取失败，使用注释数据中的最大位置作为备选
         if (visualizationData.value.length > 0) {
           chromosomeLength.value = Math.max(...visualizationData.value.map(d => d.end));
-          console.log('使用注释数据计算的染色体长度:', chromosomeLength.value);
+          initializeSegmentLength(chromosomeLength.value);
         }
       }
     };
 
     // 绘制注释可视化
     const drawAnnotationVisualization = () => {
-      console.log('drawAnnotationVisualization 被调用', {
-        container: annotationContainer.value,
-        organism: selectedOrganism.value,
-        chromosome: selectedChromosome.value,
-        dataLength: visualizationData.value.length
-      });
-
       if (!annotationContainer.value || !selectedOrganism.value || !selectedChromosome.value) {
-        console.log('绘制条件不满足，退出');
         return;
       }
 
       // 清除之前的内容
       d3.select(annotationContainer.value).selectAll("*").remove();
+      d3.selectAll('.annotation-tooltip').remove();
 
       const container = d3.select(annotationContainer.value);
-      const containerRect = annotationContainer.value.getBoundingClientRect();
-      const width = Math.max(800, containerRect.width);
+      const width = Math.max(720, annotationContainer.value.clientWidth);
+
+      const formatGenomicPosition = (position) => {
+        const value = Number(position) || 0;
+        if (Math.abs(value) >= 1000000) {
+          return `${Number((value / 1000000).toFixed(2))} Mb`;
+        }
+        if (Math.abs(value) >= 1000) {
+          return `${Number((value / 1000).toFixed(2))} kb`;
+        }
+        return `${Math.round(value)} bp`;
+      };
 
       // 过滤要显示的特征类型
       const filteredData = visualizationData.value.filter(d =>
@@ -638,7 +973,7 @@ export default {
           .style("text-align", "center")
           .style("padding", "50px")
           .style("color", "#999")
-          .text("没有要显示的注释特征");
+          .text(t('page.annotation.noFeatures'));
         return;
       }
 
@@ -647,13 +982,6 @@ export default {
       const numSegments = Math.ceil(chromosomeLength.value / segmentLen);
       const margin = { top: 50, right: 50, bottom: 50, left: 50 };
       const segmentWidth = width - margin.left - margin.right;
-
-      console.log('绘制参数:', {
-        chromosomeLength: chromosomeLength.value,
-        segmentLen: segmentLen,
-        numSegments: numSegments,
-        segmentWidth: segmentWidth
-      });
 
       // 预计算每个分段的特征密度和所需高度
       const segmentInfos = [];
@@ -697,7 +1025,7 @@ export default {
         const baseHeight = 25; // 减少基础高度
         const maxTracksPerType = Math.min(maxDensityInSegment, 4); // 限制最大轨道数为4
         const densityHeight = Math.max(0, (maxTracksPerType - 1) * 4); // 每层重叠增加4px（减少）
-        const featureTypeHeight = displayFeatures.value.length * 8; // 每种特征类型8px（减少）
+        const featureTypeHeight = displayFeatures.value.length * 18;
         const segmentHeight = Math.max(40, baseHeight + densityHeight + featureTypeHeight); // 最小高度40px
 
         segmentInfos.push({
@@ -717,6 +1045,7 @@ export default {
       const svg = container.append("svg")
         .attr("width", width)
         .attr("height", height)
+        .style("display", "block")
         .style("background", "#fafafa");
 
       // 使用统一的特征类型颜色映射
@@ -730,20 +1059,14 @@ export default {
       };
 
       // 为每个分段绘制
-      segmentInfos.forEach((segmentInfo, i) => {
+      segmentInfos.forEach((segmentInfo) => {
         const { start: segmentStart, end: segmentEnd, height: segmentHeight, y: segmentY } = segmentInfo;
 
-        // 计算该分段的实际宽度（最后一行可能不满整行）
+        // 单段短序列采用自适应比例铺满；多段染色体的末段继续保持统一比例。
         const actualSegmentLength = segmentEnd - segmentStart;
-        const actualSegmentWidth = (actualSegmentLength / segmentLen) * segmentWidth;
-
-        console.log(`分段 ${i}:`, {
-          segmentStart: segmentStart,
-          segmentEnd: segmentEnd,
-          actualSegmentLength: actualSegmentLength,
-          actualSegmentWidth: actualSegmentWidth,
-          segmentLen: segmentLen
-        });
+        const actualSegmentWidth = numSegments === 1
+          ? segmentWidth
+          : (actualSegmentLength / segmentLen) * segmentWidth;
 
         // 创建该分段的比例尺
         const xScale = d3.scaleLinear()
@@ -768,7 +1091,7 @@ export default {
           .attr("dominant-baseline", "middle")
           .style("font-size", "12px")
           .style("fill", "#666")
-          .text(`${(segmentStart / 1000000).toFixed(1)} Mb`);
+          .text(formatGenomicPosition(segmentStart));
 
         // 添加分段标签 - 右侧显示终止位置
         svg.append("text")
@@ -778,7 +1101,7 @@ export default {
           .attr("dominant-baseline", "middle")
           .style("font-size", "12px")
           .style("fill", "#666")
-          .text(`${(segmentEnd / 1000000).toFixed(1)} Mb`);
+          .text(formatGenomicPosition(segmentEnd));
 
         // 过滤该分段的数据
         const segmentData = filteredData.filter(d =>
@@ -793,8 +1116,8 @@ export default {
 
           // 为该特征类型的数据分配轨道，避免重叠
           const tracks = [];
-          const trackHeight = 6; // 减少轨道高度
-          const trackSpacing = 1; // 减少轨道间距
+          const trackHeight = 10;
+          const trackSpacing = 2;
           const maxTracks = 3; // 限制最大轨道数
 
           typeData.forEach(feature => {
@@ -835,7 +1158,7 @@ export default {
 
           // 绘制每个轨道的特征
           tracks.forEach((track, trackIndex) => {
-            const baseTrackY = segmentY + 8 + typeIndex * 15; // 每种特征类型占15px（减少）
+            const baseTrackY = segmentY + 10 + typeIndex * 18;
             const trackY = baseTrackY + trackIndex * (trackHeight + trackSpacing);
 
             track.forEach(feature => {
@@ -852,6 +1175,7 @@ export default {
                 .attr("opacity", 0.8)
                 .on("mouseover", function(event) {
                   // 创建tooltip
+                  d3.selectAll('.annotation-tooltip').remove();
                   const tooltip = d3.select("body").append("div")
                     .attr("class", "annotation-tooltip")
                     .style("opacity", 0)
@@ -870,9 +1194,9 @@ export default {
 
                   tooltip.html(`
                     <strong>${feature.feature}</strong><br/>
-                    位置: ${feature.start.toLocaleString()} - ${feature.end.toLocaleString()}<br/>
-                    长度: ${feature.length.toLocaleString()} bp<br/>
-                    链: ${feature.strand}<br/>
+                    ${t('page.annotation.position')}: ${feature.start.toLocaleString()} - ${feature.end.toLocaleString()}<br/>
+                    ${t('page.annotation.length')}: ${feature.length.toLocaleString()} bp<br/>
+                    ${t('page.annotation.strand')}: ${feature.strand}<br/>
                     ${feature.attributes.ID ? 'ID: ' + feature.attributes.ID : ''}
                   `)
                     .style("left", (event.pageX + 10) + "px")
@@ -907,9 +1231,8 @@ export default {
       }
     };
 
-    // 重置分段长度为1Mb
     const resetSegmentLength = () => {
-      segmentLengthMb.value = 1.00;
+      segmentLength.value = getDefaultSegmentLengthBp(chromosomeLength.value);
       if (viewMode.value === 'chart' && selectedOrganism.value && selectedChromosome.value) {
         drawAnnotationVisualization();
       }
@@ -949,25 +1272,29 @@ export default {
     };
 
     const increaseValue = () => {
-      const newValue = Math.min(50, segmentLengthMb.value + 0.01);
-      segmentLengthMb.value = Math.round(newValue * 100) / 100; // 保持精度
+      const newValue = Math.min(
+        segmentLengthMax.value,
+        segmentLengthDisplay.value + segmentLengthStep.value
+      );
+      segmentLengthDisplay.value = newValue;
       handleSegmentLengthChange();
     };
 
     const decreaseValue = () => {
-      const newValue = Math.max(0.01, segmentLengthMb.value - 0.01);
-      segmentLengthMb.value = Math.round(newValue * 100) / 100; // 保持精度
+      const newValue = Math.max(
+        segmentLengthMin.value,
+        segmentLengthDisplay.value - segmentLengthStep.value
+      );
+      segmentLengthDisplay.value = newValue;
       handleSegmentLengthChange();
     };
 
     const validateInput = () => {
-      if (segmentLengthMb.value < 0.01) {
-        segmentLengthMb.value = 0.01;
-      } else if (segmentLengthMb.value > 50) {
-        segmentLengthMb.value = 50;
-      }
-      // 保持两位小数精度
-      segmentLengthMb.value = Math.round(segmentLengthMb.value * 100) / 100;
+      const value = Number(segmentLengthDisplay.value);
+      segmentLengthDisplay.value = Math.min(
+        segmentLengthMax.value,
+        Math.max(segmentLengthMin.value, Number.isFinite(value) ? value : segmentLengthMin.value)
+      );
       handleSegmentLengthChange();
     };
 
@@ -979,44 +1306,129 @@ export default {
     };
 
     const clearContextData = () => {
-      contextAccession.value = '';
-      contextAssemblyId.value = '';
-      contextAnnotationId.value = '';
+      hierarchyController?.abort();
+      optionsController?.abort();
+      annotationDataController?.abort();
+      visualizationController?.abort();
+      hierarchyController = null;
+      optionsController = null;
+      annotationDataController = null;
+      visualizationController = null;
+      loadingHierarchy.value = false;
+      loadingOptions.value = false;
+      loadingAnnotation.value = false;
+      loadingVisualization.value = false;
+      Object.assign(draftQuery, {
+        accession: '',
+        assemblyId: '',
+        annotationId: '',
+        chromosome: '',
+        featureType: 'all'
+      });
+      Object.assign(appliedQuery, {
+        accession: '',
+        assemblyId: '',
+        annotationId: '',
+        chromosome: '',
+        featureType: 'all'
+      });
       hierarchyAssemblies.value = [];
+      assemblyOptions.value = [];
+      annotationOptions.value = [];
       loadedHierarchyAccession.value = '';
-      selectedOrganism.value = '';
-      selectedChromosome.value = '';
-      selectedFeatureType.value = 'all';
       currentPage.value = 1;
       annotationData.value = [];
       totalCount.value = 0;
       annotationStatistics.value = null;
+      dataErrorKey.value = '';
+      visualizationErrorKey.value = '';
+      loadedOptionsAnnotationId.value = '';
+      optionsRequestToken.value += 1;
       chromosomeOptions.value = [];
       featureTypeOptions.value = ['all'];
       visualizationData.value = [];
       chromosomeLength.value = 0;
+      contextErrorKey.value = '';
+      hierarchyLoadFailed.value = false;
+      loadingHierarchy.value = false;
     };
 
-    const syncRouteContext = async () => {
+    const syncRouteContext = async (requestToken) => {
       const accession = normalizeQueryValue(route.query.accession) || normalizeQueryValue(route.query.organism);
       const requestedAssemblyId = normalizeQueryValue(route.query.assembly);
       const requestedAnnotationId = normalizeQueryValue(route.query.annotation);
+      const requestedChromosome = normalizeQueryValue(route.query.chromosome);
+      const requestedFeatureType = normalizeQueryValue(route.query.feature) || 'all';
+      const requestedViewMode = normalizeViewMode(route.query.view);
+      const requestedPage = normalizePositiveInteger(route.query.page, 1);
+      const requestedPageSize = normalizePageSize(route.query.page_size);
 
       if (!accession) {
         clearContextData();
-        return;
+        return true;
       }
 
+      contextErrorKey.value = '';
       selectedOrganism.value = accession;
-      contextAccession.value = accession;
+      draftQuery.assemblyId = requestedAssemblyId;
+      draftQuery.annotationId = requestedAnnotationId;
+      draftQuery.chromosome = requestedChromosome;
+      draftQuery.featureType = requestedFeatureType;
+      appliedQuery.chromosome = requestedChromosome;
+      appliedQuery.featureType = requestedFeatureType;
+      viewMode.value = requestedViewMode;
+      currentPage.value = requestedPage;
+      pageSize.value = requestedPageSize;
 
-      await fetchAccessionHierarchy(accession);
+      const hierarchyLoaded = await fetchAccessionHierarchy(accession);
+      if (
+        componentDisposed
+        || requestToken !== routeRequestToken
+        || !hierarchyLoaded
+      ) {
+        return false;
+      }
+
+      if (hierarchyLoadFailed.value) {
+        contextErrorKey.value = 'page.annotation.contextLoadFailed';
+        return false;
+      }
 
       const assembly = pickAssembly(requestedAssemblyId);
+      if (requestedAssemblyId && !assembly) {
+        updateAnnotationOptions(null);
+        contextAccession.value = accession;
+        contextAssemblyId.value = '';
+        contextAnnotationId.value = '';
+        contextErrorKey.value = 'page.annotation.assemblyNotFound';
+        return false;
+      }
+      updateAnnotationOptions(assembly);
       const annotation = pickAnnotation(assembly, requestedAnnotationId);
 
+      const resolvedAssemblyId = assembly?.id ? String(assembly.id) : '';
+      const resolvedAnnotationId = annotation?.id ? String(annotation.id) : '';
+      const contextChanged = (
+        appliedQuery.accession !== accession
+        || appliedQuery.assemblyId !== resolvedAssemblyId
+        || appliedQuery.annotationId !== resolvedAnnotationId
+      );
+      draftQuery.assemblyId = resolvedAssemblyId;
+      draftQuery.annotationId = resolvedAnnotationId;
+      contextAccession.value = accession;
       contextAssemblyId.value = assembly?.id ? String(assembly.id) : '';
+      if (requestedAnnotationId && !annotation) {
+        contextAnnotationId.value = '';
+        contextErrorKey.value = 'page.annotation.annotationNotFound';
+        return false;
+      }
       contextAnnotationId.value = annotation?.id ? String(annotation.id) : '';
+      if (contextChanged) {
+        annotationStatistics.value = null;
+        loadedOptionsAnnotationId.value = '';
+        dataErrorKey.value = '';
+        visualizationErrorKey.value = '';
+      }
 
       if (allOrganisms.value.length && !allOrganisms.value.includes(accession)) {
         organismOptions.value = Array.from(new Set([accession, ...allOrganisms.value]));
@@ -1025,8 +1437,59 @@ export default {
       await replaceRouteQuery(buildNormalizedQuery({
         accession,
         assembly: assembly?.id || '',
-        annotation: annotation?.id || ''
+        annotation: annotation?.id || '',
+        chromosome: requestedChromosome,
+        featureType: requestedFeatureType,
+        view: requestedViewMode,
+        page: requestedPage,
+        pageSize: requestedPageSize,
+        from: normalizeQueryValue(route.query.from),
+        returnTo: route.query.return_to
       }));
+      return true;
+    };
+
+    const reconcileRouteFilters = async () => {
+      const chromosomeIsValid = !selectedChromosome.value
+        || chromosomeOptions.value.includes(selectedChromosome.value);
+      const featureIsValid = selectedFeatureType.value === 'all'
+        || featureTypeOptions.value.includes(selectedFeatureType.value);
+
+      if (!chromosomeIsValid) selectedChromosome.value = '';
+      if (!featureIsValid) selectedFeatureType.value = 'all';
+      appliedQuery.chromosome = selectedChromosome.value;
+      appliedQuery.featureType = selectedFeatureType.value;
+      if (!chromosomeIsValid || !featureIsValid) currentPage.value = 1;
+
+      await replaceRouteQuery(buildCurrentRouteQuery());
+    };
+
+    const returnToAssembly = () => {
+      if (annotationReturnPath.value) {
+        router.push(annotationReturnPath.value);
+        return;
+      }
+      const targetAssemblyId = contextAssemblyId.value || normalizeQueryValue(route.query.assembly);
+      if (targetAssemblyId) {
+        router.push({ name: 'assembly-detail', params: { assemblyId: targetAssemblyId } });
+      } else {
+        router.push({ name: 'assembly' });
+      }
+    };
+
+    const useDefaultAnnotation = async () => {
+      const requestedAssemblyId = contextErrorKey.value === 'page.annotation.assemblyNotFound'
+        ? ''
+        : contextAssemblyId.value || normalizeQueryValue(route.query.assembly);
+      await router.replace({
+        path: route.path,
+        query: buildNormalizedQuery({
+          accession: contextAccession.value || normalizeQueryValue(route.query.accession),
+          assembly: requestedAssemblyId,
+          from: normalizeQueryValue(route.query.from),
+          returnTo: route.query.return_to
+        })
+      });
     };
 
     // 获取文件列表（保持兼容性）
@@ -1042,7 +1505,7 @@ export default {
         }
       } catch (error) {
         console.error('获取数据失败:', error);
-        ElMessage.error('获取数据失败');
+        ElMessage.error(t('messages.getDataFailed'));
       } finally {
         loading.value = false;
       }
@@ -1063,7 +1526,7 @@ export default {
     const handleAccessionSearch = async () => {
       const keyword = String(selectedOrganism.value || '').trim();
       if (!keyword) {
-        ElMessage.warning('Please enter an Accession.');
+        ElMessage.warning(t('page.annotation.enterAccession'));
         return;
       }
 
@@ -1071,7 +1534,17 @@ export default {
         item => normalizeAccession(item) === normalizeAccession(keyword)
       );
       if (!accession) {
-        ElMessage.warning(`No exact Accession match: ${keyword}`);
+        ElMessage.warning(t('page.annotation.noExactMatch', { accession: keyword }));
+        return;
+      }
+
+      if (
+        normalizeAccession(accession) === normalizeAccession(loadedHierarchyAccession.value)
+        && selectedAssemblyId.value
+        && selectedAnnotationId.value
+      ) {
+        await pushRouteQuery(buildCurrentRouteQuery({ accession }));
+        await handleRouteParams();
         return;
       }
 
@@ -1082,71 +1555,203 @@ export default {
       await handleOrganismChange(item?.value || '');
     };
 
+    const handleAccessionInput = (value) => {
+      if (normalizeAccession(value) === normalizeAccession(loadedHierarchyAccession.value)) return;
+      draftQuery.assemblyId = '';
+      draftQuery.annotationId = '';
+      draftQuery.chromosome = '';
+      draftQuery.featureType = 'all';
+      hierarchyAssemblies.value = [];
+      assemblyOptions.value = [];
+      annotationOptions.value = [];
+      loadedHierarchyAccession.value = '';
+    };
+
     // 生物体选择变化
     const handleOrganismChange = async (value) => {
       selectedOrganism.value = value;
-      selectedChromosome.value = '';
-      selectedFeatureType.value = 'all';
+      draftQuery.assemblyId = '';
+      draftQuery.annotationId = '';
+      draftQuery.chromosome = '';
+      draftQuery.featureType = 'all';
       currentPage.value = 1;
 
       if (value) {
         contextAccession.value = value;
         contextAssemblyId.value = '';
         contextAnnotationId.value = '';
+        appliedQuery.chromosome = '';
+        appliedQuery.featureType = 'all';
         hierarchyAssemblies.value = [];
+        assemblyOptions.value = [];
+        annotationOptions.value = [];
         loadedHierarchyAccession.value = '';
         visualizationData.value = [];
         chromosomeLength.value = 0;
-        await replaceRouteQuery(buildNormalizedQuery({
-          accession: value
-        }));
+        await pushRouteQuery(buildNormalizedQuery({ accession: value }));
+        await handleRouteParams();
       } else {
         clearContextData();
-        await replaceRouteQuery({});
+        await pushRouteQuery({});
       }
+    };
+
+    const handleAssemblyChange = async (value) => {
+      const assembly = assemblyOptions.value.find((item) => matchesId(item, value));
+      selectedAssemblyId.value = assembly?.id || '';
+      updateAnnotationOptions(assembly);
+      const annotation = pickAnnotation(assembly, '');
+      selectedAnnotationId.value = annotation?.id || '';
+      selectedChromosome.value = '';
+      selectedFeatureType.value = 'all';
+      currentPage.value = 1;
+      visualizationData.value = [];
+      chromosomeLength.value = 0;
+      segmentLengthContextKey = '';
+      dataErrorKey.value = '';
+      visualizationErrorKey.value = '';
+      if (!assembly) return;
+
+      await pushRouteQuery(buildCurrentRouteQuery({
+        assembly: assembly.id,
+        annotation: annotation?.id || '',
+        chromosome: '',
+        featureType: 'all',
+        page: 1
+      }));
+      await handleRouteParams();
+    };
+
+    const handleAnnotationChange = async (value) => {
+      const annotation = annotationOptions.value.find((item) => matchesId(item, value));
+      selectedAnnotationId.value = annotation?.id || '';
+      selectedChromosome.value = '';
+      selectedFeatureType.value = 'all';
+      currentPage.value = 1;
+      visualizationData.value = [];
+      chromosomeLength.value = 0;
+      dataErrorKey.value = '';
+      visualizationErrorKey.value = '';
+      if (!annotation) return;
+
+      await pushRouteQuery(buildCurrentRouteQuery({
+        annotation: annotation.id,
+        chromosome: '',
+        featureType: 'all',
+        page: 1
+      }));
+      await handleRouteParams();
     };
 
     // 染色体选择变化
     const handleChromosomeChange = async (value) => {
       selectedChromosome.value = value;
+      visualizationErrorKey.value = '';
+      appliedQuery.chromosome = selectedChromosome.value;
       currentPage.value = 1;
-      if (value) {
-        if (viewMode.value === 'table') {
-          await fetchAnnotationData();
-        } else if (viewMode.value === 'chart') {
-          await fetchVisualizationData();
-        }
+      await pushRouteQuery(buildCurrentRouteQuery());
+      if (viewMode.value === 'table') {
+        await fetchAnnotationData();
+      } else if (viewMode.value === 'chart' && value) {
+        await fetchVisualizationData();
+      } else if (!value) {
+        visualizationData.value = [];
+        chromosomeLength.value = 0;
       }
     };
 
     // 特征类型选择变化
-    const handleFeatureTypeChange = (value) => {
+    const handleFeatureTypeChange = async (value) => {
       selectedFeatureType.value = value;
+      appliedQuery.featureType = selectedFeatureType.value;
       currentPage.value = 1;
-      fetchAnnotationData();
+      await pushRouteQuery(buildCurrentRouteQuery());
+      await fetchAnnotationData();
+    };
+
+    const resetAnnotationFilters = async () => {
+      selectedChromosome.value = '';
+      selectedFeatureType.value = 'all';
+      appliedQuery.chromosome = '';
+      appliedQuery.featureType = 'all';
+      currentPage.value = 1;
+      visualizationData.value = [];
+      chromosomeLength.value = 0;
+      dataErrorKey.value = '';
+      visualizationErrorKey.value = '';
+      await pushRouteQuery(buildCurrentRouteQuery());
+      if (viewMode.value === 'table' && selectedAnnotationId.value) {
+        await fetchAnnotationData();
+      }
+    };
+
+    const handleViewModeChange = async (mode) => {
+      viewMode.value = mode === 'chart' ? 'chart' : 'table';
+      if (viewMode.value === 'chart') {
+        annotationDataController?.abort();
+        annotationDataController = null;
+        loadingAnnotation.value = false;
+      } else {
+        visualizationController?.abort();
+        visualizationController = null;
+        loadingVisualization.value = false;
+        d3.selectAll('.annotation-tooltip').remove();
+      }
+      await pushRouteQuery(buildCurrentRouteQuery());
+      if (viewMode.value === 'chart') {
+        if (selectedChromosome.value) await fetchVisualizationData();
+      } else if (selectedAnnotationId.value) {
+        await fetchAnnotationData();
+      }
     };
 
     // 分页大小变化
-    const handleSizeChange = (size) => {
+    const handleSizeChange = async (size) => {
       pageSize.value = size;
       currentPage.value = 1;
-      fetchAnnotationData();
+      await pushRouteQuery(buildCurrentRouteQuery());
+      await fetchAnnotationData();
     };
 
     // 当前页变化
-    const handleCurrentChange = (page) => {
+    const handleCurrentChange = async (page) => {
       currentPage.value = page;
-      fetchAnnotationData();
+      await pushRouteQuery(buildCurrentRouteQuery());
+      await fetchAnnotationData();
     };
 
     // 处理URL参数
     const handleRouteParams = async () => {
-      await syncRouteContext();
-      await fetchFiles();
+      const requestToken = routeRequestToken + 1;
+      routeRequestToken = requestToken;
+      loading.value = true;
+      const isValidContext = await syncRouteContext(requestToken);
+      if (componentDisposed || requestToken !== routeRequestToken) return;
+      if (isValidContext) {
+        await fetchAnnotationOptions();
+        if (componentDisposed || requestToken !== routeRequestToken) return;
+        await reconcileRouteFilters();
+        if (componentDisposed || requestToken !== routeRequestToken) return;
+        await fetchFiles();
+      } else {
+        loading.value = false;
+      }
     };
 
     watch(
-      () => [route.query.accession, route.query.organism, route.query.assembly, route.query.annotation],
+      () => [
+        route.query.accession,
+        route.query.organism,
+        route.query.assembly,
+        route.query.annotation,
+        route.query.chromosome,
+        route.query.feature,
+        route.query.view,
+        route.query.page,
+        route.query.page_size,
+        route.query.from,
+        route.query.return_to
+      ],
       async () => {
         if (routeSyncInProgress.value) {
           return;
@@ -1161,50 +1766,70 @@ export default {
       }
     });
 
-    // 监听视图模式变化
-    watch(viewMode, async (newMode) => {
-      if (newMode === 'chart' && selectedOrganism.value && selectedChromosome.value) {
-        await fetchVisualizationData();
-      }
-    });
-
-    // 监听生物体和染色体选择，在图形模式下自动加载数据
-    watch([selectedOrganism, selectedChromosome], async ([newOrganism, newChromosome]) => {
-      if (viewMode.value === 'chart' && newOrganism && newChromosome) {
-        await fetchVisualizationData();
-      }
-    });
-
     onMounted(async () => {
       await fetchOrganisms();
+      if (componentDisposed) return;
       await handleRouteParams();
+    });
+
+    onBeforeUnmount(() => {
+      componentDisposed = true;
+      routeRequestToken += 1;
+      organismsController?.abort();
+      hierarchyController?.abort();
+      optionsController?.abort();
+      annotationDataController?.abort();
+      visualizationController?.abort();
+      stopChange();
+      d3.selectAll('.annotation-tooltip').remove();
+      if (annotationContainer.value) {
+        d3.select(annotationContainer.value).selectAll('*').remove();
+      }
     });
 
     return {
       loading,
       loadingOrganisms,
       loadingAnnotation,
-      loadingChromosomes,
+      loadingHierarchy,
+      loadingOptions,
       loadingVisualization,
+      draftQuery,
+      appliedQuery,
       selectedOrganism,
+      selectedAssemblyId,
+      selectedAnnotationId,
       selectedChromosome,
       selectedFeatureType,
       organismOptions,
+      assemblyOptions,
+      annotationOptions,
       chromosomeOptions,
       featureTypeOptions,
       annotationData,
       annotationStatistics,
+      dataErrorKey,
+      visualizationErrorKey,
       currentPage,
       pageSize,
       totalCount,
+      displayedResultCount,
+      contextErrorKey,
+      annotationReturnPath,
       viewMode,
       annotationContainer,
       displayFeatures,
       segmentLength,
-      segmentLengthMb,
+      segmentLengthDisplay,
+      segmentLengthUnit,
+      segmentLengthStep,
+      segmentLengthMin,
+      segmentLengthMax,
+      segmentLengthResetLabel,
       fetchFiles,
       fetchOrganisms,
       fetchAnnotationData,
+      fetchAnnotationOptions,
       fetchVisualizationData,
       drawAnnotationVisualization,
       updateVisualization,
@@ -1216,14 +1841,23 @@ export default {
       validateInput,
       getFeatureColor,
       queryAccessionSuggestions,
+      getAssemblyLabel,
+      getAnnotationLabel,
       handleAccessionSearch,
       handleAccessionSelect,
+      handleAccessionInput,
       handleOrganismChange,
+      handleAssemblyChange,
+      handleAnnotationChange,
       handleChromosomeChange,
       handleFeatureTypeChange,
+      resetAnnotationFilters,
+      handleViewModeChange,
       handleSizeChange,
       handleCurrentChange,
-      handleRouteParams
+      handleRouteParams,
+      returnToAssembly,
+      useDefaultAnnotation
     };
   }
 };
@@ -1232,65 +1866,114 @@ export default {
 <style scoped>
 .annotation-view {
   padding: 0;
+  min-height: calc(100vh - 160px);
+  color: #132449;
 }
 
-.page-header {
+.annotation-hero {
+  margin-bottom: 12px;
+  padding-top: 4px;
+}
+
+.breadcrumb {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-}
-
-.title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1a56db;
-}
-
-.header-actions {
-  display: flex;
   gap: 8px;
+  margin-bottom: 8px;
+  color: #7183a0;
+  font-size: 13px;
 }
 
-.search-container {
-  margin-bottom: 24px;
+.breadcrumb a,
+.breadcrumb button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2b6fc7;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 0 16px;
-  max-width: 1200px;
-  gap: 16px;
+.breadcrumb a:hover,
+.breadcrumb a:focus-visible,
+.breadcrumb button:hover,
+.breadcrumb button:focus-visible {
+  color: #0068e8;
+  text-decoration: underline;
+  outline: none;
 }
 
-.search-icon {
-  color: #606266;
-  margin-right: 8px;
-}
-
-.search-select {
-  width: 100%;
-}
-
-.accession-search-button {
-  flex-shrink: 0;
+.annotation-hero h1 {
+  margin: 0;
+  color: #102f61;
+  font-size: 30px;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
 }
 
 .data-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  padding: 24px;
+  padding: 14px 15px 16px;
+  border: 1px solid #d9e7f7;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 36px rgba(36, 103, 178, 0.08);
+}
+
+.data-card-header,
+.data-card-actions,
+.data-card-header h2 {
+  display: flex;
+  align-items: center;
+}
+
+.data-card-header {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.data-card-header h2 {
+  gap: 8px;
+  margin: 0;
+  color: #0060df;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.data-card-actions {
+  gap: 10px;
+  color: #60799e;
+  font-size: 13px;
 }
 
 .loading {
   padding: 20px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.data-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #f3c2c2;
+  border-radius: 8px;
+  background: #fef0f0;
+  color: #b42318;
 }
 
 .empty-state {
@@ -1299,83 +1982,11 @@ export default {
 }
 
 .content-container {
-  padding: 20px 0;
-}
-
-.annotation-info h3 {
-  color: #1a56db;
-  margin-bottom: 16px;
-}
-
-.annotation-info p {
-  color: #606266;
-  line-height: 1.6;
-}
-
-.data-stats {
-  background: #f0f5ff;
-  border-radius: 6px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
-  border-left: 4px solid #1a56db;
-}
-
-.data-stats p {
-  margin: 0;
-  color: #1a56db;
-  font-size: 14px;
-}
-
-.divider {
-  width: 1px;
-  height: 24px;
-  background-color: #e4e7ed;
-  margin: 0 8px;
-}
-
-.chromosome-select,
-.feature-select {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.select-label {
-  font-size: 14px;
-  color: #606266;
-  white-space: nowrap;
-}
-
-.chromosome-dropdown,
-.feature-dropdown {
-  min-width: 150px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stat-label {
-  font-weight: 500;
-  color: #606266;
-}
-
-.stat-value {
-  font-weight: 600;
-  color: #1a56db;
-  font-size: 16px;
+  padding: 0;
 }
 
 .annotation-table {
-  margin-top: 24px;
+  margin-top: 0;
 }
 
 .attributes-container {
@@ -1404,6 +2015,7 @@ export default {
   margin-top: 16px;
   display: flex;
   justify-content: center;
+  overflow-x: auto;
 }
 
 .view-toggle {
@@ -1523,7 +2135,7 @@ export default {
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   background: white;
-  min-height: 400px;
+  min-height: 220px;
   overflow-x: auto;
 }
 
@@ -1560,5 +2172,14 @@ export default {
 .control-group .el-input-number .el-input-number__decrease:active {
   /* 按下时立即响应 */
   transform: scale(0.95);
+}
+
+@media (max-width: 760px) {
+  .annotation-hero h1 { font-size: 26px; }
+  .data-card-header { align-items: flex-start; }
+  .data-card-actions { flex-shrink: 0; }
+  .pagination-container { justify-content: flex-start; }
+  .visualization-controls, .control-group { align-items: flex-start; }
+  .control-group { flex-direction: column; }
 }
 </style>

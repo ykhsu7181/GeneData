@@ -1,6 +1,7 @@
 import json
 
 from files.models import Accession, Assembly, FileRelation, Species
+from files.services.assembly_visibility import visible_assembly_queryset
 from files.services.data_overview_service import datafile_download_url, file_role_display, format_size
 
 
@@ -177,7 +178,9 @@ def build_genome_list_payload(params):
     accession_id = _param(params, "accession_id")
     assembly_level = _param(params, "assembly_level")
 
-    assemblies = Assembly.objects.select_related("accession", "accession__species").all()
+    assemblies = visible_assembly_queryset(
+        Assembly.objects.select_related("accession", "accession__species").all()
+    )
     if species_id:
         assemblies = assemblies.filter(accession__species_id=species_id)
     if accession_id:

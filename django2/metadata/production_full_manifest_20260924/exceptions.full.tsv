@@ -1,0 +1,32 @@
+﻿file_path	file_name	reason	detail
+/home/labuser/rdcheng/gd/manual_files/codon.sh	codon.sh	unrecognized_filename	
+/home/labuser/rdcheng/gd/manual_files/supplymentary_data.txt	supplymentary_data.txt	auxiliary_file_excluded	辅助说明文件，不进入数据绑定。
+/home/labuser/rdcheng/gd/manual_files/supplymentary_data.txt.bak_20260416	supplymentary_data.txt.bak_20260416	auxiliary_file_excluded	辅助备份文件，不进入数据绑定。
+/home/labuser/rdcheng/gd/manual_files/centromere.OrufRS1.bed	centromere.OrufRS1.bed	empty_file	保留生产物理文件，暂不创建数据绑定；补充真实内容后再增量导入。
+/home/labuser/rdcheng/gd/manual_files/miRNA.DR1.bed	miRNA.DR1.bed	empty_file	保留生产物理文件，暂不创建数据绑定；补充真实内容后再增量导入。
+	B7	database_accession_without_genome_file	
+	ce-t2	database_accession_without_genome_file	
+	ce-t3	database_accession_without_genome_file	
+	ce-test1	database_accession_without_genome_file	
+	cet4	database_accession_without_genome_file	
+	cet5	database_accession_without_genome_file	
+	FX1	database_accession_without_genome_file	
+	GWX37	database_accession_without_genome_file	
+	GWX38	database_accession_without_genome_file	
+	GWX39	database_accession_without_genome_file	
+	GXZ1	database_accession_without_genome_file	
+	HMX3	database_accession_without_genome_file	
+	HuiJing	database_accession_without_genome_file	
+	HXZ	database_accession_without_genome_file	
+	J4115	database_accession_without_genome_file	
+	JGXZ	database_accession_without_genome_file	
+	JXZ	database_accession_without_genome_file	
+	LFXS	database_accession_without_genome_file	
+	NG9108	database_accession_without_genome_file	
+	NL001	database_accession_without_genome_file	
+	PHASE5_TEST_001	database_accession_without_genome_file	
+	QXS	database_accession_without_genome_file	
+	QY22	database_accession_without_genome_file	
+	Ruf23	database_accession_without_genome_file	
+	se1	database_accession_without_genome_file	
+	TMP_ANN	database_accession_without_genome_file	

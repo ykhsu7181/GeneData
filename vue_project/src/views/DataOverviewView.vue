@@ -1,867 +1,373 @@
-﻿<template>
-  <div class="data-overview-modern">
-    <header class="overview-header">
-      <div>
-        <p class="breadcrumb">首页 / 数据资源</p>
-        <h1>数据一览表</h1>
-      </div>
-      <button class="refresh-button" type="button" @click="fetchOverview">刷新</button>
+<template>
+  <main class="data-overview-page">
+    <header class="page-heading">
+      <nav class="breadcrumb" :aria-label="$t('page.dataOverview.breadcrumbLabel')">
+        <RouterLink to="/dashboard">{{ $t('nav.home') }}</RouterLink>
+        <span aria-hidden="true">/</span>
+        <span>{{ $t('nav.data') }}</span>
+      </nav>
+      <h1>{{ $t('page.dataOverview.title') }}</h1>
     </header>
 
-    <section class="filter-panel">
-      <div class="search-box">
-        <span class="search-icon">⌕</span>
-        <input
-          v-model="searchKeyword"
-          type="text"
-          placeholder="搜索 Accession / 物种 / 数据集 / 文件名"
-          @keyup.enter="applyFilters"
+    <section class="filter-panel" :aria-label="$t('page.dataOverview.filters.label')">
+      <div class="search-control">
+        <el-input v-model="draft.search" clearable :aria-label="$t('page.dataOverview.searchPrompt')" :placeholder="$t('page.dataOverview.searchPrompt')" @keyup.enter="applyFilters">
+          <template #prefix><el-icon aria-hidden="true"><Search /></el-icon></template>
+        </el-input>
+        <el-button type="primary" @click="applyFilters">{{ $t('common.search') }}</el-button>
+      </div>
+      <label class="filter-field"><el-select v-model="draft.category" :aria-label="$t('page.dataOverview.filters.dataType')" :placeholder="$t('page.dataOverview.filters.dataType')" clearable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in categories" :key="item.key" :label="categoryLabel(item)" :value="item.key" /></el-select></label>
+      <label class="filter-field"><el-select v-model="draft.species" :aria-label="$t('page.dataOverview.filters.species')" :placeholder="$t('page.dataOverview.filters.species')" clearable filterable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in filters.species" :key="item.key" :label="item.label" :value="item.key"><SpeciesName :common-name="item.label" :scientific-name="item.latin_name" /></el-option></el-select></label>
+      <label class="filter-field"><el-select v-model="draft.accession" :aria-label="$t('page.dataOverview.accession')" :placeholder="$t('page.dataOverview.accession')" clearable filterable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in filters.accessions" :key="item.key" :label="item.label" :value="item.key" /></el-select></label>
+      <label class="filter-field"><el-select v-model="draft.dataset" :aria-label="$t('page.dataOverview.columns.dataset')" :placeholder="$t('page.dataOverview.columns.dataset')" clearable filterable><el-option :label="$t('common.all')" value="" /><el-option v-for="item in filters.datasets" :key="item.key" :label="item.label" :value="item.key" /></el-select></label>
+      <el-button class="reset-button" @click="resetFilters"><el-icon><RefreshLeft /></el-icon>{{ $t('common.reset') }}</el-button>
+    </section>
+
+    <DataOverviewStats :summary="summary" />
+
+    <section class="file-table-card">
+      <header class="table-heading">
+        <h2>{{ $t('page.dataOverview.fileTable') }} <small>({{ $t('common.totalCount', { count: totalCount }) }})</small></h2>
+        <DataOverviewColumnSettings
+          v-model="selectedColumns"
+          :columns="columnOptions"
+          @reset-widths="restoreColumnWidths"
         />
-        <button type="button" @click="applyFilters">搜索</button>
-      </div>
+      </header>
 
-      <label class="filter-item">
-        <span>物种</span>
-        <select v-model="selectedSpecies" @change="applyFilters">
-          <option value="">全部</option>
-          <option v-for="item in filters.species" :key="item.key" :value="item.key">{{ item.label }}</option>
-        </select>
-      </label>
+      <el-alert v-if="loadError" :title="$t('messages.dataOverviewLoadFailed')" type="error" show-icon :closable="false">
+        <template #default><el-button size="small" @click="fetchOverview">{{ $t('common.retry') }}</el-button></template>
+      </el-alert>
 
-      <label class="filter-item">
-        <span>亚群</span>
-        <select v-model="selectedSubPopulation" @change="applyFilters">
-          <option value="">全部</option>
-          <option v-for="item in filters.sub_populations" :key="item" :value="item">{{ item }}</option>
-        </select>
-      </label>
-
-      <label class="filter-item">
-        <span>数据类型</span>
-        <select v-model="selectedCategory" @change="applyFilters">
-          <option value="">全部</option>
-          <option v-for="item in dataCategories" :key="item.key" :value="item.key">{{ item.label }}</option>
-        </select>
-      </label>
-
-      <label class="filter-item">
-        <span>文件角色</span>
-        <select v-model="selectedFileRole" @change="applyFilters">
-          <option value="">全部</option>
-          <option v-for="item in filters.file_roles" :key="item.key" :value="item.key">{{ item.label }}</option>
-        </select>
-      </label>
-
-      <label class="filter-item">
-        <span>地理位置</span>
-        <select v-model="selectedLocation" @change="applyFilters">
-          <option value="">全部</option>
-          <option v-for="item in filters.locations" :key="item" :value="item">{{ item }}</option>
-        </select>
-      </label>
-
-      <button class="plain-button" type="button" @click="resetFilters">重置</button>
-      <button class="plain-button more" type="button">更多条件</button>
-    </section>
-
-    <section class="summary-grid">
-      <article v-for="card in summaryCards" :key="card.key" class="summary-card">
-        <div :class="['summary-icon', card.theme]">{{ card.icon }}</div>
-        <div>
-          <div class="summary-label">{{ card.label }}</div>
-          <div class="summary-value">{{ card.value }}<span v-if="card.unit" class="summary-unit">{{ card.unit }}</span></div>
-        </div>
-      </article>
-    </section>
-
-    <section class="view-switcher">
-      <div class="tabs">
-        <button :class="{ active: activeView === 'matrix' }" type="button" @click="activeView = 'matrix'">矩阵视图</button>
-        <button :class="{ active: activeView === 'detail' }" type="button" @click="activeView = 'detail'">明细视图</button>
-      </div>
-      <button class="export-button" type="button">导出当前结果</button>
-    </section>
-
-    <section v-if="loading" class="loading-card">正在加载数据一览表...</section>
-
-    <section v-else-if="activeView === 'matrix'" class="table-card">
-      <div class="table-scroll">
-        <table class="matrix-table">
+      <div v-loading="loading" class="table-scroll" :aria-busy="loading" aria-live="polite">
+        <table class="file-table" :style="{ width: `${tableWidth}px` }">
+          <caption class="sr-only">{{ $t('page.dataOverview.fileTable') }}</caption>
+          <colgroup>
+            <col v-for="column in visibleColumns" :key="column.key" :style="{ width: `${columnWidth(column.key)}px` }" />
+            <col :style="{ width: `${columnWidth('actions')}px` }" />
+          </colgroup>
           <thead>
             <tr>
-              <th rowspan="2">Accession</th>
-              <th colspan="3">基本信息</th>
-              <th :colspan="dataCategories.length">文件统计（点击数量查看文件）</th>
-              <th rowspan="2">地理位置</th>
-            </tr>
-            <tr>
-              <th>物种</th>
-              <th>亚群</th>
-              <th>样本数</th>
-              <th v-for="category in dataCategories" :key="category.key">
-                {{ category.label }}<br />
-                <span>{{ category.en_label }}</span>
+              <th v-for="column in visibleColumns" :key="column.key">
+                {{ column.label }}
+                <button
+                  type="button"
+                  class="column-resizer"
+                  :aria-label="$t('page.dataOverview.resizeColumn', { column: column.label })"
+                  @pointerdown="startColumnResize($event, column.key)"
+                  @dblclick="resetSingleColumn(column.key)"
+                  @keydown.left.prevent="resizeColumnByKeyboard(column.key, -10)"
+                  @keydown.right.prevent="resizeColumnByKeyboard(column.key, 10)"
+                />
+              </th>
+              <th>
+                {{ $t('common.actions') }}
+                <button
+                  type="button"
+                  class="column-resizer"
+                  :aria-label="$t('page.dataOverview.resizeColumn', { column: $t('common.actions') })"
+                  @pointerdown="startColumnResize($event, 'actions')"
+                  @dblclick="resetSingleColumn('actions')"
+                  @keydown.left.prevent="resizeColumnByKeyboard('actions', -10)"
+                  @keydown.right.prevent="resizeColumnByKeyboard('actions', 10)"
+                />
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in matrixRows" :key="row.accession_id">
-              <td><router-link class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link></td>
-              <td>{{ row.species_name || '-' }}</td>
-              <td><span class="sub-population">{{ row.sub_population || 'Unknown' }}</span></td>
-              <td>{{ row.sample_count }}</td>
-              <td v-for="category in dataCategories" :key="`${row.accession_id}-${category.key}`">
-                <button
-                  v-if="cellStatus(row, category.key) === 'available'"
-                  class="matrix-cell-button"
-                  type="button"
-                  @click="openFileDrawer(row, category.key)"
-                >
-                  {{ cellDisplay(row, category.key) }}
-                </button>
-                <span v-else-if="cellStatus(row, category.key) === 'coming_soon'" class="building-state">建设中</span>
-                <span v-else class="empty-state">-</span>
+            <tr v-for="row in rows" :key="row.file_id">
+              <td v-for="column in visibleColumns" :key="column.key" :class="`cell-${column.key}`">
+                <span v-if="column.key === 'category'" :class="['category-tag', `category-${row.category}`]">{{ categoryLabel(row.category) }}</span>
+                <span v-else-if="column.key === 'file_name'" class="file-name" :title="row.file_name">{{ row.file_name || '-' }}</span>
+                <SpeciesName
+                  v-else-if="column.key === 'species_name' && row.species?.length === 1"
+                  :common-name="row.species[0].name"
+                  :scientific-name="row.species[0].scientific_name"
+                />
+                <span v-else-if="column.key === 'species_name'">{{ row.species_name || '-' }}</span>
+                <router-link v-else-if="column.key === 'accession' && row.accession && row.accession !== 'Multiple'" class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link>
+                <span v-else-if="column.key === 'description'" class="truncate" :title="displayDescription(row)">{{ displayDescription(row) }}</span>
+                <code v-else-if="column.key === 'md5'" class="truncate" :title="row.md5">{{ row.md5 || '-' }}</code>
+                <span v-else>{{ row[column.key] || '-' }}</span>
               </td>
-              <td>{{ row.location_display || '-' }}</td>
+              <td class="actions-cell"><button type="button" :aria-label="$t('page.dataOverview.detail.openFor', { file: row.file_name })" @click="openDetail(row.file_id)">{{ $t('common.details') }}</button><span aria-hidden="true">|</span><a :href="row.download_url" :aria-label="$t('page.dataOverview.detail.downloadFor', { file: row.file_name })">{{ $t('common.download') }}</a></td>
             </tr>
-            <tr v-if="!matrixRows.length">
-              <td class="empty-table" :colspan="dataCategories.length + 5">暂无符合条件的数据</td>
-            </tr>
+            <tr v-if="!loading && !rows.length"><td :colspan="visibleColumns.length + 1" class="empty-cell">{{ $t('page.dataOverview.noMatches') }}</td></tr>
           </tbody>
         </table>
       </div>
-    </section>
 
-    <section v-else class="table-card detail-card">
-      <div class="table-scroll">
-        <table class="detail-table">
-          <thead>
-            <tr>
-              <th>物种</th>
-              <th>Accession</th>
-              <th>数据类型</th>
-              <th>数据集 (Dataset)</th>
-              <th>组装版本 (Assembly)</th>
-              <th>注释版本 (Annotation)</th>
-              <th>文件数</th>
-              <th>数据量</th>
-              <th>更新时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in detailRows" :key="`${row.accession_id}-${row.category}-${row.dataset_name}`">
-              <td>{{ row.species_name || '-' }}</td>
-              <td><router-link class="accession-link" :to="{ path: '/accession-card', query: { accession: row.accession } }">{{ row.accession }}</router-link></td>
-              <td>{{ row.category_display }}</td>
-              <td>{{ row.dataset_name }}</td>
-              <td>{{ row.assembly_name }}</td>
-              <td>{{ row.annotation_name }}</td>
-              <td>{{ row.file_count || '-' }}</td>
-              <td>{{ row.total_size_display || '-' }}</td>
-              <td>{{ shortDate(row.updated_at) }}</td>
-              <td>
-                <button
-                  v-if="row.status === 'available'"
-                  class="file-button"
-                  type="button"
-                  @click="openFileDrawer(row, row.category)"
-                >
-                  查看文件
-                </button>
-                <span v-else class="building-state">建设中</span>
-              </td>
-            </tr>
-            <tr v-if="!detailRows.length">
-              <td class="empty-table" colspan="10">暂无明细数据</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <footer class="pagination-bar">
-      <span>共 {{ totalCount }} 条</span>
-      <select v-model.number="pageSize" @change="changePageSize">
-        <option :value="20">20条/页</option>
-        <option :value="50">50条/页</option>
-        <option :value="100">100条/页</option>
-      </select>
-      <button type="button" :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">上一页</button>
-      <strong>{{ currentPage }}</strong>
-      <button type="button" :disabled="!hasNextPage" @click="changePage(currentPage + 1)">下一页</button>
-    </footer>
-
-    <div v-if="drawerOpen" class="drawer-mask" @click="closeDrawer"></div>
-    <aside :class="['file-drawer', { open: drawerOpen }]">
-      <header class="drawer-header">
+      <footer class="pagination-bar">
+        <span>{{ $t('common.totalCount', { count: totalCount }) }}</span>
         <div>
-          <h2>{{ drawerPayload.title || '文件列表' }}</h2>
-          <p>DataFile 下载入口</p>
+          <span>{{ $t('page.dataOverview.itemsPerPage') }}</span>
+          <el-select v-model="pageSize" class="page-size" @change="changePageSize"><el-option :value="20" label="20" /><el-option :value="50" label="50" /><el-option :value="100" label="100" /></el-select>
+          <el-button :disabled="currentPage <= 1" :aria-label="$t('common.previous')" @click="changePage(currentPage - 1)"><el-icon><ArrowLeft /></el-icon></el-button>
+          <strong>{{ currentPage }}</strong>
+          <el-button :disabled="currentPage >= pageCount" :aria-label="$t('common.next')" @click="changePage(currentPage + 1)"><el-icon><ArrowRight /></el-icon></el-button>
         </div>
-        <button type="button" @click="closeDrawer">×</button>
-      </header>
+      </footer>
+    </section>
 
-      <section class="relation-overview">
-        <p class="section-kicker">关系概览</p>
-        <div class="relation-flow">
-          <span>Accession {{ drawerPayload.relation_overview?.accession || '-' }}</span>
-          <span>→</span>
-          <span>{{ drawerPayload.relation_overview?.assembly || '-' }}</span>
-          <span>→</span>
-          <span>{{ drawerPayload.relation_overview?.annotation || 'DataFile' }}</span>
-        </div>
-      </section>
-
-      <section class="drawer-table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>文件名</th>
-              <th>文件角色</th>
-              <th>类型</th>
-              <th>大小</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="file in drawerPayload.files" :key="file.file_id">
-              <td>{{ file.file_name }}</td>
-              <td>{{ file.file_role_display }}</td>
-              <td>{{ file.file_type || '-' }}</td>
-              <td>{{ file.file_size_display || '-' }}</td>
-              <td><a class="download-link" :href="file.download_url">下载</a></td>
-            </tr>
-            <tr v-if="!drawerPayload.files?.length">
-              <td class="empty-table" colspan="5">暂无文件</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-    </aside>
-  </div>
+    <DataFileDetailDrawer :model-value="drawerOpen" :loading="detailLoading" :error="detailError" :detail="detail" :category-label="categoryLabel" @close="closeDetail" @retry="loadDetail" />
+  </main>
 </template>
 
-<script>
-import { computed, onMounted, ref } from 'vue'
-import axios from 'axios'
+<script setup>
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { ArrowLeft, ArrowRight, RefreshLeft, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import DataFileDetailDrawer from '@/components/data-overview/DataFileDetailDrawer.vue'
+import DataOverviewColumnSettings from '@/components/data-overview/DataOverviewColumnSettings.vue'
+import DataOverviewStats from '@/components/data-overview/DataOverviewStats.vue'
+import SpeciesName from '@/components/common/SpeciesName.vue'
+import { fetchDataFileDetail, fetchDataOverview } from '@/services/dataOverview'
+import {
+  loadColumnWidths,
+  resetColumnWidths,
+  resizeColumn,
+  saveColumnWidths
+} from '@/services/tableColumnWidths.mjs'
 
-const DEFAULT_CATEGORIES = [
-  { key: 'raw_data', label: '原始数据', en_label: 'Raw Data' },
-  { key: 'genome', label: '基因组', en_label: 'Genome' },
-  { key: 'annotation', label: '注释', en_label: 'Annotation' },
-  { key: 'transcriptome', label: '转录组', en_label: 'Transcriptome' },
-  { key: 'population', label: '群体遗传', en_label: 'Population' },
-  { key: 'codon', label: '密码子', en_label: 'Codon' },
-  { key: 'centromere', label: '着丝粒', en_label: 'Centromere' },
-  { key: 'tes', label: '转座子', en_label: 'TEs' },
-  { key: 'coreblocks', label: '核心可变区块', en_label: 'CoreBlocks' },
-  { key: 'ncrna', label: 'ncRNA', en_label: 'ncRNA' }
-]
-
-export default {
-  name: 'DataOverviewView',
-  setup() {
-    const loading = ref(false)
-    const activeView = ref('matrix')
-    const searchKeyword = ref('')
-    const selectedSpecies = ref('')
-    const selectedSubPopulation = ref('')
-    const selectedCategory = ref('')
-    const selectedFileRole = ref('')
-    const selectedLocation = ref('')
-    const currentPage = ref(1)
-    const pageSize = ref(20)
-    const totalCount = ref(0)
-    const summary = ref({})
-    const filters = ref({ species: [], sub_populations: [], locations: [], data_categories: [], file_roles: [] })
-    const matrixRows = ref([])
-    const detailRows = ref([])
-    const drawerOpen = ref(false)
-    const drawerPayload = ref({ files: [], relation_overview: {} })
-
-    const dataCategories = computed(() => {
-      const categories = filters.value.data_categories?.length ? filters.value.data_categories : DEFAULT_CATEGORIES
-      if (!selectedCategory.value) return categories
-      return categories.filter(category => category.key === selectedCategory.value)
-    })
-
-    const summaryCards = computed(() => [
-      { key: 'accession', label: '材料(Accession)', value: summary.value.accession_count || 0, icon: '苗', theme: 'green' },
-      { key: 'dataset', label: '数据集(Dataset)', value: summary.value.dataset_count || 0, icon: '集', theme: 'purple' },
-      { key: 'datafile', label: '文件(DataFile)', value: summary.value.datafile_count || 0, icon: '文', theme: 'blue' },
-      { key: 'total_size', label: '总数据量', value: summary.value.total_size_display || '-', icon: '量', theme: 'orange' },
-      { key: 'geo', label: '地理位置', value: summary.value.geo_location_count || 0, unit: '个点位', icon: '地', theme: 'cyan' },
-      { key: 'updated', label: '更新时间', value: summary.value.latest_update || '-', icon: '时', theme: 'pink' }
-    ])
-
-    const hasNextPage = computed(() => currentPage.value * pageSize.value < totalCount.value)
-
-    const requestParams = () => {
-      const params = { page: currentPage.value, page_size: pageSize.value }
-      if (searchKeyword.value.trim()) params.search = searchKeyword.value.trim()
-      if (selectedSpecies.value) params.species = selectedSpecies.value
-      if (selectedSubPopulation.value) params.sub_populations = selectedSubPopulation.value
-      if (selectedCategory.value) params.category = selectedCategory.value
-      if (selectedFileRole.value) params.file_role = selectedFileRole.value
-      if (selectedLocation.value) params.location = selectedLocation.value
-      return params
-    }
-
-    const fetchOverview = async () => {
-      loading.value = true
-      try {
-        const response = await axios.get('/files/query/data-overview/', { params: requestParams() })
-        const payload = response.data || {}
-        summary.value = payload.summary || {}
-        filters.value = payload.filters || filters.value
-        matrixRows.value = payload.matrix_rows || []
-        detailRows.value = payload.detail_rows || []
-        totalCount.value = payload.count || 0
-      } catch (error) {
-        console.error('获取数据一览表失败:', error)
-        ElMessage.error('获取数据一览表失败')
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const applyFilters = () => {
-      currentPage.value = 1
-      fetchOverview()
-    }
-
-    const resetFilters = () => {
-      searchKeyword.value = ''
-      selectedSpecies.value = ''
-      selectedSubPopulation.value = ''
-      selectedCategory.value = ''
-      selectedFileRole.value = ''
-      selectedLocation.value = ''
-      currentPage.value = 1
-      fetchOverview()
-    }
-
-    const changePage = (page) => {
-      currentPage.value = page
-      fetchOverview()
-    }
-
-    const changePageSize = () => {
-      currentPage.value = 1
-      fetchOverview()
-    }
-
-    const cell = (row, categoryKey) => row.cells?.[categoryKey] || {}
-    const cellStatus = (row, categoryKey) => cell(row, categoryKey).status || 'empty'
-    const cellDisplay = (row, categoryKey) => cell(row, categoryKey).display || '-'
-
-    const openFileDrawer = async (row, category) => {
-      const accession = row.accession
-      try {
-        const response = await axios.get('/files/query/data-overview-files/', { params: { accession, category } })
-        drawerPayload.value = response.data || { files: [], relation_overview: {} }
-        drawerOpen.value = true
-      } catch (error) {
-        console.error('获取文件列表失败:', error)
-        ElMessage.error('获取文件列表失败')
-      }
-    }
-
-    const closeDrawer = () => {
-      drawerOpen.value = false
-    }
-
-    const shortDate = (value) => {
-      if (!value) return '-'
-      return String(value).slice(0, 10)
-    }
-
-    onMounted(fetchOverview)
-
-    return {
-      loading,
-      activeView,
-      searchKeyword,
-      selectedSpecies,
-      selectedSubPopulation,
-      selectedCategory,
-      selectedFileRole,
-      selectedLocation,
-      currentPage,
-      pageSize,
-      totalCount,
-      summaryCards,
-      filters,
-      dataCategories,
-      matrixRows,
-      detailRows,
-      drawerOpen,
-      drawerPayload,
-      hasNextPage,
-      fetchOverview,
-      applyFilters,
-      resetFilters,
-      changePage,
-      changePageSize,
-      cellStatus,
-      cellDisplay,
-      openFileDrawer,
-      closeDrawer,
-      shortDate
-    }
-  }
+const STORAGE_KEY = 'genedata:data-overview-columns:v1'
+const WIDTH_STORAGE_KEY = 'genedata:data-overview-column-widths:v1'
+const DEFAULT_COLUMNS = ['category', 'file_name', 'species_name', 'accession', 'file_type', 'file_size_display']
+const OPTIONAL_COLUMNS = ['dataset_name', 'data_source', 'md5', 'description']
+const DEFAULT_COLUMN_WIDTHS = {
+  category: 130,
+  file_name: 300,
+  species_name: 180,
+  accession: 150,
+  file_type: 130,
+  file_size_display: 130,
+  dataset_name: 180,
+  data_source: 170,
+  md5: 260,
+  description: 280,
+  actions: 190
 }
+
+const { locale, t, te } = useI18n()
+const route = useRoute()
+const router = useRouter()
+const loading = ref(false)
+const loadError = ref(false)
+const rows = ref([])
+const summary = ref({})
+const filters = ref({ data_categories: [], species: [], accessions: [], datasets: [] })
+const totalCount = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(20)
+const drawerOpen = ref(false)
+const detailLoading = ref(false)
+const detailError = ref(false)
+const detail = ref(null)
+const detailFileId = ref(null)
+const draft = reactive({ search: '', category: '', species: '', accession: '', dataset: '' })
+const applied = reactive({ search: '', category: '', species: '', accession: '', dataset: '' })
+let overviewController = null
+let detailController = null
+let overviewRequestId = 0
+let detailRequestId = 0
+let activeResize = null
+
+const loadStoredColumns = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY))
+    return Array.isArray(stored) ? [...new Set([...DEFAULT_COLUMNS, ...stored.filter(key => OPTIONAL_COLUMNS.includes(key))])] : DEFAULT_COLUMNS
+  } catch (_) { return DEFAULT_COLUMNS }
+}
+const selectedColumns = ref(loadStoredColumns())
+const columnWidths = ref(loadColumnWidths(WIDTH_STORAGE_KEY, DEFAULT_COLUMN_WIDTHS))
+watch(selectedColumns, value => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(value)) } catch (_) { /* preference storage is optional */ }
+}, { deep: true })
+
+const categoryLabel = category => {
+  const key = category?.key || category
+  const path = `page.dataOverview.categories.${key}`
+  if (te(path)) return t(path)
+  if (typeof category === 'object') return locale.value === 'en' ? category.en_label || category.label : category.label || category.en_label
+  return key || '-'
+}
+const displayDescription = row => row?.category === 'raw_data' ? '-' : row?.description || '-'
+const categories = computed(() => filters.value.data_categories || [])
+const columnOptions = computed(() => [
+  { key: 'category', label: t('common.dataType'), required: true },
+  { key: 'file_name', label: t('common.fileName'), required: true },
+  { key: 'species_name', label: t('common.species'), required: true },
+  { key: 'accession', label: t('page.dataOverview.accession'), required: true },
+  { key: 'file_type', label: t('common.fileType'), required: true },
+  { key: 'file_size_display', label: t('common.fileSize'), required: true },
+  { key: 'dataset_name', label: t('page.dataOverview.columns.dataset') },
+  { key: 'data_source', label: t('page.dataOverview.columns.dataSource') },
+  { key: 'md5', label: 'MD5' },
+  { key: 'description', label: t('page.dataOverview.columns.description') }
+])
+const visibleColumns = computed(() => columnOptions.value.filter(column => selectedColumns.value.includes(column.key)))
+const columnWidth = key => columnWidths.value[key] || DEFAULT_COLUMN_WIDTHS[key] || 120
+const tableWidth = computed(() => (
+  visibleColumns.value.reduce((total, column) => total + columnWidth(column.key), 0)
+  + columnWidth('actions')
+))
+const persistColumnWidths = () => saveColumnWidths(WIDTH_STORAGE_KEY, columnWidths.value)
+const setColumnWidth = (key, width, { persist = true } = {}) => {
+  columnWidths.value = resizeColumn(columnWidths.value, key, width, DEFAULT_COLUMN_WIDTHS)
+  if (persist) persistColumnWidths()
+}
+const handleColumnResizeMove = event => {
+  if (!activeResize) return
+  setColumnWidth(
+    activeResize.key,
+    activeResize.startWidth + event.clientX - activeResize.startX,
+    { persist: false }
+  )
+}
+const stopColumnResize = () => {
+  if (activeResize) persistColumnWidths()
+  activeResize = null
+  window.removeEventListener('pointermove', handleColumnResizeMove)
+  window.removeEventListener('pointerup', stopColumnResize)
+  document.body.classList.remove('is-resizing-table-column')
+}
+const startColumnResize = (event, key) => {
+  if (!(key in DEFAULT_COLUMN_WIDTHS)) return
+  event.preventDefault()
+  stopColumnResize()
+  activeResize = { key, startX: event.clientX, startWidth: columnWidth(key) }
+  window.addEventListener('pointermove', handleColumnResizeMove)
+  window.addEventListener('pointerup', stopColumnResize, { once: true })
+  document.body.classList.add('is-resizing-table-column')
+}
+const resizeColumnByKeyboard = (key, amount) => setColumnWidth(key, columnWidth(key) + amount)
+const resetSingleColumn = key => setColumnWidth(key, DEFAULT_COLUMN_WIDTHS[key])
+const restoreColumnWidths = () => {
+  columnWidths.value = resetColumnWidths(DEFAULT_COLUMN_WIDTHS)
+  persistColumnWidths()
+}
+const pageCount = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize.value)))
+
+const requestParams = () => ({
+  page: currentPage.value,
+  page_size: pageSize.value,
+  ...Object.fromEntries(Object.entries(applied).filter(([, value]) => value))
+})
+const queryValue = value => Array.isArray(value) ? value[0] : value
+const positiveInteger = (value, fallback) => {
+  const parsed = Number.parseInt(queryValue(value), 10)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+const routeQuery = () => {
+  const query = Object.fromEntries(Object.entries(applied).filter(([, value]) => value))
+  if (currentPage.value > 1) query.page = String(currentPage.value)
+  if (pageSize.value !== 20) query.page_size = String(pageSize.value)
+  return query
+}
+const sameQuery = (left, right) => {
+  const normalize = query => Object.fromEntries(Object.entries(query).map(([key, value]) => [key, String(queryValue(value) ?? '')]).filter(([, value]) => value))
+  return JSON.stringify(Object.entries(normalize(left)).sort()) === JSON.stringify(Object.entries(normalize(right)).sort())
+}
+const navigateToState = async (replace = false) => {
+  const query = routeQuery()
+  if (sameQuery(route.query, query)) return fetchOverview()
+  await router[replace ? 'replace' : 'push']({ path: route.path, query })
+}
+const fetchOverview = async () => {
+  overviewController?.abort()
+  overviewController = new AbortController()
+  const requestId = ++overviewRequestId
+  loading.value = true
+  loadError.value = false
+  try {
+    const { data } = await fetchDataOverview(requestParams(), { signal: overviewController.signal })
+    if (requestId !== overviewRequestId) return
+    rows.value = data.results || []
+    summary.value = data.summary || {}
+    filters.value = data.filters || filters.value
+    totalCount.value = data.count || 0
+    const lastPage = Math.max(1, Math.ceil(totalCount.value / pageSize.value))
+    if (currentPage.value > lastPage) {
+      currentPage.value = lastPage
+      await navigateToState(true)
+    }
+  } catch (error) {
+    if (error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError') return
+    if (requestId !== overviewRequestId) return
+    loadError.value = true
+    console.error('Failed to load Data Overview:', error)
+    ElMessage.error(t('messages.dataOverviewLoadFailed'))
+  } finally { if (requestId === overviewRequestId) loading.value = false }
+}
+const applyFilters = () => {
+  Object.assign(applied, Object.fromEntries(Object.entries(draft).map(([key, value]) => [key, String(value || '').trim()])))
+  currentPage.value = 1
+  navigateToState()
+}
+const resetFilters = () => {
+  Object.keys(draft).forEach(key => { draft[key] = ''; applied[key] = '' })
+  currentPage.value = 1
+  navigateToState()
+}
+const changePage = page => { currentPage.value = page; navigateToState() }
+const changePageSize = () => { currentPage.value = 1; navigateToState() }
+const openDetail = async fileId => {
+  detailFileId.value = fileId
+  drawerOpen.value = true
+  loadDetail()
+}
+const loadDetail = async () => {
+  if (!detailFileId.value) return
+  detailController?.abort()
+  detailController = new AbortController()
+  const requestId = ++detailRequestId
+  detailLoading.value = true
+  detailError.value = false
+  detail.value = null
+  try {
+    const response = await fetchDataFileDetail(detailFileId.value, { signal: detailController.signal })
+    if (requestId === detailRequestId) detail.value = response.data
+  } catch (error) {
+    if (error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError') return
+    if (requestId !== detailRequestId) return
+    detailError.value = true
+    console.error('Failed to load DataFile detail:', error)
+    ElMessage.error(t('page.dataOverview.detail.loadFailed'))
+  } finally { if (requestId === detailRequestId) detailLoading.value = false }
+}
+const closeDetail = () => {
+  detailController?.abort()
+  detailRequestId += 1
+  detailLoading.value = false
+  drawerOpen.value = false
+}
+
+watch(() => route.query, async query => {
+  for (const key of Object.keys(applied)) {
+    const value = String(queryValue(query[key]) || '').trim()
+    draft[key] = value
+    applied[key] = value
+  }
+  currentPage.value = positiveInteger(query.page, 1)
+  const requestedPageSize = positiveInteger(query.page_size, 20)
+  pageSize.value = [20, 50, 100].includes(requestedPageSize) ? requestedPageSize : 20
+  if (!sameQuery(query, routeQuery())) {
+    await router.replace({ path: route.path, query: routeQuery() })
+    return
+  }
+  fetchOverview()
+}, { immediate: true })
+
+onBeforeUnmount(() => {
+  stopColumnResize()
+  overviewController?.abort()
+  detailController?.abort()
+  overviewRequestId += 1
+  detailRequestId += 1
+})
 </script>
 
 <style scoped>
-.data-overview-modern {
-  min-height: 100vh;
-  padding: 18px 22px 36px;
-  background: #f7faff;
-  color: #162844;
-}
-
-.overview-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.breadcrumb {
-  margin: 0 0 8px;
-  color: #6f7f96;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.overview-header h1 {
-  margin: 0;
-  font-size: 30px;
-  letter-spacing: 0.02em;
-}
-
-.refresh-button,
-.plain-button,
-.export-button,
-.file-button {
-  border: 1px solid #cfe0f5;
-  border-radius: 10px;
-  background: #fff;
-  color: #31516f;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.refresh-button,
-.export-button {
-  height: 40px;
-  padding: 0 16px;
-}
-
-.filter-panel {
-  display: grid;
-  grid-template-columns: minmax(340px, 1.35fr) repeat(5, minmax(126px, .55fr)) 90px 116px;
-  gap: 12px;
-  align-items: center;
-  padding: 14px;
-  border: 1px solid #e1eaf5;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 14px 36px rgba(31, 79, 136, 0.08);
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  height: 46px;
-  border: 1px solid #dce7f4;
-  border-radius: 11px;
-  background: #fff;
-}
-
-.search-icon {
-  padding-left: 14px;
-  color: #7b889b;
-  font-size: 20px;
-}
-
-.search-box input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  padding: 0 12px;
-  color: #172944;
-}
-
-.search-box button {
-  width: 88px;
-  height: 100%;
-  border: 0;
-  color: #fff;
-  background: #1f6fee;
-  font-weight: 900;
-}
-
-.filter-item {
-  display: grid;
-  grid-template-columns: auto minmax(86px, 1fr);
-  align-items: center;
-  gap: 8px;
-  height: 46px;
-  padding: 0 12px;
-  border: 1px solid #dce7f4;
-  border-radius: 11px;
-  background: #fff;
-  color: #384d68;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.filter-item select,
-.pagination-bar select {
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #253a58;
-  font-weight: 700;
-}
-
-.plain-button {
-  height: 46px;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px;
-  margin: 18px 0 14px;
-}
-
-.summary-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 78px;
-  padding: 13px 14px;
-  border: 1px solid #e1e8f3;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 6px 18px rgba(35, 68, 116, .06);
-}
-
-.summary-icon {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 auto;
-  border-radius: 12px;
-  background: #edf4ff;
-  color: #1760e8;
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.summary-icon.green,
-.summary-icon.purple,
-.summary-icon.blue,
-.summary-icon.orange,
-.summary-icon.cyan,
-.summary-icon.pink {
-  background: #edf4ff;
-  color: #1760e8;
-}
-
-.summary-label {
-  color: #718096;
-  font-size: 12px;
-}
-
-.summary-value {
-  margin-top: 4px;
-  color: #153a7a;
-  font-size: 21px;
-  font-weight: 800;
-}
-
-.summary-unit {
-  margin-left: 4px;
-  color: #7a8798;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.view-switcher {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 10px 0 12px;
-  border-bottom: 1px solid #dce7f4;
-}
-
-.tabs {
-  display: flex;
-  gap: 28px;
-}
-
-.tabs button {
-  padding: 14px 2px;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  color: #6e7d91;
-  font-size: 15px;
-  font-weight: 950;
-  cursor: pointer;
-}
-
-.tabs button.active {
-  color: #1f6fee;
-  border-bottom-color: #1f6fee;
-}
-
-.loading-card,
-.table-card {
-  border: 1px solid #dce7f4;
-  border-radius: 15px;
-  background: #fff;
-  box-shadow: 0 14px 34px rgba(31, 79, 136, 0.08);
-}
-
-.loading-card {
-  padding: 64px;
-  text-align: center;
-  color: #6e7d91;
-}
-
-.table-scroll {
-  overflow: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.matrix-table {
-  min-width: 1480px;
-}
-
-.detail-table {
-  min-width: 1120px;
-}
-
-th,
-td {
-  padding: 13px 12px;
-  border-right: 1px solid #e7eef7;
-  border-bottom: 1px solid #e7eef7;
-  text-align: center;
-  white-space: nowrap;
-  font-size: 13px;
-}
-
-th {
-  color: #40536c;
-  background: linear-gradient(180deg, #f8fbff 0%, #edf5ff 100%);
-  font-weight: 950;
-}
-
-th span {
-  color: #68788d;
-  font-size: 11px;
-}
-
-.matrix-table td:first-child,
-.matrix-table th:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: #fff;
-  text-align: left;
-  font-weight: 950;
-}
-
-.matrix-table th:first-child {
-  background: #f1f7ff;
-}
-
-.accession-link,
-.matrix-cell-button,
-.download-link {
-  color: #1f6fee;
-  font-weight: 950;
-  text-decoration: none;
-}
-
-.matrix-cell-button {
-  border: 0;
-  background: transparent;
-  color: #18a567;
-  cursor: pointer;
-}
-
-.file-button {
-  height: 30px;
-  padding: 0 12px;
-  color: #1f6fee;
-}
-
-.sub-population {
-  display: inline-flex;
-  padding: 4px 10px;
-  border-radius: 999px;
-  color: #167f4d;
-  background: #e8f8ef;
-  font-weight: 900;
-}
-
-.empty-state,
-.empty-table {
-  color: #9aa7b8;
-  font-weight: 800;
-}
-
-.building-state {
-  color: #a86614;
-  font-weight: 900;
-}
-
-.detail-card {
-  min-height: 320px;
-}
-
-.pagination-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 14px;
-  color: #52637a;
-  font-weight: 800;
-}
-
-.pagination-bar button,
-.pagination-bar select {
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid #d6e3f2;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.drawer-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  background: rgba(10, 25, 45, 0.18);
-}
-
-.file-drawer {
-  position: fixed;
-  top: 82px;
-  right: 24px;
-  bottom: 30px;
-  z-index: 31;
-  display: none;
-  width: 450px;
-  overflow: hidden;
-  border: 1px solid #dce7f4;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 28px 80px rgba(22, 48, 86, 0.24);
-}
-
-.file-drawer.open {
-  display: block;
-}
-
-.drawer-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 20px;
-  border-bottom: 1px solid #e7eef7;
-  background: linear-gradient(135deg, #f7fbff 0%, #fff 100%);
-}
-
-.drawer-header h2 {
-  margin: 0;
-  color: #123a7a;
-  font-size: 18px;
-}
-
-.drawer-header p {
-  margin: 8px 0 0;
-  color: #6f7f95;
-  font-size: 13px;
-}
-
-.drawer-header button {
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 50%;
-  background: #eef4fb;
-  color: #38536f;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.relation-overview {
-  margin: 16px 18px;
-  padding: 14px;
-  border: 1px dashed #bfd3ee;
-  border-radius: 14px;
-  background: #f8fbff;
-}
-
-.section-kicker {
-  margin: 0 0 10px;
-  color: #4d6684;
-  font-size: 12px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.relation-flow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  color: #24466f;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.relation-flow span:nth-child(odd) {
-  padding: 7px 9px;
-  border: 1px solid #d6e4f4;
-  border-radius: 9px;
-  background: #fff;
-}
-
-.drawer-table-wrap {
-  max-height: calc(100% - 178px);
-  overflow: auto;
-  padding: 0 18px 18px;
-}
-
-.drawer-table-wrap table {
-  min-width: 0;
-}
-
-.drawer-table-wrap th,
-.drawer-table-wrap td {
-  padding: 10px 8px;
-  text-align: left;
-  font-size: 12px;
-}
+.data-overview-page{min-height:calc(100vh - 160px);color:#102c55}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.page-heading{margin-bottom:12px;padding-top:4px}.breadcrumb{display:flex;gap:8px;align-items:center;margin-bottom:8px;color:#4b6693;font-size:13px}.breadcrumb a{color:#31558f;text-decoration:none}.breadcrumb a:hover,.breadcrumb a:focus-visible{color:#0068e8;text-decoration:underline}.page-heading h1{margin:0;color:#0a2b73;font-size:30px;line-height:1.15}.filter-panel{display:grid;grid-template-columns:minmax(330px,1.7fr) repeat(4,minmax(142px,.65fr)) 94px;gap:12px;align-items:end;padding:18px;border:1px solid #d9e6f5;border-radius:15px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.06)}.search-control{display:grid;grid-template-columns:minmax(0,1fr) 106px}.search-control :deep(.el-input__wrapper){height:44px;border-radius:8px 0 0 8px;box-shadow:0 0 0 1px #cbdcf1 inset}.search-control>.el-button{height:44px;border-radius:0 8px 8px 0;background:linear-gradient(135deg,#3098f5,#0871e7);font-weight:700}.filter-field{min-width:0}.filter-field :deep(.el-select){width:100%}.filter-field :deep(.el-select__wrapper){min-height:44px}.reset-button{height:44px}.file-table-card{overflow:hidden;border:1px solid #d8e5f4;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.07)}.table-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px}.table-heading h2{margin:0;color:#123a72;font-size:17px}.table-heading h2 small{font-size:13px;font-weight:500}.table-scroll{min-height:260px;overflow:auto;padding:0 16px}.file-table{min-width:100%;border-collapse:collapse;border:1px solid #dae6f3;table-layout:fixed}.file-table th,.file-table td{padding:11px 13px;border-right:1px solid #e1eaf4;border-bottom:1px solid #e1eaf4;text-align:left;font-size:13px;overflow:hidden;text-overflow:ellipsis}.file-table th{position:relative;background:#edf5ff;color:#163c72;font-weight:800;white-space:nowrap}.column-resizer{position:absolute;top:0;right:-5px;z-index:2;width:10px;height:100%;padding:0;border:0;background:transparent;cursor:col-resize;touch-action:none}.column-resizer::after{content:'';position:absolute;top:22%;bottom:22%;left:4px;width:2px;border-radius:2px;background:#9eb9d8;opacity:0}.file-table th:hover .column-resizer::after,.column-resizer:focus-visible::after{opacity:1}.column-resizer:focus-visible{outline:2px solid #1479e8;outline-offset:-2px}.data-overview-page :global(body.is-resizing-table-column){cursor:col-resize;user-select:none}.file-table tbody tr:hover{background:#f8fbff}.file-name,.truncate{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-name{color:#173b70;font-weight:600}.cell-species_name em{color:#385c88}.accession-link,.actions-cell a,.actions-cell button{color:#0874e8;font-weight:700;text-decoration:none}.actions-cell{white-space:nowrap}.actions-cell button{padding:0;border:0;background:transparent;cursor:pointer}.actions-cell span{margin:0 10px;color:#aac0dc}.category-tag{display:inline-flex;padding:3px 9px;border-radius:6px;background:#e4f1ff;color:#0874e8;font-weight:700;white-space:nowrap}.category-annotation{background:#e8f8ee;color:#15935a}.category-raw_data{background:#fff0df;color:#d56d0b}.category-transcriptome{background:#f0eaff;color:#7546d8}.category-population{background:#ffe9ed;color:#d43d5b}.empty-cell{height:180px!important;text-align:center!important;color:#7a8da8}.pagination-bar{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;color:#58708e;font-size:13px}.pagination-bar>div{display:flex;align-items:center;gap:9px}.page-size{width:78px}.pagination-bar strong{display:grid;place-items:center;width:34px;height:34px;border-radius:7px;background:#1279ed;color:#fff}.file-table code{color:#536a87;font-size:12px}@media(max-width:1280px){.filter-panel{grid-template-columns:repeat(3,minmax(0,1fr))}.search-control{grid-column:span 2}.reset-button{width:100%}}@media(max-width:760px){.page-heading h1{font-size:27px}.filter-panel{grid-template-columns:1fr}.search-control{grid-column:auto}.table-heading,.pagination-bar{align-items:flex-start;flex-direction:column}}
 </style>

@@ -1,30 +1,29 @@
 <template>
-  <div class="app-shell">
-    <router-view v-if="isStandaloneRoute" />
+  <el-config-provider :locale="elementLocale">
+    <div class="app-shell">
+      <router-view v-if="isStandaloneRoute" />
 
-    <div v-else :class="['layout-shell', { 'is-dashboard-route': isDashboardRoute }]">
-      <TopNavBar
-        :current-language="currentLanguage"
-        @language-change="handleLanguageChange"
-        @logout="handleLogout"
-      />
+      <div v-else :class="['layout-shell', { 'is-dashboard-route': isDashboardRoute }]">
+        <TopNavBar
+          :current-language="currentLanguage"
+          @language-change="handleLanguageChange"
+        />
 
-      <main :class="['layout-main', { 'layout-main-dashboard': isDashboardRoute }]">
-        <router-view />
-      </main>
-
-      <footer class="layout-footer">
-        {{ $t('footer.version') }}
-      </footer>
+        <main :class="['layout-main', { 'layout-main-dashboard': isDashboardRoute }]">
+          <router-view />
+        </main>
+      </div>
     </div>
-  </div>
+  </el-config-provider>
 </template>
 
 <script>
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import en from 'element-plus/es/locale/lang/en'
 
 import TopNavBar from '@/components/TopNavBar.vue'
 
@@ -35,14 +34,15 @@ export default {
   },
   setup() {
     const route = useRoute()
-    const router = useRouter()
-    const { locale } = useI18n()
+    const { locale, t } = useI18n()
 
     const currentLanguage = ref(locale.value)
+    const elementLocale = computed(() => (currentLanguage.value === 'zh' ? zhCn : en))
 
     watch(locale, (newLocale) => {
       currentLanguage.value = newLocale
-    })
+      document.documentElement.lang = newLocale === 'zh' ? 'zh-CN' : 'en'
+    }, { immediate: true })
 
     const isStandaloneRoute = computed(() => route.path === '/login' || route.path.startsWith('/admin'))
     const isDashboardRoute = computed(() => route.path === '/' || route.path === '/dashboard')
@@ -53,26 +53,17 @@ export default {
       localStorage.setItem('language', language)
 
       ElMessage({
-        message: language === 'zh' ? '已切换到中文' : 'Switched to English',
+        message: t('messages.languageChanged'),
         type: 'success'
       })
-    }
-
-    const handleLogout = () => {
-      localStorage.removeItem('isLoggedIn')
-      ElMessage({
-        message: currentLanguage.value === 'zh' ? '已退出登录' : 'Logged out successfully',
-        type: 'success'
-      })
-      router.push('/login')
     }
 
     return {
       currentLanguage,
+      elementLocale,
       isStandaloneRoute,
       isDashboardRoute,
-      handleLanguageChange,
-      handleLogout
+      handleLanguageChange
     }
   }
 }
@@ -119,27 +110,20 @@ a {
 .layout-shell {
   display: flex;
   flex-direction: column;
+  padding-top: 76px;
 }
 
 .layout-main {
   flex: 1;
   width: min(1480px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 30px 0 42px;
+  padding: 20px 0 38px;
 }
 
 .layout-main-dashboard {
   width: 100%;
   max-width: none;
-  padding: 0 0 56px;
-}
-
-.layout-footer {
-  padding: 18px 20px 28px;
-  text-align: center;
-  color: #5f6f85;
-  font-size: 13px;
-  letter-spacing: 0.03em;
+  padding: 0;
 }
 
 .empty-page {
@@ -157,13 +141,17 @@ a {
 }
 
 @media (max-width: 720px) {
+  .layout-shell {
+    padding-top: 68px;
+  }
+
   .layout-main {
     width: min(100%, calc(100% - 24px));
-    padding: 18px 0 28px;
+    padding: 14px 0 26px;
   }
 
   .layout-main-dashboard {
-    padding: 0 0 36px;
+    padding: 0;
   }
 }
 </style>

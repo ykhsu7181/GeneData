@@ -5,6 +5,7 @@ import uuid
 from django.test import TransactionTestCase
 
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
+from files.services.annotation_feature_index_service import build_annotation_feature_index
 
 
 class DataFileDownloadTestCase(TransactionTestCase):
@@ -101,6 +102,7 @@ class DataFileDownloadTestCase(TransactionTestCase):
         annotation_file = self.create_data_file("E", f"annotation.{self.accession_code}.gff3")
         self.add_relation(accession_file, "accession", self.accession.id, "genome")
         self.add_relation(annotation_file, "annotation", self.annotation.id, "annotation")
+        build_annotation_feature_index(self.annotation)
 
         accession_response = self.client.get(f"/gd/api/files/accessions/{self.accession_code}/")
         annotation_response = self.client.get(

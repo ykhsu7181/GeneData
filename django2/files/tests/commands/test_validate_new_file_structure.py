@@ -31,12 +31,13 @@ class ValidateNewFileStructureCommandTestCase(TestCase):
             is_default=True,
         )
 
-    def make_data_file(self, code_suffix, file_path, file_name=None):
+    def make_data_file(self, code_suffix, file_path, file_name=None, *, is_current=True):
         return DataFile.objects.create(
             file_code=f"VALID{self.suffix}{code_suffix}",
             file_name=file_name or os.path.basename(file_path),
             file_path=file_path,
             file_size=123,
+            is_current=is_current,
         )
 
     def make_genome_file(self, file_path, *, accession=None, organism=None, category="genome"):
@@ -84,6 +85,18 @@ class ValidateNewFileStructureCommandTestCase(TestCase):
         self.assertIn("datafile_without_relation_count\t1", output)
         self.assertIn("result\tFAIL", output)
         self.assertIn("datafile_without_relation", self.read_detail_report())
+
+    def test_ignores_inactive_quarantined_datafile_without_relation(self):
+        self.make_data_file(
+            "Q",
+            f"/tmp/validate/{self.suffix}/quarantined.fasta",
+            is_current=False,
+        )
+
+        output = self.run_validate()
+
+        self.assertIn("datafile_without_relation_count\t0", output)
+        self.assertNotIn("quarantined.fasta", self.read_detail_report())
 
     def test_detects_broken_filerelation(self):
         data_file = self.make_data_file("B", f"/tmp/validate/{self.suffix}/broken_relation.fasta")

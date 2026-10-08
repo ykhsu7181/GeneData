@@ -154,6 +154,7 @@ class Command(BaseCommand):
         annotation_name = row["annotation_name"]
         annotation_version = row.get("annotation_version", "")
         source_database = row.get("source_database", "")
+        source_name = row.get("source_name", "") or source_database
         return {
             "accession": accession,
             "assembly": assembly,
@@ -165,7 +166,7 @@ class Command(BaseCommand):
             "release_version": annotation_version or None,
             "species_code": row.get("species_code") or None,
             "source_database": source_database or None,
-            "source_name": source_database or None,
+            "source_name": source_name or None,
             "external_project": row.get("external_project") or None,
             "file_name": row.get("file_name") or None,
             "file_type": row.get("file_type") or None,
@@ -177,6 +178,7 @@ class Command(BaseCommand):
         annotation_name = row["annotation_name"]
         annotation_version = row.get("annotation_version", "")
         source_database = row.get("source_database", "")
+        source_name = row.get("source_name", "") or source_database
         return {
             "accession": accession,
             "name": annotation_name or None,
@@ -187,7 +189,7 @@ class Command(BaseCommand):
             "release_version": annotation_version or None,
             "species_code": row.get("species_code") or None,
             "source_database": source_database or None,
-            "source_name": source_database or None,
+            "source_name": source_name or None,
             "external_project": row.get("external_project") or None,
             "file_name": row.get("file_name") or None,
             "file_type": row.get("file_type") or None,

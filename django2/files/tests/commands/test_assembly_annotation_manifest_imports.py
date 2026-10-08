@@ -1,6 +1,8 @@
 import tempfile
+from decimal import Decimal
 from pathlib import Path
 
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import Client, TestCase
 
@@ -35,11 +37,18 @@ class AssemblyAnnotationManifestImportTests(TestCase):
             "ASM_IR64\tIR64\tGCA_001\tIR64 genome assembly\tORYZA_SATIVA\tchromosome\tNipponbare\tFigshare\tPRJEB73710\tgenome.IR64.fasta\tFASTA\tImported assembly",
         )
 
+    def assembly_metadata_manifest(self, *, assembly_code="ASM_IR64", genome_size="387400000", gc_content="43.500"):
+        return self.write_manifest(
+            "assembly-metadata.tsv",
+            "assembly_code\taccession\tassembly_accession\tassembly_name\tspecies_code\tassembly_level\tbiosample_accession\tassembly_type\tassembly_method\tsequencing_technology\tgenome_size\tchromosome_count\tcontig_count\tn50\tgc_content\treference\tsource_database\texternal_project\tfile_name\tfile_type\tdescription",
+            f"{assembly_code}\tIR64\tGCA_001\tIR64 genome assembly\tORYZA_SATIVA\tchromosome\tSAMN04274565\thaploid\thifiasm v0.19.8\tPacBio HiFi\t{genome_size}\t12\t19\t27000000\t{gc_content}\tNipponbare\tFigshare\tPRJEB73710\tgenome.IR64.fasta\tFASTA\tImported assembly",
+        )
+
     def annotation_manifest(self):
         return self.write_manifest(
             "annotation.tsv",
-            "annotation_code\taccession\tassembly_code\tannotation_name\tannotation_version\tspecies_code\tsource_database\texternal_project\tfile_name\tfile_type\tdescription",
-            "ANN_IR64\tIR64\tASM_IR64\tIR64 genome annotation\tv1\tORYZA_SATIVA\tFigshare\tPRJEB73710\tannotation.IR64.gff\tGFF\tImported annotation",
+            "annotation_code\taccession\tassembly_code\tannotation_name\tannotation_version\tspecies_code\tsource_database\tsource_name\texternal_project\tfile_name\tfile_type\tdescription",
+            "ANN_IR64\tIR64\tASM_IR64\tIR64 genome annotation\tv1\tORYZA_SATIVA\tFigshare\tFigshare public import\tPRJEB73710\tannotation.IR64.gff\tGFF\tImported annotation",
         )
 
     def command_args(self, command, manifest, dry_run=False):
@@ -92,6 +101,7 @@ class AssemblyAnnotationManifestImportTests(TestCase):
         self.assertEqual(assembly.accession, self.accession)
         self.assertEqual(annotation.accession, self.accession)
         self.assertEqual(annotation.assembly, assembly)
+        self.assertEqual(annotation.source_name, "Figshare public import")
 
         assembly_row = get_accession_assemblies(self.accession)["results"][0]
         annotation_row = get_accession_annotations(self.accession)["results"][0]
@@ -117,6 +127,76 @@ class AssemblyAnnotationManifestImportTests(TestCase):
             "v1",
         )
 
+    def test_assembly_import_accepts_optional_detail_metadata(self):
+        call_command(*self.command_args("import_assembly_manifest", self.assembly_metadata_manifest()))
+
+        assembly = Assembly.objects.get(assembly_code="ASM_IR64")
+        self.assertEqual(assembly.biosample_accession, "SAMN04274565")
+        self.assertEqual(assembly.assembly_type, "haploid")
+        self.assertEqual(assembly.assembly_method, "hifiasm v0.19.8")
+        self.assertEqual(assembly.sequencing_technology, "PacBio HiFi")
+        self.assertEqual(assembly.genome_size, 387400000)
+        self.assertEqual(assembly.chromosome_count, 12)
+        self.assertEqual(assembly.contig_count, 19)
+        self.assertEqual(assembly.n50, 27000000)
+        self.assertEqual(assembly.gc_content, Decimal("43.500"))
+
+    def test_assembly_import_rejects_invalid_integer_metadata(self):
+        manifest = self.assembly_metadata_manifest(genome_size="387.4 Mb")
+
+        call_command(*self.command_args("import_assembly_manifest", manifest))
+
+        self.assertFalse(Assembly.objects.exists())
+        error_report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_errors_*.tsv"))
+        self.assertIn(
+            "invalid genome_size: expected a non-negative integer",
+            error_report.read_text(encoding="utf-8"),
+        )
+
+    def test_assembly_import_rejects_negative_statistics(self):
+        manifest = self.assembly_metadata_manifest(genome_size="-1")
+
+        call_command(*self.command_args("import_assembly_manifest", manifest))
+
+        self.assertFalse(Assembly.objects.exists())
+        error_report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_errors_*.tsv"))
+        self.assertIn(
+            "invalid genome_size: expected a non-negative integer",
+            error_report.read_text(encoding="utf-8"),
+        )
+
+    def test_assembly_import_rejects_out_of_range_gc_content(self):
+        manifest = self.assembly_metadata_manifest(gc_content="100.001")
+
+        call_command(*self.command_args("import_assembly_manifest", manifest))
+
+        self.assertFalse(Assembly.objects.exists())
+        error_report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_errors_*.tsv"))
+        self.assertIn(
+            "invalid gc_content: expected a percentage from 0 to 100",
+            error_report.read_text(encoding="utf-8"),
+        )
+
+    def test_assembly_model_validates_statistics_ranges(self):
+        assembly = Assembly(
+            assembly_code="ASM_INVALID",
+            accession=self.accession,
+            name="Invalid statistics",
+            genome_size=-1,
+            chromosome_count=-1,
+            contig_count=-1,
+            n50=-1,
+            gc_content=Decimal("100.001"),
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            assembly.full_clean()
+
+        self.assertEqual(
+            set(context.exception.message_dict),
+            {"genome_size", "chromosome_count", "contig_count", "n50", "gc_content"},
+        )
+
     def test_annotation_import_reports_missing_assembly_without_writing(self):
         call_command(*self.command_args("import_annotation_manifest", self.annotation_manifest()))
         self.assertFalse(Annotation.objects.exists())
@@ -138,6 +218,23 @@ class AssemblyAnnotationManifestImportTests(TestCase):
         self.assertEqual(assembly.file_name, "genome.IR64.fasta")
         error_report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_errors_*.tsv"))
         self.assertIn("metadata conflict", error_report.read_text(encoding="utf-8"))
+
+    def test_assembly_import_fills_new_blanks_and_preserves_curated_statistics(self):
+        assembly = Assembly.objects.create(
+            assembly_code="ASM_IR64",
+            accession=self.accession,
+            name="IR64 genome assembly",
+            genome_size=390000000,
+        )
+
+        call_command(*self.command_args("import_assembly_manifest", self.assembly_metadata_manifest()))
+
+        assembly.refresh_from_db()
+        self.assertEqual(assembly.biosample_accession, "SAMN04274565")
+        self.assertEqual(assembly.genome_size, 390000000)
+        self.assertEqual(assembly.chromosome_count, 12)
+        error_report = next(Path(self.temp_dir.name).glob("import_assembly_manifest_errors_*.tsv"))
+        self.assertIn("genome_size", error_report.read_text(encoding="utf-8"))
 
     def test_annotation_import_fills_blanks_and_preserves_curated_metadata(self):
         assembly = Assembly.objects.create(

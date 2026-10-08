@@ -642,7 +642,7 @@ export default {
 
         // 不显示错误消息，让用户看到友好的无数据提示
         if (!isNoCodonDataError.value) {
-          ElMessage.error('获取密码子数据失败');
+          ElMessage.error(t('page.codonCard.dataLoadFailed'));
         }
       } finally {
         loading.value = false;
@@ -795,8 +795,8 @@ export default {
 
       } catch (err) {
         console.error('加载CodonW结果失败:', err);
-        error.value = '加载CodonW分析结果失败';
-        ElMessage.error('加载CodonW分析结果失败');
+        error.value = t('page.codonCard.codonWResultLoadFailed');
+        ElMessage.error(t('page.codonCard.codonWResultLoadFailed'));
       } finally {
         loading.value = false;
       }
@@ -867,17 +867,17 @@ export default {
     const beforeResultUpload = (file) => {
       const isZip = file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip');
       if (!isZip) {
-        ElMessage.error('只能上传ZIP格式的CodonW结果文件！');
+        ElMessage.error(t('page.codonCard.zipOnly'));
         return false;
       }
 
       const isLt100M = file.size / 1024 / 1024 < 100;
       if (!isLt100M) {
-        ElMessage.error('文件大小不能超过100MB！');
+        ElMessage.error(t('page.codonCard.fileTooLarge'));
         return false;
       }
 
-      ElMessage.info('正在上传CodonW结果文件...');
+      ElMessage.info(t('page.codonCard.uploadingResults'));
       return true;
     };
 
@@ -885,7 +885,7 @@ export default {
     const handleResultUploadSuccess = (response) => {
       console.log('上传成功:', response);
       if (response && response.success) {
-        ElMessage.success('CodonW结果上传成功！');
+        ElMessage.success(t('page.codonCard.uploadSuccess'));
         // 解析并显示结果
         if (response.data) {
           codonData.value = response.data;
@@ -893,14 +893,14 @@ export default {
           error.value = null;
         }
       } else {
-        ElMessage.error(response.message || '上传处理失败');
+        ElMessage.error(t('page.codonCard.uploadProcessFailed'));
       }
     };
 
     // 上传失败处理
     const handleResultUploadError = (error) => {
       console.error('上传失败:', error);
-      ElMessage.error('上传失败，请检查文件格式和网络连接');
+      ElMessage.error(t('page.codonCard.uploadFailed'));
     };
 
     return {

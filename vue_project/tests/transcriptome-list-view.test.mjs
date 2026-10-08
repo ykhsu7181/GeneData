@@ -2,19 +2,17 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const repoRoot = process.cwd()
-const viewPath = resolve(repoRoot, 'src/views/TranscriptomeOverviewView.vue')
-const source = readFileSync(viewPath, 'utf8')
+const source = readFileSync(resolve(process.cwd(), 'src/views/TranscriptomeOverviewView.vue'), 'utf8')
 
-assert.match(source, /转录组表/, 'Transcriptome overview title should be 转录组表')
+assert.match(source, /page\.transcriptomeOverview\.title/, 'Transcriptome overview should use its localized title')
 assert.match(source, /query\/transcriptome-list\//, 'Transcriptome list should load rows from transcriptome-list endpoint')
 assert.match(source, /query\/transcriptome-files\//, 'Transcriptome list should load drawer files from transcriptome-files endpoint')
-assert.match(source, /搜索物种 \/ Accession \/ 品种/, 'Transcriptome list should expose the required search placeholder')
-assert.match(source, /参考基因组版本/, 'Transcriptome filter/table should include reference assembly version')
-assert.match(source, /样本类型/, 'Transcriptome filter/table should include sample type')
-assert.match(source, /数据大小/, 'Transcriptome table should include data size')
-assert.match(source, /查看详情/, 'Transcriptome rows should provide a detail action')
-assert.match(source, /查看文件/, 'Transcriptome rows should provide a view files action')
+assert.match(source, /page\.transcriptomeOverview\.searchPlaceholder/, 'Transcriptome list should localize the search placeholder')
+assert.match(source, /page\.transcriptomeOverview\.assembly/, 'Transcriptome filter/table should localize Assembly labels')
+assert.match(source, /page\.transcriptomeOverview\.sampleType/, 'Transcriptome filter/table should localize sample-type labels')
+assert.match(source, /page\.transcriptomeOverview\.dataSize/, 'Transcriptome table should localize data-size labels')
+assert.match(source, /page\.transcriptomeOverview\.viewDetail/, 'Transcriptome rows should provide a localized detail action')
+assert.match(source, /page\.transcriptomeOverview\.viewFiles/, 'Transcriptome rows should provide a localized view-files action')
 assert.match(source, /fileDrawerVisible/, 'Transcriptome list should have a file drawer')
 assert.match(source, /data-files/, 'Transcriptome downloads should use DataFile download URLs')
 

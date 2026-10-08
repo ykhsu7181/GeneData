@@ -115,8 +115,7 @@ def list_sequence_ids(file_path, *, index_path=None, max_bytes=None, timeout_sec
 def sequence_length(file_path, sequence_id, *, index_path=None, max_bytes=None, timeout_seconds=None):
     if index_path:
         indexed_lengths = read_fai(index_path)
-        if sequence_id in indexed_lengths:
-            return indexed_lengths[sequence_id]
+        return indexed_lengths.get(sequence_id)
 
     _ensure_scan_budget(file_path, max_bytes)
     started_at = time.monotonic()

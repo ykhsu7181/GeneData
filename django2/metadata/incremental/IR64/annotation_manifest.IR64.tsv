@@ -1,0 +1,2 @@
+annotation_code	accession	assembly_code	annotation_name	annotation_version	is_default	species_code	source_database	source_name	external_project	file_name	file_type	description
+ANN_IR64	IR64	ASM_IR64	IR64 annotation		true		Public database	Public database import		annotation.IR64.gff	GFF	IR64 annotation imported from a public database and stored as annotation.IR64.gff.

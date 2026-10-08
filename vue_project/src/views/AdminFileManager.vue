@@ -1,7 +1,7 @@
 <template>
   <div class="file-manager">
     <div class="page-header">
-      <h2>文件管理</h2>
+      <h2>{{ $t('page.admin.fileManagement') }}</h2>
     </div>
     
     <!-- 操作工具栏 -->
@@ -9,7 +9,7 @@
       <div class="toolbar-left">
         <el-input
           v-model="searchText"
-          placeholder="搜索文件名"
+          :placeholder="$t('page.admin.searchFileName')"
           style="width: 200px; margin-right: 10px;"
           clearable
           @input="handleSearch"
@@ -21,12 +21,12 @@
 
         <el-select
           v-model="filterCategory"
-          placeholder="选择类别"
+          :placeholder="$t('page.admin.selectCategory')"
           style="width: 150px; margin-right: 10px;"
           clearable
           @change="loadFiles"
         >
-          <el-option label="全部类别" value="" />
+          <el-option :label="$t('page.admin.allCategories')" value="" />
           <el-option
             v-for="category in categories"
             :key="category.value"
@@ -37,12 +37,12 @@
 
         <el-select
           v-model="filterOrganism"
-          placeholder="选择生物体"
+          :placeholder="$t('page.admin.selectOrganism')"
           style="width: 150px;"
           clearable
           @change="loadFiles"
         >
-          <el-option label="全部生物体" value="" />
+          <el-option :label="$t('page.admin.allOrganisms')" value="" />
           <el-option
             v-for="organism in organisms"
             :key="organism"
@@ -55,11 +55,11 @@
       <div class="toolbar-right">
         <el-button type="primary" @click="showUploadDialog = true">
           <el-icon><Upload /></el-icon>
-          上传文件
+          {{ $t('page.admin.uploadFile') }}
         </el-button>
         <el-button type="success" @click="showFolderUploadDialog = true">
           <el-icon><FolderOpened /></el-icon>
-          上传文件夹
+          {{ $t('page.admin.uploadFolder') }}
         </el-button>
         <el-button
           type="danger"
@@ -67,7 +67,7 @@
           @click="handleBatchDelete"
         >
           <el-icon><Delete /></el-icon>
-          批量删除 ({{ selectedFiles ? selectedFiles.length : 0 }})
+          {{ $t('page.admin.batchDelete', { count: selectedFiles ? selectedFiles.length : 0 }) }}
         </el-button>
         <el-button
           type="primary"
@@ -75,11 +75,11 @@
           @click="handleBatchDownload"
         >
           <el-icon><Download /></el-icon>
-          批量下载 ({{ selectedFiles ? selectedFiles.length : 0 }})
+          {{ $t('page.admin.batchDownload', { count: selectedFiles ? selectedFiles.length : 0 }) }}
         </el-button>
         <el-button type="success" @click="handleRescan">
           <el-icon><Refresh /></el-icon>
-          重新扫描
+          {{ $t('page.admin.rescan') }}
         </el-button>
       </div>
     </div>
@@ -96,7 +96,7 @@
       >
         <el-table-column type="selection" width="55" />
         
-        <el-table-column prop="name" label="文件名" min-width="200">
+        <el-table-column prop="name" :label="$t('common.fileName')" min-width="200">
           <template #default="scope">
             <div class="file-name">
               <el-icon v-if="!scope.row.exists" class="missing-icon"><Warning /></el-icon>
@@ -105,33 +105,33 @@
           </template>
         </el-table-column>
         
-        <el-table-column prop="organism" label="生物体" width="120" />
+        <el-table-column prop="organism" :label="$t('page.admin.organism')" width="120" />
         
-        <el-table-column prop="category" label="类别" width="150">
+        <el-table-column prop="category" :label="$t('page.admin.category')" width="150">
           <template #default="scope">
             <el-tag size="small">{{ getCategoryLabel(scope.row.category) }}</el-tag>
           </template>
         </el-table-column>
         
-        <el-table-column prop="file_type" label="文件类型" width="100" />
+        <el-table-column prop="file_type" :label="$t('common.fileType')" width="100" />
         
-        <el-table-column prop="size" label="文件大小" width="120">
+        <el-table-column prop="size" :label="$t('common.fileSize')" width="120">
           <template #default="scope">
             {{ formatFileSize(scope.row.size) }}
           </template>
         </el-table-column>
         
-        <el-table-column prop="created_at" label="创建时间" width="160" />
+        <el-table-column prop="created_at" :label="$t('page.admin.createdAt')" width="160" />
         
-        <el-table-column label="状态" width="80">
+        <el-table-column :label="$t('page.rawData.columns.status')" width="80">
           <template #default="scope">
             <el-tag :type="scope.row.exists ? 'success' : 'danger'" size="small">
-              {{ scope.row.exists ? '正常' : '缺失' }}
+              {{ scope.row.exists ? $t('page.admin.normal') : $t('page.admin.missing') }}
             </el-tag>
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column :label="$t('common.actions')" width="150" fixed="right">
           <template #default="scope">
             <el-button 
               type="primary" 
@@ -139,14 +139,14 @@
               :disabled="!scope.row.exists"
               @click="handleDownload(scope.row)"
             >
-              下载
+              {{ $t('common.download') }}
             </el-button>
             <el-button 
               type="danger" 
               size="small"
               @click="handleDelete(scope.row)"
             >
-              删除
+              {{ $t('common.delete') }}
             </el-button>
           </template>
         </el-table-column>
@@ -169,7 +169,7 @@
     <!-- 上传文件对话框 -->
     <el-dialog
       v-model="showUploadDialog"
-      title="上传文件"
+      :title="$t('page.admin.uploadFile')"
       width="500px"
       @close="resetUpload"
     >
@@ -186,24 +186,24 @@
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
         <div class="el-upload__text">
-          将文件拖到此处，或<em>点击上传</em>
+          {{ $t('page.admin.dragFiles') }}<em>{{ $t('page.admin.clickUpload') }}</em>
         </div>
         <template #tip>
           <div class="el-upload__tip">
-            支持多文件上传，系统会自动识别文件类型和分类
+            {{ $t('page.admin.uploadTip') }}
           </div>
         </template>
       </el-upload>
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="showUploadDialog = false">取消</el-button>
+          <el-button @click="showUploadDialog = false">{{ $t('common.cancel') }}</el-button>
           <el-button
             type="primary"
             :loading="uploading"
             @click="handleUpload"
           >
-            {{ uploading ? '上传中...' : '开始上传' }}
+            {{ uploading ? $t('page.admin.uploading') : $t('page.admin.startUpload') }}
           </el-button>
         </span>
       </template>
@@ -212,7 +212,7 @@
     <!-- 上传文件夹对话框 -->
     <el-dialog
       v-model="showFolderUploadDialog"
-      title="上传文件夹"
+      :title="$t('page.admin.uploadFolder')"
       width="500px"
       @close="resetFolderUpload"
     >
@@ -231,15 +231,15 @@
         >
           <el-icon class="folder-icon"><FolderOpened /></el-icon>
           <div class="folder-upload-text">
-            点击选择文件夹
+            {{ $t('page.admin.selectFolder') }}
           </div>
           <div class="folder-upload-tip">
-            将上传文件夹中的所有文件
+            {{ $t('page.admin.folderTip') }}
           </div>
         </div>
 
         <div v-if="folderFiles.length > 0" class="folder-files-preview">
-          <h4>将要上传的文件 ({{ folderFiles.length }} 个):</h4>
+          <h4>{{ $t('page.admin.pendingFiles', { count: folderFiles.length }) }}</h4>
           <div class="files-list">
             <div
               v-for="file in folderFiles.slice(0, 10)"
@@ -249,7 +249,7 @@
               {{ file.webkitRelativePath || file.name }}
             </div>
             <div v-if="folderFiles.length > 10" class="more-files">
-              ... 还有 {{ folderFiles.length - 10 }} 个文件
+              ... {{ $t('page.admin.moreFiles', { count: folderFiles.length - 10 }) }}
             </div>
           </div>
         </div>
@@ -257,14 +257,14 @@
 
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="showFolderUploadDialog = false">取消</el-button>
+          <el-button @click="showFolderUploadDialog = false">{{ $t('common.cancel') }}</el-button>
           <el-button
             type="primary"
             :loading="uploading"
             :disabled="folderFiles.length === 0"
             @click="handleFolderUpload"
           >
-            {{ uploading ? '上传中...' : `开始上传 (${folderFiles.length} 个文件)` }}
+            {{ uploading ? $t('page.admin.uploading') : $t('page.admin.startFolderUpload', { count: folderFiles.length }) }}
           </el-button>
         </span>
       </template>
@@ -273,12 +273,13 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Upload, Delete, Download, Refresh, Search, Warning, UploadFilled, FolderOpened
 } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { useI18n } from 'vue-i18n'
 
 export default {
   name: 'AdminFileManager',
@@ -294,6 +295,7 @@ export default {
   },
   emits: ['refresh-stats'],
   setup(props, { emit }) {
+    const { t } = useI18n()
     const loading = ref(false)
     const uploading = ref(false)
     const showUploadDialog = ref(false)
@@ -317,24 +319,24 @@ export default {
     const organisms = ref([])
     
     // 文件类别选项
-    const categories = [
-      { value: 'genome', label: '基因组序列' },
-      { value: 'transcriptome.all', label: '转录组-All' },
-      { value: 'transcriptome.root', label: '转录组-Root' },
-      { value: 'transcriptome.stem', label: '转录组-Stem' },
-      { value: 'transcriptome.leaf', label: '转录组-Leaf' },
-      { value: 'transcriptome.panicles', label: '转录组-Panicles' },
-      { value: 'transcriptome.shoot', label: '转录组-Shoot' },
-      { value: 'miRNA', label: '微RNA' },
-      { value: 'tRNA', label: '转运RNA' },
-      { value: 'rRNA', label: '核糖体RNA' },
-      { value: 'codon', label: '密码子' },
-      { value: 'centromere', label: '着丝粒' },
-      { value: 'TEs', label: '转座子' },
-      { value: 'annotation', label: '基因注释' },
-      { value: 'coreBlocks', label: '核心区块' },
-      { value: 'other', label: '其他' }
-    ]
+    const categories = computed(() => [
+      { value: 'genome', label: t('nav.genome') },
+      { value: 'transcriptome.all', label: `${t('nav.transcriptome')}-All` },
+      { value: 'transcriptome.root', label: `${t('nav.transcriptome')}-Root` },
+      { value: 'transcriptome.stem', label: `${t('nav.transcriptome')}-Stem` },
+      { value: 'transcriptome.leaf', label: `${t('nav.transcriptome')}-Leaf` },
+      { value: 'transcriptome.panicles', label: `${t('nav.transcriptome')}-Panicles` },
+      { value: 'transcriptome.shoot', label: `${t('nav.transcriptome')}-Shoot` },
+      { value: 'miRNA', label: 'miRNA' },
+      { value: 'tRNA', label: 'tRNA' },
+      { value: 'rRNA', label: 'rRNA' },
+      { value: 'codon', label: t('nav.codon') },
+      { value: 'centromere', label: 'Centromere' },
+      { value: 'TEs', label: 'TEs' },
+      { value: 'annotation', label: t('nav.annotation') },
+      { value: 'coreBlocks', label: t('nav.coreVariableBlocks') },
+      { value: 'other', label: t('page.admin.otherFiles') }
+    ])
     
     const uploadUrl = computed(() => {
       return '/admin/files/upload/'
@@ -342,7 +344,7 @@ export default {
     
     // 获取类别标签
     const getCategoryLabel = (value) => {
-      const category = categories.find(c => c.value === value)
+      const category = categories.value.find(c => c.value === value)
       return category ? category.label : value
     }
     
@@ -392,7 +394,7 @@ export default {
         }
       } catch (error) {
         console.error('加载文件列表失败:', error)
-        ElMessage.error('加载文件列表失败')
+        ElMessage.error(t('page.admin.fileListLoadFailed'))
       } finally {
         loading.value = false
       }
@@ -419,11 +421,11 @@ export default {
     const handleDelete = async (file) => {
       try {
         await ElMessageBox.confirm(
-          `确定要删除文件 "${file.name}" 吗？此操作不可恢复。`,
-          '确认删除',
+          t('page.admin.deleteFileConfirm', { name: file.name }),
+          t('page.admin.deleteConfirmTitle'),
           {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
             type: 'warning'
           }
         )
@@ -431,16 +433,16 @@ export default {
         const response = await axios.delete(`/admin/files/${file.id}/delete/`)
 
         if (response.data.success) {
-          ElMessage.success(response.data.message)
+          ElMessage.success(t('page.admin.deleteSuccess'))
           loadFiles()
           emit('refresh-stats')
         } else {
-          ElMessage.error(response.data.message)
+          ElMessage.error(t('page.admin.deleteFileFailed'))
         }
       } catch (error) {
         if (error !== 'cancel') {
           console.error('删除文件失败:', error)
-          ElMessage.error('删除文件失败')
+          ElMessage.error(t('page.admin.deleteFileFailed'))
         }
       }
     }
@@ -448,17 +450,17 @@ export default {
     // 批量删除
     const handleBatchDelete = async () => {
       if (!selectedFiles.value || selectedFiles.value.length === 0) {
-        ElMessage.warning('请选择要删除的文件')
+        ElMessage.warning(t('page.admin.selectFilesToDelete'))
         return
       }
 
       try {
         await ElMessageBox.confirm(
-          `确定要删除选中的 ${selectedFiles.value.length} 个文件吗？此操作不可恢复。`,
-          '确认批量删除',
+          t('page.admin.batchDeleteConfirm', { count: selectedFiles.value.length }),
+          t('page.admin.batchDeleteTitle'),
           {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
             type: 'warning'
           }
         )
@@ -469,7 +471,7 @@ export default {
         })
 
         if (response.data.success) {
-          ElMessage.success(response.data.message)
+          ElMessage.success(t('page.admin.deleteSuccess'))
           selectedFiles.value = []
           // 清除表格选择状态
           if (fileTableRef.value) {
@@ -478,12 +480,12 @@ export default {
           loadFiles()
           emit('refresh-stats')
         } else {
-          ElMessage.error(response.data.message)
+          ElMessage.error(t('page.admin.batchDeleteFailed'))
         }
       } catch (error) {
         if (error !== 'cancel') {
           console.error('批量删除失败:', error)
-          ElMessage.error('批量删除失败')
+          ElMessage.error(t('page.admin.batchDeleteFailed'))
         }
       }
     }
@@ -491,7 +493,7 @@ export default {
     // 批量下载
     const handleBatchDownload = async () => {
       if (!selectedFiles.value || selectedFiles.value.length === 0) {
-        ElMessage.warning('请选择要下载的文件')
+        ElMessage.warning(t('page.admin.selectFilesToDownload'))
         return
       }
 
@@ -524,7 +526,7 @@ export default {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
 
-        ElMessage.success(`成功下载 ${selectedFiles.value.length} 个文件`)
+        ElMessage.success(t('page.admin.batchDownloaded', { count: selectedFiles.value.length }))
         selectedFiles.value = []
         // 清除表格选择状态
         if (fileTableRef.value) {
@@ -533,7 +535,7 @@ export default {
 
       } catch (error) {
         console.error('批量下载失败:', error)
-        ElMessage.error('批量下载失败')
+        ElMessage.error(t('page.admin.batchDownloadFailed'))
       }
     }
 
@@ -544,15 +546,15 @@ export default {
         const response = await axios.post('/admin/rescan/')
 
         if (response.data.success) {
-          ElMessage.success(response.data.message)
+          ElMessage.success(t('messages.dataRefreshed'))
           loadFiles()
           emit('refresh-stats')
         } else {
-          ElMessage.error(response.data.message)
+          ElMessage.error(t('page.admin.rescanFailed'))
         }
       } catch (error) {
         console.error('重新扫描失败:', error)
-        ElMessage.error('重新扫描失败')
+        ElMessage.error(t('page.admin.rescanFailed'))
       } finally {
         loading.value = false
       }
@@ -575,7 +577,7 @@ export default {
       console.log('开始上传，文件列表:', fileList.value)
 
       if (!fileList.value || fileList.value.length === 0) {
-        ElMessage.warning('请选择要上传的文件')
+        ElMessage.warning(t('page.admin.selectFilesToUpload'))
         return
       }
 
@@ -601,7 +603,7 @@ export default {
           await axios.post('/admin/files/upload/', formData, { headers })
         }
 
-        ElMessage.success('所有文件上传成功')
+        ElMessage.success(t('page.admin.allFilesUploaded'))
         showUploadDialog.value = false
         resetUpload()
         loadFiles()
@@ -610,9 +612,9 @@ export default {
       } catch (error) {
         console.error('上传失败:', error)
         if (error.response && error.response.data && error.response.data.message) {
-          ElMessage.error(error.response.data.message)
+          ElMessage.error(t('page.admin.uploadNetworkFailed'))
         } else {
-          ElMessage.error('上传失败，请检查网络连接')
+          ElMessage.error(t('page.admin.uploadNetworkFailed'))
         }
       } finally {
         uploading.value = false
@@ -621,12 +623,12 @@ export default {
 
     // 上传成功处理
     const handleUploadSuccess = (response, file) => {
-      ElMessage.success(`文件 ${file.name} 上传成功`)
+      ElMessage.success(t('page.admin.fileUploadSuccess', { name: file.name }))
     }
 
     // 上传失败处理
     const handleUploadError = (error, file) => {
-      ElMessage.error(`文件 ${file.name} 上传失败`)
+      ElMessage.error(t('page.admin.fileUploadFailed', { name: file.name }))
     }
 
     // 选择文件夹
@@ -646,7 +648,7 @@ export default {
     // 文件夹上传处理
     const handleFolderUpload = async () => {
       if (folderFiles.value.length === 0) {
-        ElMessage.warning('请选择要上传的文件夹')
+        ElMessage.warning(t('page.admin.selectFolderWarning'))
         return
       }
 
@@ -681,18 +683,18 @@ export default {
         }
 
         if (successCount > 0) {
-          ElMessage.success(`成功上传 ${successCount} 个文件${failCount > 0 ? `，${failCount} 个文件失败` : ''}`)
+          ElMessage.success(t('page.admin.folderUploadResult', { success: successCount, failed: failCount }))
           showFolderUploadDialog.value = false
           resetFolderUpload()
           loadFiles()
           emit('refresh-stats')
         } else {
-          ElMessage.error('所有文件上传失败')
+          ElMessage.error(t('page.admin.allUploadsFailed'))
         }
 
       } catch (error) {
         console.error('文件夹上传失败:', error)
-        ElMessage.error('文件夹上传失败')
+        ElMessage.error(t('page.admin.folderUploadFailed'))
       } finally {
         uploading.value = false
       }
