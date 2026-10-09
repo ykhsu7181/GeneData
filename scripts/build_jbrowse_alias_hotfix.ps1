@@ -36,11 +36,14 @@ foreach ($path in @($releaseDirectory, $archivePath, $archiveChecksumPath, $sour
     }
 }
 
-$runbook = "docs/GeneData_JBrowse_OriSeqID_hotfix_生产部署手册_20261009.md"
-$runbookPath = Join-Path $projectRoot $runbook
-if (-not (Test-Path -LiteralPath $runbookPath)) {
-    throw "Runbook is missing: $runbookPath"
+$runbooks = @(
+    Get-ChildItem -LiteralPath (Join-Path $projectRoot "docs") -File |
+        Where-Object { $_.Name -like "GeneData_JBrowse_OriSeqID_hotfix_*_20261009.md" }
+)
+if ($runbooks.Count -ne 1) {
+    throw "Expected exactly one OriSeqID hotfix runbook; found $($runbooks.Count)."
 }
+$runbookPath = $runbooks[0].FullName
 
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 try {
