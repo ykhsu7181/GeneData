@@ -132,6 +132,86 @@ class JBrowseIndexDryRunTestCase(TestCase):
         self.assertEqual(result["status"], "seqid_mismatch")
         self.assertEqual(result["gff_seqids_missing_from_fasta"], ["Chr99"])
 
+    def test_ori_seqid_alias_is_validated_and_written_as_fasta_id(self):
+        Path(self.fasta_path).write_text(
+            ">GWHESHQ00000001 Chromosome 1 OriSeqID=chr1 Len=4\nACGT\n"
+            ">GWHESHQ00000002 contig OriSeqID=W0103_054 Len=6\nAACCGG\n",
+            encoding="utf-8",
+        )
+        Path(self.gff_path).write_text(
+            "W0103_054\ttest\tgene\t1\t6\t.\t+\t.\tID=gene2\n"
+            "chr1\ttest\tgene\t1\t4\t.\t+\t.\tID=gene1\n",
+            encoding="utf-8",
+        )
+        output_root = os.path.join(self.temporary_directory.name, "alias-derived")
+
+        preflight = inspect_jbrowse_assembly(self.assembly.id, output_root=output_root)
+
+        self.assertEqual(preflight["status"], "ready_for_build")
+        self.assertEqual(preflight["gff_seqid_alias_count"], 2)
+        self.assertEqual(preflight["gff_seqid_aliases"]["chr1"], "GWHESHQ00000001")
+        self.assertFalse(os.path.exists(output_root))
+
+        def fake_bgzip(_command, source_path, target_path):
+            Path(target_path).write_bytes(Path(source_path).read_bytes())
+
+        def fake_tabix(_command, gff3_path):
+            Path(f"{gff3_path}.tbi").write_bytes(b"test-tabix-index")
+
+        with patch(
+            "files.services.jbrowse_index_service._resolve_tool",
+            side_effect=lambda command: command,
+        ), patch(
+            "files.services.jbrowse_index_service._run_bgzip",
+            side_effect=fake_bgzip,
+        ), patch(
+            "files.services.jbrowse_index_service._run_tabix",
+            side_effect=fake_tabix,
+        ):
+            result = build_jbrowse_assembly_indexes(
+                self.assembly.id, output_root=output_root
+            )
+
+        self.assertEqual(result["status"], "built")
+        generated = Path(result["planned_annotation_gff3"]).read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("GWHESHQ00000001\ttest\tgene", generated)
+        self.assertIn("GWHESHQ00000002\ttest\tgene", generated)
+        self.assertNotIn("\nchr1\t", generated)
+        self.assertNotIn("\nW0103_054\t", generated)
+
+    def test_ambiguous_ori_seqid_alias_fails_preflight(self):
+        Path(self.fasta_path).write_text(
+            ">contig1 OriSeqID=chr1\nACGT\n"
+            ">contig2 OriSeqID=chr1\nACGT\n",
+            encoding="utf-8",
+        )
+        Path(self.gff_path).write_text(
+            "chr1\ttest\tgene\t1\t4\t.\t+\t.\tID=gene1\n",
+            encoding="utf-8",
+        )
+
+        result = inspect_jbrowse_assembly(self.assembly.id)
+
+        self.assertEqual(result["status"], "ambiguous_seqid_alias")
+        self.assertEqual(result["ambiguous_gff_seqids"], ["chr1"])
+
+    def test_ori_seqid_coordinate_overrun_fails_preflight(self):
+        Path(self.fasta_path).write_text(
+            ">contig1 OriSeqID=chr1 Len=4\nACGT\n",
+            encoding="utf-8",
+        )
+        Path(self.gff_path).write_text(
+            "chr1\ttest\tgene\t1\t5\t.\t+\t.\tID=gene1\n",
+            encoding="utf-8",
+        )
+
+        result = inspect_jbrowse_assembly(self.assembly.id)
+
+        self.assertEqual(result["status"], "coordinate_out_of_bounds")
+        self.assertEqual(result["out_of_bounds_gff_seqids"], ["chr1"])
+
     def test_command_outputs_json_and_remains_read_only(self):
         output_root = os.path.join(self.temporary_directory.name, "command-derived")
         stdout = StringIO()

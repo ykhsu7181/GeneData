@@ -71,7 +71,9 @@ def inspect_jbrowse_assembly(assembly_id, output_root=None):
         return result
 
     try:
-        fasta_seqids = _read_fasta_seqids(genome["file_path"])
+        fasta_seqids, fasta_aliases, fasta_lengths = _read_fasta_seqids(
+            genome["file_path"]
+        )
     except (OSError, UnicodeError, ValueError) as exc:
         result.update(status="invalid_genome_file", error=str(exc))
         return result
@@ -125,15 +127,45 @@ def inspect_jbrowse_assembly(assembly_id, output_root=None):
         return result
 
     gff_seqids = set(annotation_info.pop("gff_seqids"))
-    missing = sorted(gff_seqids - fasta_seqids)
-    unannotated = sorted(fasta_seqids - gff_seqids)
+    gff_max_ends = annotation_info.pop("gff_max_ends")
+    resolved = {}
+    missing = []
+    ambiguous = []
+    out_of_bounds = []
+    for seqid in sorted(gff_seqids):
+        candidates = fasta_aliases.get(seqid, set())
+        if not candidates:
+            missing.append(seqid)
+        elif len(candidates) > 1:
+            ambiguous.append(seqid)
+        else:
+            fasta_seqid = next(iter(candidates))
+            resolved[seqid] = fasta_seqid
+            if gff_max_ends[seqid] > fasta_lengths[fasta_seqid]:
+                out_of_bounds.append(seqid)
+    unannotated = sorted(fasta_seqids - set(resolved.values()))
+    aliases_used = {
+        seqid: fasta_seqid
+        for seqid, fasta_seqid in resolved.items()
+        if seqid != fasta_seqid
+    }
     result.update(
         gff_seqid_count=len(gff_seqids),
         gff_seqids_missing_from_fasta=missing,
+        ambiguous_gff_seqids=ambiguous,
+        out_of_bounds_gff_seqids=out_of_bounds,
+        gff_seqid_aliases=aliases_used,
+        gff_seqid_alias_count=len(aliases_used),
         unannotated_fasta_seqids=unannotated,
     )
     if missing:
         result.update(status="seqid_mismatch")
+        return result
+    if ambiguous:
+        result.update(status="ambiguous_seqid_alias")
+        return result
+    if out_of_bounds:
+        result.update(status="coordinate_out_of_bounds")
         return result
 
     annotation_dir = root / "annotations" / f"annotation-{annotation.id}"
@@ -184,6 +216,7 @@ def build_jbrowse_assembly_indexes(
                 preflight["annotation_path"],
                 staged_sorted,
                 fasta_seqids=[entry[0] for entry in fasta_entries],
+                seqid_aliases=preflight["gff_seqid_aliases"],
                 workspace=workspace,
             )
             _run_bgzip(bgzip_path, staged_sorted, staged_gff3)
@@ -239,7 +272,9 @@ def _release_lock(lock_dir):
         pass
 
 
-def _write_sorted_gff3(source_path, target_path, *, fasta_seqids, workspace):
+def _write_sorted_gff3(
+    source_path, target_path, *, fasta_seqids, seqid_aliases, workspace
+):
     order = {seqid: index for index, seqid in enumerate(fasta_seqids)}
     chunks = []
     records = []
@@ -258,11 +293,14 @@ def _write_sorted_gff3(source_path, target_path, *, fasta_seqids, workspace):
                 raise JBrowseIndexBuildError(
                     f"invalid GFF coordinates at line {line_number}"
                 ) from exc
+            columns[0] = seqid_aliases.get(columns[0], columns[0])
             if columns[0] not in order:
                 raise JBrowseIndexBuildError(
                     f"GFF seqid is absent from FASTA at line {line_number}: {columns[0]}"
                 )
-            records.append((order[columns[0]], start, end, line_number, line))
+            records.append((
+                order[columns[0]], start, end, line_number, "\t".join(columns)
+            ))
             if len(records) >= SORT_CHUNK_SIZE:
                 chunks.append(_write_sort_chunk(records, workspace, len(chunks)))
                 records = []
@@ -481,6 +519,8 @@ def _file_error(file_path):
 
 def _read_fasta_seqids(file_path):
     seqids = set()
+    aliases = {}
+    lengths = {}
     current_seqid = None
     sequence_bases = 0
     with open(file_path, "rt", encoding="utf-8-sig") as handle:
@@ -491,12 +531,18 @@ def _read_fasta_seqids(file_path):
             if line.startswith(">"):
                 if current_seqid is not None and sequence_bases == 0:
                     raise ValueError(f"FASTA sequence has no bases: {current_seqid}")
+                if current_seqid is not None:
+                    lengths[current_seqid] = sequence_bases
                 seqid = line[1:].strip().split()[0] if line[1:].strip() else ""
                 if not seqid:
                     raise ValueError(f"empty FASTA header at line {line_number}")
                 if seqid in seqids:
                     raise ValueError(f"duplicate FASTA sequence ID: {seqid}")
                 seqids.add(seqid)
+                aliases.setdefault(seqid, set()).add(seqid)
+                for token in line[1:].split():
+                    if token.startswith("OriSeqID=") and token[9:]:
+                        aliases.setdefault(token[9:], set()).add(seqid)
                 current_seqid = seqid
                 sequence_bases = 0
                 continue
@@ -507,7 +553,8 @@ def _read_fasta_seqids(file_path):
         raise ValueError("FASTA contains no sequence headers")
     if current_seqid is not None and sequence_bases == 0:
         raise ValueError(f"FASTA sequence has no bases: {current_seqid}")
-    return seqids
+    lengths[current_seqid] = sequence_bases
+    return seqids, aliases, lengths
 
 
 def _select_annotation_source(annotation_id):
@@ -535,6 +582,7 @@ def _select_annotation_source(annotation_id):
 
 def _inspect_gff(file_path):
     seqids = set()
+    max_ends = {}
     feature_count = 0
     malformed_count = 0
     declared_gff3 = False
@@ -566,6 +614,7 @@ def _inspect_gff(file_path):
                 continue
             feature_count += 1
             seqids.add(columns[0])
+            max_ends[columns[0]] = max(max_ends.get(columns[0], 0), end)
             attributes = columns[8].strip()
             if "=" in attributes:
                 gff3_attribute_count += 1
@@ -588,4 +637,5 @@ def _inspect_gff(file_path):
         "detected_format": detected_format,
         "malformed_count": malformed_count,
         "gff_seqids": sorted(seqids),
+        "gff_max_ends": max_ends,
     }
