@@ -37,15 +37,21 @@ foreach ($path in @($releaseDirectory, $archivePath, $archiveChecksumPath, $sour
 }
 
 $runbook = "docs/GeneData_JBrowse_OriSeqID_hotfix_生产部署手册_20261009.md"
-& git -C $projectRoot cat-file -e "${resolvedCommit}:$runbook"
-if ($LASTEXITCODE -ne 0) { throw "The runbook is not in the release commit." }
+$runbookPath = Join-Path $projectRoot $runbook
+if (-not (Test-Path -LiteralPath $runbookPath)) {
+    throw "Runbook is missing: $runbookPath"
+}
 
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 try {
-    & git -C $projectRoot archive --format=zip --output=$sourceArchive $resolvedCommit -- django2 $runbook
+    & git -C $projectRoot archive --format=zip --output=$sourceArchive $resolvedCommit -- django2
     if ($LASTEXITCODE -ne 0) { throw "git archive failed." }
     New-Item -ItemType Directory -Path $releaseDirectory | Out-Null
     Expand-Archive -LiteralPath $sourceArchive -DestinationPath $releaseDirectory
+    New-Item -ItemType Directory -Path (Join-Path $releaseDirectory "docs") | Out-Null
+    Copy-Item -LiteralPath $runbookPath -Destination (
+        Join-Path $releaseDirectory "docs/PRODUCTION_DEPLOYMENT_RUNBOOK.md"
+    )
 
     $info = @(
         "release_name=$releaseName"
