@@ -132,6 +132,13 @@ class JBrowseConfigApiTestCase(TestCase):
         )
         self.assertEqual(config_response.status_code, 200)
         payload = config_response.json()
+        self.assertEqual(
+            payload["plugins"],
+            [{
+                "name": "GeneDataResponsiveLayout",
+                "umdLoc": {"uri": "/jbrowse2/plugins/genedata-responsive-layout.js?v=5"},
+            }],
+        )
         self.assertEqual(payload["assemblies"][0]["name"], f"assembly-{self.assembly.id}")
         self.assertNotIn("status", payload)
         self.assertNotIn("defaultLocation", payload)

@@ -609,7 +609,7 @@ export default {
   .assembly-page { padding:8px 0 34px; }
   .detail-header { padding:14px; }
   .heading-row { align-items:flex-start; flex-direction:column; }
-  .detail-header h1 { font-size:26px; }
+  .detail-header h1 { font-size:25px; }
   .heading-actions { width:100%; flex-basis:auto; margin-left:0; }
   .detail-search { max-width:none; }
   .card-heading-with-actions { align-items:flex-start; flex-direction:column; }

@@ -136,21 +136,23 @@
             <el-table-column
               fixed="right"
               :label="$t('page.annotation.actions')"
-              width="180"
+              width="96"
               align="center"
             >
               <template #default="scope">
                 <el-tooltip :content="getBrowserActionHint(scope.row)" placement="top">
                   <span class="browser-action-wrapper">
                     <el-button
+                      class="browser-locate-action"
                       type="primary"
-                      plain
+                      link
                       size="small"
                       :disabled="!canOpenFeatureInBrowser(scope.row)"
                       :loading="String(scope.row.feature_id) === locatingFeatureId"
                       @click="openFeatureInBrowser(scope.row)"
                     >
-                      {{ $t('page.annotation.viewInGenomeBrowser') }}
+                      <el-icon aria-hidden="true"><Aim /></el-icon>
+                      <span>{{ $t('page.annotation.locateFeature') }}</span>
                     </el-button>
                   </span>
                 </el-tooltip>
@@ -298,7 +300,7 @@
 import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { Collection, Refresh, Loading } from '@element-plus/icons-vue';
+import { Aim, Collection, Refresh, Loading } from '@element-plus/icons-vue';
 import axios from 'axios';
 import * as d3 from 'd3';
 import { useI18n } from 'vue-i18n';
@@ -362,6 +364,7 @@ export default {
   components: {
     AnnotationSearchPanel,
     AnnotationSummaryBar,
+    Aim,
     Collection,
     Refresh,
     Loading
@@ -2237,6 +2240,11 @@ export default {
 
 .browser-action-wrapper {
   display: inline-flex;
+}
+
+.browser-locate-action {
+  gap: 4px;
+  font-weight: 600;
 }
 
 .pagination-container {

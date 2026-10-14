@@ -8,6 +8,8 @@ readonly JBROWSE_VERSION="4.3.0"
 readonly JBROWSE_ARCHIVE="jbrowse-web-v${JBROWSE_VERSION}.zip"
 readonly JBROWSE_URL="https://github.com/GMOD/jbrowse-components/releases/download/v${JBROWSE_VERSION}/${JBROWSE_ARCHIVE}"
 readonly JBROWSE_SHA256="a9d42417102ee088a1cbf85c6d857c1065d66984ea6c56f3115ef9dd56d76702"
+readonly SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly RESPONSIVE_PLUGIN_SOURCE="${SCRIPT_DIRECTORY}/../jbrowse_plugins/genedata-responsive-layout.js"
 
 usage() {
     printf 'Usage: %s OUTPUT_DIRECTORY\n' "$0" >&2
@@ -66,6 +68,14 @@ if [[ "$(tr -d '\r\n' < "$unpack_directory/version.txt")" != "$JBROWSE_VERSION" 
     printf 'Downloaded package version.txt does not match %s.\n' "$JBROWSE_VERSION" >&2
     exit 1
 fi
+
+if [[ ! -f "$RESPONSIVE_PLUGIN_SOURCE" ]]; then
+    printf 'GeneData responsive-layout plugin is missing: %s\n' "$RESPONSIVE_PLUGIN_SOURCE" >&2
+    exit 1
+fi
+
+mkdir -p "$unpack_directory/plugins"
+cp -- "$RESPONSIVE_PLUGIN_SOURCE" "$unpack_directory/plugins/genedata-responsive-layout.js"
 
 if ! grep -q 'src="static/' "$unpack_directory/index.html"; then
     printf 'JBrowse entry point does not use the expected relative static asset path.\n' >&2

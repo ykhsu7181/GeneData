@@ -58,6 +58,7 @@ foreach ($requiredPath in @(
     (Join-Path $distRoot "index.html"),
     (Join-Path $jbrowseRoot "index.html"),
     (Join-Path $jbrowseRoot "version.txt"),
+    (Join-Path $jbrowseRoot "plugins\genedata-responsive-layout.js"),
     $runbookPath
 )) {
     if (-not (Test-Path -LiteralPath $requiredPath)) {
@@ -74,6 +75,7 @@ try {
     & git -C $projectRoot archive --format=zip --output=$sourceArchive $resolvedCommit -- `
         django2 `
         deploy/nginx/genedata-jbrowse2.conf.example `
+        jbrowse_plugins `
         scripts/build_jbrowse2_web.sh `
         .env.example
     if ($LASTEXITCODE -ne 0) { throw "git archive failed." }
@@ -108,7 +110,7 @@ try {
         "build_time_utc=$buildTime"
         "jbrowse_web_version=$jbrowseVersion"
         "production_baseline=557aa17"
-        "contains=django2,dist,jbrowse2-v4.3.0,nginx-example,build-script,runbook"
+        "contains=django2,dist,jbrowse2-v4.3.0,jbrowse-plugin-source,nginx-example,build-script,runbook"
         "excludes=secrets,manual_files,derived_data,database,logs,venv,node_modules,runtime,jbrowse_upstream_test_data"
     ) | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $releaseDirectory "RELEASE_INFO.txt")
 

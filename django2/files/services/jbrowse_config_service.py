@@ -70,6 +70,10 @@ def get_jbrowse_config(assembly_id, annotation_id=None):
         )
 
     config = {
+        "plugins": [{
+            "name": "GeneDataResponsiveLayout",
+            "umdLoc": {"uri": "/jbrowse2/plugins/genedata-responsive-layout.js?v=5"},
+        }],
         "assemblies": [{
             "name": assembly_name,
             "displayName": _assembly_display_name(assembly),

@@ -6,15 +6,22 @@ import test from 'node:test'
 const read = path => readFileSync(join(process.cwd(), path), 'utf8')
 const annotationView = read('src/views/AnnotationView.vue')
 const browserView = read('src/views/GenomeBrowserView.vue')
+const accessionDetailView = read('src/views/AccessionDetailTableView.vue')
+const assemblyDetailView = read('src/views/AssemblyView.vue')
 const internalNavigationSource = read('src/utils/internalNavigation.js')
 const jbrowseNavigationSource = read('src/utils/jbrowseNavigation.js')
 const localeZh = read('src/i18n/locales/zh-CN.js')
 const localeEn = read('src/i18n/locales/en-US.js')
+const responsiveLayoutPlugin = read('../jbrowse_plugins/genedata-responsive-layout.js')
+const jbrowseBuildScript = read('../scripts/build_jbrowse2_web.sh')
 
 const importSource = source => import(`data:text/javascript;charset=utf-8,${encodeURIComponent(source)}`)
 
 test('annotation table uses a readiness-gated feature action and trusted location API', () => {
   assert.match(annotationView, /fixed="right"/)
+  assert.match(annotationView, /width="96"/)
+  assert.match(annotationView, /<Aim\s*\/>/)
+  assert.match(annotationView, /type="primary"[\s\S]*?link[\s\S]*?page\.annotation\.locateFeature/)
   assert.match(annotationView, /openFeatureInBrowser\(scope\.row\)/)
   assert.match(annotationView, /normalizePositiveId\(row\?\.feature_id\)/)
   assert.match(annotationView, /browserStatusPayload\.value\?\.status === 'ready'/)
@@ -45,6 +52,36 @@ test('browser page uses the same selected-mode URL for iframe and new window', (
   assert.match(browserView, /trackIds: Array\.isArray\(payload\.track_ids\)/)
   assert.match(browserView, /if \(!requestedLocation\.value\)/)
   assert.match(browserView, /buildJBrowseUrl\(\{ configUrl: configUrl\.toString\(\) \}\)/)
+})
+
+test('browser page keeps its surrounding chrome compact and names navigation actions', () => {
+  assert.match(browserView, /<ArrowLeft\s*\/>/)
+  assert.match(browserView, /<Refresh\s*\/>/)
+  assert.match(browserView, /<TopRight\s*\/>/)
+  assert.match(browserView, /page\.genomeBrowser\.backToAnnotation/)
+  assert.match(browserView, /page\.genomeBrowser\.backToAssembly/)
+  assert.doesNotMatch(browserView, /page\.genomeBrowser\.description/)
+  assert.match(browserView, /\.browser-shell \{ position:relative; height:calc\(100vh - 282px\); height:calc\(100dvh - 282px\); min-height:480px; \}/)
+  assert.doesNotMatch(browserView, /min-height:680px/)
+  assert.doesNotMatch(browserView, /class="primary-link"/)
+})
+
+test('browser detail heading matches accession and assembly detail heading sizes', () => {
+  assert.match(browserView, /\.browser-header h1 \{[^}]*font-size:30px;[^}]*line-height:1\.2;/)
+  assert.match(accessionDetailView, /\.page-heading h1 \{[^}]*font-size:30px;[^}]*line-height:1\.2;/)
+  assert.match(assemblyDetailView, /\.detail-header h1 \{[^}]*font-size:30px;[^}]*line-height:1\.2;/)
+  assert.match(browserView, /\.browser-header h1 \{ font-size:25px; \}/)
+  assert.match(accessionDetailView, /\.page-heading h1 \{ width:100%; font-size:25px; \}/)
+  assert.match(assemblyDetailView, /\.detail-header h1 \{ font-size:25px; \}/)
+})
+
+test('JBrowse responsive plugin fills the remaining iframe height without reloading the session', () => {
+  assert.match(responsiveLayoutPlugin, /GeneDataResponsiveLayout/)
+  assert.match(responsiveLayoutPlugin, /new window\.ResizeObserver\(schedule\)/)
+  assert.match(responsiveLayoutPlugin, /display\.setHeight\(nextHeight\)/)
+  assert.match(responsiveLayoutPlugin, /window\.innerHeight - APP_CHROME_HEIGHT - view\.height - BOTTOM_GAP/)
+  assert.doesNotMatch(responsiveLayoutPlugin, /location\.reload|window\.location/)
+  assert.match(jbrowseBuildScript, /plugins\/genedata-responsive-layout\.js/)
 })
 
 test('shared internal return-path validator allows only application-owned destinations', async () => {
@@ -97,6 +134,7 @@ test('JBrowse URL builder validates coordinates and emits fixed selected-mode pa
 test('Stage C messages exist in both locales', () => {
   for (const key of [
     'viewInGenomeBrowser',
+    'locateFeature',
     'browserStatusLoading',
     'browserUnavailable',
     'browserFeatureUnavailable',

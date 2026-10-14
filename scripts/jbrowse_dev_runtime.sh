@@ -68,6 +68,10 @@ prepare() {
             "$repo_root/scripts/build_jbrowse2_web.sh" "$jbrowse_release"
         fi
     fi
+    mkdir -p "$jbrowse_release/plugins"
+    cp -- \
+        "$repo_root/jbrowse_plugins/genedata-responsive-layout.js" \
+        "$jbrowse_release/plugins/genedata-responsive-layout.js"
     ln -sfn "$jbrowse_release" "$runtime_root/www/jbrowse2"
 
     # Local development records contain Windows absolute paths. Linux permits
