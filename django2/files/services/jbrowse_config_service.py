@@ -6,10 +6,18 @@ from pathlib import Path
 from django.conf import settings
 
 from files.models import Annotation, DataFile, FileRelation
+from files.services.annotation_feature_index_service import (
+    AnnotationIndexUnavailable,
+    get_ready_annotation_index,
+)
 from files.services.assembly_visibility import visible_assembly_queryset
 from files.services.file_relation_service import (
     GenomeFileSelectionError,
     get_primary_genome_file_for_assembly,
+)
+from files.services.reference_name_service import (
+    ReferenceNameError,
+    load_current_refname_mapping,
 )
 
 
@@ -304,7 +312,35 @@ def _public_status(context):
         payload["track_ids"] = [f"annotation-{annotation.id}-features"]
     else:
         payload["track_ids"] = []
+    location_ready, location_status = _location_readiness(context)
+    payload["location_ready"] = location_ready
+    payload["location_status"] = location_status
     return payload
+
+
+def _location_readiness(context):
+    if context["status"] != "ready":
+        return False, "jbrowse_not_ready"
+
+    annotation = context["annotation"]
+    source_file = context["annotation_source"]
+    try:
+        get_ready_annotation_index(
+            annotation,
+            {"file_id": source_file.id, "file_path": source_file.file_path},
+        )
+    except AnnotationIndexUnavailable as exc:
+        return False, f"annotation_index_{exc.index_status}"
+
+    try:
+        load_current_refname_mapping(
+            context["assembly"],
+            context["genome_file"],
+            context["fasta_index"],
+        )
+    except ReferenceNameError as exc:
+        return False, exc.code
+    return True, "ready"
 
 
 def _failed(context, status_value, message):

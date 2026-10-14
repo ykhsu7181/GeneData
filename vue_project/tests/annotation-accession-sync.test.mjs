@@ -24,7 +24,7 @@ assert.match(
 
 assert.match(
   source,
-  /const normalizeAssemblyReturnPath[\s\S]*?const returnToAssembly/,
+  /import \{[\s\S]*?normalizeAssemblyReturnPath[\s\S]*?from '@\/utils\/internalNavigation';[\s\S]*?const returnToAssembly/,
   'Annotation context should validate and restore its Assembly return path'
 )
 

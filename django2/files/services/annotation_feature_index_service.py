@@ -180,6 +180,7 @@ def _feature_from_row(feature_index, row):
 
 def serialize_feature(feature):
     return {
+        'feature_id': feature.id,
         'seqid': feature.seqid,
         'source': feature.source,
         'feature': feature.feature,
@@ -194,3 +195,13 @@ def serialize_feature(feature):
         'sequence_ontology': feature.sequence_ontology,
         'name': feature.name,
     }
+
+
+def feature_index_version(feature_index):
+    indexed_at = feature_index.indexed_at.isoformat() if feature_index.indexed_at else ''
+    raw = (
+        f'{feature_index.pk}:{indexed_at}:{feature_index.source_file_id}:'
+        f'{feature_index.source_file_size}:{feature_index.source_file_mtime_ns}:'
+        f'{feature_index.source_file_md5 or ""}'
+    )
+    return hashlib.sha256(raw.encode('utf-8')).hexdigest()

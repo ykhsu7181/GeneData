@@ -21,6 +21,7 @@ from files.services.file_write_service import (
     create_or_get_datafile_from_path,
     create_or_get_file_relation,
 )
+from files.services.reference_name_service import read_fasta_reference_names
 
 
 ANNOTATION_SOURCE_ROLE = "annotation"
@@ -71,7 +72,7 @@ def inspect_jbrowse_assembly(assembly_id, output_root=None):
         return result
 
     try:
-        fasta_seqids, fasta_aliases, fasta_lengths = _read_fasta_seqids(
+        fasta_seqids, fasta_aliases, fasta_lengths = read_fasta_reference_names(
             genome["file_path"]
         )
     except (OSError, UnicodeError, ValueError) as exc:
@@ -515,46 +516,6 @@ def _file_error(file_path):
     if os.path.getsize(file_path) <= 0:
         return f"file is empty: {file_path}"
     return ""
-
-
-def _read_fasta_seqids(file_path):
-    seqids = set()
-    aliases = {}
-    lengths = {}
-    current_seqid = None
-    sequence_bases = 0
-    with open(file_path, "rt", encoding="utf-8-sig") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            if line.startswith(">"):
-                if current_seqid is not None and sequence_bases == 0:
-                    raise ValueError(f"FASTA sequence has no bases: {current_seqid}")
-                if current_seqid is not None:
-                    lengths[current_seqid] = sequence_bases
-                seqid = line[1:].strip().split()[0] if line[1:].strip() else ""
-                if not seqid:
-                    raise ValueError(f"empty FASTA header at line {line_number}")
-                if seqid in seqids:
-                    raise ValueError(f"duplicate FASTA sequence ID: {seqid}")
-                seqids.add(seqid)
-                aliases.setdefault(seqid, set()).add(seqid)
-                for token in line[1:].split():
-                    if token.startswith("OriSeqID=") and token[9:]:
-                        aliases.setdefault(token[9:], set()).add(seqid)
-                current_seqid = seqid
-                sequence_bases = 0
-                continue
-            if current_seqid is None:
-                raise ValueError(f"FASTA sequence encountered before header at line {line_number}")
-            sequence_bases += len(stripped)
-    if not seqids:
-        raise ValueError("FASTA contains no sequence headers")
-    if current_seqid is not None and sequence_bases == 0:
-        raise ValueError(f"FASTA sequence has no bases: {current_seqid}")
-    lengths[current_seqid] = sequence_bases
-    return seqids, aliases, lengths
 
 
 def _select_annotation_source(annotation_id):

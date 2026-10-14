@@ -590,7 +590,7 @@ def query_annotation_data(request):
 
     feature_index = get_ready_annotation_index(annotation, service_file)
     cache_key = annotation_cache_key(
-        "data", feature_index, chromosome, feature_type, page, page_size
+        "data-v2", feature_index, chromosome, feature_type, page, page_size
     )
 
     def build_payload():

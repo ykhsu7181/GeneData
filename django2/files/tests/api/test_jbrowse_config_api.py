@@ -123,6 +123,8 @@ class JBrowseConfigApiTestCase(TestCase):
         self.assertEqual(status_response.json()["status"], "ready")
         self.assertTrue(status_response.json()["reference_ready"])
         self.assertTrue(status_response.json()["annotation_ready"])
+        self.assertFalse(status_response.json()["location_ready"])
+        self.assertEqual(status_response.json()["location_status"], "annotation_index_missing")
         self.assertEqual(status_response.json()["default_location"], "Chr01:1..4")
         self.assertEqual(
             status_response.json()["track_ids"],

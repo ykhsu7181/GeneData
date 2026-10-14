@@ -18,6 +18,10 @@ from files.services.jbrowse_config_service import (
     get_jbrowse_config,
     get_jbrowse_status,
 )
+from files.services.jbrowse_location_service import (
+    JBrowseLocationError,
+    resolve_jbrowse_location,
+)
 
 
 ROLE_SUFFIXES = {
@@ -58,6 +62,25 @@ def jbrowse_config(request, assembly_id):
     if config is None:
         return Response(status_payload, status=status.HTTP_409_CONFLICT)
     return Response(config)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def jbrowse_location(request, assembly_id, annotation_id, feature_id):
+    expected_version = request.query_params.get("feature_index_version") or None
+    try:
+        payload = resolve_jbrowse_location(
+            assembly_id,
+            annotation_id,
+            feature_id,
+            expected_index_version=expected_version,
+        )
+    except JBrowseLocationError as exc:
+        return Response(
+            {"detail": str(exc), "code": exc.code},
+            status=exc.http_status,
+        )
+    return Response(payload)
 
 
 @api_view(["GET", "HEAD"])

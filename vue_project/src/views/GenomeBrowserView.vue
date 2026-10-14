@@ -61,12 +61,23 @@
 </template>
 
 <script>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
+import { normalizeInternalAppPath } from '@/utils/internalNavigation';
+import {
+  buildJBrowseUrl,
+  normalizeJBrowseLocation,
+  normalizePositiveId
+} from '@/utils/jbrowseNavigation';
 
 const firstQueryValue = (value) => (Array.isArray(value) ? value[0] : value);
+const isCanceledRequest = error => (
+  error?.code === 'ERR_CANCELED'
+  || error?.name === 'CanceledError'
+  || axios.isCancel?.(error)
+);
 
 export default {
   name: 'GenomeBrowserView',
@@ -78,9 +89,15 @@ export default {
     const iframeLoading = ref(false);
     const statusPayload = ref(null);
     const errorKey = ref('');
+    let statusController = null;
+    let requestToken = 0;
+    let componentDisposed = false;
 
     const assemblyId = computed(() => String(route.params.assemblyId || '').trim());
-    const annotationId = computed(() => String(firstQueryValue(route.query.annotation_id) || '').trim());
+    const rawAnnotationId = computed(() => String(firstQueryValue(route.query.annotation_id) || '').trim());
+    const annotationId = computed(() => normalizePositiveId(rawAnnotationId.value));
+    const rawLocation = computed(() => String(firstQueryValue(route.query.loc) || '').trim());
+    const requestedLocation = computed(() => normalizeJBrowseLocation(rawLocation.value));
     const assemblyLabel = computed(() => (
       statusPayload.value?.assembly_code || `#${assemblyId.value || '-'}`
     ));
@@ -95,15 +112,37 @@ export default {
       const configPath = `/gd/api/files/assemblies/${encodeURIComponent(assemblyId.value)}/jbrowse-config/`;
       const configUrl = new URL(configPath, window.location.origin);
       if (annotationId.value) configUrl.searchParams.set('annotation_id', annotationId.value);
-      const params = new URLSearchParams({ config: configUrl.toString() });
-      return `/jbrowse2/?${params.toString()}`;
+      if (!requestedLocation.value) {
+        return buildJBrowseUrl({ configUrl: configUrl.toString() });
+      }
+      if (payload.status !== 'ready') return '';
+      return buildJBrowseUrl({
+        configUrl: configUrl.toString(),
+        assemblyName: payload.assembly_name || '',
+        loc: requestedLocation.value,
+        trackIds: Array.isArray(payload.track_ids) ? payload.track_ids : []
+      });
     });
 
     const loadBrowser = async () => {
-      if (!/^\d+$/.test(assemblyId.value)) {
+      const token = requestToken + 1;
+      requestToken = token;
+      statusController?.abort();
+      statusController = null;
+      if (!normalizePositiveId(assemblyId.value)) {
         errorKey.value = 'page.genomeBrowser.invalidAssembly';
         return;
       }
+      if (rawAnnotationId.value && !annotationId.value) {
+        errorKey.value = 'page.genomeBrowser.invalidAnnotation';
+        return;
+      }
+      if (rawLocation.value && !requestedLocation.value) {
+        errorKey.value = 'page.genomeBrowser.invalidLocation';
+        return;
+      }
+      const controller = new AbortController();
+      statusController = controller;
       loading.value = true;
       iframeLoading.value = false;
       errorKey.value = '';
@@ -112,30 +151,59 @@ export default {
         const params = annotationId.value ? { annotation_id: annotationId.value } : {};
         const response = await axios.get(
           `/files/assemblies/${encodeURIComponent(assemblyId.value)}/jbrowse-status/`,
-          { params }
+          { params, signal: controller.signal }
         );
+        if (componentDisposed || controller.signal.aborted || token !== requestToken) return;
         const payload = response.data || {};
         if (!['ready', 'reference_only'].includes(payload.status)) {
           errorKey.value = `page.genomeBrowser.status.${payload.status || 'unknown'}`;
           return;
         }
+        if (
+          requestedLocation.value
+          && (
+            payload.status !== 'ready'
+            || !payload.assembly_name
+            || !Array.isArray(payload.track_ids)
+            || !payload.track_ids.length
+          )
+        ) {
+          errorKey.value = 'page.genomeBrowser.locationUnavailable';
+          return;
+        }
         statusPayload.value = payload;
+        if (!iframeUrl.value) {
+          statusPayload.value = null;
+          errorKey.value = 'page.genomeBrowser.invalidLocation';
+          return;
+        }
         iframeLoading.value = true;
       } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return;
+        if (token !== requestToken) return;
         errorKey.value = error.response?.status === 404
           ? 'page.genomeBrowser.notFound'
           : 'page.genomeBrowser.loadFailed';
       } finally {
-        loading.value = false;
+        if (statusController === controller && token === requestToken) {
+          loading.value = false;
+          statusController = null;
+        }
       }
     };
     const goBack = () => {
-      const returnTo = String(firstQueryValue(route.query.return_to) || '').trim();
-      if (returnTo.startsWith('/')) router.push(returnTo);
+      const returnTo = normalizeInternalAppPath(route.query.return_to);
+      if (returnTo) router.push(returnTo);
       else router.push(assemblyRoute.value);
     };
 
-    watch([assemblyId, annotationId], loadBrowser, { immediate: true });
+    watch([assemblyId, rawAnnotationId, rawLocation], loadBrowser, { immediate: true });
+
+    onBeforeUnmount(() => {
+      componentDisposed = true;
+      requestToken += 1;
+      statusController?.abort();
+    });
 
     return {
       assemblyLabel,

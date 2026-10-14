@@ -62,7 +62,12 @@
             {{ $t('page.annotation.resultCount', { count: displayedResultCount }) }}
           </span>
           <el-tooltip :content="$t('page.annotation.refreshData')" placement="top">
-            <el-button circle :aria-label="$t('page.annotation.refreshData')" @click="fetchFiles" :loading="loading">
+            <el-button
+              circle
+              :aria-label="$t('page.annotation.refreshData')"
+              :loading="loading"
+              @click="fetchFiles({ forceBrowserStatus: true })"
+            >
               <el-icon><Refresh /></el-icon>
             </el-button>
           </el-tooltip>
@@ -126,6 +131,29 @@
                     <span class="attr-value">{{ value }}</span>
                   </div>
                 </div>
+              </template>
+            </el-table-column>
+            <el-table-column
+              fixed="right"
+              :label="$t('page.annotation.actions')"
+              width="180"
+              align="center"
+            >
+              <template #default="scope">
+                <el-tooltip :content="getBrowserActionHint(scope.row)" placement="top">
+                  <span class="browser-action-wrapper">
+                    <el-button
+                      type="primary"
+                      plain
+                      size="small"
+                      :disabled="!canOpenFeatureInBrowser(scope.row)"
+                      :loading="String(scope.row.feature_id) === locatingFeatureId"
+                      @click="openFeatureInBrowser(scope.row)"
+                    >
+                      {{ $t('page.annotation.viewInGenomeBrowser') }}
+                    </el-button>
+                  </span>
+                </el-tooltip>
               </template>
             </el-table-column>
           </el-table>
@@ -276,6 +304,11 @@ import * as d3 from 'd3';
 import { useI18n } from 'vue-i18n';
 import AnnotationSearchPanel from '@/components/annotation/AnnotationSearchPanel.vue';
 import AnnotationSummaryBar from '@/components/annotation/AnnotationSummaryBar.vue';
+import {
+  normalizeAssemblyReturnPath,
+  normalizeInternalAppPath
+} from '@/utils/internalNavigation';
+import { normalizeJBrowseLocation, normalizePositiveId } from '@/utils/jbrowseNavigation';
 
 const normalizeQueryValue = (value) => {
   if (Array.isArray(value)) {
@@ -323,12 +356,6 @@ const isCanceledRequest = error => (
   || error?.name === 'CanceledError'
   || axios.isCancel?.(error)
 );
-
-const normalizeAssemblyReturnPath = (value) => {
-  const normalized = normalizeQueryValue(value);
-  if (!normalized || normalized.startsWith('//')) return '';
-  return /^\/assembly\/[^/?#]+(?:[/?#]|$)/.test(normalized) ? normalized : '';
-};
 
 export default {
   name: 'AnnotationView',
@@ -392,6 +419,9 @@ export default {
     const annotationStatistics = ref(null);
     const dataErrorKey = ref('');
     const visualizationErrorKey = ref('');
+    const browserStatusPayload = ref(null);
+    const browserStatusLoading = ref(false);
+    const locatingFeatureId = ref('');
     const loadedOptionsAnnotationId = ref('');
     const optionsRequestToken = ref(0);
     const currentPage = ref(1);
@@ -404,6 +434,10 @@ export default {
     let optionsController = null;
     let annotationDataController = null;
     let visualizationController = null;
+    let browserStatusController = null;
+    let locationController = null;
+    let browserStatusRequestToken = 0;
+    const browserStatusCache = new Map();
     let segmentLengthContextKey = '';
 
     const replaceRequestController = (currentController) => {
@@ -441,6 +475,16 @@ export default {
       get: () => appliedQuery.annotationId,
       set: (value) => { appliedQuery.annotationId = value ? String(value) : ''; }
     });
+    const browserContextKey = computed(() => (
+      contextAssemblyId.value && contextAnnotationId.value
+        ? `${contextAssemblyId.value}:${contextAnnotationId.value}`
+        : ''
+    ));
+    const browserReady = computed(() => (
+      browserStatusPayload.value?.status === 'ready'
+      && browserStatusPayload.value?.annotation_ready === true
+      && browserStatusPayload.value?.location_ready === true
+    ));
     const hierarchyAssemblies = ref([]);
     const loadedHierarchyAccession = ref('');
     const routeSyncInProgress = ref(false);
@@ -794,6 +838,157 @@ export default {
         if (requestToken === optionsRequestToken.value && optionsController === controller) {
           loadingOptions.value = false;
           optionsController = null;
+        }
+      }
+    };
+
+    const fetchBrowserStatus = async ({ force = false } = {}) => {
+      const key = browserContextKey.value;
+      browserStatusRequestToken += 1;
+      const requestToken = browserStatusRequestToken;
+      browserStatusController?.abort();
+      browserStatusController = null;
+      if (!key) {
+        browserStatusPayload.value = null;
+        browserStatusLoading.value = false;
+        return false;
+      }
+      if (locationController && locationController.contextKey !== key) {
+        locationController.abort();
+        locationController = null;
+        locatingFeatureId.value = '';
+      }
+      if (!force && browserStatusCache.has(key)) {
+        browserStatusPayload.value = browserStatusCache.get(key);
+        browserStatusLoading.value = false;
+        return browserReady.value;
+      }
+
+      const controller = new AbortController();
+      browserStatusController = controller;
+      browserStatusLoading.value = true;
+      browserStatusPayload.value = null;
+      try {
+        const response = await axios.get(
+          `/files/assemblies/${encodeURIComponent(contextAssemblyId.value)}/jbrowse-status/`,
+          {
+            params: { annotation_id: contextAnnotationId.value },
+            signal: controller.signal
+          }
+        );
+        if (
+          componentDisposed
+          || controller.signal.aborted
+          || requestToken !== browserStatusRequestToken
+          || browserContextKey.value !== key
+        ) {
+          return false;
+        }
+        const payload = response.data || {};
+        browserStatusCache.set(key, payload);
+        browserStatusPayload.value = payload;
+        return payload.status === 'ready' && payload.annotation_ready === true;
+      } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return false;
+        if (requestToken !== browserStatusRequestToken || browserContextKey.value !== key) {
+          return false;
+        }
+        browserStatusPayload.value = { status: 'load_failed' };
+        return false;
+      } finally {
+        if (browserStatusController === controller && requestToken === browserStatusRequestToken) {
+          browserStatusLoading.value = false;
+          browserStatusController = null;
+        }
+      }
+    };
+
+    const canOpenFeatureInBrowser = row => (
+      browserReady.value
+      && !browserStatusLoading.value
+      && !locatingFeatureId.value
+      && Boolean(normalizePositiveId(row?.feature_id))
+    );
+
+    const getBrowserActionHint = (row) => {
+      if (!normalizePositiveId(row?.feature_id)) {
+        return t('page.annotation.browserFeatureUnavailable');
+      }
+      if (browserStatusLoading.value) {
+        return t('page.annotation.browserStatusLoading');
+      }
+      if (!browserReady.value) {
+        return t('page.annotation.browserUnavailable');
+      }
+      return t('page.annotation.viewInGenomeBrowser');
+    };
+
+    const openFeatureInBrowser = async (row) => {
+      if (!canOpenFeatureInBrowser(row)) return;
+      const assemblyId = normalizePositiveId(contextAssemblyId.value);
+      const annotationId = normalizePositiveId(contextAnnotationId.value);
+      const featureId = normalizePositiveId(row.feature_id);
+      const contextKey = browserContextKey.value;
+      if (!assemblyId || !annotationId || !featureId || !contextKey) return;
+
+      locationController?.abort();
+      const controller = new AbortController();
+      controller.contextKey = contextKey;
+      locationController = controller;
+      locatingFeatureId.value = featureId;
+      try {
+        const response = await axios.get(
+          `/files/assemblies/${encodeURIComponent(assemblyId)}`
+            + `/annotations/${encodeURIComponent(annotationId)}`
+            + `/features/${encodeURIComponent(featureId)}/jbrowse-location/`,
+          { signal: controller.signal }
+        );
+        if (
+          componentDisposed
+          || controller.signal.aborted
+          || locationController !== controller
+          || browserContextKey.value !== contextKey
+        ) {
+          return;
+        }
+        const payload = response.data || {};
+        const loc = normalizeJBrowseLocation(payload.loc);
+        if (
+          String(payload.assembly_id) !== assemblyId
+          || String(payload.annotation_id) !== annotationId
+          || String(payload.feature_id) !== featureId
+          || !loc
+        ) {
+          throw new Error('Invalid JBrowse location response');
+        }
+        const returnTo = normalizeInternalAppPath(route.fullPath);
+        await router.push({
+          name: 'assembly-browser',
+          params: { assemblyId },
+          query: {
+            annotation_id: annotationId,
+            loc,
+            ...(returnTo ? { return_to: returnTo } : {})
+          }
+        });
+      } catch (error) {
+        if (isCanceledRequest(error) || controller.signal.aborted) return;
+        const code = error.response?.data?.code;
+        const errorKey = code === 'not_found'
+          ? 'page.annotation.browserLocationNotFound'
+          : code === 'feature_index_version_conflict' || code === 'alias_ambiguous'
+            ? 'page.annotation.browserLocationConflict'
+            : code === 'alias_missing' || code === 'coordinate_out_of_bounds'
+              ? 'page.annotation.browserLocationInvalid'
+              : code === 'mapping_missing' || code === 'mapping_stale'
+                || code === 'annotation_index_unavailable' || code === 'jbrowse_not_ready'
+                ? 'page.annotation.browserMappingUnavailable'
+                : 'page.annotation.browserLocationFailed';
+        ElMessage.error(t(errorKey));
+      } finally {
+        if (locationController === controller) {
+          locationController = null;
+          locatingFeatureId.value = '';
         }
       }
     };
@@ -1310,10 +1505,14 @@ export default {
       optionsController?.abort();
       annotationDataController?.abort();
       visualizationController?.abort();
+      browserStatusController?.abort();
+      locationController?.abort();
       hierarchyController = null;
       optionsController = null;
       annotationDataController = null;
       visualizationController = null;
+      browserStatusController = null;
+      locationController = null;
       loadingHierarchy.value = false;
       loadingOptions.value = false;
       loadingAnnotation.value = false;
@@ -1342,6 +1541,10 @@ export default {
       annotationStatistics.value = null;
       dataErrorKey.value = '';
       visualizationErrorKey.value = '';
+      browserStatusPayload.value = null;
+      browserStatusLoading.value = false;
+      locatingFeatureId.value = '';
+      browserStatusRequestToken += 1;
       loadedOptionsAnnotationId.value = '';
       optionsRequestToken.value += 1;
       chromosomeOptions.value = [];
@@ -1424,6 +1627,14 @@ export default {
       }
       contextAnnotationId.value = annotation?.id ? String(annotation.id) : '';
       if (contextChanged) {
+        browserStatusController?.abort();
+        browserStatusController = null;
+        browserStatusRequestToken += 1;
+        browserStatusPayload.value = null;
+        browserStatusLoading.value = false;
+        locationController?.abort();
+        locationController = null;
+        locatingFeatureId.value = '';
         annotationStatistics.value = null;
         loadedOptionsAnnotationId.value = '';
         dataErrorKey.value = '';
@@ -1493,15 +1704,20 @@ export default {
     };
 
     // 获取文件列表（保持兼容性）
-    const fetchFiles = async () => {
+    const fetchFiles = async ({ forceBrowserStatus = false } = {}) => {
       try {
         loading.value = true;
+        const browserStatusPromise = fetchBrowserStatus({ force: forceBrowserStatus });
         if (selectedOrganism.value) {
           if (viewMode.value === 'table') {
-            await fetchAnnotationData();
+            await Promise.all([fetchAnnotationData(), browserStatusPromise]);
           } else if (viewMode.value === 'chart' && selectedChromosome.value) {
-            await fetchVisualizationData();
+            await Promise.all([fetchVisualizationData(), browserStatusPromise]);
+          } else {
+            await browserStatusPromise;
           }
+        } else {
+          await browserStatusPromise;
         }
       } catch (error) {
         console.error('获取数据失败:', error);
@@ -1780,6 +1996,8 @@ export default {
       optionsController?.abort();
       annotationDataController?.abort();
       visualizationController?.abort();
+      browserStatusController?.abort();
+      locationController?.abort();
       stopChange();
       d3.selectAll('.annotation-tooltip').remove();
       if (annotationContainer.value) {
@@ -1810,6 +2028,8 @@ export default {
       annotationStatistics,
       dataErrorKey,
       visualizationErrorKey,
+      browserStatusLoading,
+      locatingFeatureId,
       currentPage,
       pageSize,
       totalCount,
@@ -1831,6 +2051,7 @@ export default {
       fetchAnnotationData,
       fetchAnnotationOptions,
       fetchVisualizationData,
+      fetchBrowserStatus,
       drawAnnotationVisualization,
       updateVisualization,
       handleSegmentLengthChange,
@@ -1839,6 +2060,9 @@ export default {
       startDecrease,
       stopChange,
       validateInput,
+      canOpenFeatureInBrowser,
+      getBrowserActionHint,
+      openFeatureInBrowser,
       getFeatureColor,
       queryAccessionSuggestions,
       getAssemblyLabel,
@@ -2009,6 +2233,10 @@ export default {
 .attr-value {
   color: #606266;
   word-break: break-all;
+}
+
+.browser-action-wrapper {
+  display: inline-flex;
 }
 
 .pagination-container {

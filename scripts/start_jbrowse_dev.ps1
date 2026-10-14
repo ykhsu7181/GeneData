@@ -152,7 +152,7 @@ try {
 
     Wait-Http "Django" "http://localhost:$DjangoPort/gd/api/files/assemblies/"
     Wait-Http "JBrowse" "http://localhost:$JBrowsePort/jbrowse2/"
-    Wait-Http "Vue" "http://localhost:$VuePort/"
+    Wait-Http "Vue" "http://localhost:$VuePort/" 180
 
     Write-Host ""
     Write-Host "GeneData development environment is running."

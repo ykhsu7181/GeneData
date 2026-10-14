@@ -121,6 +121,20 @@ class JBrowseAssetApiTestCase(TestCase):
         self._relation(disallowed, "assembly", self.assembly.id, "other")
         cases.append(disallowed)
 
+        private_mapping = self._file(
+            self.derived_root,
+            os.path.join("jbrowse", "assemblies", "assembly-1", "refname-aliases.json"),
+            "PRIVATE_REFNAME_MAPPING",
+            b'{}',
+        )
+        self._relation(
+            private_mapping,
+            "assembly",
+            self.assembly.id,
+            "jbrowse_refname_aliases",
+        )
+        cases.append(private_mapping)
+
         mismatched = self._file(self.manual_root, "fake.txt", "MISMATCHED")
         self._relation(mismatched, "assembly", self.assembly.id, "genome_fasta")
         cases.append(mismatched)

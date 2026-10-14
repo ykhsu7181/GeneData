@@ -6,6 +6,7 @@ CANONICAL_FILE_ROLES = frozenset(
         "annotation",
         "jbrowse_annotation_gff3",
         "jbrowse_annotation_tabix",
+        "jbrowse_refname_aliases",
         "centromere",
         "telomere",
         "codon",

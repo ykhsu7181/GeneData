@@ -12,6 +12,7 @@ COMMAND_LIFECYCLE = {
     "audit_genome_transcriptome_readiness": ACTIVE,
     "audit_legacy_fallback": RETAIN_AUDIT,
     "backfill_assembly_fasta_statistics": ACTIVE,
+    "backfill_jbrowse_refname_aliases": ACTIVE,
     "backfill_assembly_from_genome_relations": LEGACY_REPAIR,
     "backfill_genomefile_to_datafile": LEGACY_REPAIR,
     "bind_manual_files": ACTIVE,
