@@ -240,13 +240,13 @@ export default {
 </script>
 
 <style scoped>
-.browser-page { width:100%; padding:6px 0 24px; color:#15233d; box-sizing:border-box; }
-.browser-header { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:10px; padding:12px 16px; border:1px solid #e1e8f3; border-radius:11px; background:#fff; box-shadow:0 3px 12px rgba(35,68,116,.04); }
+.browser-page { width:100%; padding:8px 0 36px; color:#15233d; box-sizing:border-box; }
+.browser-header { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:16px; padding:16px 20px 18px; border:1px solid #e1e8f3; border-radius:13px; background:#fff; box-shadow:0 6px 18px rgba(35,68,116,.05); }
 .browser-heading { min-width:0; }
-.browser-title-line { display:flex; align-items:center; flex-wrap:wrap; gap:9px; margin:4px 0 2px; }
-.browser-header h1 { margin:0; color:#102c5d; font-size:30px; line-height:1.2; }
+.browser-title-line { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:0; }
+.browser-header h1 { margin:0; color:#102c5d; font-size:24px; line-height:1.2; }
 .browser-product-badge { display:inline-flex; align-items:center; min-height:24px; padding:0 8px; border:1px solid #d8e3f0; border-radius:999px; color:#55708f; background:#f6f9fd; font-size:11px; font-weight:700; }
-.browser-breadcrumb { display:flex; align-items:center; gap:8px; color:#7a879b; font-size:13px; }
+.browser-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:6px; color:#76849a; font-size:13px; }
 .browser-breadcrumb a { color:#3974c7; text-decoration:none; }
 .browser-actions { display:flex; align-items:center; justify-content:flex-end; flex-shrink:0; gap:7px; }
 .primary-button,.secondary-button,.secondary-link,.icon-button { display:inline-flex; align-items:center; justify-content:center; min-height:34px; border-radius:7px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; text-decoration:none; box-sizing:border-box; }
@@ -259,9 +259,9 @@ export default {
 .browser-state,.browser-shell { border:1px solid #dbe5f2; border-radius:10px; background:#fff; overflow:hidden; }
 .browser-state { padding:24px; box-sizing:border-box; }
 .browser-state { min-height:480px; }
-.browser-shell { position:relative; height:calc(100vh - 282px); height:calc(100dvh - 282px); min-height:480px; }
+.browser-shell { position:relative; height:calc(100vh - 294px); height:calc(100dvh - 294px); min-height:480px; }
 .iframe-loading { position:absolute; z-index:1; inset:0; display:grid; place-items:center; color:#5d7392; background:#f8fbff; }
 .jbrowse-frame { display:block; width:100%; height:100%; border:0; background:#fff; }
-@media (max-width:800px) { .browser-header { align-items:flex-start; flex-direction:column; } .browser-actions { justify-content:flex-start; } .browser-shell { height:calc(100vh - 329px); height:calc(100dvh - 329px); min-height:420px; } }
-@media (max-width:520px) { .browser-actions { width:100%; flex-wrap:wrap; } .secondary-button,.secondary-link { flex:1; } .browser-header h1 { font-size:25px; } }
+@media (max-width:800px) { .browser-header { align-items:flex-start; flex-direction:column; } .browser-actions { justify-content:flex-start; } .browser-shell { height:calc(100vh - 342px); height:calc(100dvh - 342px); min-height:420px; } }
+@media (max-width:520px) { .browser-actions { width:100%; flex-wrap:wrap; } .secondary-button,.secondary-link { flex:1; } .browser-header h1 { font-size:21px; } }
 </style>

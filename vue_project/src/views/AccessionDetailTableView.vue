@@ -295,13 +295,13 @@ export default {
 
 <style scoped>
 .accession-page { padding:8px 0 36px; color:#15233d; }
-.accession-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:14px; color:#76849a; font-size:13px; }
+.accession-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:6px; color:#76849a; font-size:13px; }
 .accession-breadcrumb a { color:#3974c7; text-decoration:none; }
 .accession-breadcrumb a:hover,.accession-breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
 .page-heading { margin-bottom:16px; padding:16px 20px 18px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }
 .heading-row { display:flex; align-items:center; gap:18px; }
 .heading-main { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }
-.page-heading h1 { margin:0 6px 0 0; color:#102c5d; font-size:30px; line-height:1.2; }
+.page-heading h1 { margin:0 6px 0 0; color:#102c5d; font-size:24px; line-height:1.2; }
 .heading-tags { display:flex; flex-wrap:wrap; gap:8px; }
 .heading-tag { padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
 .species-tag { color:#1c5bc5; background:#eaf2ff; border:1px solid #cfe0ff; }
@@ -369,7 +369,7 @@ export default {
 }
 @media (max-width:700px) {
   .page-heading { padding:16px; }
-  .page-heading h1 { width:100%; font-size:25px; }
+  .page-heading h1 { width:100%; font-size:21px; }
   .heading-actions,.detail-search { width:100%; }
   .search-button { min-width:64px; }
   .side-column,.basic-info-grid { grid-template-columns:1fr; }

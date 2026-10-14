@@ -570,12 +570,12 @@ export default {
 <style scoped>
 .assembly-page { width:100%; margin:0; padding:8px 0 36px; box-sizing:border-box; color:#15233d; }
 .detail-header { margin-bottom:16px; padding:16px 20px 18px; background:#fff; border:1px solid #e1e8f3; border-radius:13px; box-shadow:0 6px 18px rgba(35,68,116,.05); }
-.breadcrumb { display:flex; gap:8px; align-items:center; margin-bottom:14px; color:#76849a; font-size:13px; }
+.breadcrumb { display:flex; gap:8px; align-items:center; margin-bottom:6px; color:#76849a; font-size:13px; }
 .breadcrumb a { color:#3974c7; text-decoration:none; }
 .breadcrumb a:hover,.breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
 .heading-row { display:flex; align-items:center; justify-content:space-between; gap:18px; }
 .heading-main { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-width:0; }
-.detail-header h1 { margin:0 6px 0 0; color:#102c5d; font-size:30px; line-height:1.2; }
+.detail-header h1 { margin:0 6px 0 0; color:#102c5d; font-size:24px; line-height:1.2; }
 .heading-tags { display:flex; flex-wrap:wrap; gap:8px; }
 .heading-tag { padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap; }
 .species-tag { color:#1c5bc5; background:#eaf2ff; border:1px solid #cfe0ff; }
@@ -609,7 +609,7 @@ export default {
   .assembly-page { padding:8px 0 34px; }
   .detail-header { padding:14px; }
   .heading-row { align-items:flex-start; flex-direction:column; }
-  .detail-header h1 { font-size:25px; }
+  .detail-header h1 { font-size:21px; }
   .heading-actions { width:100%; flex-basis:auto; margin-left:0; }
   .detail-search { max-width:none; }
   .card-heading-with-actions { align-items:flex-start; flex-direction:column; }
