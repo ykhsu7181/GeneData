@@ -838,7 +838,6 @@ const enUS = {
     admin: {
       title: 'Gene Data Management System',
       loginTitle: 'Administrator Login',
-      defaultAccount: 'Default account: root / root123',
       welcome: 'Welcome, {username}',
       logout: 'Log Out',
       statistics: 'Statistics',

@@ -13,7 +13,6 @@ const walkVueFiles = (directory) => readdirSync(directory, { withFileTypes: true
 const phaseThreeFiles = [
   'src/views/AnnotationView.vue',
   'src/views/TranscriptomeOverviewView.vue',
-  'src/views/LoginView.vue',
   'src/views/AdminLogin.vue',
   'src/views/AdminDashboard.vue',
   'src/views/AdminDataManager.vue',

@@ -838,7 +838,6 @@ const zhCN = {
     admin: {
       title: '基因数据管理系统',
       loginTitle: '管理员登录',
-      defaultAccount: '默认账号：root / root123',
       welcome: '欢迎，{username}',
       logout: '退出登录',
       statistics: '数据统计',

@@ -8,8 +8,7 @@ const EmptyComponent = {
 const routes = [
   {
     path: '/login',
-    name: 'login',
-    component: () => import('../views/LoginView.vue')
+    redirect: '/dashboard'
   },
   {
     path: '/',
@@ -20,7 +19,7 @@ const routes = [
     name: 'dashboard-home',
     component: () => import('../views/DashboardHomeView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -28,7 +27,7 @@ const routes = [
     name: 'assembly',
     component: () => import('../views/AssemblyPortalView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -36,7 +35,7 @@ const routes = [
     name: 'assembly-browser',
     component: () => import('../views/GenomeBrowserView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -44,7 +43,7 @@ const routes = [
     name: 'assembly-detail',
     component: () => import('../views/AssemblyView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -52,7 +51,7 @@ const routes = [
     name: 'home',
     component: () => import('../views/HomeView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -60,7 +59,7 @@ const routes = [
     name: 'transcriptome',
     component: () => import('../views/TranscriptomeView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -68,7 +67,7 @@ const routes = [
     name: 'data-chart',
     component: () => import('../views/DataChartView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -76,7 +75,7 @@ const routes = [
     name: 'data-overview',
     component: () => import('../views/DataOverviewView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -84,7 +83,7 @@ const routes = [
     name: 'raw-data',
     component: () => import('../views/RawDataView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -92,7 +91,7 @@ const routes = [
     name: 'transcriptome-overview',
     component: () => import('../views/TranscriptomeOverviewView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -100,7 +99,7 @@ const routes = [
     name: 'accession-map',
     component: () => import('../views/AccessionMapView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -122,7 +121,7 @@ const routes = [
       return { name: 'accession-card' }
     },
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -130,7 +129,7 @@ const routes = [
     name: 'annotation',
     component: () => import('../views/AnnotationView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -138,7 +137,7 @@ const routes = [
     name: 'annotation-card',
     component: () => import('../views/AnnotationView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -146,7 +145,7 @@ const routes = [
     name: 'core-variable-blocks',
     component: () => import('../views/CoreVariableBlocks.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -154,7 +153,7 @@ const routes = [
     name: 'core-variable-blocks-card',
     component: () => import('../views/CoreVariableBlocks.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -162,7 +161,7 @@ const routes = [
     name: 'codon-card',
     component: () => import('../views/CodonCard.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -170,7 +169,7 @@ const routes = [
     name: 'accession-card',
     component: () => import('../views/AccessionCard.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -178,7 +177,7 @@ const routes = [
     name: 'accession-detail',
     component: () => import('../views/AccessionDetailTableView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -186,7 +185,7 @@ const routes = [
     name: 'tools-codonw',
     component: () => import('../views/CodonWTool.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -194,7 +193,7 @@ const routes = [
     name: 'placeholder',
     component: EmptyComponent,
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -234,23 +233,11 @@ const hasAdminSession = async () => {
 }
 
 router.beforeEach(async (to, from, next) => {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-
   if (to.matched.some((record) => record.meta.requiresAdminAuth)) {
     if (!(await hasAdminSession())) {
       next('/admin/login')
       return
     }
-  }
-
-  if (to.matched.some((record) => record.meta.requiresAuth) && !isLoggedIn) {
-    next('/login')
-    return
-  }
-
-  if (to.path === '/login' && isLoggedIn) {
-    next('/dashboard')
-    return
   }
 
   if (to.path === '/admin/login' && await hasAdminSession()) {

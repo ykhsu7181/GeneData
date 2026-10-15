@@ -9,14 +9,14 @@ const viewSource = readFileSync(join(process.cwd(), 'src', 'views', 'AssemblyVie
 const drawerSource = readFileSync(join(process.cwd(), 'src', 'components', 'assembly', 'RelatedFilesDrawer.vue'), 'utf8')
 const recentDrawerSource = readFileSync(join(process.cwd(), 'src', 'components', 'assembly', 'AssemblyRecentDrawer.vue'), 'utf8')
 
-test('Assembly portal and detail have authenticated standalone routes', () => {
+test('Assembly portal and detail expose public routes', () => {
   assert.match(
     routerSource,
-    /path:\s*'\/assembly'[\s\S]*?component:\s*\(\)\s*=>\s*import\('\.\.\/views\/AssemblyPortalView\.vue'\)[\s\S]*?requiresAuth:\s*true/
+    /path:\s*'\/assembly'[\s\S]*?component:\s*\(\)\s*=>\s*import\('\.\.\/views\/AssemblyPortalView\.vue'\)[\s\S]*?requiresAuth:\s*false/
   )
   assert.match(
     routerSource,
-    /path:\s*'\/assembly\/:assemblyId'[\s\S]*?name:\s*'assembly-detail'[\s\S]*?requiresAuth:\s*true/
+    /path:\s*'\/assembly\/:assemblyId'[\s\S]*?name:\s*'assembly-detail'[\s\S]*?requiresAuth:\s*false/
   )
 })
 

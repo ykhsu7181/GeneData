@@ -47,9 +47,6 @@
         </el-form-item>
       </el-form>
       
-      <div class="login-footer">
-        <p>{{ $t('page.admin.defaultAccount') }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -185,13 +182,4 @@ export default {
   font-size: 16px;
 }
 
-.login-footer {
-  text-align: center;
-  color: #999;
-  font-size: 12px;
-}
-
-.login-footer p {
-  margin: 0;
-}
 </style>

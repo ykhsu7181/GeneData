@@ -44,7 +44,7 @@ export default {
       document.documentElement.lang = newLocale === 'zh' ? 'zh-CN' : 'en'
     }, { immediate: true })
 
-    const isStandaloneRoute = computed(() => route.path === '/login' || route.path.startsWith('/admin'))
+    const isStandaloneRoute = computed(() => route.path.startsWith('/admin'))
     const isDashboardRoute = computed(() => route.path === '/' || route.path === '/dashboard')
 
     const handleLanguageChange = (language) => {
