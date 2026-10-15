@@ -139,6 +139,14 @@ python manage.py check --deploy --settings=filemanager.settings_production 可�
 
 只有达到 `SECURITY GATE = PASS` 后，才进入后续 Query/API 治理。
 
+### 4.4 已确认的 P0 管理与凭据边界（2026-09-11）
+
+- 管理后台继续使用；新增、修改、删除和上传接口采用 Django Session Authentication、CSRF 与 `is_staff=True` 权限，不以 localStorage token 作为后端授权依据。
+- 匿名用户和 `is_staff=False` 用户禁止调用管理写接口；`is_superuser=True` 用户按 Django 语义自然满足 staff 策略。
+- 本次 P0 不修改现有数据库密码、不重写 Git 历史，也不新增或复制明文凭据。
+- 历史源码和当前开发配置中的数据库凭据暴露记录为 **Accepted Risk / Known Exception**；生产必须显式提供 `GENEDATA_DB_PASSWORD`，数据库账号限制来源与权限，数据库端口不得直接暴露公网。
+- 在凭据轮换并从活动源码配置移除前，Security Gate 保持 OPEN。详细记录见 `docs/security_exceptions.md`。
+
 ## 5. 已完成 ingestion 基线与生产数据验收
 
 ### 5.1 当前基线边界
@@ -503,15 +511,15 @@ npm run build
 security check
 ```
 
-### 9.4 当前实施状态（2026-09-10）
+### 9.4 当前实施状态（2026-09-11）
 
-- **IMPLEMENTED / 待首次 CI 验证**：新增 GitHub Actions workflow，PR、`main`/`master` push 和手工触发均执行独立 Django 与前端 job。
-- **IMPLEMENTED / 待首次 CI 验证**：Django job 使用临时 MySQL 8 service 和环境变量连接，不接触生产数据库；依次执行 system check、迁移漂移检查、完整 `files` 测试和 production deploy check。
+- **PASS**：GitHub Actions workflow 已在 PR 验证通过，PR、`main`/`master` push 和手工触发均执行独立 Django 与前端 job。
+- **PASS**：Django job 使用临时 MySQL 8 service 和环境变量连接，不接触生产数据库；system check、迁移漂移检查、238 项 `files` 测试和 production deploy check 已通过。
 - **PASS**：原 `files/tests.py` 已迁入 `files/tests/` package，消除 `python manage.py test files` 的模块发现冲突。
 - **SECURITY EXCEPTION / OPEN**：按当前项目要求，基础 settings 暂时保留本地数据库密码作为 fallback；CI 仍通过 `GENEDATA_DB_PASSWORD` 覆盖。由于凭据仍在源码和 Git 历史中，Security Gate 不得标记为 PASS。
 - **PASS**：前端新增标准 `npm test` 入口，`package-lock.json` 已与声明依赖同步；5 个落后于当前路由/拆包实现的测试期望已校正，`npm ci`、全量 39 项行为测试和 production build 均通过。
 - **PASS**：MySQL 条件唯一约束和超长 unique `CharField` warning 保持可见，未使用 silence 绕过。
-- **LOCAL BLOCKED / CI COVERED**：本机已成功发现 238 项 Django 测试，但 `python manage.py test files` 因本地 MySQL 拒绝当前凭据（1045）而未启动；不得据此声称本地全量测试通过，首次 GitHub Actions 的隔离 MySQL 结果仍须审阅。
+- **LOCAL BLOCKED / CI COVERED**：本机 MySQL 仍拒绝当前凭据（1045）；已有基线的 238 项 Django 测试已由 GitHub Actions 隔离 MySQL 验证，后续新增 P0 测试仍须通过新一轮 CI。
 - **OPEN / STAGE A**：production deploy check 当前对 error 阻塞，但仍显示 HSTS、SSL redirect、secure cookie 等 Stage A warning；在代理/HTTPS 策略人工确认前不把 warning 提升为阻塞。
 - **DEFERRED**：lint 在现有基线专项清理完成前不进入阻塞门禁。
 

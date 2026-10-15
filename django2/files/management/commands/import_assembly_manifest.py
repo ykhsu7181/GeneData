@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
@@ -44,7 +45,7 @@ class Command(BaseCommand):
         stats = {
             "total_rows": len(rows), "matched_accession": 0, "missing_accession": 0,
             "created_assembly": 0, "updated_assembly": 0, "reused_assembly": 0,
-            "duplicate_assembly": 0, "conflict_count": 0,
+            "duplicate_assembly": 0, "conflict_count": 0, "invalid_metadata": 0,
         }
 
         with transaction.atomic():
@@ -62,6 +63,13 @@ class Command(BaseCommand):
                     continue
                 stats["matched_accession"] += 1
 
+                try:
+                    metadata_values = self._metadata_values(row)
+                except ValueError as exc:
+                    stats["invalid_metadata"] += 1
+                    errors.append(self._error(line_number, assembly_code, accession_code, str(exc)))
+                    continue
+
                 assembly = Assembly.objects.filter(assembly_code=assembly_code).first()
                 if assembly:
                     stats["duplicate_assembly"] += 1
@@ -77,7 +85,7 @@ class Command(BaseCommand):
 
                     updates, conflicts = plan_fill_blank_metadata(
                         assembly,
-                        self._metadata_values(row),
+                        metadata_values,
                     )
                     if conflicts:
                         stats["conflict_count"] += len(conflicts)
@@ -100,7 +108,7 @@ class Command(BaseCommand):
                 if not options["dry_run"]:
                     Assembly.objects.create(
                         assembly_code=assembly_code,
-                        **self._defaults(row, accession),
+                        **self._defaults(row, accession, metadata_values),
                     )
                     stats["created_assembly"] += 1
 
@@ -137,30 +145,19 @@ class Command(BaseCommand):
                 raise CommandError(f"Manifest missing required columns: {', '.join(sorted(missing))}")
             return [{key: (value or "").strip() for key, value in row.items()} for row in reader]
 
-    @staticmethod
-    def _defaults(row, accession):
-        assembly_name = row["assembly_name"]
-        assembly_accession = row.get("assembly_accession", "")
+    @classmethod
+    def _defaults(cls, row, accession, metadata_values=None):
+        metadata_values = metadata_values or cls._metadata_values(row)
         return {
             "accession": accession,
-            "name": assembly_name or row["assembly_code"],
-            "assembly_name": assembly_name or None,
-            "display_name": assembly_name or None,
-            "assembly_accession": assembly_accession or None,
-            "standard_id": assembly_accession or None,
-            "species_code": row.get("species_code") or None,
-            "assembly_level": row.get("assembly_level") or None,
-            "reference": row.get("reference") or None,
-            "source_database": row.get("source_database") or None,
-            "external_project": row.get("external_project") or None,
-            "bio_project": row.get("external_project") or None,
-            "file_name": row.get("file_name") or None,
-            "file_type": row.get("file_type") or None,
-            "description": row.get("description") or None,
+            **{
+                **metadata_values,
+                "name": metadata_values["name"] or row["assembly_code"],
+            },
         }
 
-    @staticmethod
-    def _metadata_values(row):
+    @classmethod
+    def _metadata_values(cls, row):
         assembly_name = row["assembly_name"]
         assembly_accession = row.get("assembly_accession", "")
         return {
@@ -171,6 +168,15 @@ class Command(BaseCommand):
             "standard_id": assembly_accession or None,
             "species_code": row.get("species_code") or None,
             "assembly_level": row.get("assembly_level") or None,
+            "biosample_accession": row.get("biosample_accession") or None,
+            "assembly_type": row.get("assembly_type") or None,
+            "assembly_method": row.get("assembly_method") or None,
+            "sequencing_technology": row.get("sequencing_technology") or None,
+            "genome_size": cls._optional_nonnegative_integer(row, "genome_size"),
+            "chromosome_count": cls._optional_nonnegative_integer(row, "chromosome_count"),
+            "contig_count": cls._optional_nonnegative_integer(row, "contig_count"),
+            "n50": cls._optional_nonnegative_integer(row, "n50"),
+            "gc_content": cls._optional_percentage(row, "gc_content"),
             "reference": row.get("reference") or None,
             "source_database": row.get("source_database") or None,
             "external_project": row.get("external_project") or None,
@@ -179,6 +185,34 @@ class Command(BaseCommand):
             "file_type": row.get("file_type") or None,
             "description": row.get("description") or None,
         }
+
+    @staticmethod
+    def _optional_nonnegative_integer(row, field):
+        raw_value = row.get(field, "")
+        if raw_value == "":
+            return None
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            raise ValueError(f"invalid {field}: expected a non-negative integer")
+        if value < 0:
+            raise ValueError(f"invalid {field}: expected a non-negative integer")
+        return value
+
+    @staticmethod
+    def _optional_percentage(row, field):
+        raw_value = row.get(field, "")
+        if raw_value == "":
+            return None
+        try:
+            value = Decimal(raw_value)
+        except (InvalidOperation, TypeError, ValueError):
+            raise ValueError(f"invalid {field}: expected a percentage from 0 to 100")
+        if not value.is_finite() or value < 0 or value > 100:
+            raise ValueError(f"invalid {field}: expected a percentage from 0 to 100")
+        if value.as_tuple().exponent < -3:
+            raise ValueError(f"invalid {field}: expected at most 3 decimal places")
+        return value
 
     @staticmethod
     def _conflict_reason(conflicts):

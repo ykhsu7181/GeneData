@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeneData · 品种详情页草图</title>
+  <style>
+    :root { --blue:#0865e8; --navy:#102b57; --muted:#6e7f9c; --line:#dfe8f5; --surface:#fff; --soft:#f1f7ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--navy); background:linear-gradient(140deg,#f7fbff 0%,#edf5ff 52%,#f8fbff 100%); font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif; }
+    button { font:inherit; }
+    .topbar { height:64px; display:flex; align-items:center; padding:0 3vw; background:rgba(255,255,255,.94); border-bottom:1px solid var(--line); }
+    .brand { font-size:22px; font-weight:800; letter-spacing:-.02em; }
+    .brand span { color:var(--blue); }
+    .nav { display:flex; gap:34px; margin-left:auto; color:#314766; font-size:14px; font-weight:600; }
+    .nav b { color:var(--blue); }
+    .page { max-width:1660px; margin:auto; padding:24px 28px 44px; }
+    .crumb { margin-bottom:14px; color:#657896; font-size:14px; }
+    .heading { margin-bottom:16px; padding:16px 20px 18px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.97); box-shadow:0 7px 20px rgba(29,68,123,.06); }
+    .heading-row { display:flex; justify-content:space-between; align-items:center; gap:18px; }
+    .heading-main { display:flex; align-items:center; gap:12px; min-width:0; flex-wrap:wrap; }
+    h1 { margin:0 8px 0 0; font-size:30px; letter-spacing:-.02em; }
+    .tags { display:flex; gap:8px; }
+    .tag { padding:6px 13px; border:1px solid #cfe0fb; border-radius:999px; background:#eaf3ff; color:#0b61cf; font-size:13px; font-weight:700; }
+    .tag.green { border-color:#d0ead7; color:#297a48; background:#eaf8ef; }
+    .heading-actions { display:flex; align-items:center; gap:10px; margin-left:auto; }
+    .accession-search { display:flex; align-items:stretch; gap:8px; }
+    .search-field { width:310px; height:40px; display:flex; align-items:center; gap:9px; padding:0 13px; border:1px solid #cfddf1; border-radius:10px; background:#fff; color:#71839d; }
+    .search-field svg { width:18px; height:18px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.8; }
+    .search-field input { width:100%; min-width:0; border:0; outline:0; color:#173b73; background:transparent; font:inherit; font-size:14px; }
+    .search-field input::placeholder { color:#93a3ba; }
+    .search-button { height:40px; padding:0 22px; border:0; border-radius:10px; background:#318ff0; color:#fff; cursor:pointer; font-weight:800; }
+    .refresh { width:40px; height:40px; border:1px solid #d3e1f4; border-radius:50%; color:var(--blue); background:#fff; cursor:pointer; font-size:20px; }
+    .layout { display:grid; grid-template-columns:minmax(0,1fr) 284px; gap:16px; align-items:start; }
+    .panel,.side-card { border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.97); overflow:hidden; }
+    .tabs { display:flex; gap:28px; min-height:52px; padding:0 18px; border-bottom:1px solid var(--line); overflow:auto; }
+    .tab { position:relative; flex:0 0 auto; border:0; background:transparent; color:#50627e; cursor:pointer; }
+    .tab.active { color:var(--blue); font-weight:800; }
+    .tab.active::after { content:""; position:absolute; right:0; bottom:0; left:0; height:3px; border-radius:3px 3px 0 0; background:var(--blue); }
+    .content { padding:18px; }
+    .section-title { margin:0 0 13px; color:#075ecf; font-size:18px; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); border-radius:11px; overflow:hidden; }
+    .info { min-height:42px; display:grid; grid-template-columns:115px 1fr; align-items:center; border-bottom:1px solid var(--line); }
+    .info:nth-child(odd) { border-right:1px solid var(--line); }
+    .info.full { grid-column:1/-1; border-right:0; }
+    .info:nth-last-child(1) { border-bottom:0; }
+    .label { padding:11px 14px; color:#60728f; font-size:13px; }
+    .value { padding:11px 14px; color:#173b73; font-size:14px; font-weight:650; }
+    .link { color:var(--blue); }
+    .table-title { margin:22px 0 12px; color:#075ecf; font-size:18px; }
+    table { width:100%; border-collapse:collapse; border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:13px; }
+    th { padding:12px 13px; color:#536a8d; background:#f1f6fd; text-align:left; font-weight:700; }
+    td { padding:12px 13px; border-top:1px solid var(--line); color:#173b73; }
+    .action { padding:6px 13px; border:1px solid #bdd4fa; border-radius:7px; color:var(--blue); background:#fff; font-weight:700; cursor:pointer; }
+    .tab-placeholder { min-height:350px; display:grid; place-items:center; color:#6a7d99; text-align:center; }
+    .tab-placeholder strong { display:block; color:#17498f; font-size:19px; margin-bottom:8px; }
+    .side { display:grid; gap:16px; }
+    .side-card { padding:18px; }
+    .side-card h2 { margin:0 0 14px; color:#075ecf; font-size:18px; }
+    .map { min-height:172px; display:grid; place-items:center; padding:18px; border-radius:11px; background:linear-gradient(145deg,#eef7ff,#f8fbff); text-align:center; }
+    .pin { width:40px; height:40px; margin:auto; border:10px solid #5da4ff; border-radius:50% 50% 50% 0; background:#0865e8; transform:rotate(-45deg); box-shadow:0 8px 18px rgba(8,101,232,.2); }
+    .map strong { display:block; margin-top:13px; font-size:19px; }
+    .map small { display:block; margin-top:6px; color:var(--muted); }
+    .relation-head { display:flex; justify-content:space-between; align-items:baseline; }
+    .relation-head small { color:var(--muted); }
+    .root { display:inline-block; padding:7px 13px; border:2px solid var(--blue); border-radius:999px; color:var(--blue); font-weight:800; }
+    .tree { margin:12px 0 0 12px; padding-left:18px; border-left:2px solid #d9e6f7; font-size:13px; }
+    .branch { position:relative; margin:13px 0; }
+    .branch::before { content:""; position:absolute; top:8px; left:-19px; width:12px; border-top:2px solid #d9e6f7; }
+    .branch strong { display:block; margin-bottom:6px; }
+    .leaf { display:block; margin:5px 0 0 14px; color:#667994; }
+    @media (max-width:1100px) { .heading { flex-wrap:wrap; } .heading-actions { width:100%; margin-left:0; } .accession-search { flex:1; } .search-field { width:auto; flex:1; } .layout { grid-template-columns:1fr; } .side { grid-template-columns:1fr 1fr; } }
+    @media (max-width:700px) { .nav { display:none; } .page { padding:18px 14px 32px; } .heading { align-items:flex-start; padding:16px; } .heading-actions { align-items:stretch; } .accession-search { min-width:0; } .search-button { padding:0 15px; } h1 { font-size:27px; } .info-grid { grid-template-columns:1fr; } .info:nth-child(odd) { border-right:0; } .info.full { grid-column:auto; } .side { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="brand"><span>Gene</span>Data</div><nav class="nav"><b>首页</b><span>品种信息</span><span>基因组</span><span>数据资源⌄</span><span>更多⌄</span></nav></header>
+  <main class="page">
+    <section class="heading"><div class="crumb">首页 / 品种信息 / IR64</div><div class="heading-row"><div class="heading-main"><h1>品种信息 · IR64</h1><div class="tags"><span class="tag">物种：水稻 (Oryza sativa)</span><span class="tag green">亚群：XI</span></div></div><div class="heading-actions"><form class="accession-search" onsubmit="return false"><label class="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" aria-label="搜索品种编号" placeholder="搜索品种编号，例如 IR64"></label><button class="search-button" type="submit">搜索</button></form><button class="refresh" aria-label="刷新" title="刷新">↻</button></div></div></section>
+    <section class="layout">
+      <div class="panel">
+        <nav class="tabs" aria-label="详情栏目"><button class="tab active" data-tab="basic">基本信息</button><button class="tab" data-tab="datasets">数据集</button><button class="tab" data-tab="samples">样本</button><button class="tab" data-tab="annotations">注释版本</button><button class="tab" data-tab="files">相关文件</button></nav>
+        <div id="content" class="content">
+          <h2 class="section-title">基本信息</h2>
+          <div class="info-grid">
+            <div class="info"><span class="label">品种编号</span><span class="value">IR64</span></div><div class="info"><span class="label">物种</span><span class="value">水稻 (Oryza sativa)</span></div>
+            <div class="info"><span class="label">亚群</span><span class="value">XI</span></div><div class="info"><span class="label">经度</span><span class="value">121.77</span></div>
+            <div class="info"><span class="label">地区</span><span class="value">—</span></div><div class="info"><span class="label">纬度</span><span class="value">12.88</span></div>
+            <div class="info"><span class="label">国家</span><span class="value">—</span></div><div class="info"><span class="label">描述</span><span class="value">—</span></div>
+            <div class="info"><span class="label">ENA Study</span><span class="value">—</span></div><div class="info"><span class="label">BioSample</span><span class="value">0</span></div>
+            <div class="info"><span class="label">Experiment</span><span class="value">0</span></div><div class="info"><span class="label">Run</span><span class="value">0</span></div>
+            <div class="info full"><span class="label">外部链接</span><span class="value link">https://www.ncbi.nlm.nih.gov/sra/SRP227298</span></div>
+          </div>
+          <h2 class="table-title">组装版本信息</h2>
+          <table><thead><tr><th>组装版本</th><th>组装编码</th><th>数据库编号</th><th>BioProject</th><th>Reference</th><th>操作</th></tr></thead><tbody>
+            <tr><td>default</td><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="action">查看文件</button></td></tr>
+            <tr><td>haplotype-demo</td><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="action">查看文件</button></td></tr>
+            <tr><td>v2-polish</td><td>—</td><td>—</td><td>—</td><td>—</td><td><button class="action">查看文件</button></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <aside class="side">
+        <section class="side-card"><h2>地理信息</h2><div class="map"><div><div class="pin"></div><strong>IR64</strong><small>已记录地理坐标<br>12.88, 121.77</small></div></div></section>
+        <section class="side-card"><div class="relation-head"><h2>关系概览</h2><small>品种数据结构</small></div><span class="root">IR64</span><div class="tree"><div class="branch"><strong>default</strong><span class="leaf">default-annotation</span><span class="leaf">functional-demo</span><span class="leaf">gene-v2</span></div><div class="branch"><strong>haplotype-demo</strong><span class="leaf">default-annotation</span><span class="leaf">functional-demo</span></div><div class="branch"><strong>v2-polish</strong><span class="leaf">default-annotation</span><span class="leaf">gene-v2</span></div></div></section>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const basicMarkup = document.getElementById('content').innerHTML;
+    const labels = { datasets:'数据集', samples:'样本', annotations:'注释版本', files:'相关文件' };
+    document.querySelectorAll('.tab').forEach((button) => button.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((item) => item.classList.toggle('active', item === button));
+      const key = button.dataset.tab;
+      document.getElementById('content').innerHTML = key === 'basic' ? basicMarkup : `<div class="tab-placeholder"><div><strong>${labels[key]}</strong><span>草图阶段保留独立标签页；正式实施时接入现有接口数据。</span></div></div>`;
+    }));
+  </script>
+</body>
+</html>

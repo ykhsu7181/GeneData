@@ -1,637 +1,472 @@
-﻿<template>
-  <div class="accession-map-view">
-    <div class="page-header">
-      <h2 class="title">{{ $t('page.accessionMap.title') }}</h2>
-      <div class="header-actions">
-        <el-tooltip :content="$t('page.accessionMap.refreshData')" placement="top">
-          <el-button circle size="small" @click="fetchData" :loading="loading">
-            <el-icon><Refresh /></el-icon>
+<template>
+  <main class="accession-map-view">
+    <header class="page-heading">
+      <div>
+        <nav class="map-breadcrumb" :aria-label="$t('page.accessionPortal.breadcrumbLabel')">
+          <router-link :to="{ name: 'dashboard-home' }">{{ $t('nav.home') }}</router-link>
+          <span aria-hidden="true">/</span>
+          <router-link :to="{ name: 'accession-card' }">{{ $t('nav.accession') }}</router-link>
+          <span aria-hidden="true">/</span>
+          <span>{{ $t('page.accessionMap.title') }}</span>
+        </nav>
+        <h1>{{ $t('page.accessionMap.title') }}</h1>
+      </div>
+      <el-button :loading="loading" @click="fetchData">
+        <el-icon aria-hidden="true"><Refresh /></el-icon>
+        {{ $t('page.accessionMap.refreshData') }}
+      </el-button>
+    </header>
+
+    <section class="filter-card" :aria-label="$t('page.accessionMap.filters')">
+      <div class="filter-grid">
+        <label class="filter-field">
+          <span>{{ $t('page.accessionMap.accessionFilter') }}</span>
+          <el-select
+            v-model="selectedAccession"
+            filterable
+            clearable
+            :placeholder="$t('page.accessionMap.searchPlaceholder')"
+            @change="applyFilters"
+          >
+            <el-option
+              v-for="item in accessionOptions"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+        </label>
+
+        <label class="filter-field">
+          <span>{{ $t('page.accessionMap.regionFilter') }}</span>
+          <el-input
+            v-model="selectedRegion"
+            clearable
+            :placeholder="$t('page.accessionMap.regionPlaceholder')"
+            @change="applyFilters"
+            @clear="applyFilters"
+          >
+            <template #prefix><el-icon aria-hidden="true"><Search /></el-icon></template>
+          </el-input>
+        </label>
+
+        <label class="filter-field">
+          <span>{{ $t('page.accessionMap.subPopulationFilter') }}</span>
+          <el-select
+            v-model="selectedSubPopulations"
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
+            clearable
+            :placeholder="$t('page.accessionMap.allSubPopulations')"
+            @change="applyFilters"
+          >
+            <el-option
+              v-for="subPopulation in allSubPopulations"
+              :key="subPopulation"
+              :label="subPopulation"
+              :value="subPopulation"
+            />
+          </el-select>
+        </label>
+
+        <div class="filter-actions">
+          <el-button :disabled="!hasActiveFilters" @click="resetFilters">
+            {{ $t('page.accessionMap.resetFilters') }}
           </el-button>
-        </el-tooltip>
-      </div>
-    </div>
-
-    <div class="search-container">
-      <div class="search-wrapper">
-        <el-icon class="search-icon"><Search /></el-icon>
-        <el-select
-          v-model="selectedOrganism"
-          filterable
-          remote
-          :placeholder="$t('page.accessionMap.searchPlaceholder')"
-          :remote-method="searchOrganisms"
-          :loading="loadingOrganisms"
-          clearable
-          @change="handleOrganismChange"
-          class="search-select"
-        >
-          <el-option
-            v-for="item in organismOptions"
-            :key="item"
-            :label="item"
-            :value="item"
-          />
-        </el-select>
-      </div>
-    </div>
-
-    <div class="filter-panel">
-      <div class="filter-section">
-        <span class="filter-label">{{ $t('page.accessionMap.subPopulationFilter') }}</span>
-        <el-checkbox-group v-model="selectedSubPopulations" @change="handleSubPopulationChange" class="subpop-checkboxes">
-          <el-checkbox 
-            v-for="subPop in allSubPopulations" 
-            :key="subPop" 
-            :label="subPop">
-            <span :class="['sub-population', getSubPopulationClass(subPop)]">
-              {{ subPop }}
-            </span>
-          </el-checkbox>
-        </el-checkbox-group>
-      </div>
-      
-      <div class="viz-section">
-        <span class="filter-label">{{ $t('page.accessionMap.markerSize') }}</span>
-        <el-slider 
-          v-model="pointSize" 
-          :min="5" 
-          :max="25" 
-          @change="updateMap"
-          :show-tooltip="true"
-          style="width: 120px;">
-        </el-slider>
-      </div>
-    </div>
-
-    <div class="research-map-card">
-
-      <div class="map-body">
-        <div v-if="loading" class="loading-state">
-          <div class="loading-spinner">
-            <div class="spinner"></div>
-            <p>{{ $t('page.accessionMap.loadingGeographicData') }}</p>
-          </div>
         </div>
+      </div>
+    </section>
 
-        <div v-else class="map-wrapper">
-          <div ref="mapContainer" class="echarts-map"></div>
-
+    <section class="map-card" :aria-label="$t('page.accessionMap.mapAriaLabel')">
+      <div class="map-toolbar">
+        <div class="map-actions">
+          <el-select
+            v-model="selectedClusterKey"
+            class="region-select"
+            size="small"
+            :placeholder="$t('page.accessionMap.browseRegions')"
+            :aria-label="$t('page.accessionMap.browseRegions')"
+            @change="openClusterByKey"
+          >
+            <el-option
+              v-for="cluster in clusterOptions"
+              :key="cluster.key"
+              :label="cluster.label"
+              :value="cluster.key"
+            />
+          </el-select>
+          <el-button size="small" @click="fitFilteredData">
+            <el-icon aria-hidden="true"><Aim /></el-icon>
+            {{ $t('page.accessionMap.fitDataView') }}
+          </el-button>
+          <el-button size="small" @click="showGlobalView">
+            <el-icon aria-hidden="true"><FullScreen /></el-icon>
+            {{ $t('page.accessionMap.globalView') }}
+          </el-button>
         </div>
       </div>
 
-    </div>
-
-    <div class="data-summary">
-      <h3 class="summary-title">{{ $t('page.accessionMap.dataOverview') }}</h3>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-icon">DNA</div>
-          <div class="summary-content">
-            <div class="summary-number">{{ totalCount }}</div>
-            <div class="summary-label">{{ $t('page.accessionMap.totalGermplasm') }}</div>
-            <div class="summary-desc">{{ $t('page.accessionMap.totalGermplasmDesc') }}</div>
-          </div>
+      <div class="map-stage" aria-live="polite">
+        <div v-if="loading" class="state-panel" role="status">
+          <el-icon class="is-loading" aria-hidden="true"><Loading /></el-icon>
+          <span>{{ $t('page.accessionMap.loadingGeographicData') }}</span>
         </div>
-        <div class="summary-item">
-          <div class="summary-icon">MAP</div>
-          <div class="summary-content">
-            <div class="summary-number">{{ filteredData.length }}</div>
-            <div class="summary-label">{{ $t('page.accessionMap.locatedGermplasm') }}</div>
-            <div class="summary-desc">{{ $t('page.accessionMap.locatedGermplasmDesc') }}</div>
-          </div>
+        <div v-else-if="loadError" class="state-panel" role="alert">
+          <el-icon aria-hidden="true"><Warning /></el-icon>
+          <span>{{ $t('page.accessionMap.loadFailed') }}</span>
+          <el-button size="small" @click="fetchData">{{ $t('page.accessionMap.retry') }}</el-button>
         </div>
-        <div class="summary-item">
-          <div class="summary-icon">REG</div>
-          <div class="summary-content">
-            <div class="summary-number">{{ uniqueCountries }}</div>
-            <div class="summary-label">{{ $t('page.accessionMap.geographicRegions') }}</div>
-            <div class="summary-desc">{{ $t('page.accessionMap.geographicRegionsDesc') }}</div>
-          </div>
+        <div v-else-if="!filteredData.length" class="state-panel" role="status">
+          <el-icon aria-hidden="true"><Location /></el-icon>
+          <span>{{ $t('page.accessionMap.noResults') }}</span>
+          <el-button v-if="hasActiveFilters" size="small" @click="resetFilters">
+            {{ $t('page.accessionMap.resetFilters') }}
+          </el-button>
         </div>
-        <div class="summary-item">
-          <div class="summary-icon">SUB</div>
-          <div class="summary-content">
-            <div class="summary-number">{{ selectedSubPopulations.length }}</div>
-            <div class="summary-label">{{ $t('page.accessionMap.activeSubPopulations') }}</div>
-            <div class="summary-desc">{{ $t('page.accessionMap.activeSubPopulationsDesc') }}</div>
-          </div>
-        </div>
+        <div
+          v-show="!loading && !loadError && filteredData.length"
+          ref="mapContainer"
+          class="echarts-map"
+          role="img"
+          tabindex="0"
+          :aria-label="$t('page.accessionMap.mapAriaLabelWithCount', {
+            count: filteredMetrics.mappedAccessions,
+            regions: filteredMetrics.geographicRegions
+          })"
+        />
+        <AccessionClusterPanel
+          v-model="drawerOpen"
+          :items="drawerItems"
+          @select="openAccession"
+        />
       </div>
-    </div>
-  </div>
+
+      <footer class="map-footer">
+        <div class="size-legend" :aria-label="$t('page.accessionMap.bubbleLegend')">
+          <strong>{{ $t('page.accessionMap.bubbleColor') }}</strong>
+          <span><i class="bubble cluster-single" />1</span>
+          <span><i class="bubble cluster-small" />2–5</span>
+          <span><i class="bubble cluster-medium" />6–10</span>
+          <span><i class="bubble cluster-large" />11–19</span>
+          <span><i class="bubble cluster-extra-large" />20–50</span>
+          <span><i class="bubble cluster-very-large" />51–100</span>
+          <span><i class="bubble cluster-extreme" />&gt;100</span>
+        </div>
+      </footer>
+    </section>
+
+    <section class="metrics" :aria-label="$t('page.accessionMap.dataOverview')">
+      <article>
+        <strong>{{ baseMetrics.totalAccessions }}</strong>
+        <span>{{ $t('page.accessionMap.totalGermplasm') }}</span>
+      </article>
+      <article>
+        <strong>{{ baseMetrics.mappedAccessions }}</strong>
+        <span>{{ $t('page.accessionMap.locatedGermplasm') }}</span>
+      </article>
+      <article>
+        <strong>{{ baseMetrics.unmappedAccessions }}</strong>
+        <span>{{ $t('page.accessionMap.unmappedGermplasm') }}</span>
+      </article>
+      <article>
+        <strong>{{ filteredMetrics.geographicRegions }}</strong>
+        <span>{{ $t('page.accessionMap.geographicRegions') }}</span>
+      </article>
+    </section>
+
+  </main>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue';
-import { Search, Refresh } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
-import { useRouter, useRoute } from 'vue-router';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import * as echarts from 'echarts';
+import {
+  Aim,
+  FullScreen,
+  Loading,
+  Location,
+  Refresh,
+  Search,
+  Warning
+} from '@element-plus/icons-vue';
+import AccessionClusterPanel from '@/components/accession/AccessionClusterPanel.vue';
 import { worldMapData } from '@/data/worldMapData.js';
+import {
+  GEOGRAPHIC_GRID_SIZE,
+  aggregateGeographicItems,
+  buildGeographicMetrics,
+  filterGeographicItems,
+  getGeographicClusterColor,
+  getGeographicViewport,
+  normalizeGeographicItems,
+  normalizeSubPopulation
+} from '@/services/accessionGeography.mjs';
+import {
+  parseAccessionMapQuery,
+  serializeAccessionMapQuery
+} from '@/services/accessionMapRoute.mjs';
 
 export default {
   name: 'AccessionMapView',
   components: {
+    AccessionClusterPanel,
+    Aim,
+    FullScreen,
+    Loading,
+    Location,
+    Refresh,
     Search,
-    Refresh
+    Warning
   },
   setup() {
-    const router = useRouter();
     const route = useRoute();
+    const router = useRouter();
     const { t } = useI18n();
     const loading = ref(true);
-    const selectedOrganism = ref('');
-    const selectedRegion = ref('');
-    const allOrganisms = ref([]);
-    const organismOptions = ref([]);
-    const loadingOrganisms = ref(false);
-    
-    const allSubPopulations = ref([]);
-    const selectedSubPopulations = ref([]);
-    
+    const loadError = ref(false);
     const supplementaryData = ref({});
-    const totalCount = ref(0);
-    
+    const selectedAccession = ref('');
+    const selectedRegion = ref('');
+    const selectedSubPopulations = ref([]);
     const mapContainer = ref(null);
     const mapInstance = ref(null);
-    const mapMode = ref('scatter');
-    const pointSize = ref(10);
+    const drawerOpen = ref(false);
+    const drawerItems = ref([]);
+    const selectedClusterKey = ref('');
+    let resizeObserver = null;
 
-    const syncRouteSelection = () => {
-      const accessionFromQuery = route.query.accession || route.query.organism;
-      selectedOrganism.value = typeof accessionFromQuery === 'string' ? accessionFromQuery : '';
-
-      const regionFromQuery = route.query.region;
-      selectedRegion.value = typeof regionFromQuery === 'string' ? regionFromQuery : '';
-
-      const subPopulationFromQuery = route.query.sub_population;
-      if (typeof subPopulationFromQuery === 'string' && subPopulationFromQuery.trim()) {
-        selectedSubPopulations.value = [subPopulationFromQuery.trim()];
-      } else if (allSubPopulations.value.length) {
-        selectedSubPopulations.value = [...allSubPopulations.value];
-      }
-    };
-
-    const filteredData = computed(() => {
-      let data = Object.entries(supplementaryData.value);
-
-      data = data.filter(([, info]) =>
-        info.longitude !== null && info.latitude !== null
-      );
-
-      if (selectedOrganism.value) {
-        data = data.filter(([accession]) =>
-          accession === selectedOrganism.value
-        );
-      } else {
-        // 濡傛灉娌℃湁閫変腑浠讳綍浜氱兢锛屽垯涓嶆樉绀轰换浣曟暟鎹偣
-        if (selectedSubPopulations.value.length === 0) {
-          return [];
-        }
-
-        data = data.filter(([, info]) => {
-          const subPop = info.sub_population || 'Unknown';
-          return selectedSubPopulations.value.includes(subPop);
-        });
-      }
-
-      if (selectedRegion.value) {
-        const normalizedRegion = selectedRegion.value.toLowerCase();
-        data = data.filter(([, info]) => {
-          const region = (info.region || '').toLowerCase();
-          const country = (info.country || '').toLowerCase();
-          return region.includes(normalizedRegion) || country.includes(normalizedRegion);
-        });
-      }
-
-      return data;
-    });
-
-    const uniqueCountries = computed(() => {
-      const coordinates = filteredData.value.map(([, info]) => 
-        `${Math.round(info.longitude)},${Math.round(info.latitude)}`
-      );
-      return new Set(coordinates).size;
-    });
-
-    const getSubPopulationClass = (subPopulation) => {
-      const classMap = {
-        'cA': 'sub-pop-ca',
-        'cB': 'sub-pop-cb',
-        'GJ': 'sub-pop-gj',
-        'XI': 'sub-pop-xi',
-        'WILD': 'sub-pop-wild',
-        'O.glaberrima': 'sub-pop-glaberrima',
-        'Unknown': 'sub-pop-unknown'
-      };
-      return classMap[subPopulation] || 'sub-pop-default';
-    };
-
-    const fetchOrganisms = async () => {
-      try {
-        loadingOrganisms.value = true;
-
-        if (Object.keys(supplementaryData.value).length === 0) {
-          await fetchSupplementaryData();
-        }
-
-        const organismsWithLocation = Object.entries(supplementaryData.value)
-          .filter(([, info]) =>
-            info.longitude !== null &&
-            info.latitude !== null
-          )
-          .map((entry) => entry[0])
-
-        allOrganisms.value = organismsWithLocation;
-        organismOptions.value = organismsWithLocation;
-      } catch (error) {
-        console.error('获取材料列表失败', error);
-        ElMessage.error(t('messages.getOrganismsFailed'));
-      } finally {
-        loadingOrganisms.value = false;
-      }
-    };
-
-    const fetchSubPopulations = async () => {
-      try {
-        const response = await axios.get('/files/query/sub-populations/');
-        const subPopulations = (response.data || []).map(subPop =>
-          subPop === '未知亚群' ? 'Unknown' : subPop
-        );
-        allSubPopulations.value = subPopulations;
-        syncRouteSelection();
-      } catch (error) {
-        console.error('获取亚群列表失败:', error);
-        ElMessage.error(t('messages.getSubPopulationsFailed'));
-      }
-    };
-
-    const fetchSupplementaryData = async () => {
-      try {
-        const response = await axios.get('/files/query/supplementary-data/');
-        const rawData = response.data || {};
-
-        const processedData = {};
-        Object.keys(rawData).forEach(key => {
-          const item = rawData[key];
-          if (item.sub_population === '未知亚群') {
-            item.sub_population = 'Unknown';
-          }
-          processedData[key] = item;
-        });
-
-        supplementaryData.value = processedData;
-        totalCount.value = Object.keys(supplementaryData.value).length;
-      } catch (error) {
-        console.error('获取补充数据失败:', error);
-        ElMessage.error(t('messages.getSupplementaryDataFailed'));
-      }
-    };
-
-    const fetchData = async () => {
-      try {
-        loading.value = true;
-        await fetchSupplementaryData();
-        await Promise.all([
-          fetchOrganisms(),
-          fetchSubPopulations()
-        ]);
-      } catch (error) {
-        console.error('获取数据失败:', error);
-        ElMessage.error(t('messages.getDataFailed'));
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    const searchOrganisms = (query) => {
-      if (query) {
-        organismOptions.value = allOrganisms.value.filter(item =>
-          item.toLowerCase().includes(query.toLowerCase())
-        );
-      } else {
-        organismOptions.value = allOrganisms.value;
-      }
-    };
-
-    const handleOrganismChange = (value) => {
-      selectedOrganism.value = value;
-
-      console.log('Selected organism:', value);
-      console.log('Filtered data length:', filteredData.value.length);
-
-      nextTick(() => {
-        updateMap();
-
-        if (value && supplementaryData.value[value]) {
-          const info = supplementaryData.value[value];
-          if (info.longitude !== null && info.latitude !== null) {
-            if (mapInstance.value) {
-              setTimeout(() => {
-                mapInstance.value.setOption({
-                  geo: {
-                    center: [info.longitude, info.latitude],
-                    zoom: 4
-                  }
-                });
-              }, 100);
-            }
-          }
-        } else if (!value) {
-          if (mapInstance.value) {
-            mapInstance.value.setOption({
-              geo: {
-                center: [20, 10],
-                zoom: 1.3
-              }
-            });
-          }
-        }
-      });
-    };
-
-    const handleSubPopulationChange = () => {
-      updateMap();
-    };
-
-    const initMap = async () => {
-      if (!mapContainer.value) return;
-
-      try {
-        echarts.registerMap('world', worldMapData);
-
-        mapInstance.value = echarts.init(mapContainer.value, null, {
-          width: mapContainer.value.clientWidth,
-          height: mapContainer.value.clientHeight
-        });
-
-        updateMap();
-
-        window.addEventListener('resize', () => {
-          if (mapInstance.value) {
-            mapInstance.value.resize();
-          }
-        });
-
-      } catch (error) {
-        console.error('地图初始化失败:', error);
-        ElMessage.error(t('messages.mapLoadFailed'));
-      }
-    };
-
-    const updateMap = () => {
-      if (!mapInstance.value) return;
-
-      console.log('Updating map with filtered data:', filteredData.value.length, 'points');
-
-      const mapData = filteredData.value.map(([accession, info]) => {
-        const subPop = info.sub_population || 'Unknown';
+    const geographicItems = computed(() => normalizeGeographicItems(supplementaryData.value));
+    const accessionOptions = computed(() => (
+      geographicItems.value.map((item) => item.accession).sort((a, b) => a.localeCompare(b))
+    ));
+    const allSubPopulations = computed(() => (
+      Array.from(new Set(geographicItems.value.map((item) => item.sub_population)))
+        .sort((a, b) => a.localeCompare(b))
+    ));
+    const baseMetrics = computed(() => buildGeographicMetrics(geographicItems.value));
+    const filteredData = computed(() => filterGeographicItems(geographicItems.value, {
+      accession: selectedAccession.value,
+      region: selectedRegion.value,
+      subPopulations: selectedSubPopulations.value.length ? selectedSubPopulations.value : null
+    }));
+    const filteredMetrics = computed(() => buildGeographicMetrics(filteredData.value));
+    const clusters = computed(() => aggregateGeographicItems(filteredData.value, GEOGRAPHIC_GRID_SIZE));
+    const clusterOptions = computed(() => clusters.value
+      .map((cluster) => {
+        const namedLocations = cluster.accessions
+          .map((item) => item.country || item.region)
+          .filter(Boolean);
+        const location = namedLocations[0]
+          || `${cluster.latitude.toFixed(1)}°, ${cluster.longitude.toFixed(1)}°`;
         return {
-          name: accession,
-          value: [info.longitude, info.latitude, 1],
-          subPopulation: subPop,
-          itemStyle: {
-            color: getSubPopulationColor(subPop)
-          }
+          ...cluster,
+          label: t('page.accessionMap.regionOption', { location, count: cluster.count })
         };
+      })
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)));
+    const hasActiveFilters = computed(() => Boolean(
+      selectedAccession.value || selectedRegion.value || selectedSubPopulations.value.length
+    ));
+
+    const readRouteFilters = () => {
+      const filters = parseAccessionMapQuery(route.query);
+      selectedAccession.value = filters.accession;
+      selectedRegion.value = filters.region;
+      selectedSubPopulations.value = filters.subPopulations.map(normalizeSubPopulation);
+    };
+
+    const syncRouteFilters = async () => {
+      const query = serializeAccessionMapQuery({
+        accession: selectedAccession.value,
+        region: selectedRegion.value,
+        subPopulations: selectedSubPopulations.value
       });
+      if (JSON.stringify(route.query) !== JSON.stringify(query)) {
+        await router.replace({ name: 'accession-map', query });
+      }
+    };
 
-      console.log('Map data points:', mapData.length);
+    const setViewport = (viewport) => {
+      if (!mapInstance.value) return;
+      mapInstance.value.setOption({ geo: viewport });
+    };
 
-      const option = {
-        backgroundColor: '#f8fafc',
+    const fitFilteredData = () => setViewport(getGeographicViewport(filteredData.value));
+    const showGlobalView = () => setViewport({ center: [0, 15], zoom: 1.05 });
+
+    const openCluster = (cluster) => {
+      drawerItems.value = [...cluster.accessions].sort((a, b) => a.accession.localeCompare(b.accession));
+      drawerOpen.value = true;
+    };
+
+    const openClusterByKey = (key) => {
+      const cluster = clusters.value.find((item) => item.key === key);
+      if (cluster) openCluster(cluster);
+      nextTick(() => { selectedClusterKey.value = ''; });
+    };
+
+    const openAccession = async (accession) => {
+      drawerOpen.value = false;
+      const mapQuery = serializeAccessionMapQuery({
+        accession: selectedAccession.value,
+        region: selectedRegion.value,
+        subPopulations: selectedSubPopulations.value
+      });
+      const returnTo = router.resolve({ name: 'accession-map', query: mapQuery }).fullPath;
+      await router.push({
+        name: 'accession-card',
+        query: { accession, return_to: returnTo }
+      });
+    };
+
+    const buildMapOption = () => {
+      const viewport = getGeographicViewport(filteredData.value);
+      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
+      return {
+        backgroundColor: '#f7faff',
         tooltip: {
           trigger: 'item',
-          backgroundColor: 'rgba(255, 255, 255, 0.96)',
-          borderColor: '#e2e8f0',
-          borderWidth: 1,
-          borderRadius: 12,
-          shadowBlur: 20,
-          shadowColor: 'rgba(0, 0, 0, 0.12)',
-          shadowOffsetX: 0,
-          shadowOffsetY: 8,
-          textStyle: {
-            color: '#1e293b',
-            fontSize: 14,
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-          },
-          formatter: function(params) {
-            if (params.data) {
-              return `
-                <div style="padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-width: 280px; max-width: 320px;">
-                  <div style="display: flex; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9;">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: ${params.data.itemStyle.color}; margin-right: 12px; box-shadow: 0 0 0 3px ${params.data.itemStyle.color}20;"></div>
-                    <div style="font-weight: 700; color: #0f172a; font-size: 16px; letter-spacing: -0.025em;">${params.data.name}</div>
-                  </div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                    <div style="background: #f8fafc; padding: 8px 12px; border-radius: 8px; border-left: 3px solid ${params.data.itemStyle.color};">
-                      <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Subpopulation</div>
-                      <div style="font-weight: 700; color: #1e293b; font-size: 13px;">${params.data.subPopulation}</div>
-                    </div>
-                    <div style="background: #f8fafc; padding: 8px 12px; border-radius: 8px;">
-                      <div style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Coordinates</div>
-                      <div style="font-weight: 600; color: #1e293b; font-size: 12px; font-family: 'SF Mono', Monaco, monospace;">${params.data.value[0].toFixed(3)}°, ${params.data.value[1].toFixed(3)}°</div>
-                    </div>
-                  </div>
-                  <div style="font-size: 11px; color: #94a3b8; text-align: center; font-style: italic; margin-top: 8px; padding: 6px 12px; background: #f1f5f9; border-radius: 6px; border: 1px solid #e2e8f0;">
-                    <span style="color: #3b82f6; font-weight: 600;">Click to view detailed information</span>
-                  </div>
-                </div>
-              `;
-            }
-            return '';
-          }
+          confine: true,
+          renderMode: 'richText',
+          formatter: ({ data }) => data
+            ? t('page.accessionMap.clusterTooltip', {
+              count: data.cluster.count,
+              accessions: data.cluster.accessions.slice(0, 3).map((item) => item.accession).join(', ')
+            })
+            : ''
         },
         geo: {
           map: 'world',
           roam: true,
-          zoom: 1.3,
-          center: [20, 10],
-          left: 30,
-          right: 30,
-          top: 30,
-          bottom: 30,
-          boundingCoords: [[-180, -90], [180, 90]],
-          zlevel: 1,
-          itemStyle: {
-            areaColor: '#f1f5f9',
-            borderColor: '#cbd5e1',
-            borderWidth: 1
-          },
-          emphasis: {
-            itemStyle: {
-              areaColor: '#e2e8f0',
-              borderColor: '#94a3b8'
-            }
-          },
-          silent: false,
-          triggerEvent: true,
-          regions: [
-            {
-              name: 'Antarctica',
-              itemStyle: {
-                areaColor: '#f8fafc'
-              }
-            }
-          ]
+          center: viewport.center,
+          zoom: viewport.zoom,
+          scaleLimit: { min: 1, max: 12 },
+          left: 12,
+          right: 12,
+          top: 12,
+          bottom: 12,
+          itemStyle: { areaColor: '#edf4fc', borderColor: '#bfd2e8', borderWidth: 0.8 },
+          emphasis: { itemStyle: { areaColor: '#dceafb' }, label: { show: false } },
+          select: { disabled: true }
         },
         series: [{
-          type: 'scatter',
+          type: 'effectScatter',
           coordinateSystem: 'geo',
-          data: mapData,
-          symbol: 'circle',
-          symbolSize: function() {
-            return Math.max(pointSize.value + 3, 8);
-          },
-          itemStyle: {
-            opacity: 0.8
-          },
-          emphasis: {
-            itemStyle: {
-              opacity: 1,
-              scale: 1.3
-            },
-          },
-          silent: false,
-          animation: true,
-          animationDuration: 800,
-          animationEasing: 'cubicOut',
-          animationDelay: function(idx) {
-            return idx * 5;
-          },
-          progressive: 0,
-          progressiveThreshold: 3000
+          data: clusters.value.map((cluster) => ({
+            name: cluster.key,
+            value: [cluster.longitude, cluster.latitude, cluster.count],
+            itemStyle: { color: getGeographicClusterColor(cluster.count) },
+            cluster
+          })),
+          symbolSize: ({ 2: count }) => Math.min(34, 10 + Math.sqrt(count) * 4),
+          showEffectOn: 'emphasis',
+          rippleEffect: { scale: 2.2, brushType: 'stroke' },
+          itemStyle: { borderColor: '#fff', borderWidth: 1.5, opacity: 0.9 },
+          label: { show: false },
+          emphasis: { scale: 1.15 },
+          animation: !reducedMotion,
+          animationDuration: reducedMotion ? 0 : 450
         }]
       };
-
-      mapInstance.value.setOption(option, false);
-      setupMapInteraction();
-      setupClickEvents();
     };
 
-    const getSubPopulationColor = (subPopulation) => {
-      const colorMap = {
-        'cA': '#2563eb',
-        'cB': '#dc2626',
-        'GJ': '#16a34a',
-        'XI': '#9333ea',
-        'WILD': '#ea580c',
-        'O.glaberrima': '#db2777',
-        'Unknown': '#64748b'
-      };
-      return colorMap[subPopulation] || '#64748b';
+    const handleMapClick = ({ data }) => {
+      if (data?.cluster) openCluster(data.cluster);
     };
 
-    const getSubPopulationCount = (subPopulation) => {
-      return filteredData.value.filter(([, info]) =>
-        (info.sub_population || 'Unknown') === subPopulation
-      ).length;
-    };
-
-    const toggleSubPopulation = (subPopulation) => {
-      const index = selectedSubPopulations.value.indexOf(subPopulation);
-      if (index > -1) {
-        selectedSubPopulations.value.splice(index, 1);
-      } else {
-        selectedSubPopulations.value.push(subPopulation);
-      }
-      updateMap();
-    };
-
-    const setupMapInteraction = () => {
-      if (!mapInstance.value) return;
-
-      const mapDom = mapInstance.value.getDom();
-      if (mapDom) {
-        mapDom.style.pointerEvents = 'auto';
-        mapDom.style.cursor = 'default';
-      }
-    };
-
-    const setupClickEvents = () => {
-      if (!mapInstance.value) return;
-
-      mapInstance.value.off('click');
-      mapInstance.value.off('mouseover');
-      mapInstance.value.off('mouseout');
-
-      mapInstance.value.on('click', { seriesType: 'scatter' }, function(params) {
-        if (params.data && params.data.name) {
-          const accessionId = params.data.name;
-
-          router.push({
-            path: '/accession-card',
-            query: {
-              accession: accessionId
-            }
-          });
-
-          ElMessage.success(t('messages.jumpingToDetailsPage', { accession: accessionId }));
-        }
-      });
-
-      mapInstance.value.on('mouseover', { seriesType: 'scatter' }, function() {
-        const mapDom = mapInstance.value.getDom();
-        if (mapDom) {
-          mapDom.style.cursor = 'pointer';
-        }
-      });
-
-      mapInstance.value.on('mouseout', { seriesType: 'scatter' }, function() {
-        const mapDom = mapInstance.value.getDom();
-        if (mapDom) {
-          mapDom.style.cursor = 'default';
-        }
-      });
-    };
-
-    onMounted(async () => {
-      syncRouteSelection();
-      await fetchData();
+    const renderMap = async () => {
+      if (loading.value || loadError.value || !filteredData.value.length) return;
       await nextTick();
-      initMap();
-    });
+      if (!mapContainer.value) return;
+      if (!mapInstance.value) {
+        echarts.registerMap('world', worldMapData);
+        mapInstance.value = echarts.init(mapContainer.value);
+        mapInstance.value.on('click', handleMapClick);
+        resizeObserver = new ResizeObserver(() => mapInstance.value?.resize());
+        resizeObserver.observe(mapContainer.value);
+      }
+      mapInstance.value.setOption(buildMapOption(), true);
+    };
+
+    const applyFilters = async () => {
+      await syncRouteFilters();
+      await renderMap();
+    };
+
+    const resetFilters = async () => {
+      selectedAccession.value = '';
+      selectedRegion.value = '';
+      selectedSubPopulations.value = [];
+      await applyFilters();
+    };
+
+    const fetchData = async () => {
+      loading.value = true;
+      loadError.value = false;
+      try {
+        const response = await axios.get('/files/query/supplementary-data/');
+        supplementaryData.value = response.data && typeof response.data === 'object'
+          ? response.data
+          : {};
+      } catch (error) {
+        console.error('Failed to load geographic data:', error);
+        loadError.value = true;
+      } finally {
+        loading.value = false;
+      }
+      await renderMap();
+    };
 
     watch(
       () => route.query,
       async () => {
-        syncRouteSelection();
-        await nextTick();
-        updateMap();
+        readRouteFilters();
+        await renderMap();
       }
     );
 
+    onMounted(async () => {
+      readRouteFilters();
+      await syncRouteFilters();
+      await fetchData();
+    });
+
     onUnmounted(() => {
+      resizeObserver?.disconnect();
       if (mapInstance.value) {
+        mapInstance.value.off('click', handleMapClick);
         mapInstance.value.dispose();
       }
-      window.removeEventListener('resize', () => {});
     });
 
     return {
-      loading,
-      selectedOrganism,
-      organismOptions,
-      loadingOrganisms,
+      accessionOptions,
       allSubPopulations,
-      selectedSubPopulations,
+      applyFilters,
+      baseMetrics,
+      clusterOptions,
+      drawerItems,
+      drawerOpen,
+      fetchData,
       filteredData,
-      totalCount,
-      uniqueCountries,
+      filteredMetrics,
+      fitFilteredData,
+      hasActiveFilters,
+      loadError,
+      loading,
       mapContainer,
-      mapMode,
-      pointSize,
-      getSubPopulationClass,
-      getSubPopulationColor,
-      getSubPopulationCount,
-      toggleSubPopulation,
-      searchOrganisms,
-      handleOrganismChange,
-      handleSubPopulationChange,
-      updateMap,
-      fetchData
+      openAccession,
+      openClusterByKey,
+      resetFilters,
+      selectedAccession,
+      selectedClusterKey,
+      selectedRegion,
+      selectedSubPopulations,
+      showGlobalView
     };
   }
 };
@@ -639,331 +474,92 @@ export default {
 
 <style scoped>
 .accession-map-view {
-  padding: 0;
+  width: min(1440px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 4px 0 48px;
+  color: #12335f;
 }
 
-.page-header {
+.page-heading {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #1a56db;
-}
-
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.search-container {
-  margin-bottom: 24px;
-}
-
-.search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 0 16px;
-  max-width: 500px;
-}
-
-.search-icon {
-  color: #606266;
-  margin-right: 8px;
-}
-
-.search-select {
-  width: 100%;
-}
-
-.filter-panel {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.filter-section {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.filter-section:last-child {
-  margin-bottom: 0;
-}
-
-.viz-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.filter-label {
-  font-weight: 500;
-  color: #606266;
-  white-space: nowrap;
-  margin-top: 4px;
-}
-
-.subpop-checkboxes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.sub-population {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  border: none !important;
-}
-
-.sub-pop-ca {
-  background-color: #e0f2fe;
-  color: #0369a1;
-}
-
-.sub-pop-cb {
-  background-color: #fef3c7;
-  color: #d97706;
-}
-
-.sub-pop-gj {
-  background-color: #ecfdf5;
-  color: #059669;
-}
-
-.sub-pop-xi {
-  background-color: #f3f0ff;
-  color: #7c3aed;
-}
-
-.sub-pop-wild {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-.sub-pop-glaberrima {
-  background-color: #fdf4ff;
-  color: #c026d3;
-}
-
-.sub-pop-unknown {
-  background-color: #f3f4f6;
-  color: #6b7280;
-}
-
-.sub-pop-default {
-  background-color: #f9fafb;
-  color: #6b7280;
-}
-
-.research-map-card {
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.15),
-    0 4px 6px -2px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.08);
-  border: 2px solid #e5e7eb;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 32px;
-}
-
-.research-map-card:hover {
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.2),
-    0 10px 10px -5px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(59, 130, 246, 0.1);
-  border-color: #cbd5e1;
-  transform: translateY(-2px);
-}
-
-.map-body {
-  position: relative;
-  min-height: 800px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  transition: all 0.3s ease;
-}
-
-.loading-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 800px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-}
-
-.loading-spinner {
-  text-align: center;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e2e8f0;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-spinner p {
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.map-wrapper {
-  position: relative;
-  height: 800px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-}
-
-.echarts-map {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  image-rendering: pixelated;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.data-summary {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  padding: 32px;
-  border: 1px solid #e2e8f0;
-}
-
-.summary-title {
-  margin: 0 0 24px 0;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1e293b;
-  font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
-  border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 12px;
-}
-
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 18px;
 }
 
-.summary-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+.map-breadcrumb { display:flex; align-items:center; gap:8px; margin-bottom:8px; color:#76849a; font-size:13px; }
+.map-breadcrumb a { color:#3974c7; text-decoration:none; }
+.map-breadcrumb a:hover,.map-breadcrumb a:focus-visible { color:#086cde; text-decoration:underline; }
+.page-heading h1 { margin:0; color:#102f61; font-size:30px; line-height:1.12; letter-spacing:-.03em; }
+
+.filter-card,
+.map-card,
+.metrics {
+  border: 1px solid #d6e4f4;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(23, 73, 128, 0.06);
 }
 
-.summary-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #cbd5e1;
+.filter-card { margin-bottom: 16px; padding: 18px; }
+.filter-grid { display: grid; grid-template-columns: 1.15fr 1fr 1.15fr auto; gap: 14px; align-items: end; }
+.filter-field { display: grid; gap: 7px; min-width: 0; color: #284c77; font-size: 13px; font-weight: 650; }
+.filter-actions { display: flex; }
+
+.map-card { overflow: hidden; }
+.map-toolbar { display: flex; justify-content: flex-end; gap: 20px; align-items: center; padding: 16px 18px; border-bottom: 1px solid #e1ebf6; }
+.map-actions { display: flex; flex-shrink: 0; align-items: center; }
+.region-select { width: 230px; margin-right: 10px; }
+.map-stage { position: relative; min-height: clamp(460px, 62vh, 680px); background: #f7faff; }
+.echarts-map { width: 100%; height: clamp(460px, 62vh, 680px); }
+.state-panel { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; color: #637b9a; text-align: center; }
+.state-panel > .el-icon { font-size: 30px; color: #287fdc; }
+.map-footer { display: flex; justify-content: flex-start; gap: 18px; align-items: center; min-height: 50px; padding: 8px 18px; border-top: 1px solid #e1ebf6; color: #637b9a; font-size: 12px; }
+.size-legend { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.size-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.bubble { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
+.cluster-single { background: #1677e8; }
+.cluster-small { background: #16a34a; }
+.cluster-large { background: #f07818; }
+.cluster-medium { background: #7c3aed; }
+.cluster-extra-large { background: #eab308; }
+.cluster-very-large { background: #ef4444; }
+.cluster-extreme { background: #ec4899; }
+
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 16px; overflow: hidden; }
+.metrics article { display: grid; gap: 3px; padding: 18px 22px; border-right: 1px solid #e1ebf6; }
+.metrics article:last-child { border-right: 0; }
+.metrics strong { color: #0b54ac; font-size: 24px; }
+.metrics span { color: #647b99; font-size: 13px; }
+
+@media (max-width: 960px) {
+  .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .metrics article:nth-child(2) { border-right: 0; }
+  .metrics article:nth-child(-n+2) { border-bottom: 1px solid #e1ebf6; }
 }
 
-.summary-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-  margin-top: 4px;
+@media (max-width: 640px) {
+  .accession-map-view { width: min(100% - 24px, 1440px); padding-top: 4px; }
+  .page-heading { align-items: flex-start; }
+  .page-heading h1 { font-size: 26px; }
+  .page-heading > .el-button { padding-inline: 9px; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .filter-actions .el-button { width: 100%; }
+  .map-toolbar { align-items: flex-start; flex-direction: column; }
+  .map-actions { width: 100%; }
+  .region-select { flex: 1; width: auto; min-width: 0; }
+  .map-actions .el-button { flex: 1; }
+  .map-stage,
+  .echarts-map { min-height: 430px; height: 56vh; }
+  .map-footer { align-items: flex-start; flex-direction: column; padding-block: 12px; }
+  .metrics { grid-template-columns: 1fr; }
+  .metrics article { border-right: 0; border-bottom: 1px solid #e1ebf6; }
+  .metrics article:last-child { border-bottom: 0; }
 }
 
-.summary-content {
-  flex: 1;
-}
-
-.summary-number {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 4px;
-  font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
-}
-
-.summary-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: #475569;
-  margin-bottom: 4px;
-}
-
-.summary-desc {
-  font-size: 13px;
-  color: #64748b;
-  line-height: 1.4;
-}
-
-:deep(.el-select) {
-  width: 100%;
-}
-
-:deep(.el-select .el-input__wrapper) {
-  box-shadow: none;
-  border: none;
-}
-
-:deep(.el-checkbox-group) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-:deep(.el-checkbox) {
-  margin-right: 0;
-}
-
-:deep(.el-checkbox__label) {
-  padding-left: 8px;
-}
-
-.filter-container {
-  display: inline-block;
+@media (prefers-reduced-motion: reduce) {
+  .accession-map-view :deep(*) { scroll-behavior: auto !important; }
 }
 </style>

@@ -1,6 +1,33 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { getTopNavActiveGroup, isTopNavGroupActive, normalizeTopNavPath, topNavGroups } from '../src/config/topNavConfig.mjs'
+import { getTopNavActiveGroup, isTopNavGroupActive, normalizeTopNavPath, topNavItems } from '../src/config/topNavConfig.mjs'
+
+test('top navigation exposes the agreed five first-level entries in order', () => {
+  assert.deepEqual(
+    topNavItems.map((item) => [item.key, item.path]),
+    [
+      ['home', '/dashboard'],
+      ['accession', '/accession-card'],
+      ['assembly', '/assembly'],
+      ['data', '/data-overview'],
+      ['more', undefined]
+    ]
+  )
+})
+
+test('Data and More contain only the agreed secondary entries', () => {
+  const data = topNavItems.find((item) => item.key === 'data')
+  const more = topNavItems.find((item) => item.key === 'more')
+
+  assert.deepEqual(data.children.map((item) => [item.labelKey, item.path]), [
+    ['nav.dataOverview', '/data-overview'],
+    ['nav.researchGroupRawData', '/raw-data']
+  ])
+  assert.deepEqual(more.children.map((item) => [item.labelKey, item.path]), [
+    ['nav.annotation', '/annotation'],
+    ['nav.transcriptomeOverview', '/transcriptome-overview']
+  ])
+})
 
 test('normalizeTopNavPath aliases legacy detail and card routes', () => {
   assert.equal(normalizeTopNavPath('/'), '/dashboard')
@@ -9,39 +36,31 @@ test('normalizeTopNavPath aliases legacy detail and card routes', () => {
   assert.equal(normalizeTopNavPath('/accession-detail'), '/accession-card')
 })
 
-test('getTopNavActiveGroup maps data routes to data overview group', () => {
-  assert.equal(getTopNavActiveGroup('/data-overview'), 'dataOverview')
-  assert.equal(getTopNavActiveGroup('/genome-card'), 'dataOverview')
-  assert.equal(getTopNavActiveGroup('/annotation-card'), 'dataOverview')
-  assert.equal(getTopNavActiveGroup('/transcriptome-overview'), 'dataOverview')
+test('active group mapping covers visible navigation destinations', () => {
+  const cases = {
+    '/dashboard': 'home',
+    '/accession-card': 'accession',
+    '/accession-detail': 'accession',
+    '/accession-map': 'accession',
+    '/assembly': 'assembly',
+    '/data': 'data',
+    '/data-chart': 'data',
+    '/data-overview': 'data',
+    '/raw-data': 'data',
+    '/genome-card': null,
+    '/annotation': 'more',
+    '/annotation-card': 'more',
+    '/transcriptome': 'more',
+    '/transcriptome-overview': 'more'
+  }
+
+  Object.entries(cases).forEach(([path, group]) => assert.equal(getTopNavActiveGroup(path), group))
 })
 
-test('getTopNavActiveGroup maps tools routes to tools group', () => {
-  assert.equal(getTopNavActiveGroup('/core-variable-blocks'), 'tools')
-  assert.equal(getTopNavActiveGroup('/codon-card'), 'tools')
-  assert.equal(getTopNavActiveGroup('/tools/codonw'), 'tools')
-})
-
-test('isTopNavGroupActive only marks the owning group active', () => {
-  assert.equal(isTopNavGroupActive('accession', '/accession-detail'), true)
-  assert.equal(isTopNavGroupActive('tools', '/annotation'), false)
-})
-
-test('topNavGroups keeps agreed secondary navigation structure', () => {
-  assert.equal(topNavGroups.dataOverview.labelKey, 'nav.dataResources')
-  assert.equal(topNavGroups.dataOverview.path, '/data-overview')
-  assert.deepEqual(
-    topNavGroups.dataOverview.children.map((item) => [item.labelKey, item.path]),
-    [
-      ['nav.rawData', '/raw-data'],
-      ['nav.dataOverview', '/data-overview'],
-      ['nav.genome', '/genome-card'],
-      ['nav.annotation', '/annotation'],
-      ['nav.transcriptomeOverview', '/transcriptome-overview']
-    ]
-  )
-  assert.deepEqual(
-    topNavGroups.tools.children.map((item) => item.path),
-    ['/core-variable-blocks', '/codon-card', '/tools/codonw']
-  )
+test('hidden tools and placeholder routes do not activate a first-level entry', () => {
+  assert.equal(getTopNavActiveGroup('/core-variable-blocks'), null)
+  assert.equal(getTopNavActiveGroup('/codon-card'), null)
+  assert.equal(getTopNavActiveGroup('/tools/codonw'), null)
+  assert.equal(getTopNavActiveGroup('/placeholder'), null)
+  assert.equal(isTopNavGroupActive('more', '/codon-card'), false)
 })

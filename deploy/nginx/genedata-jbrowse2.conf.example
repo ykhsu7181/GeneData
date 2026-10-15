@@ -1,0 +1,32 @@
+# Include these locations in the HTTPS server block that already serves GeneData.
+# Confirm every path against the production host before enabling this file.
+
+location = /jbrowse2 {
+    return 301 /jbrowse2/;
+}
+
+# JBrowse Web v4.3.0 static application. Point this alias at an immutable,
+# versioned release directory; switch versions only after validation.
+location /jbrowse2/ {
+    alias /home/labuser/rdcheng/gd/releases/jbrowse2-v4.3.0/;
+    index index.html;
+}
+
+# Only Django-generated X-Accel-Redirect responses may access source FASTA.
+location /_protected_manual_files/ {
+    internal;
+    alias /home/labuser/rdcheng/gd/manual_files/;
+    gzip off;
+    add_header Accept-Ranges bytes always;
+    add_header X-Content-Type-Options nosniff always;
+}
+
+# Only Django-generated X-Accel-Redirect responses may access generated
+# .fai, bgzip-compressed GFF3 and tabix index artifacts.
+location /_protected_derived_data/ {
+    internal;
+    alias /home/labuser/rdcheng/gd/derived_data/;
+    gzip off;
+    add_header Accept-Ranges bytes always;
+    add_header X-Content-Type-Options nosniff always;
+}

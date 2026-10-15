@@ -52,12 +52,12 @@
                 class="column-config-button"
                 @click="toggleColumnSelector"
               >
-                显示列
+                {{ $t('page.home.showColumns') }}
               </el-button>
             </template>
 
             <div class="column-selector-panel">
-              <div class="column-selector-title">显示列配置</div>
+              <div class="column-selector-title">{{ $t('page.home.columnSettings') }}</div>
               <el-checkbox-group
                 v-model="visibleColumnKeys"
                 @change="handleVisibleColumnsChange"
@@ -75,8 +75,8 @@
               </el-checkbox-group>
 
               <div class="column-selector-actions">
-                <el-button link type="primary" @click="selectAllColumns">全选</el-button>
-                <el-button link type="primary" @click="resetVisibleColumns">恢复默认</el-button>
+                <el-button link type="primary" @click="selectAllColumns">{{ $t('page.home.selectAll') }}</el-button>
+                <el-button link type="primary" @click="resetVisibleColumns">{{ $t('page.home.restoreDefaults') }}</el-button>
               </div>
             </div>
           </el-popover>
@@ -146,7 +146,7 @@
                           v-model="isAllSelected"
                           @change="handleSelectAllChange"
                           class="select-all-checkbox">
-                          全选
+                          {{ $t('page.home.selectAll') }}
                         </el-checkbox>
                       </div>
                       <el-checkbox-group
@@ -177,7 +177,7 @@
               <span
                 v-else
                 :class="['sub-population', getSubPopulationClass('Unknown')]">
-                Unknown
+                {{ $t('common.unknown') }}
               </span>
             </template>
           </el-table-column>
@@ -201,7 +201,7 @@
                 <router-link
                   v-if="scope.row.genome"
                   class="data-link"
-                  :to="{ name: 'genome-card', query: buildGenomeQuery(scope.row) }">
+                  :to="buildGenomeRoute(scope.row)">
                   genome.{{ scope.row.accession }}
                 </router-link>
                 <span v-else class="data-empty">-</span>
@@ -387,7 +387,7 @@ export default {
     Location
   },
   setup() {
-    useI18n();
+    const { t } = useI18n();
     const loading = ref(true);
     const tableData = ref([]);
     const selectedOrganism = ref('');
@@ -477,7 +477,7 @@ export default {
         organismOptions.value = allOrganisms.value;
       } catch (error) {
         console.error('获取生物体列表失败:', error);
-        ElMessage.error('获取生物体列表失败');
+        ElMessage.error(t('messages.getOrganismsFailed'));
       } finally {
         loadingOrganisms.value = false;
       }
@@ -498,7 +498,7 @@ export default {
         isAllSelected.value = true;
       } catch (error) {
         console.error('获取亚群列表失败:', error);
-        ElMessage.error('获取亚群列表失败');
+        ElMessage.error(t('messages.getSubPopulationsFailed'));
       } finally {
         loadingSubPopulations.value = false;
       }
@@ -560,7 +560,7 @@ export default {
 
       } catch (error) {
         console.error('获取文件列表失败:', error);
-        ElMessage.error('获取文件列表失败');
+        ElMessage.error(t('messages.getFileListFailed'));
       }
     };
 
@@ -574,7 +574,7 @@ export default {
         await fetchFilesQuietly();
       } catch (error) {
         console.error('获取文件列表失败:', error);
-        ElMessage.error('获取文件列表失败');
+        ElMessage.error(t('messages.getFileListFailed'));
       } finally {
         loading.value = false;
       }
@@ -692,6 +692,19 @@ export default {
       return query;
     };
 
+    const buildGenomeRoute = (row) => {
+      if (row.default_assembly_id) {
+        return {
+          name: 'assembly-detail',
+          params: { assemblyId: row.default_assembly_id }
+        };
+      }
+      return {
+        name: 'accession-detail',
+        query: { accession: row.accession }
+      };
+    };
+
     const buildAnnotationQuery = (row) => {
       const query = buildGenomeQuery(row);
       if (row.default_annotation_id) {
@@ -719,7 +732,7 @@ export default {
 
     // 处理地理位置点击事件
     const handleGeographicClick = (accession) => {
-      ElMessage.success(`正在跳转到 ${accession} 的地理分布图`);
+      ElMessage.success(t('messages.jumpingToGeographicMap', { accession }));
     };
 
     onUnmounted(() => {
@@ -764,6 +777,7 @@ export default {
       handleGeographicClick,
       buildAccessionQuery,
       buildGenomeQuery,
+      buildGenomeRoute,
       buildAnnotationQuery
     };
   }

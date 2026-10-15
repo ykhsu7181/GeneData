@@ -567,7 +567,7 @@ export default {
     };
 
     // 上传进度
-    const handleUploadProgress = (event, file, fileListParam) => {
+    const handleUploadProgress = (event, file) => {
       console.log('上传进度:', event, file);
       uploading.value = true;
     };
@@ -579,7 +579,7 @@ export default {
       taskId: null
     };
 
-    const handleGenomeUploadSuccess = (response, file, fileListParam) => {
+    const handleGenomeUploadSuccess = (response) => {
       console.log('基因组文件上传成功:', response);
       genomicAnalysisState.genomeUploaded = true;
 
@@ -594,7 +594,7 @@ export default {
       }
     };
 
-    const handleGffUploadSuccess = (response, file, fileListParam) => {
+    const handleGffUploadSuccess = (response) => {
       console.log('GFF文件上传成功:', response);
       genomicAnalysisState.gffUploaded = true;
 
@@ -626,7 +626,7 @@ export default {
       }
     };
 
-    const handleCdsUploadSuccess = (response, file, fileListParam) => {
+    const handleCdsUploadSuccess = (response) => {
       console.log('CDS文件上传成功:', response);
       uploading.value = false;
       analyzing.value = true;
@@ -651,18 +651,11 @@ export default {
     };
 
     // 上传失败
-    const handleUploadError = (error, file, fileListParam) => {
+    const handleUploadError = (error) => {
       console.error('上传失败:', error);
       uploading.value = false;
 
-      let errorMessage = t('page.codonw.uploadFailedError');
-      if (error && error.message) {
-        errorMessage += ': ' + error.message;
-      } else if (typeof error === 'string') {
-        errorMessage += ': ' + error;
-      }
-
-      ElMessage.error(errorMessage);
+      ElMessage.error(t('page.codonw.uploadFailedError'));
     };
 
     // 轮询分析状态
@@ -679,13 +672,13 @@ export default {
             analyzing.value = false;
             analysisStatus.value = 'success';
             progressText.value = t('page.codonw.analysisCompleted');
-            ElMessage.success('CodonW分析完成');
+            ElMessage.success(t('page.codonw.analysisCompleted'));
             fetchAnalysisHistory();
           } else if (status === 'failed') {
             analyzing.value = false;
             analysisStatus.value = 'exception';
             progressText.value = t('page.codonw.analysisFailed', { message });
-            ElMessage.error('分析失败: ' + message);
+            ElMessage.error(t('page.codonw.analysisFailed', { message }));
             fetchAnalysisHistory();
           } else {
             // 继续轮询
