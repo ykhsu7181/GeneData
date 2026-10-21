@@ -1,11 +1,6 @@
 """Protected browser-asset responses delegated to Nginx via X-Accel-Redirect."""
 
-import os
-from pathlib import Path
-from urllib.parse import quote
-
 from django.conf import settings
-from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -22,6 +17,7 @@ from files.services.jbrowse_location_service import (
     JBrowseLocationError,
     resolve_jbrowse_location,
 )
+from files.services.protected_asset_service import build_protected_file_response
 
 
 ROLE_SUFFIXES = {
@@ -94,16 +90,13 @@ def browser_asset(request, file_id):
     if relation is None:
         return _not_found()
 
-    mapping = _internal_path_mapping(data_file.file_path)
-    if mapping is None:
+    response = build_protected_file_response(
+        data_file,
+        roots=_jbrowse_protected_roots(),
+        disposition="inline",
+    )
+    if response is None:
         return _not_found()
-    internal_uri, content_type = mapping
-
-    response = HttpResponse(status=status.HTTP_200_OK, content_type=content_type)
-    response["X-Accel-Redirect"] = internal_uri
-    response["Content-Disposition"] = _inline_content_disposition(data_file.file_name)
-    response["Accept-Ranges"] = "bytes"
-    response["X-Content-Type-Options"] = "nosniff"
     return response
 
 
@@ -149,62 +142,30 @@ def _visible_jbrowse_relation(data_file):
     return None
 
 
-def _internal_path_mapping(file_path):
-    if not file_path or not os.path.isfile(file_path) or not os.access(file_path, os.R_OK):
-        return None
-
-    candidate = Path(file_path).resolve()
-    roots = [
-        (
-            Path(settings.MANUAL_FILES_DIR).resolve(),
-            getattr(
+def _jbrowse_protected_roots():
+    return {
+        "manual": {
+            "path": settings.MANUAL_FILES_DIR,
+            "internal_uri": getattr(
                 settings,
                 "GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX",
                 "/_protected_manual_files/",
             ),
-        ),
-        (
-            Path(settings.GENEDATA_DERIVED_DATA_DIR).resolve(),
-            getattr(
+        },
+        "derived": {
+            "path": settings.GENEDATA_DERIVED_DATA_DIR,
+            "internal_uri": getattr(
                 settings,
                 "GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX",
                 "/_protected_derived_data/",
             ),
-        ),
-    ]
-    roots.sort(key=lambda item: len(str(item[0])), reverse=True)
-    for root, prefix in roots:
-        try:
-            relative = candidate.relative_to(root)
-        except ValueError:
-            continue
-        normalized_prefix = f"/{str(prefix).strip('/')}/"
-        relative_uri = quote(relative.as_posix(), safe="/")
-        return f"{normalized_prefix}{relative_uri}", _content_type(candidate.name)
-    return None
+        },
+    }
 
 
 def _role_matches_path(role, file_path):
     normalized = str(file_path or "").lower()
     return any(normalized.endswith(suffix) for suffix in ROLE_SUFFIXES.get(role, ()))
-
-
-def _content_type(file_name):
-    normalized = file_name.lower()
-    if normalized.endswith((".gff.gz", ".gff3.gz")):
-        return "application/gzip"
-    if normalized.endswith(".tbi"):
-        return "application/octet-stream"
-    return "text/plain; charset=utf-8"
-
-
-def _inline_content_disposition(file_name):
-    name = os.path.basename(file_name or "jbrowse-asset")
-    ascii_name = name.encode("ascii", errors="ignore").decode("ascii")
-    ascii_name = "".join(
-        character for character in ascii_name if character >= " " and character not in {'"', "\\"}
-    ) or "jbrowse-asset"
-    return f"inline; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(name)}"
 
 
 def _integer_id(value):

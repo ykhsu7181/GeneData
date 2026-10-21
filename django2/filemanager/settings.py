@@ -36,6 +36,10 @@ ALLOWED_HOSTS = ['*']
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_RATES': {
+        'external_metadata': os.environ.get('GENEDATA_METADATA_RATE', '120/minute'),
+        'external_content': os.environ.get('GENEDATA_CONTENT_RATE', '30/minute'),
+    },
 }
 
 # 网站URL设置

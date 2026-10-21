@@ -44,6 +44,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("gd/api/warehouse/dashboard/", warehouse_dashboard, name="warehouse-dashboard"),
     path("gd/api/files/", include("files.urls")),
+    path("gd/api/v1/", include("files.api_v1.urls")),
     path("gd/api/admin/", include("files.urls")),
     path("gd/api/integrations/", include("integrations.urls")),
     path("api/warehouse/dashboard/", warehouse_dashboard, name="warehouse-dashboard-api"),
