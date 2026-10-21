@@ -37,7 +37,7 @@ pgrep -af 'manage.py|gunicorn|uwsgi'
 nginx -T > "$AUDIT_ROOT/nginx_before.txt"
 ```
 
-记录并人工确认唯一活动服务的 PID、cwd、Python、用户、settings 与端口。确认 `/home/labuser/rdcheng/gd` 是预期根目录后，才可进入备份。
+记录并人工确认唯一活动服务的 PID、cwd、Python、用户、settings 与端口。确认 `/home/labuser/rdcheng/gd` 是预期根目录后，才可进入备份。另需从 `nginx -T` 证据确认 HTTP→HTTPS 跳转和 `X-Forwarded-Proto`；未确认时不得启用 Django SSL redirect 或 HSTS。
 
 ## 4. 备份门禁
 
@@ -90,6 +90,8 @@ cd '<active-backend>/django2'
 '<production-python>' manage.py list_data_access_tokens --include-inactive \
   > "$AUDIT_ROOT/token_inventory.tsv"
 ```
+
+使用 `metadata/external_api_release_template/` 中的 IR64 清单分别执行 DataFile 和 Dataset dry-run；确认 SHA-256、稳定代码及报告无 blocker 后，才能在批准窗口使用 `--apply`。随后执行全材料只读审计，并使用 `--require-*` 参数为 IR64 设置硬门禁。其他材料只盘点，不自动发布。
 
 确认 Dataset `DS_IR64_REFERENCE_V1` 为 public/released 且只关联批准文件。随后按运维手册签发 2 小时 Token，将明文只存 Secret Manager，并在当前 shell 中安全注入 `GENEDATA_TOKEN`。
 

@@ -17,6 +17,7 @@
 5. `manage.py check --deploy --settings=filemanager.settings_production` 通过；migration plan 仅含已评审迁移。
 6. `/_protected_manual_files/` 与 `/_protected_derived_data/` 为 `internal`，alias 指向真实目录，`nginx -t` 通过。
 7. Canary 的 IR64 文件、Dataset、Assembly 与索引状态均完成只读核对。
+8. 已确认 Nginx 是否设置 `X-Forwarded-Proto` 以及 HTTP→HTTPS 跳转归属；确认后显式配置 `GENEDATA_SECURE_SSL_REDIRECT`、`GENEDATA_TRUST_X_FORWARDED_PROTO` 和 `GENEDATA_SECURE_HSTS_SECONDS`。在未验证整个域名及子域均为 HTTPS 前，不启用 HSTS subdomains/preload。
 
 任一门禁失败即停止，不运行 `--apply`，不切换服务。
 
@@ -66,6 +67,25 @@ python manage.py audit_public_fasta_indexes --assembly ASM_IR64
 ```
 
 只有报告 `blocked=0`、FASTA 审计 `PASS`，且 Dataset 为 `visibility=public,status=released` 时才能进入 HTTP Canary。不得以数据库主键跨环境推断对象；使用 `file_code`、`dataset_code`、`assembly_code` 核对后再记录生产主键。
+
+Dataset 及其 Accession/File 关系使用稳定代码清单发布，同样必须先 dry-run：
+
+```bash
+python manage.py publish_external_datasets \
+  --manifest metadata/external_api_release_template/dataset_publication.ir64.tsv \
+  --output-dir /home/labuser/rdcheng/gd/audit_reports/external_api/canary
+```
+
+全材料暴露面审计不会修改数据库，并且报告不包含物理路径：
+
+```bash
+python manage.py audit_external_api_readiness \
+  --output-dir /home/labuser/rdcheng/gd/audit_reports/external_api/readiness \
+  --require-file FILE000013 --require-file FAI_14 --require-file FILE000001 \
+  --require-dataset DS_IR64_REFERENCE_V1 --require-assembly ASM_IR64
+```
+
+该命令输出 summary、accessions、assemblies、datasets、files 五份 TSV。其他材料只做分类盘点，不会自动变更发布状态。
 
 ## 5. 监控与告警
 

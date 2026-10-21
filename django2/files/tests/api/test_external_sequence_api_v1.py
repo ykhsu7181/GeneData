@@ -189,3 +189,6 @@ class ExternalSequenceApiV1Tests(TestCase):
             [response.status_code for response in responses],
             [200, 200, 429],
         )
+        self.assertIn("Retry-After", responses[-1])
+        self.assertNotIn(self.raw_token, responses[-1].content.decode("utf-8"))
+        self.assertNotIn(str(self.root), responses[-1].content.decode("utf-8"))
