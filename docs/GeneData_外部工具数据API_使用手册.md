@@ -114,8 +114,8 @@ rule ir64_region:
     output: "IR64.Chr01.1-120.fa"
     shell:
         "curl --fail-with-body --silent --show-error "
-        "-H 'Authorization: Bearer $GENEDATA_TOKEN' "
-        "'$GENEDATA_BASE_URL/gd/api/v1/assemblies/ASM_IR64/sequence/?sequence=Chr01&start=1&end=120' "
+        "-H \"Authorization: Bearer $GENEDATA_TOKEN\" "
+        "\"$GENEDATA_BASE_URL/gd/api/v1/assemblies/ASM_IR64/sequence/?sequence=Chr01&start=1&end=120\" "
         "-o {output}"
 ```
 
