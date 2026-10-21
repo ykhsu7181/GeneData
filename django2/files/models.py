@@ -1,6 +1,13 @@
+import hashlib
+import hmac
+import re
+import secrets
+
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class FileType(models.Model):
@@ -463,6 +470,27 @@ class Annotation(models.Model):
 
 
 class DataFile(models.Model):
+    ACCESS_LEVEL_INHERITED = 'inherited'
+    ACCESS_LEVEL_PRIVATE = 'private'
+    ACCESS_LEVEL_INTERNAL = 'internal'
+    ACCESS_LEVEL_PUBLIC = 'public'
+    ACCESS_LEVEL_CHOICES = [
+        (ACCESS_LEVEL_INHERITED, 'Inherited'),
+        (ACCESS_LEVEL_PRIVATE, 'Private'),
+        (ACCESS_LEVEL_INTERNAL, 'Internal'),
+        (ACCESS_LEVEL_PUBLIC, 'Public'),
+    ]
+    PUBLICATION_DRAFT = 'draft'
+    PUBLICATION_APPROVED = 'approved'
+    PUBLICATION_RELEASED = 'released'
+    PUBLICATION_WITHDRAWN = 'withdrawn'
+    PUBLICATION_STATUS_CHOICES = [
+        (PUBLICATION_DRAFT, 'Draft'),
+        (PUBLICATION_APPROVED, 'Approved'),
+        (PUBLICATION_RELEASED, 'Released'),
+        (PUBLICATION_WITHDRAWN, 'Withdrawn'),
+    ]
+
     file_code = models.CharField(max_length=100, unique=True, db_index=True)
     dataset = models.ForeignKey(
         'Dataset',
@@ -483,7 +511,28 @@ class DataFile(models.Model):
     file_path = models.CharField(max_length=500, unique=True, db_index=True)
     file_size = models.BigIntegerField(blank=True, null=True)
     md5 = models.CharField(max_length=64, blank=True, null=True)
+    sha256 = models.CharField(max_length=64, blank=True, null=True, db_index=True)
     is_current = models.BooleanField(default=True)
+    access_level = models.CharField(
+        max_length=20,
+        choices=ACCESS_LEVEL_CHOICES,
+        default=ACCESS_LEVEL_INHERITED,
+        db_index=True,
+    )
+    publication_status = models.CharField(
+        max_length=20,
+        choices=PUBLICATION_STATUS_CHOICES,
+        default=PUBLICATION_DRAFT,
+        db_index=True,
+    )
+    published_at = models.DateTimeField(blank=True, null=True)
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='published_data_files',
+    )
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -494,6 +543,109 @@ class DataFile(models.Model):
 
     def __str__(self):
         return self.file_name
+
+    @property
+    def content_version(self):
+        digest = (self.sha256 or '').strip().lower()
+        return f'sha256:{digest}' if re.fullmatch(r'[0-9a-f]{64}', digest) else None
+
+
+class DataAccessToken(models.Model):
+    ACCESS_TIER_PUBLIC = 'public'
+    ACCESS_TIER_INTERNAL = 'internal'
+    ACCESS_TIER_CHOICES = [
+        (ACCESS_TIER_PUBLIC, 'Public data'),
+        (ACCESS_TIER_INTERNAL, 'Public and internal data'),
+    ]
+
+    SCOPE_METADATA_READ = 'metadata:read'
+    SCOPE_FILE_READ = 'file:read'
+    SCOPE_SEQUENCE_READ = 'sequence:read'
+    SCOPE_DATASET_MANIFEST = 'dataset:manifest'
+    ALLOWED_SCOPES = frozenset({
+        SCOPE_METADATA_READ,
+        SCOPE_FILE_READ,
+        SCOPE_SEQUENCE_READ,
+        SCOPE_DATASET_MANIFEST,
+    })
+
+    name = models.CharField(max_length=255)
+    token_prefix = models.CharField(max_length=16, unique=True, db_index=True)
+    token_hash = models.CharField(max_length=64, unique=True)
+    scopes = models.JSONField(default=list)
+    access_tier = models.CharField(
+        max_length=20,
+        choices=ACCESS_TIER_CHOICES,
+        default=ACCESS_TIER_PUBLIC,
+    )
+    expires_at = models.DateTimeField(blank=True, null=True)
+    revoked_at = models.DateTimeField(blank=True, null=True)
+    last_used_at = models.DateTimeField(blank=True, null=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='created_data_access_tokens',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'data_access_token'
+        ordering = ['name', 'id']
+
+    def __str__(self):
+        return f'{self.name} ({self.token_prefix})'
+
+    @classmethod
+    def issue(cls, *, name, scopes, access_tier=ACCESS_TIER_PUBLIC, **extra_fields):
+        normalized_scopes = sorted(set(scopes))
+        unknown_scopes = set(normalized_scopes) - cls.ALLOWED_SCOPES
+        if unknown_scopes:
+            raise ValueError(f'Unsupported data access scopes: {sorted(unknown_scopes)}')
+
+        prefix = secrets.token_hex(6)
+        secret = secrets.token_urlsafe(32)
+        raw_token = f'gdt_{prefix}_{secret}'
+        token = cls.objects.create(
+            name=name,
+            token_prefix=prefix,
+            token_hash=cls.hash_raw_token(raw_token),
+            scopes=normalized_scopes,
+            access_tier=access_tier,
+            **extra_fields,
+        )
+        return token, raw_token
+
+    @classmethod
+    def authenticate(cls, raw_token):
+        try:
+            marker, prefix, _secret = str(raw_token).split('_', 2)
+        except ValueError:
+            return None
+        if marker != 'gdt':
+            return None
+        token = cls.objects.filter(token_prefix=prefix).first()
+        if token is None or not token.is_active:
+            return None
+        expected = cls.hash_raw_token(raw_token)
+        if not hmac.compare_digest(token.token_hash, expected):
+            return None
+        return token
+
+    @staticmethod
+    def hash_raw_token(raw_token):
+        key = settings.SECRET_KEY.encode('utf-8')
+        return hmac.new(key, str(raw_token).encode('utf-8'), hashlib.sha256).hexdigest()
+
+    @property
+    def is_active(self):
+        now = timezone.now()
+        return self.revoked_at is None and (self.expires_at is None or self.expires_at > now)
+
+    def has_scope(self, scope):
+        return scope in set(self.scopes or [])
 
 
 class AnnotationFeatureIndex(models.Model):

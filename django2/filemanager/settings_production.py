@@ -51,6 +51,16 @@ GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX = os.environ.get(
     "GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX",
     "/_protected_derived_data/",
 )
+GENEDATA_PROTECTED_FILE_ROOTS = {
+    "manual": {
+        "path": MANUAL_FILES_DIR,
+        "internal_uri": GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX,
+    },
+    "derived": {
+        "path": GENEDATA_DERIVED_DATA_DIR,
+        "internal_uri": GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX,
+    },
+}
 
 LOGGING = {
     "version": 1,

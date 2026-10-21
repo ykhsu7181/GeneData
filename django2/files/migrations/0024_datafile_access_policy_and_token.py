@@ -1,0 +1,85 @@
+from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
+
+
+class Migration(migrations.Migration):
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('files', '0023_annotation_feature_index'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='datafile',
+            name='access_level',
+            field=models.CharField(
+                choices=[
+                    ('inherited', 'Inherited'),
+                    ('private', 'Private'),
+                    ('internal', 'Internal'),
+                    ('public', 'Public'),
+                ],
+                db_index=True,
+                default='inherited',
+                max_length=20,
+            ),
+        ),
+        migrations.AddField(
+            model_name='datafile',
+            name='publication_status',
+            field=models.CharField(
+                choices=[
+                    ('draft', 'Draft'),
+                    ('approved', 'Approved'),
+                    ('released', 'Released'),
+                    ('withdrawn', 'Withdrawn'),
+                ],
+                db_index=True,
+                default='draft',
+                max_length=20,
+            ),
+        ),
+        migrations.AddField(
+            model_name='datafile',
+            name='published_at',
+            field=models.DateTimeField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='datafile',
+            name='published_by',
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='published_data_files',
+                to=settings.AUTH_USER_MODEL,
+            ),
+        ),
+        migrations.AddField(
+            model_name='datafile',
+            name='sha256',
+            field=models.CharField(blank=True, db_index=True, max_length=64, null=True),
+        ),
+        migrations.CreateModel(
+            name='DataAccessToken',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=255)),
+                ('token_prefix', models.CharField(db_index=True, max_length=16, unique=True)),
+                ('token_hash', models.CharField(max_length=64, unique=True)),
+                ('scopes', models.JSONField(default=list)),
+                ('access_tier', models.CharField(choices=[('public', 'Public data'), ('internal', 'Public and internal data')], default='public', max_length=20)),
+                ('expires_at', models.DateTimeField(blank=True, null=True)),
+                ('revoked_at', models.DateTimeField(blank=True, null=True)),
+                ('last_used_at', models.DateTimeField(blank=True, null=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_data_access_tokens', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'db_table': 'data_access_token',
+                'ordering': ['name', 'id'],
+            },
+        ),
+    ]
