@@ -7,12 +7,14 @@
 - `GET /gd/api/v1/files/<id>/`：已发布文件元数据；公开元数据允许匿名读取。
 - `GET /gd/api/v1/files/<id>/content/`：要求 Bearer Token 和 `file:read` scope。
 - `HEAD /gd/api/v1/files/<id>/content/`：执行与 GET 相同的鉴权并返回文件响应头。
+- `GET /gd/api/v1/accessions/<accession>/`：返回外部工具需要的 Accession 基础元数据。
+- `GET /gd/api/v1/accessions/<accession>/assemblies/`：返回该 Accession 的全部真实 Assembly，不替调用方猜选版本。
 - `GET /gd/api/v1/accessions/<accession>/files/`：从 Accession、Assembly 和 Annotation 关系发现已发布文件，支持 `role/category/dataset/format` 过滤和分页。
 - Bearer Token 支持过期、撤销、scope 和 public/internal tier。
 - metadata 与 content 使用独立基础限流。
 - JBrowse 和 v1 Content API 共用受保护路径、URL 编码和响应头服务。
 
-本次没有实现 Accession/Assembly 元数据端点、Dataset Manifest、FASTA Region，也没有完成真实 Nginx Range 验证。
+本次没有实现 Dataset Manifest、FASTA Region，也没有完成真实 Nginx Range 验证。
 
 ## 2. 稳定契约
 
@@ -93,24 +95,35 @@ curl.exe "http://127.0.0.1:8011/gd/api/v1/accessions/IR64/files/?format=fasta"
 
 真实开发数据结果：总计 3 个公开文件；`role=genome` 返回 `FILE000013`，`category=annotation` 返回 `FILE000001`，`format=fasta` 返回 `FILE000013`。响应没有物理路径。
 
+Accession 到 Assembly 的元数据发现：
+
+```powershell
+curl.exe http://127.0.0.1:8011/gd/api/v1/accessions/IR64/
+curl.exe http://127.0.0.1:8011/gd/api/v1/accessions/IR64/assemblies/
+```
+
+真实开发数据结果：Accession 响应为 `IR64 / Oryza sativa / XI`；Assembly 列表返回 1 项，`assembly_id=131`、`assembly_code=ASM_IR64`、`is_default=true`。接口使用公共 Assembly 可见性规则，不暴露迁移占位记录；即使存在多个版本或多个默认标记，也只返回完整列表，不产生隐式 `selected_assembly_id`。
+
+外部工具的标准调用链为：先读取 Accession 元数据和 Assembly 列表，再发现文件，最后凭 `file:read` Token 请求所选文件的 content URL。远程工具可直接消费 HTTP 响应，不要求预先把 FASTA 下载到 GeneData 应用机本地；但工具本身是否落盘、流式读取或建立本地索引，由该工具决定。
+
 ## 5. 自动化验证
 
 ```powershell
 python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py test files.tests.api.test_external_file_api_v1 `
+  files.tests.api.test_external_accession_metadata_api_v1 `
   files.tests.api.test_external_accession_files_api_v1 `
   files.tests.api.test_jbrowse_asset_api `
   files.tests.unit.test_datafile_access_service --noinput
 python manage.py test files --noinput
 ```
 
-开发环境结果：文件接口首轮定向测试 29 项通过、1 项条件跳过；文件发现最终定向测试 12 项通过；`files` 全量测试 443 项通过、1 项条件跳过。
+开发环境结果：新增 Accession/Assembly 元数据与文件发现定向测试 10 项通过；`files` 全量测试 448 项通过、1 项条件跳过。
 
 ## 6. 仍待完成
 
 1. 在测试或生产 Nginx 后验证 GET、HEAD、`200/206/416`、Content-Range 和 `curl -C -`。
-2. 实现 Accession 和 Assembly 元数据 API。
-3. 实现 Dataset Manifest。
-4. 实现带 `.fai` 的 FASTA Region API。
-5. 补充正式 API 文档、Token 轮换和生产监控。
+2. 实现 Dataset Manifest。
+3. 实现带 `.fai` 的 FASTA Region API。
+4. 补充正式 API 文档、Token 轮换和生产监控。
