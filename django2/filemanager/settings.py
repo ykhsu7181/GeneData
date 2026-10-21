@@ -41,6 +41,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'external_metadata': os.environ.get('GENEDATA_METADATA_RATE', '120/minute'),
         'external_content': os.environ.get('GENEDATA_CONTENT_RATE', '30/minute'),
+        'external_manifest': os.environ.get('GENEDATA_MANIFEST_RATE', '30/minute'),
     },
 }
 

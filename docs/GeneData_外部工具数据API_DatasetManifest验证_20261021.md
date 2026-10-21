@@ -1,0 +1,80 @@
+# GeneData 外部工具数据 API Dataset Manifest 验证
+
+## 实现范围
+
+- `GET /gd/api/v1/datasets/<dataset>/manifest/`：JSON Manifest。
+- `GET /gd/api/v1/datasets/<dataset>/manifest.tsv`：TSV 下载资源，不追加尾斜杠。
+- `<dataset>` 优先精确匹配唯一的 `dataset_code`；未命中时聚合同一 `bioproject_accession` 下的全部公开已发布 Dataset。
+- 两个接口均要求 Bearer Token 具有 `dataset:manifest` scope，并使用独立的 Manifest 限流。
+- Manifest 仅输出 `visibility=public`、`status=released` 的 Dataset 中经过统一访问决策的公开文件。
+- 文件还必须满足 `is_current=True`、`publication_status=released`、已发布、SHA-256 有效、物理文件存在且位于受保护根内。
+- 响应不包含 `file_path`。
+
+## Accession 归属规则
+
+文件的 Accession 依次从其明确的 Accession、Assembly、Annotation 或 Sample 关系解析。没有文件级关系时，才回退到 `DatasetAccession`。
+
+如果只能得到一个 Accession，JSON 同时返回单值 `accession` 和 `accessions` 列表。如果存在多个候选，`accession` 为 `null`，`accessions` 返回完整排序列表，不任意选择第一项。TSV 的 `accession` 列使用逗号连接全部候选。
+
+## JSON 关键字段
+
+```text
+dataset
+dataset_codes
+count
+files[].id
+files[].accession
+files[].accessions
+files[].role
+files[].file_name
+files[].format
+files[].size
+files[].sha256
+files[].md5
+files[].content_version
+files[].content_url
+```
+
+## TSV 列
+
+```text
+accession
+file_role
+file_name
+size
+sha256
+md5
+content_version
+url
+```
+
+TSV 的 `url` 为绝对 Content API URL，可直接交给 curl、Snakemake 或 Nextflow；实际下载仍需另外具备 `file:read` scope。
+
+## 自动化验证
+
+```powershell
+python manage.py test files.tests.api.test_external_dataset_manifest_api_v1 --verbosity 2
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test --verbosity 1
+```
+
+结果：Dataset Manifest 定向测试 7 项通过；系统检查通过；没有新增迁移；全量测试 455 项通过、1 项按环境条件跳过。
+
+覆盖场景包括 JSON、TSV、Dataset code、BioProject 聚合、直接 Dataset 外键、Dataset FileRelation、scope、限流、未发布/非 current/缺失/非公开文件过滤、私有或草稿 Dataset 隐藏，以及多 Accession 不猜选。
+
+## 开发库边界
+
+检查时开发数据库中 `visibility=public AND status=released` 的 Dataset 数量为 0。因此本次没有把任何 Dataset 擅自改为公开，也没有声称真实 Dataset 的成功 curl 已通过。
+
+首个 Dataset 按发布流程正式发布后，应使用短期 Token 补做：
+
+```powershell
+curl.exe -H "Authorization: Bearer <TOKEN>" `
+  http://127.0.0.1:8011/gd/api/v1/datasets/<DATASET>/manifest/
+
+curl.exe -H "Authorization: Bearer <TOKEN>" `
+  http://127.0.0.1:8011/gd/api/v1/datasets/<DATASET>/manifest.tsv
+```
+
+并核对文件数量、Accession、角色、SHA-256、Content URL 以及响应中不存在物理路径。

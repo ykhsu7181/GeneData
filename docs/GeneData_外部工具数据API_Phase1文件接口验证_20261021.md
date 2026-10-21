@@ -10,11 +10,13 @@
 - `GET /gd/api/v1/accessions/<accession>/`：返回外部工具需要的 Accession 基础元数据。
 - `GET /gd/api/v1/accessions/<accession>/assemblies/`：返回该 Accession 的全部真实 Assembly，不替调用方猜选版本。
 - `GET /gd/api/v1/accessions/<accession>/files/`：从 Accession、Assembly 和 Annotation 关系发现已发布文件，支持 `role/category/dataset/format` 过滤和分页。
+- `GET /gd/api/v1/datasets/<dataset>/manifest/`：按 Dataset code 或 BioProject 返回 JSON Manifest。
+- `GET /gd/api/v1/datasets/<dataset>/manifest.tsv`：返回供 Snakemake、Nextflow 等工作流使用的 TSV Manifest。
 - Bearer Token 支持过期、撤销、scope 和 public/internal tier。
 - metadata 与 content 使用独立基础限流。
 - JBrowse 和 v1 Content API 共用受保护路径、URL 编码和响应头服务。
 
-本次没有实现 Dataset Manifest、FASTA Region，也没有完成真实 Nginx Range 验证。
+本次没有实现 FASTA Region，也没有完成真实 Nginx Range 验证。Dataset Manifest 代码与自动化测试已完成，但开发库尚无 `public + released` Dataset，因此真实成功响应仍待首个 Dataset 正式发布后验证。
 
 ## 2. 稳定契约
 
@@ -119,11 +121,11 @@ python manage.py test files.tests.api.test_external_file_api_v1 `
 python manage.py test files --noinput
 ```
 
-开发环境结果：新增 Accession/Assembly 元数据与文件发现定向测试 10 项通过；`files` 全量测试 448 项通过、1 项条件跳过。
+开发环境结果：新增 Accession/Assembly 元数据与文件发现定向测试 10 项通过；Dataset Manifest 定向测试 7 项通过；`files` 全量测试 455 项通过、1 项条件跳过。
 
 ## 6. 仍待完成
 
 1. 在测试或生产 Nginx 后验证 GET、HEAD、`200/206/416`、Content-Range 和 `curl -C -`。
-2. 实现 Dataset Manifest。
+2. 正式发布首个 Dataset 后完成 JSON/TSV Manifest 的开发库真实成功响应验证。
 3. 实现带 `.fai` 的 FASTA Region API。
 4. 补充正式 API 文档、Token 轮换和生产监控。

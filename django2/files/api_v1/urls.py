@@ -5,12 +5,23 @@ from files.api_v1.accession_views import (
     accession_files,
     accession_metadata,
 )
+from files.api_v1.dataset_views import dataset_manifest, dataset_manifest_tsv
 from files.api_v1.file_views import file_content, file_metadata
 
 
 app_name = "files-api-v1"
 
 urlpatterns = [
+    path(
+        "datasets/<str:dataset>/manifest/",
+        dataset_manifest,
+        name="dataset-manifest",
+    ),
+    path(
+        "datasets/<str:dataset>/manifest.tsv",
+        dataset_manifest_tsv,
+        name="dataset-manifest-tsv",
+    ),
     path(
         "accessions/<str:accession>/assemblies/",
         accession_assemblies,

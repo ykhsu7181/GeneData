@@ -18,3 +18,7 @@ class ExternalMetadataThrottle(DataAccessRateThrottle):
 
 class ExternalContentThrottle(DataAccessRateThrottle):
     scope = "external_content"
+
+
+class ExternalManifestThrottle(DataAccessRateThrottle):
+    scope = "external_manifest"
