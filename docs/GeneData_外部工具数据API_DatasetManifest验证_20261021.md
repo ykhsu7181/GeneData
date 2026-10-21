@@ -63,18 +63,35 @@ python manage.py test --verbosity 1
 
 覆盖场景包括 JSON、TSV、Dataset code、BioProject 聚合、直接 Dataset 外键、Dataset FileRelation、scope、限流、未发布/非 current/缺失/非公开文件过滤、私有或草稿 Dataset 隐藏，以及多 Accession 不猜选。
 
-## 开发库边界
+## 首个 Dataset 发布及真实验证
 
-检查时开发数据库中 `visibility=public AND status=released` 的 Dataset 数量为 0。因此本次没有把任何 Dataset 擅自改为公开，也没有声称真实 Dataset 的成功 curl 已通过。
+审计发现原有 289 个 Dataset 均属于 PRJEB73710 草稿私有数据，且没有 Dataset 文件或 Accession 关系，因此没有错误复用这些记录。开发库新建并正式发布：
 
-首个 Dataset 按发布流程正式发布后，应使用短期 Token 补做：
+```text
+dataset_id=291
+dataset_code=DS_IR64_REFERENCE_V1
+dataset_name=IR64 Reference Genome and Annotation v1
+dataset_type=genome
+visibility=public
+status=released
+bioproject_accession=null
+accession=IR64
+DatasetAccession id=1
+Dataset FileRelation ids=230,231,232
+```
+
+未填写 BioProject，因为现有证据不能把 IR64 参考文件归入 PRJEB73710。Dataset 绑定已经正式发布的三个文件：DataFile 14 FASTA、147 FAI、2 GFF。
+
+使用同时具有 `dataset:manifest` 和 `file:read` 的 1 小时短期 Token 执行：
 
 ```powershell
 curl.exe -H "Authorization: Bearer <TOKEN>" `
-  http://127.0.0.1:8011/gd/api/v1/datasets/<DATASET>/manifest/
+  http://127.0.0.1:8011/gd/api/v1/datasets/DS_IR64_REFERENCE_V1/manifest/
 
 curl.exe -H "Authorization: Bearer <TOKEN>" `
-  http://127.0.0.1:8011/gd/api/v1/datasets/<DATASET>/manifest.tsv
+  http://127.0.0.1:8011/gd/api/v1/datasets/DS_IR64_REFERENCE_V1/manifest.tsv
 ```
 
-并核对文件数量、Accession、角色、SHA-256、Content URL 以及响应中不存在物理路径。
+结果：JSON 和 TSV 均为 HTTP 200，返回 3 个文件；Accession 均为 IR64，角色分别为 `genome`、`genome_index`、`annotation`；SHA-256 与已发布记录一致；JSON 不包含 `file_path`；DataFile 14 的授权 HEAD 为 200。短期 Token 验证完成后已撤销。
+
+精确回滚时，应先删除 FileRelation 230、231、232，再删除 DatasetAccession 1，最后删除 Dataset 291；三个 DataFile 及其原有关系不应删除或降级。

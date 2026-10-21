@@ -42,8 +42,16 @@ REST_FRAMEWORK = {
         'external_metadata': os.environ.get('GENEDATA_METADATA_RATE', '120/minute'),
         'external_content': os.environ.get('GENEDATA_CONTENT_RATE', '30/minute'),
         'external_manifest': os.environ.get('GENEDATA_MANIFEST_RATE', '30/minute'),
+        'external_sequence': os.environ.get('GENEDATA_SEQUENCE_RATE', '60/minute'),
     },
 }
+
+GENEDATA_SEQUENCE_MAX_BASES = int(
+    os.environ.get('GENEDATA_SEQUENCE_MAX_BASES', '1000000')
+)
+GENEDATA_SEQUENCE_MAX_RESPONSE_BYTES = int(
+    os.environ.get('GENEDATA_SEQUENCE_MAX_RESPONSE_BYTES', '1100000')
+)
 
 # 网站URL设置
 SITE_URL = 'https://riceome.hzau.edu.cn'

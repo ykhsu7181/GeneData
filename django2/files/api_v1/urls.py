@@ -7,11 +7,17 @@ from files.api_v1.accession_views import (
 )
 from files.api_v1.dataset_views import dataset_manifest, dataset_manifest_tsv
 from files.api_v1.file_views import file_content, file_metadata
+from files.api_v1.sequence_views import assembly_sequence
 
 
 app_name = "files-api-v1"
 
 urlpatterns = [
+    path(
+        "assemblies/<str:assembly>/sequence/",
+        assembly_sequence,
+        name="assembly-sequence",
+    ),
     path(
         "datasets/<str:dataset>/manifest/",
         dataset_manifest,

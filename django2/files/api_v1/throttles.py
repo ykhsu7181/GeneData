@@ -22,3 +22,7 @@ class ExternalContentThrottle(DataAccessRateThrottle):
 
 class ExternalManifestThrottle(DataAccessRateThrottle):
     scope = "external_manifest"
+
+
+class ExternalSequenceThrottle(DataAccessRateThrottle):
+    scope = "external_sequence"
