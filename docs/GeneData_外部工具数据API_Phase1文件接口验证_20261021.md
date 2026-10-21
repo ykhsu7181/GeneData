@@ -7,11 +7,12 @@
 - `GET /gd/api/v1/files/<id>/`：已发布文件元数据；公开元数据允许匿名读取。
 - `GET /gd/api/v1/files/<id>/content/`：要求 Bearer Token 和 `file:read` scope。
 - `HEAD /gd/api/v1/files/<id>/content/`：执行与 GET 相同的鉴权并返回文件响应头。
+- `GET /gd/api/v1/accessions/<accession>/files/`：从 Accession、Assembly 和 Annotation 关系发现已发布文件，支持 `role/category/dataset/format` 过滤和分页。
 - Bearer Token 支持过期、撤销、scope 和 public/internal tier。
 - metadata 与 content 使用独立基础限流。
 - JBrowse 和 v1 Content API 共用受保护路径、URL 编码和响应头服务。
 
-本次没有实现 Accession 文件发现、Dataset Manifest、FASTA Region，也没有完成真实 Nginx Range 验证。
+本次没有实现 Accession/Assembly 元数据端点、Dataset Manifest、FASTA Region，也没有完成真实 Nginx Range 验证。
 
 ## 2. 稳定契约
 
@@ -81,23 +82,35 @@ ETag: "sha256-df205b6bff738e32a72553bd7148c704ad5ff3db885190c7449c6f6864730070"
 
 开发 Token：`genescreen-dev-file-read-20261021`，仅有 `file:read`，有效期 24 小时；文档不记录明文。
 
+Accession 文件发现：
+
+```powershell
+curl.exe http://127.0.0.1:8011/gd/api/v1/accessions/IR64/files/
+curl.exe "http://127.0.0.1:8011/gd/api/v1/accessions/IR64/files/?role=genome"
+curl.exe "http://127.0.0.1:8011/gd/api/v1/accessions/IR64/files/?category=annotation"
+curl.exe "http://127.0.0.1:8011/gd/api/v1/accessions/IR64/files/?format=fasta"
+```
+
+真实开发数据结果：总计 3 个公开文件；`role=genome` 返回 `FILE000013`，`category=annotation` 返回 `FILE000001`，`format=fasta` 返回 `FILE000013`。响应没有物理路径。
+
 ## 5. 自动化验证
 
 ```powershell
 python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py test files.tests.api.test_external_file_api_v1 `
+  files.tests.api.test_external_accession_files_api_v1 `
   files.tests.api.test_jbrowse_asset_api `
   files.tests.unit.test_datafile_access_service --noinput
 python manage.py test files --noinput
 ```
 
-开发环境结果：定向测试 29 项通过、1 项条件跳过；`files` 全量测试 438 项通过、1 项条件跳过。
+开发环境结果：文件接口首轮定向测试 29 项通过、1 项条件跳过；文件发现最终定向测试 12 项通过；`files` 全量测试 443 项通过、1 项条件跳过。
 
 ## 6. 仍待完成
 
 1. 在测试或生产 Nginx 后验证 GET、HEAD、`200/206/416`、Content-Range 和 `curl -C -`。
-2. 实现 Accession/Assembly 文件发现 API。
+2. 实现 Accession 和 Assembly 元数据 API。
 3. 实现 Dataset Manifest。
 4. 实现带 `.fai` 的 FASTA Region API。
 5. 补充正式 API 文档、Token 轮换和生产监控。

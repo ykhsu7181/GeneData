@@ -101,8 +101,8 @@ def _file_format(data_file):
     if data_file.file_type_id:
         file_type = data_file.file_type
         return file_type.format or file_type.code or file_type.name or file_type.extension
-    suffixes = "".join(Path(data_file.file_name).suffixes).lstrip(".")
-    return suffixes.upper() or None
+    suffix = Path(data_file.file_name).suffix.lstrip(".")
+    return suffix.upper() or None
 
 
 def _dataset_code(data_file):

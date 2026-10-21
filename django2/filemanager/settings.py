@@ -36,6 +36,8 @@ ALLOWED_HOSTS = ['*']
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    # ``format`` is a public file-discovery filter, not a renderer override.
+    'URL_FORMAT_OVERRIDE': None,
     'DEFAULT_THROTTLE_RATES': {
         'external_metadata': os.environ.get('GENEDATA_METADATA_RATE', '120/minute'),
         'external_content': os.environ.get('GENEDATA_CONTENT_RATE', '30/minute'),
