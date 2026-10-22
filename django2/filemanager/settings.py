@@ -36,7 +36,22 @@ ALLOWED_HOSTS = ['*']
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    # ``format`` is a public file-discovery filter, not a renderer override.
+    'URL_FORMAT_OVERRIDE': None,
+    'DEFAULT_THROTTLE_RATES': {
+        'external_metadata': os.environ.get('GENEDATA_METADATA_RATE', '120/minute'),
+        'external_content': os.environ.get('GENEDATA_CONTENT_RATE', '30/minute'),
+        'external_manifest': os.environ.get('GENEDATA_MANIFEST_RATE', '30/minute'),
+        'external_sequence': os.environ.get('GENEDATA_SEQUENCE_RATE', '60/minute'),
+    },
 }
+
+GENEDATA_SEQUENCE_MAX_BASES = int(
+    os.environ.get('GENEDATA_SEQUENCE_MAX_BASES', '1000000')
+)
+GENEDATA_SEQUENCE_MAX_RESPONSE_BYTES = int(
+    os.environ.get('GENEDATA_SEQUENCE_MAX_RESPONSE_BYTES', '1100000')
+)
 
 # 网站URL设置
 SITE_URL = 'https://riceome.hzau.edu.cn'
@@ -225,6 +240,16 @@ GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX = os.environ.get(
     'GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX',
     '/_protected_derived_data/',
 )
+GENEDATA_PROTECTED_FILE_ROOTS = {
+    'manual': {
+        'path': MANUAL_FILES_DIR,
+        'internal_uri': GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX,
+    },
+    'derived': {
+        'path': GENEDATA_DERIVED_DATA_DIR,
+        'internal_uri': GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX,
+    },
+}
 
 # 文件上传配置
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 * 1024  # 10GB

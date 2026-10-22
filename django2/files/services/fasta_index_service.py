@@ -23,8 +23,9 @@ def find_current_fasta_index(*, genome_file, related_type, related_id):
     if not genome_file.file_path or not os.path.isfile(genome_file.file_path):
         return None
 
+    file_name = getattr(genome_file, "file_name", None) or getattr(genome_file, "name", None)
     expected_names = {
-        f"{genome_file.name}.fai" if genome_file.name else "",
+        f"{file_name}.fai" if file_name else "",
         f"{os.path.basename(genome_file.file_path)}.fai" if genome_file.file_path else "",
     }
     relations = (

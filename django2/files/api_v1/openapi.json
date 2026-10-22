@@ -1,0 +1,148 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "GeneData External Data API",
+    "version": "1.0.0",
+    "description": "Stable v1 API for external analysis tools. Genomic coordinates are 1-based inclusive. Tokens must never be placed in URLs or logs."
+  },
+  "servers": [{"url": "/", "description": "Current GeneData deployment"}],
+  "tags": [
+    {"name": "Discovery"},
+    {"name": "Files"},
+    {"name": "Datasets"},
+    {"name": "Sequences"}
+  ],
+  "paths": {
+    "/gd/api/v1/accessions/{accession}/": {
+      "get": {
+        "tags": ["Discovery"], "summary": "Get public accession metadata",
+        "security": [{}, {"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/Accession"}],
+        "responses": {
+          "200": {"description": "Accession metadata", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Accession"}}}},
+          "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/accessions/{accession}/assemblies/": {
+      "get": {
+        "tags": ["Discovery"], "summary": "List public assemblies for an accession",
+        "security": [{}, {"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/Accession"}],
+        "responses": {
+          "200": {"description": "Assembly list", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AssemblyList"}}}},
+          "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/accessions/{accession}/files/": {
+      "get": {
+        "tags": ["Discovery"], "summary": "Discover released files for an accession",
+        "security": [{}, {"bearerAuth": []}],
+        "parameters": [
+          {"$ref": "#/components/parameters/Accession"},
+          {"name": "role", "in": "query", "schema": {"type": "string"}},
+          {"name": "category", "in": "query", "schema": {"type": "string"}},
+          {"name": "dataset", "in": "query", "schema": {"type": "string"}},
+          {"name": "format", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "default": 1}},
+          {"name": "page_size", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 500, "default": 100}}
+        ],
+        "responses": {
+          "200": {"description": "Paginated file discovery result", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FileDiscovery"}}}},
+          "400": {"$ref": "#/components/responses/InvalidQuery"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/files/{file_id}/": {
+      "get": {
+        "tags": ["Files"], "summary": "Get released file metadata",
+        "security": [{}, {"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/FileId"}],
+        "responses": {
+          "200": {"description": "File metadata without a physical path", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/File"}}}},
+          "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/files/{file_id}/content/": {
+      "get": {
+        "tags": ["Files"], "summary": "Download file content", "security": [{"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/FileId"}, {"name": "Range", "in": "header", "description": "Optional byte range, for example bytes=0-1023", "schema": {"type": "string"}}],
+        "responses": {
+          "200": {"description": "Complete attachment", "headers": {"Accept-Ranges": {"schema": {"type": "string", "example": "bytes"}}, "Content-Disposition": {"schema": {"type": "string"}}}, "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}},
+          "206": {"description": "Partial content returned by the protected-file web-server handoff"},
+          "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "416": {"description": "Requested range is not satisfiable"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      },
+      "head": {
+        "tags": ["Files"], "summary": "Inspect downloadable file headers", "security": [{"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/FileId"}],
+        "responses": {"200": {"description": "Download headers"}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}}
+      }
+    },
+    "/gd/api/v1/datasets/{dataset}/manifest/": {
+      "get": {
+        "tags": ["Datasets"], "summary": "Get a public dataset manifest as JSON", "security": [{"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/Dataset"}],
+        "responses": {
+          "200": {"description": "Dataset manifest", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DatasetManifest"}}}},
+          "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/datasets/{dataset}/manifest.tsv": {
+      "get": {
+        "tags": ["Datasets"], "summary": "Get a public dataset manifest as TSV", "security": [{"bearerAuth": []}],
+        "parameters": [{"$ref": "#/components/parameters/Dataset"}],
+        "responses": {
+          "200": {"description": "Tab-separated manifest", "content": {"text/tab-separated-values": {"schema": {"type": "string"}}}},
+          "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/assemblies/{assembly}/sequence/": {
+      "get": {
+        "tags": ["Sequences"], "summary": "Fetch an indexed FASTA region", "description": "Coordinates are 1-based inclusive. The configured maximum is normally 1,000,000 bases.", "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "assembly", "in": "path", "required": true, "description": "Assembly code or unique assembly accession", "schema": {"type": "string"}},
+          {"name": "sequence", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "start", "in": "query", "required": true, "schema": {"type": "integer", "minimum": 1}},
+          {"name": "end", "in": "query", "required": true, "schema": {"type": "integer", "minimum": 1}}
+        ],
+        "responses": {
+          "200": {"description": "FASTA region", "headers": {"X-Sequence-Id": {"schema": {"type": "string"}}, "X-Sequence-Start": {"schema": {"type": "integer"}}, "X-Sequence-End": {"schema": {"type": "integer"}}, "X-Coordinate-System": {"schema": {"type": "string", "enum": ["1-based-inclusive"]}}}, "content": {"text/x-fasta": {"schema": {"type": "string"}}}},
+          "400": {"$ref": "#/components/responses/InvalidRegion"}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "409": {"$ref": "#/components/responses/Conflict"}, "413": {"$ref": "#/components/responses/TooLarge"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "opaque GeneData token"}},
+    "parameters": {
+      "Accession": {"name": "accession", "in": "path", "required": true, "schema": {"type": "string"}},
+      "Dataset": {"name": "dataset", "in": "path", "required": true, "description": "Dataset code or BioProject accession", "schema": {"type": "string"}},
+      "FileId": {"name": "file_id", "in": "path", "required": true, "schema": {"type": "integer", "minimum": 1}}
+    },
+    "responses": {
+      "AuthenticationRequired": {"description": "Bearer token is required", "headers": {"WWW-Authenticate": {"schema": {"type": "string", "example": "Bearer"}}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "Forbidden": {"description": "Token is invalid, inactive, has insufficient scope, or has insufficient access tier", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "NotFound": {"description": "Resource is absent or is intentionally hidden", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "InvalidQuery": {"description": "Invalid query parameter", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "InvalidRegion": {"description": "Invalid coordinates", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "Conflict": {"description": "Ambiguous assembly or unavailable, invalid, or stale FASTA index", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "TooLarge": {"description": "Requested region or generated response exceeds the configured limit", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+      "RateLimited": {"description": "Rate limit exceeded", "headers": {"Retry-After": {"schema": {"type": "integer"}}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+    },
+    "schemas": {
+      "Error": {"type": "object", "required": ["detail", "code"], "properties": {"detail": {"type": "string"}, "code": {"type": "string"}}},
+      "Accession": {"type": "object", "required": ["accession", "species", "sub_population", "country", "region"], "properties": {"accession": {"type": "string"}, "species": {"type": "string", "nullable": true}, "sub_population": {"type": "string", "nullable": true}, "country": {"type": "string", "nullable": true}, "region": {"type": "string", "nullable": true}}},
+      "Assembly": {"type": "object", "required": ["assembly_id", "assembly_code", "assembly_name", "assembly_accession", "assembly_level", "is_default"], "properties": {"assembly_id": {"type": "integer"}, "assembly_code": {"type": "string"}, "assembly_name": {"type": "string", "nullable": true}, "assembly_accession": {"type": "string", "nullable": true}, "assembly_level": {"type": "string", "nullable": true}, "is_default": {"type": "boolean"}}},
+      "AssemblyList": {"type": "object", "required": ["accession", "count", "assemblies"], "properties": {"accession": {"type": "string"}, "count": {"type": "integer"}, "assemblies": {"type": "array", "items": {"$ref": "#/components/schemas/Assembly"}}}},
+      "File": {"type": "object", "required": ["id", "file_code", "file_name", "format", "role", "size", "sha256", "md5", "content_version", "dataset", "content_url"], "properties": {"id": {"type": "integer"}, "file_code": {"type": "string"}, "file_name": {"type": "string"}, "format": {"type": "string", "nullable": true}, "role": {"type": "string", "nullable": true}, "size": {"type": "integer", "format": "int64"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "md5": {"type": "string", "nullable": true}, "content_version": {"type": "string", "nullable": true}, "dataset": {"type": "string", "nullable": true}, "last_modified": {"type": "string", "format": "date-time"}, "content_url": {"type": "string"}}},
+      "FileDiscovery": {"type": "object", "required": ["accession", "count", "page", "page_size", "results"], "properties": {"accession": {"type": "string"}, "count": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "results": {"type": "array", "items": {"$ref": "#/components/schemas/File"}}}},
+      "ManifestFile": {"allOf": [{"$ref": "#/components/schemas/File"}, {"type": "object", "required": ["accession", "accessions"], "properties": {"accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}}}]},
+      "DatasetManifest": {"type": "object", "required": ["dataset", "dataset_codes", "count", "files"], "properties": {"dataset": {"type": "string"}, "dataset_codes": {"type": "array", "items": {"type": "string"}}, "count": {"type": "integer"}, "files": {"type": "array", "items": {"$ref": "#/components/schemas/ManifestFile"}}}}
+    }
+  }
+}
