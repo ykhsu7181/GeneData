@@ -16,6 +16,11 @@ from files.api_v1.batch_views import (
     file_batch_manifest_tsv,
     resolve_file_batch,
 )
+from files.api_v1.archive_views import (
+    create_file_archive,
+    file_archive_content,
+    file_archive_status,
+)
 
 
 app_name = "files-api-v1"
@@ -27,6 +32,9 @@ urlpatterns = [
     path("file-batches/<str:batch_id>/", file_batch_detail, name="file-batch-detail"),
     path("file-batches/<str:batch_id>/manifest/", file_batch_manifest, name="file-batch-manifest"),
     path("file-batches/<str:batch_id>/manifest.tsv", file_batch_manifest_tsv, name="file-batch-manifest-tsv"),
+    path("file-batches/<str:batch_id>/archives/", create_file_archive, name="file-archive-create"),
+    path("file-archives/<str:archive_id>/", file_archive_status, name="file-archive-status"),
+    path("file-archives/<str:archive_id>/content/", file_archive_content, name="file-archive-content"),
     path(
         "assemblies/<str:assembly>/sequence/",
         assembly_sequence,
