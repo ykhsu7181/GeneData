@@ -55,6 +55,7 @@ COMMAND_LIFECYCLE = {
     "list_data_access_tokens": ACTIVE,
     "publish_datafiles": ACTIVE,
     "publish_external_datasets": ACTIVE,
+    "prepare_external_file_registration": ACTIVE,
     "revoke_data_access_token": ACTIVE,
     "scan_files": ACTIVE,
     "seed_ir64_demo_hierarchy": RETIRE_PENDING_USAGE_CONFIRMATION,
