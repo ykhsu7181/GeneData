@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 from urllib.parse import quote
 
-from django.http import HttpResponse
-from django.utils.http import http_date
+from django.http import HttpResponse, HttpResponseNotModified
+from django.utils.http import http_date, parse_http_date_safe
 
 from files.services.datafile_access_service import resolve_protected_datafile_path
 
@@ -28,6 +28,35 @@ def build_protected_file_response(data_file, *, roots=None, disposition="attachm
     response["X-Content-Type-Options"] = "nosniff"
     if data_file.content_version:
         response["ETag"] = f'"sha256-{data_file.sha256.lower()}"'
+    return response
+
+
+def apply_conditional_request(request, response):
+    """Return 304 for matching validators before Nginx serves protected bytes."""
+    etag = response.get("ETag")
+    if_none_match = request.META.get("HTTP_IF_NONE_MATCH", "")
+    if etag and if_none_match:
+        validators = {item.strip() for item in if_none_match.split(",")}
+        if "*" in validators or etag in validators:
+            return _not_modified(response)
+
+    if if_none_match:
+        return response
+    last_modified = response.get("Last-Modified")
+    if_modified_since = request.META.get("HTTP_IF_MODIFIED_SINCE", "")
+    if last_modified and if_modified_since:
+        current = parse_http_date_safe(last_modified)
+        supplied = parse_http_date_safe(if_modified_since)
+        if current is not None and supplied is not None and supplied >= current:
+            return _not_modified(response)
+    return response
+
+
+def _not_modified(source):
+    response = HttpResponseNotModified()
+    for header in ("ETag", "Last-Modified", "Accept-Ranges", "X-Content-Type-Options"):
+        if header in source:
+            response[header] = source[header]
     return response
 
 

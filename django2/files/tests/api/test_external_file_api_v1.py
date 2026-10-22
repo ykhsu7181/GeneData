@@ -76,7 +76,7 @@ class ExternalFileApiV1Tests(TestCase):
         self.assertEqual(payload["role"], "genome_fasta")
         self.assertEqual(payload["size"], 11)
         self.assertEqual(payload["content_version"], f"sha256:{data_file.sha256}")
-        self.assertEqual(payload["content_url"], f"/gd/api/v1/files/{data_file.id}/content/")
+        self.assertEqual(payload["content_url"], "/gd/api/v1/files/PUBLIC/content/")
         self.assertNotIn("file_path", payload)
         self.assertNotIn(str(self.root), str(payload))
 
@@ -136,6 +136,34 @@ class ExternalFileApiV1Tests(TestCase):
         self.assertEqual(head_response.content, b"")
         token.refresh_from_db()
         self.assertIsNotNone(token.last_used_at)
+
+    def test_stable_file_code_route_and_numeric_compatibility_match(self):
+        data_file = self.make_file(code="FILE000013")
+
+        stable = self.client.get("/gd/api/v1/files/FILE000013/")
+        legacy = self.client.get(f"/gd/api/v1/files/{data_file.id}/")
+
+        self.assertEqual(stable.status_code, 200)
+        self.assertEqual(legacy.status_code, 200)
+        self.assertEqual(stable.json(), legacy.json())
+        self.assertEqual(
+            stable.json()["content_url"],
+            "/gd/api/v1/files/FILE000013/content/",
+        )
+
+    def test_matching_etag_returns_not_modified_without_protected_handoff(self):
+        data_file = self.make_file(code="FILE000014")
+        _token, raw_token = self.issue([DataAccessToken.SCOPE_FILE_READ])
+
+        response = self.client.get(
+            "/gd/api/v1/files/FILE000014/content/",
+            HTTP_IF_NONE_MATCH=f'"sha256-{data_file.sha256}"',
+            **self.bearer(raw_token),
+        )
+
+        self.assertEqual(response.status_code, 304)
+        self.assertEqual(response["ETag"], f'"sha256-{data_file.sha256}"')
+        self.assertNotIn("X-Accel-Redirect", response)
 
     def test_invalid_or_revoked_token_returns_401(self):
         data_file = self.make_file()

@@ -20,15 +20,46 @@ from files.services.datafile_access_service import (
     resolve_datafile_access,
     resolve_protected_datafile_path,
 )
-from files.services.protected_asset_service import build_protected_file_response
+from files.services.external_file_catalog_service import list_external_files
+from files.services.external_file_urls import external_content_url
+from files.services.protected_asset_service import (
+    apply_conditional_request,
+    build_protected_file_response,
+)
 
 
 @api_view(["GET"])
 @authentication_classes([DataAccessTokenAuthentication])
 @permission_classes([AllowAny])
 @throttle_classes([ExternalMetadataThrottle])
-def file_metadata(request, file_id):
-    data_file = _data_file(file_id)
+def file_catalog(request):
+    try:
+        payload = list_external_files(
+            principal=request.auth,
+            file_name=request.query_params.get("file_name"),
+            name_contains=request.query_params.get("name_contains"),
+            accession=request.query_params.get("accession"),
+            assembly=request.query_params.get("assembly"),
+            dataset=request.query_params.get("dataset"),
+            role=request.query_params.get("role"),
+            file_format=request.query_params.get("format"),
+            page=request.query_params.get("page", 1),
+            page_size=request.query_params.get("page_size", 100),
+        )
+    except ValueError as exc:
+        return Response(
+            {"detail": str(exc), "code": "invalid_query"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return Response(payload)
+
+
+@api_view(["GET"])
+@authentication_classes([DataAccessTokenAuthentication])
+@permission_classes([AllowAny])
+@throttle_classes([ExternalMetadataThrottle])
+def file_metadata(request, file_identifier):
+    data_file = _data_file(file_identifier)
     if data_file is None:
         return _not_found()
     decision = resolve_datafile_access(
@@ -64,7 +95,7 @@ def file_metadata(request, file_id):
         "last_modified": datetime.fromtimestamp(
             stat.st_mtime, tz=datetime_timezone.utc
         ).isoformat().replace("+00:00", "Z"),
-        "content_url": f"/gd/api/v1/files/{data_file.id}/content/",
+        "content_url": external_content_url(data_file.file_code),
     })
 
 
@@ -72,8 +103,8 @@ def file_metadata(request, file_id):
 @authentication_classes([DataAccessTokenAuthentication])
 @permission_classes([AllowAny])
 @throttle_classes([ExternalContentThrottle])
-def file_content(request, file_id):
-    data_file = _data_file(file_id)
+def file_content(request, file_identifier):
+    data_file = _data_file(file_identifier)
     if data_file is None:
         return _not_found()
     decision = resolve_datafile_access(
@@ -86,15 +117,19 @@ def file_content(request, file_id):
     response = build_protected_file_response(data_file, disposition="attachment")
     if response is None:
         return _not_found()
-    return response
+    return apply_conditional_request(request, response)
 
 
-def _data_file(file_id):
-    return (
+def _data_file(file_identifier):
+    queryset = (
         DataFile.objects.select_related("file_type", "dataset")
-        .filter(id=file_id)
-        .first()
     )
+    data_file = queryset.filter(file_code=file_identifier).first()
+    if data_file is not None:
+        return data_file
+    if str(file_identifier).isdigit():
+        return queryset.filter(id=int(file_identifier)).first()
+    return None
 
 
 def _file_format(data_file):

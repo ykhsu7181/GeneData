@@ -121,7 +121,10 @@ class ExternalAccessionFilesApiV1Tests(TestCase):
         self.assertNotIn("file_path", str(payload))
         genome = next(item for item in payload["results"] if item["file_code"] == "GENOME")
         self.assertEqual(genome["dataset"], "DS_IR64")
-        self.assertEqual(genome["content_url"], f"/gd/api/v1/files/{self.genome.id}/content/")
+        self.assertEqual(
+            genome["content_url"],
+            f"/gd/api/v1/files/{self.genome.file_code}/content/",
+        )
 
     def test_filters_match_role_category_dataset_and_format(self):
         cases = (

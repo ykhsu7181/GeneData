@@ -87,6 +87,16 @@ python manage.py audit_external_api_readiness \
 
 该命令输出 summary、accessions、assemblies、datasets、files 五份 TSV。其他材料只做分类盘点，不会自动变更发布状态。
 
+权威文件名清单与 `DataFile` 注册覆盖率使用以下只读命令审计：
+
+```bash
+python manage.py audit_external_file_catalog \
+  --file-list /absolute/all-warehouse-file-names.txt \
+  --output /home/labuser/rdcheng/gd/audit_reports/external_api/file-catalog
+```
+
+输出 `external_file_catalog_coverage.tsv` 和 `external_file_catalog_summary.tsv`，状态包括 `UNREGISTERED`、`UNIQUE_REGISTERED`、`MULTIPLE_REGISTERED`、`DUPLICATE_INPUT_NAME` 和 `INVALID_NAME`。命令不修改数据库、不发布文件，也不在报告中输出物理路径。
+
 ## 5. 监控与告警
 
 每 5 分钟使用独立、最小权限监控 Token 依次检查：OpenAPI 200、IR64 accession 200、Manifest 200 且文件数符合基线、120 bp Region 200 且 `X-Coordinate-System=1-based-inclusive`。完整文件下载只在发布 Canary 执行，不用于高频探活。

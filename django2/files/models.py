@@ -506,7 +506,7 @@ class DataFile(models.Model):
         blank=True,
         related_name='data_files',
     )
-    file_name = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=255, db_index=True)
     original_name = models.CharField(max_length=255, blank=True, null=True)
     file_path = models.CharField(max_length=500, unique=True, db_index=True)
     file_size = models.BigIntegerField(blank=True, null=True)

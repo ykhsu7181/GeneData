@@ -1,6 +1,6 @@
 # GeneData 外部工具数据 API v1 使用手册
 
-适用版本：OpenAPI `1.0.0`。机器可读契约位于 `/gd/api/v1/openapi.json`，简明入口位于 `/docs/api/`。
+适用版本：OpenAPI `1.1.0`。机器可读契约位于 `/gd/api/v1/openapi.json`，简明入口位于 `/docs/api/`。
 
 ## 1. 基本约定
 
@@ -43,6 +43,22 @@ curl --fail-with-body --silent --show-error \
   "$GENEDATA_BASE_URL/gd/api/v1/accessions/IR64/files/?role=genome&format=FASTA"
 ```
 
+按文件名查询全部已发布且有权访问的仓库文件；重名时返回多个候选：
+
+```bash
+curl --get --fail-with-body --silent --show-error \
+  --data-urlencode "file_name=genome.fasta" \
+  "$GENEDATA_BASE_URL/gd/api/v1/files/"
+
+curl --get --fail-with-body --silent --show-error \
+  --data-urlencode "file_name=genome.fasta" \
+  --data-urlencode "accession=IR64" \
+  --data-urlencode "role=genome_fasta" \
+  "$GENEDATA_BASE_URL/gd/api/v1/files/"
+```
+
+查询响应中的 `file_code`、Accession、Assembly、Dataset 和 Role 用于消歧。调用方不得在重名时默认选择第一项。
+
 获取 Dataset Manifest：
 
 ```bash
@@ -62,8 +78,19 @@ curl --fail-with-body --silent --show-error \
 curl --fail-with-body --location \
   -H "Authorization: Bearer $GENEDATA_TOKEN" \
   -o reference.fa \
-  "$GENEDATA_BASE_URL/gd/api/v1/files/14/content/"
+  "$GENEDATA_BASE_URL/gd/api/v1/files/FILE000013/content/"
 sha256sum reference.fa
+```
+
+数字数据库 ID 下载地址在兼容期内仍可使用，但新脚本和 Manifest 必须使用稳定 `file_code`。可用 ETag 避免重复传输：
+
+```bash
+curl --fail-with-body --location \
+  --etag-save FILE000013.etag \
+  --etag-compare FILE000013.etag \
+  -H "Authorization: Bearer $GENEDATA_TOKEN" \
+  -o reference.fa \
+  "$GENEDATA_BASE_URL/gd/api/v1/files/FILE000013/content/"
 ```
 
 请求 Region：
