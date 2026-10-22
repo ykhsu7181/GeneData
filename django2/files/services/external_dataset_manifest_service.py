@@ -21,6 +21,7 @@ from files.services.datafile_access_service import (
     resolve_protected_datafile_path,
 )
 from files.services.external_file_discovery_service import datafile_format
+from files.services.external_file_urls import external_content_url
 
 
 def find_public_datasets(identifier):
@@ -102,7 +103,7 @@ def build_dataset_manifest(identifier, datasets, *, principal):
             "sha256": data_file.sha256.lower(),
             "md5": data_file.md5,
             "content_version": data_file.content_version,
-            "content_url": f"/gd/api/v1/files/{data_file.id}/content/",
+            "content_url": external_content_url(data_file.file_code),
         })
 
     return {

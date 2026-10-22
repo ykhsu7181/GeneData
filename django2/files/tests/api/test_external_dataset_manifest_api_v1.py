@@ -222,7 +222,7 @@ class ExternalDatasetManifestApiV1Tests(TestCase):
         self.assertEqual(rows[0]["file_role"], "genome_fasta")
         self.assertEqual(
             rows[0]["url"],
-            f"http://testserver/gd/api/v1/files/{data_file.id}/content/",
+            "http://testserver/gd/api/v1/files/GENOME/content/",
         )
         self.assertNotIn(str(self.root), response.content.decode())
 

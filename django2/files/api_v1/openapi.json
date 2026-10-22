@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GeneData External Data API",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Stable v1 API for external analysis tools. Genomic coordinates are 1-based inclusive. Tokens must never be placed in URLs or logs."
   },
   "servers": [{"url": "/", "description": "Current GeneData deployment"}],
@@ -54,30 +54,53 @@
         }
       }
     },
-    "/gd/api/v1/files/{file_id}/": {
+    "/gd/api/v1/files/": {
+      "get": {
+        "tags": ["Discovery"], "summary": "Search every released and authorized warehouse file",
+        "description": "Exact file-name searches return every authorized candidate when names are duplicated. Results never expose physical paths.",
+        "security": [{}, {"bearerAuth": []}],
+        "parameters": [
+          {"name": "file_name", "in": "query", "description": "Exact file name; Unicode NFC normalized and case-insensitive", "schema": {"type": "string"}},
+          {"name": "name_contains", "in": "query", "description": "Case-insensitive file-name substring", "schema": {"type": "string"}},
+          {"name": "accession", "in": "query", "schema": {"type": "string"}},
+          {"name": "assembly", "in": "query", "description": "Assembly code, accession, or unique name", "schema": {"type": "string"}},
+          {"name": "dataset", "in": "query", "description": "Dataset code or BioProject accession", "schema": {"type": "string"}},
+          {"name": "role", "in": "query", "schema": {"type": "string"}},
+          {"name": "format", "in": "query", "schema": {"type": "string"}},
+          {"name": "page", "in": "query", "schema": {"type": "integer", "minimum": 1, "default": 1}},
+          {"name": "page_size", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 500, "default": 100}}
+        ],
+        "responses": {
+          "200": {"description": "Paginated visible file candidates", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FileCatalog"}}}},
+          "400": {"$ref": "#/components/responses/InvalidQuery"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/files/{file_code}/": {
       "get": {
         "tags": ["Files"], "summary": "Get released file metadata",
         "security": [{}, {"bearerAuth": []}],
-        "parameters": [{"$ref": "#/components/parameters/FileId"}],
+        "parameters": [{"$ref": "#/components/parameters/FileCode"}],
         "responses": {
           "200": {"description": "File metadata without a physical path", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/File"}}}},
           "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}
         }
       }
     },
-    "/gd/api/v1/files/{file_id}/content/": {
+    "/gd/api/v1/files/{file_code}/content/": {
       "get": {
         "tags": ["Files"], "summary": "Download file content", "security": [{"bearerAuth": []}],
-        "parameters": [{"$ref": "#/components/parameters/FileId"}, {"name": "Range", "in": "header", "description": "Optional byte range, for example bytes=0-1023", "schema": {"type": "string"}}],
+        "parameters": [{"$ref": "#/components/parameters/FileCode"}, {"name": "Range", "in": "header", "description": "Optional byte range, for example bytes=0-1023", "schema": {"type": "string"}}, {"name": "If-None-Match", "in": "header", "schema": {"type": "string"}}, {"name": "If-Modified-Since", "in": "header", "schema": {"type": "string"}}, {"name": "If-Range", "in": "header", "schema": {"type": "string"}}],
         "responses": {
           "200": {"description": "Complete attachment", "headers": {"Accept-Ranges": {"schema": {"type": "string", "example": "bytes"}}, "Content-Disposition": {"schema": {"type": "string"}}}, "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}},
           "206": {"description": "Partial content returned by the protected-file web-server handoff"},
+          "304": {"description": "Not modified; ETag or Last-Modified validator matched"},
           "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "416": {"description": "Requested range is not satisfiable"}, "429": {"$ref": "#/components/responses/RateLimited"}
         }
       },
       "head": {
         "tags": ["Files"], "summary": "Inspect downloadable file headers", "security": [{"bearerAuth": []}],
-        "parameters": [{"$ref": "#/components/parameters/FileId"}],
+        "parameters": [{"$ref": "#/components/parameters/FileCode"}],
         "responses": {"200": {"description": "Download headers"}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}}
       }
     },
@@ -122,7 +145,7 @@
     "parameters": {
       "Accession": {"name": "accession", "in": "path", "required": true, "schema": {"type": "string"}},
       "Dataset": {"name": "dataset", "in": "path", "required": true, "description": "Dataset code or BioProject accession", "schema": {"type": "string"}},
-      "FileId": {"name": "file_id", "in": "path", "required": true, "schema": {"type": "integer", "minimum": 1}}
+      "FileCode": {"name": "file_code", "in": "path", "required": true, "description": "Stable DataFile code. Legacy numeric database IDs remain accepted during the compatibility window.", "schema": {"type": "string"}}
     },
     "responses": {
       "AuthenticationRequired": {"description": "Bearer token is required", "headers": {"WWW-Authenticate": {"schema": {"type": "string", "example": "Bearer"}}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
@@ -140,6 +163,8 @@
       "Assembly": {"type": "object", "required": ["assembly_id", "assembly_code", "assembly_name", "assembly_accession", "assembly_level", "is_default"], "properties": {"assembly_id": {"type": "integer"}, "assembly_code": {"type": "string"}, "assembly_name": {"type": "string", "nullable": true}, "assembly_accession": {"type": "string", "nullable": true}, "assembly_level": {"type": "string", "nullable": true}, "is_default": {"type": "boolean"}}},
       "AssemblyList": {"type": "object", "required": ["accession", "count", "assemblies"], "properties": {"accession": {"type": "string"}, "count": {"type": "integer"}, "assemblies": {"type": "array", "items": {"$ref": "#/components/schemas/Assembly"}}}},
       "File": {"type": "object", "required": ["id", "file_code", "file_name", "format", "role", "size", "sha256", "md5", "content_version", "dataset", "content_url"], "properties": {"id": {"type": "integer"}, "file_code": {"type": "string"}, "file_name": {"type": "string"}, "format": {"type": "string", "nullable": true}, "role": {"type": "string", "nullable": true}, "size": {"type": "integer", "format": "int64"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "md5": {"type": "string", "nullable": true}, "content_version": {"type": "string", "nullable": true}, "dataset": {"type": "string", "nullable": true}, "last_modified": {"type": "string", "format": "date-time"}, "content_url": {"type": "string"}}},
+      "CatalogFile": {"allOf": [{"$ref": "#/components/schemas/File"}, {"type": "object", "required": ["roles", "accession", "accessions", "assembly", "assemblies", "datasets"], "properties": {"roles": {"type": "array", "items": {"type": "string"}}, "accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}, "assembly": {"type": "string", "nullable": true}, "assemblies": {"type": "array", "items": {"type": "string"}}, "datasets": {"type": "array", "items": {"type": "string"}}}}]},
+      "FileCatalog": {"type": "object", "required": ["count", "page", "page_size", "results"], "properties": {"count": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "results": {"type": "array", "items": {"$ref": "#/components/schemas/CatalogFile"}}}},
       "FileDiscovery": {"type": "object", "required": ["accession", "count", "page", "page_size", "results"], "properties": {"accession": {"type": "string"}, "count": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "results": {"type": "array", "items": {"$ref": "#/components/schemas/File"}}}},
       "ManifestFile": {"allOf": [{"$ref": "#/components/schemas/File"}, {"type": "object", "required": ["accession", "accessions"], "properties": {"accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}}}]},
       "DatasetManifest": {"type": "object", "required": ["dataset", "dataset_codes", "count", "files"], "properties": {"dataset": {"type": "string"}, "dataset_codes": {"type": "array", "items": {"type": "string"}}, "count": {"type": "integer"}, "files": {"type": "array", "items": {"$ref": "#/components/schemas/ManifestFile"}}}}

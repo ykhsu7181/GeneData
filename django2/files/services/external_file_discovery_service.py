@@ -8,6 +8,7 @@ from files.services.datafile_access_service import (
     resolve_datafile_access,
     resolve_protected_datafile_path,
 )
+from files.services.external_file_urls import external_content_url
 
 
 def discover_accession_files(
@@ -92,7 +93,7 @@ def discover_accession_files(
             "md5": data_file.md5,
             "content_version": data_file.content_version,
             "dataset": dataset_codes[0] if len(dataset_codes) == 1 else None,
-            "content_url": f"/gd/api/v1/files/{data_file.id}/content/",
+            "content_url": external_content_url(data_file.file_code),
         })
 
     total = len(results)

@@ -12,6 +12,7 @@ COMMAND_LIFECYCLE = {
     "audit_genome_transcriptome_readiness": ACTIVE,
     "audit_legacy_fallback": RETAIN_AUDIT,
     "audit_datafile_access": ACTIVE,
+    "audit_external_file_catalog": ACTIVE,
     "audit_external_api_readiness": ACTIVE,
     "audit_public_fasta_indexes": ACTIVE,
     "backfill_assembly_fasta_statistics": ACTIVE,
