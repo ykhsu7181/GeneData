@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GeneData External Data API",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Stable v1 API for external analysis tools. Genomic coordinates are 1-based inclusive. Tokens must never be placed in URLs or logs."
   },
   "servers": [{"url": "/", "description": "Current GeneData deployment"}],
@@ -10,7 +10,8 @@
     {"name": "Discovery"},
     {"name": "Files"},
     {"name": "Datasets"},
-    {"name": "Sequences"}
+    {"name": "Sequences"},
+    {"name": "Batches"}
   ],
   "paths": {
     "/gd/api/v1/accessions/{accession}/": {
@@ -124,6 +125,39 @@
         }
       }
     },
+    "/gd/api/v1/file-batches/resolve/": {
+      "post": {
+        "tags": ["Batches"], "summary": "Resolve file selectors without creating a batch", "security": [{"bearerAuth": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/BatchRequest"}}}},
+        "responses": {"200": {"description": "Resolution result", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/BatchResolution"}}}}, "400": {"$ref": "#/components/responses/InvalidQuery"}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "413": {"$ref": "#/components/responses/TooLarge"}, "429": {"$ref": "#/components/responses/RateLimited"}}
+      }
+    },
+    "/gd/api/v1/file-batches/": {
+      "post": {
+        "tags": ["Batches"], "summary": "Create an immutable file batch snapshot", "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "Idempotency-Key", "in": "header", "required": false, "schema": {"type": "string", "maxLength": 255}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/BatchRequest"}}}},
+        "responses": {"200": {"description": "Idempotent replay", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FileBatch"}}}}, "201": {"description": "Batch created", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FileBatch"}}}}, "400": {"$ref": "#/components/responses/InvalidQuery"}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "409": {"$ref": "#/components/responses/Conflict"}, "413": {"$ref": "#/components/responses/TooLarge"}, "429": {"$ref": "#/components/responses/RateLimited"}}
+      }
+    },
+    "/gd/api/v1/file-batches/{batch_id}/": {
+      "get": {
+        "tags": ["Batches"], "summary": "Get owned batch status", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/BatchId"}],
+        "responses": {"200": {"description": "Batch metadata", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FileBatch"}}}}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}}
+      }
+    },
+    "/gd/api/v1/file-batches/{batch_id}/manifest/": {
+      "get": {
+        "tags": ["Batches"], "summary": "Get immutable batch manifest as JSON", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/BatchId"}],
+        "responses": {"200": {"description": "Immutable manifest", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FileBatch"}}}}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "409": {"$ref": "#/components/responses/Conflict"}, "410": {"description": "Batch expired"}, "429": {"$ref": "#/components/responses/RateLimited"}}
+      }
+    },
+    "/gd/api/v1/file-batches/{batch_id}/manifest.tsv": {
+      "get": {
+        "tags": ["Batches"], "summary": "Get immutable batch manifest as TSV", "security": [{"bearerAuth": []}], "parameters": [{"$ref": "#/components/parameters/BatchId"}],
+        "responses": {"200": {"description": "Tab-separated immutable manifest", "content": {"text/tab-separated-values": {"schema": {"type": "string"}}}}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "409": {"$ref": "#/components/responses/Conflict"}, "410": {"description": "Batch expired"}, "429": {"$ref": "#/components/responses/RateLimited"}}
+      }
+    },
     "/gd/api/v1/assemblies/{assembly}/sequence/": {
       "get": {
         "tags": ["Sequences"], "summary": "Fetch an indexed FASTA region", "description": "Coordinates are 1-based inclusive. The configured maximum is normally 1,000,000 bases.", "security": [{"bearerAuth": []}],
@@ -145,7 +179,8 @@
     "parameters": {
       "Accession": {"name": "accession", "in": "path", "required": true, "schema": {"type": "string"}},
       "Dataset": {"name": "dataset", "in": "path", "required": true, "description": "Dataset code or BioProject accession", "schema": {"type": "string"}},
-      "FileCode": {"name": "file_code", "in": "path", "required": true, "description": "Stable DataFile code. Legacy numeric database IDs remain accepted during the compatibility window.", "schema": {"type": "string"}}
+      "FileCode": {"name": "file_code", "in": "path", "required": true, "description": "Stable DataFile code. Legacy numeric database IDs remain accepted during the compatibility window.", "schema": {"type": "string"}},
+      "BatchId": {"name": "batch_id", "in": "path", "required": true, "schema": {"type": "string"}}
     },
     "responses": {
       "AuthenticationRequired": {"description": "Bearer token is required", "headers": {"WWW-Authenticate": {"schema": {"type": "string", "example": "Bearer"}}}, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
@@ -167,7 +202,12 @@
       "FileCatalog": {"type": "object", "required": ["count", "page", "page_size", "results"], "properties": {"count": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "results": {"type": "array", "items": {"$ref": "#/components/schemas/CatalogFile"}}}},
       "FileDiscovery": {"type": "object", "required": ["accession", "count", "page", "page_size", "results"], "properties": {"accession": {"type": "string"}, "count": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "results": {"type": "array", "items": {"$ref": "#/components/schemas/File"}}}},
       "ManifestFile": {"allOf": [{"$ref": "#/components/schemas/File"}, {"type": "object", "required": ["accession", "accessions"], "properties": {"accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}}}]},
-      "DatasetManifest": {"type": "object", "required": ["dataset", "dataset_codes", "count", "files"], "properties": {"dataset": {"type": "string"}, "dataset_codes": {"type": "array", "items": {"type": "string"}}, "count": {"type": "integer"}, "files": {"type": "array", "items": {"$ref": "#/components/schemas/ManifestFile"}}}}
+      "DatasetManifest": {"type": "object", "required": ["dataset", "dataset_codes", "count", "files"], "properties": {"dataset": {"type": "string"}, "dataset_codes": {"type": "array", "items": {"type": "string"}}, "count": {"type": "integer"}, "files": {"type": "array", "items": {"$ref": "#/components/schemas/ManifestFile"}}}},
+      "BatchSelector": {"type": "object", "additionalProperties": false, "properties": {"file_code": {"type": "string"}, "file_name": {"type": "string"}, "accession": {"type": "string"}, "assembly": {"type": "string"}, "dataset": {"type": "string"}, "role": {"type": "string"}, "format": {"type": "string"}}},
+      "BatchRequest": {"type": "object", "properties": {"name": {"type": "string", "maxLength": 255}, "strict": {"type": "boolean", "default": true}, "selectors": {"type": "array", "items": {"$ref": "#/components/schemas/BatchSelector"}}, "file_codes": {"type": "array", "items": {"type": "string"}}, "accessions": {"type": "array", "items": {"type": "string"}}, "assemblies": {"type": "array", "items": {"type": "string"}}, "datasets": {"type": "array", "items": {"type": "string"}}, "roles": {"type": "array", "items": {"type": "string"}}}},
+      "BatchResolution": {"type": "object", "required": ["strict", "selector_count", "resolved", "ambiguous", "missing", "blocked", "summary"], "properties": {"strict": {"type": "boolean"}, "selector_count": {"type": "integer"}, "resolved": {"type": "array", "items": {"$ref": "#/components/schemas/CatalogFile"}}, "ambiguous": {"type": "array", "items": {"type": "object"}}, "missing": {"type": "array", "items": {"type": "object"}}, "blocked": {"type": "array", "items": {"type": "object"}}, "summary": {"type": "object"}}},
+      "BatchFile": {"type": "object", "required": ["position", "file_code", "file_name", "content_version", "size", "sha256", "content_url"], "properties": {"position": {"type": "integer"}, "file_code": {"type": "string"}, "file_name": {"type": "string"}, "content_version": {"type": "string"}, "size": {"type": "integer", "format": "int64"}, "sha256": {"type": "string"}, "format": {"type": "string"}, "role": {"type": "string", "nullable": true}, "roles": {"type": "array", "items": {"type": "string"}}, "accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}, "assembly": {"type": "string", "nullable": true}, "assemblies": {"type": "array", "items": {"type": "string"}}, "dataset": {"type": "string", "nullable": true}, "datasets": {"type": "array", "items": {"type": "string"}}, "content_url": {"type": "string"}}},
+      "FileBatch": {"type": "object", "required": ["batch_id", "status", "strict", "file_count", "total_size", "snapshot_sha256", "created_at", "expires_at"], "properties": {"batch_id": {"type": "string"}, "name": {"type": "string"}, "status": {"type": "string", "enum": ["ready", "partial"]}, "strict": {"type": "boolean"}, "file_count": {"type": "integer"}, "total_size": {"type": "integer", "format": "int64"}, "snapshot_sha256": {"type": "string"}, "resolution": {"$ref": "#/components/schemas/BatchResolution"}, "created_at": {"type": "string", "format": "date-time"}, "expires_at": {"type": "string", "format": "date-time"}, "manifest_url": {"type": "string"}, "manifest_tsv_url": {"type": "string"}, "files": {"type": "array", "items": {"$ref": "#/components/schemas/BatchFile"}}}}
     }
   }
 }

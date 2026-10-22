@@ -26,3 +26,7 @@ class ExternalManifestThrottle(DataAccessRateThrottle):
 
 class ExternalSequenceThrottle(DataAccessRateThrottle):
     scope = "external_sequence"
+
+
+class ExternalBatchThrottle(DataAccessRateThrottle):
+    scope = "external_batch"

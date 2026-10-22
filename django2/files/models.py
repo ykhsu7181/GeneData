@@ -562,11 +562,15 @@ class DataAccessToken(models.Model):
     SCOPE_FILE_READ = 'file:read'
     SCOPE_SEQUENCE_READ = 'sequence:read'
     SCOPE_DATASET_MANIFEST = 'dataset:manifest'
+    SCOPE_BATCH_CREATE = 'batch:create'
+    SCOPE_BATCH_READ = 'batch:read'
     ALLOWED_SCOPES = frozenset({
         SCOPE_METADATA_READ,
         SCOPE_FILE_READ,
         SCOPE_SEQUENCE_READ,
         SCOPE_DATASET_MANIFEST,
+        SCOPE_BATCH_CREATE,
+        SCOPE_BATCH_READ,
     })
 
     name = models.CharField(max_length=255)
@@ -646,6 +650,87 @@ class DataAccessToken(models.Model):
 
     def has_scope(self, scope):
         return scope in set(self.scopes or [])
+
+
+class ExternalFileBatch(models.Model):
+    STATUS_READY = 'ready'
+    STATUS_PARTIAL = 'partial'
+    STATUS_CHOICES = [
+        (STATUS_READY, 'Ready'),
+        (STATUS_PARTIAL, 'Partial'),
+    ]
+
+    batch_id = models.CharField(max_length=64, unique=True, db_index=True)
+    name = models.CharField(max_length=255, blank=True)
+    created_by_token = models.ForeignKey(
+        DataAccessToken,
+        on_delete=models.PROTECT,
+        related_name='external_file_batches',
+    )
+    token_prefix_snapshot = models.CharField(max_length=16)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    strict = models.BooleanField(default=True)
+    request_fingerprint = models.CharField(max_length=64, db_index=True)
+    idempotency_hash = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    file_count = models.PositiveIntegerField(default=0)
+    total_size = models.BigIntegerField(default=0)
+    snapshot_sha256 = models.CharField(max_length=64)
+    resolution_summary = models.JSONField(default=dict)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'external_file_batch'
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return self.batch_id
+
+
+class ExternalFileBatchItem(models.Model):
+    batch = models.ForeignKey(
+        ExternalFileBatch,
+        on_delete=models.CASCADE,
+        related_name='items',
+    )
+    data_file = models.ForeignKey(
+        DataFile,
+        on_delete=models.PROTECT,
+        related_name='external_batch_items',
+    )
+    position = models.PositiveIntegerField()
+    file_code = models.CharField(max_length=100)
+    file_name = models.CharField(max_length=255)
+    content_version = models.CharField(max_length=80)
+    size = models.BigIntegerField()
+    sha256 = models.CharField(max_length=64)
+    file_format = models.CharField(max_length=50, blank=True)
+    role = models.CharField(max_length=100, blank=True)
+    accession = models.CharField(max_length=100, blank=True)
+    assembly = models.CharField(max_length=100, blank=True)
+    dataset = models.CharField(max_length=100, blank=True)
+    roles = models.JSONField(default=list)
+    accessions = models.JSONField(default=list)
+    assemblies = models.JSONField(default=list)
+    datasets = models.JSONField(default=list)
+    content_url = models.CharField(max_length=500)
+
+    class Meta:
+        db_table = 'external_file_batch_item'
+        ordering = ['position', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['batch', 'position'],
+                name='uniq_external_batch_position',
+            ),
+            models.UniqueConstraint(
+                fields=['batch', 'file_code'],
+                name='uniq_external_batch_file_code',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.batch.batch_id}:{self.file_code}'
 
 
 class AnnotationFeatureIndex(models.Model):

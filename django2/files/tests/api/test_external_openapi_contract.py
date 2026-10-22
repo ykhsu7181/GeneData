@@ -17,6 +17,11 @@ class ExternalOpenApiContractTests(SimpleTestCase):
         "/gd/api/v1/datasets/{dataset}/manifest/",
         "/gd/api/v1/datasets/{dataset}/manifest.tsv",
         "/gd/api/v1/assemblies/{assembly}/sequence/",
+        "/gd/api/v1/file-batches/resolve/",
+        "/gd/api/v1/file-batches/",
+        "/gd/api/v1/file-batches/{batch_id}/",
+        "/gd/api/v1/file-batches/{batch_id}/manifest/",
+        "/gd/api/v1/file-batches/{batch_id}/manifest.tsv",
     }
 
     def test_schema_is_openapi_3_and_covers_every_public_v1_operation(self):
@@ -36,11 +41,14 @@ class ExternalOpenApiContractTests(SimpleTestCase):
         sequence = schema["paths"]["/gd/api/v1/assemblies/{assembly}/sequence/"]["get"]
         self.assertEqual(sequence["responses"]["200"]["content"]["text/x-fasta"]["schema"]["type"], "string")
         self.assertIn("413", sequence["responses"])
+        batch_create = schema["paths"]["/gd/api/v1/file-batches/"]["post"]
+        self.assertEqual(batch_create["security"], [{"bearerAuth": []}])
+        self.assertIn("Idempotency-Key", [item["name"] for item in batch_create["parameters"]])
 
     def test_schema_and_human_documentation_are_served(self):
         schema_response = self.client.get("/gd/api/v1/openapi.json")
         self.assertEqual(schema_response.status_code, 200)
-        self.assertEqual(schema_response.json()["info"]["version"], "1.1.0")
+        self.assertEqual(schema_response.json()["info"]["version"], "1.2.0")
 
         docs_response = self.client.get("/docs/api/")
         self.assertEqual(docs_response.status_code, 200)
