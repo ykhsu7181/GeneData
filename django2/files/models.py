@@ -564,6 +564,8 @@ class DataAccessToken(models.Model):
     SCOPE_DATASET_MANIFEST = 'dataset:manifest'
     SCOPE_BATCH_CREATE = 'batch:create'
     SCOPE_BATCH_READ = 'batch:read'
+    SCOPE_BATCH_ARCHIVE = 'batch:archive'
+    SCOPE_BATCH_DOWNLOAD = 'batch:download'
     ALLOWED_SCOPES = frozenset({
         SCOPE_METADATA_READ,
         SCOPE_FILE_READ,
@@ -571,6 +573,8 @@ class DataAccessToken(models.Model):
         SCOPE_DATASET_MANIFEST,
         SCOPE_BATCH_CREATE,
         SCOPE_BATCH_READ,
+        SCOPE_BATCH_ARCHIVE,
+        SCOPE_BATCH_DOWNLOAD,
     })
 
     name = models.CharField(max_length=255)
@@ -731,6 +735,73 @@ class ExternalFileBatchItem(models.Model):
 
     def __str__(self):
         return f'{self.batch.batch_id}:{self.file_code}'
+
+
+class ExternalFileArchive(models.Model):
+    FORMAT_ZIP = 'zip'
+    FORMAT_TAR_GZ = 'tar.gz'
+    FORMAT_CHOICES = [
+        (FORMAT_ZIP, 'ZIP'),
+        (FORMAT_TAR_GZ, 'TAR.GZ'),
+    ]
+    STATUS_QUEUED = 'queued'
+    STATUS_RUNNING = 'running'
+    STATUS_READY = 'ready'
+    STATUS_FAILED = 'failed'
+    STATUS_EXPIRED = 'expired'
+    STATUS_CHOICES = [
+        (STATUS_QUEUED, 'Queued'),
+        (STATUS_RUNNING, 'Running'),
+        (STATUS_READY, 'Ready'),
+        (STATUS_FAILED, 'Failed'),
+        (STATUS_EXPIRED, 'Expired'),
+    ]
+
+    archive_id = models.CharField(max_length=64, unique=True, db_index=True)
+    batch = models.ForeignKey(
+        ExternalFileBatch,
+        on_delete=models.PROTECT,
+        related_name='archives',
+    )
+    created_by_token = models.ForeignKey(
+        DataAccessToken,
+        on_delete=models.PROTECT,
+        related_name='external_file_archives',
+    )
+    token_prefix_snapshot = models.CharField(max_length=16)
+    archive_format = models.CharField(max_length=10, choices=FORMAT_CHOICES)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_QUEUED,
+        db_index=True,
+    )
+    request_fingerprint = models.CharField(max_length=64, db_index=True)
+    idempotency_hash = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    archive_name = models.CharField(max_length=255)
+    output_relative_path = models.CharField(max_length=500, blank=True)
+    file_count = models.PositiveIntegerField(default=0)
+    total_input_size = models.BigIntegerField(default=0)
+    archive_size = models.BigIntegerField(null=True, blank=True)
+    archive_sha256 = models.CharField(max_length=64, blank=True)
+    attempt_count = models.PositiveIntegerField(default=0)
+    error_code = models.CharField(max_length=100, blank=True)
+    error_detail = models.CharField(max_length=500, blank=True)
+    expires_at = models.DateTimeField()
+    queued_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'external_file_archive'
+        ordering = ['-queued_at', '-id']
+        indexes = [
+            models.Index(fields=['status', 'queued_at'], name='ext_archive_status_queue'),
+        ]
+
+    def __str__(self):
+        return self.archive_id
 
 
 class AnnotationFeatureIndex(models.Model):
