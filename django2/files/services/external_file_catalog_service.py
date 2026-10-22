@@ -42,6 +42,43 @@ def list_external_files(
     """Return only released, authorized, physically available DataFiles."""
     page = _positive_integer(page, "page")
     page_size = min(_positive_integer(page_size, "page_size"), MAX_PAGE_SIZE)
+    collected = collect_external_files(
+        principal=principal,
+        file_name=file_name,
+        name_contains=name_contains,
+        accession=accession,
+        assembly=assembly,
+        dataset=dataset,
+        role=role,
+        file_format=file_format,
+    )
+    results = [
+        {key: value for key, value in item.items() if not key.startswith("_")}
+        for item in collected
+    ]
+    total = len(results)
+    start = (page - 1) * page_size
+    return {
+        "count": total,
+        "page": page,
+        "page_size": page_size,
+        "results": results[start:start + page_size],
+    }
+
+
+def collect_external_files(
+    *,
+    principal=None,
+    action=ACTION_METADATA,
+    file_name=None,
+    name_contains=None,
+    accession=None,
+    assembly=None,
+    dataset=None,
+    role=None,
+    file_format=None,
+):
+    """Return the complete authorized catalog for server-side batch resolution."""
     filters = {
         "file_name": normalize_file_name(file_name),
         "name_contains": normalize_file_name(name_contains),
@@ -75,7 +112,7 @@ def list_external_files(
         decision = resolve_datafile_access(
             data_file,
             principal=principal,
-            action=ACTION_METADATA,
+            action=action,
         )
         if not decision.allowed:
             continue
@@ -103,14 +140,7 @@ def list_external_files(
             normalize_file_name(item["file_code"]),
         )
     )
-    total = len(results)
-    start = (page - 1) * page_size
-    return {
-        "count": total,
-        "page": page,
-        "page_size": page_size,
-        "results": results[start:start + page_size],
-    }
+    return results
 
 
 def _serialize_file(data_file, relations, context, stat):
@@ -210,8 +240,6 @@ def _matches_filters(item, filters):
         return False
     if filters["format"] and filters["format"] != normalize_file_name(item["format"]):
         return False
-    item.pop("_assembly_aliases", None)
-    item.pop("_dataset_aliases", None)
     return True
 
 
