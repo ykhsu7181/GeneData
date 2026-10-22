@@ -1,0 +1,31 @@
+line_number	file_name	proposed_file_path	proposed_file_role	parsed_accession	status	review_reason
+28	annotation.534M.gff	/home/labuser/rdcheng/gd/manual_files/annotation.534M.gff	annotation	534M	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+147	annotation.Gla4.gff	/home/labuser/rdcheng/gd/manual_files/annotation.Gla4.gff	annotation	Gla4	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+151	annotation.GP100.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP100.gff	annotation	GP100	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+152	annotation.GP117.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP117.gff	annotation	GP117	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+153	annotation.GP119.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP119.gff	annotation	GP119	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+154	annotation.GP505.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP505.gff	annotation	GP505	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+155	annotation.GP523.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP523.gff	annotation	GP523	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+156	annotation.GP524.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP524.gff	annotation	GP524	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+157	annotation.GP543.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP543.gff	annotation	GP543	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+158	annotation.GP58.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP58.gff	annotation	GP58	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+159	annotation.GP622.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP622.gff	annotation	GP622	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+160	annotation.GP635.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP635.gff	annotation	GP635	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+161	annotation.GP680.gff	/home/labuser/rdcheng/gd/manual_files/annotation.GP680.gff	annotation	GP680	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+185	annotation.HP436.gff	/home/labuser/rdcheng/gd/manual_files/annotation.HP436.gff	annotation	HP436	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+186	annotation.HP519.gff	/home/labuser/rdcheng/gd/manual_files/annotation.HP519.gff	annotation	HP519	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+293	annotation.Nip_hifi.gff	/home/labuser/rdcheng/gd/manual_files/annotation.Nip_hifi.gff	annotation	Nip_hifi	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+342	annotation.Tetep(a).gff	/home/labuser/rdcheng/gd/manual_files/annotation.Tetep(a).gff	annotation	Tetep(a)	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+431	annotation.W1952.gff	/home/labuser/rdcheng/gd/manual_files/annotation.W1952.gff	annotation	W1952	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+448	annotation.W2296.gff	/home/labuser/rdcheng/gd/manual_files/annotation.W2296.gff	annotation	W2296	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+484	annotation.W3101.gff	/home/labuser/rdcheng/gd/manual_files/annotation.W3101.gff	annotation	W3101	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+485	annotation.W3102.gff	/home/labuser/rdcheng/gd/manual_files/annotation.W3102.gff	annotation	W3102	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+498	annotation.Xiangwanxian 1.gff	/home/labuser/rdcheng/gd/manual_files/annotation.Xiangwanxian 1.gff	annotation	Xiangwanxian 1	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+786	codon.sh	/home/labuser/rdcheng/gd/manual_files/codon.sh			NON_BUSINESS_REVIEW	unrecognized_name_requires_include_or_exclude_decision
+1253	genome.OL2296.fasta	/home/labuser/rdcheng/gd/manual_files/genome.OL2296.fasta	genome	OL2296	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+1254	genome.OL3101.fasta	/home/labuser/rdcheng/gd/manual_files/genome.OL3101.fasta	genome	OL3101	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+1255	genome.OL3102.fasta	/home/labuser/rdcheng/gd/manual_files/genome.OL3102.fasta	genome	OL3102	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+1256	genome.OM1952.fasta	/home/labuser/rdcheng/gd/manual_files/genome.OM1952.fasta	genome	OM1952	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+1525	genome.Xiangwanxian 1.fasta	/home/labuser/rdcheng/gd/manual_files/genome.Xiangwanxian 1.fasta	genome	Xiangwanxian 1	MAPPING_REQUIRED	new_business_file_requires_hierarchy_review
+1872	supplymentary_data.txt	/home/labuser/rdcheng/gd/manual_files/supplymentary_data.txt			NON_BUSINESS_REVIEW	unrecognized_name_requires_include_or_exclude_decision
+1873	supplymentary_data.txt.bak_20260416	/home/labuser/rdcheng/gd/manual_files/supplymentary_data.txt.bak_20260416			NON_BUSINESS_REVIEW	unrecognized_name_requires_include_or_exclude_decision
