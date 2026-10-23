@@ -24,7 +24,7 @@ class QuarantineInvalidManualFilesCommandTestCase(TestCase):
         path.write_text(content, encoding="utf-8")
         return path
 
-    def run_command(self, *args):
+    def run_command(self, *args, **kwargs):
         stdout = StringIO()
         call_command(
             "quarantine_invalid_manual_files",
@@ -33,6 +33,7 @@ class QuarantineInvalidManualFilesCommandTestCase(TestCase):
             quarantine_root=self.quarantine_dir.name,
             output_dir=self.output_dir.name,
             stdout=stdout,
+            **kwargs,
         )
         report = sorted(
             Path(self.output_dir.name).glob("quarantine_invalid_manual_files_*.tsv")
@@ -86,4 +87,14 @@ class QuarantineInvalidManualFilesCommandTestCase(TestCase):
 
         self.assertEqual(rows[0]["status"], "blocked")
         self.assertIn("target_already_exists", rows[0]["blocked_reason"])
+        self.assertTrue(invalid.exists())
+
+    def test_only_empty_excludes_nonempty_invalid_content(self):
+        empty = self.write("genome.EMPTY.fasta", "")
+        invalid = self.write("genome.BAD.fasta", "not-fasta")
+
+        _output, rows = self.run_command(only_empty=True)
+
+        self.assertEqual([row["file_name"] for row in rows], [empty.name])
+        self.assertTrue(empty.exists())
         self.assertTrue(invalid.exists())

@@ -34,6 +34,11 @@ class Command(BaseCommand):
             ),
         )
         parser.add_argument("--output-dir", default=None)
+        parser.add_argument(
+            "--only-empty",
+            action="store_true",
+            help="Restrict candidates to zero-byte files.",
+        )
         parser.add_argument("--dry-run", action="store_true")
         parser.add_argument(
             "--apply",
@@ -71,6 +76,12 @@ class Command(BaseCommand):
                 quarantine_batch=quarantine_batch,
                 validator=validator,
             )
+            if (
+                row
+                and options["only_empty"]
+                and "empty_file" not in row["reason"].split(";")
+            ):
+                row = None
             if row:
                 rows.append(row)
 

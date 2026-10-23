@@ -1,5 +1,8 @@
 import csv
+import gzip
 import hashlib
+import io
+import tarfile
 import tempfile
 from io import StringIO
 from pathlib import Path
@@ -7,7 +10,7 @@ from pathlib import Path
 from django.core.management import call_command
 from django.test import TestCase
 
-from files.models import Accession, DataFile
+from files.models import Accession, Annotation, Assembly, DataFile
 
 
 class ValidateManualFilesCommandTestCase(TestCase):
@@ -105,3 +108,57 @@ class ValidateManualFilesCommandTestCase(TestCase):
         self.assertEqual(rows[0]["status"], "ok")
         self.assertEqual(rows[0]["accession_state"], "not_checked")
         self.assertEqual(rows[0]["datafile_state"], "not_checked")
+
+    def test_accepts_tar_member_names_with_non_utf8_bytes(self):
+        archive_path = Path(self.manual_dir.name) / "transcriptome.all.IR64.tar.gz"
+        tar_path = Path(self.manual_dir.name) / "source.tar"
+        payload = b"@read1\nACGT\n+\n!!!!\n"
+        with tarfile.open(
+            tar_path,
+            mode="w",
+            format=tarfile.GNU_FORMAT,
+        ) as archive:
+            info = tarfile.TarInfo("reads_A.fastq")
+            info.size = len(payload)
+            archive.addfile(info, io.BytesIO(payload))
+        raw_tar = bytearray(tar_path.read_bytes())
+        raw_tar[:100] = raw_tar[:100].replace(
+            b"reads_A.fastq",
+            b"reads_\x80.fastq",
+            1,
+        )
+        raw_tar[148:156] = b"        "
+        raw_tar[148:156] = f"{sum(raw_tar[:512]):06o}\0 ".encode("ascii")
+        tar_path.unlink()
+        archive_path.write_bytes(gzip.compress(bytes(raw_tar)))
+
+        _, rows = self.run_command()
+
+        self.assertEqual(len(rows), 1)
+        self.assertNotEqual(rows[0]["status"], "error", rows[0]["issues"])
+        self.assertNotIn("invalid_content", rows[0]["issues"])
+
+    def test_resolves_versioned_annotation_by_exact_registered_filename(self):
+        assembly = Assembly.objects.create(
+            accession=self.accession,
+            name="IR64 assembly",
+            assembly_code="ASM_IR64",
+        )
+        Annotation.objects.create(
+            assembly=assembly,
+            name="IGDBv1 Allset",
+            annotation_code="ANN_IR64_IGDBv1_Allset",
+            file_name="annotation.IR64.IGDBv1.Allset.gff",
+        )
+        self.write(
+            "annotation.IR64.IGDBv1.Allset.gff",
+            "##gff-version 3\nchr1\tsource\tgene\t1\t10\t.\t+\t.\tID=g1\n",
+        )
+
+        _, rows = self.run_command()
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["accession_state"], "found")
+        self.assertEqual(rows[0]["assembly_state"], "unique")
+        self.assertEqual(rows[0]["annotation_state"], "unique")
+        self.assertNotIn("unknown_accession", rows[0]["issues"])
