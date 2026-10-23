@@ -45,6 +45,7 @@ COMMAND_LIFECYCLE = {
     "import_hierarchy_file_manifest": ACTIVE,
     "import_raw_data_manifest": ACTIVE,
     "import_sample_manifest": ACTIVE,
+    "import_verified_datafile_checksums": ACTIVE,
     "issue_data_access_token": ACTIVE,
     "link_genomefiles_to_accessions": LEGACY_REPAIR,
     "migrate_placeholder_hierarchy": LEGACY_REPAIR,

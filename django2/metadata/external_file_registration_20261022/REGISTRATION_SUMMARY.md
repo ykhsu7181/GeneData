@@ -18,4 +18,15 @@ This report is read-only. It does not register, publish, or modify warehouse fil
 | READY_FROM_BASE_MANIFEST | 2242 |
 | Base-only rows | 0 |
 
+## Production-ready selection
+
+`files.registration.ready.tsv` contains 2240 rows. It excludes the two
+production files confirmed to be empty during the Phase E read-only audit:
+
+- `centromere.OrufRS1.bed` (`FILE000637`)
+- `miRNA.DR1.bed` (`FILE001606`)
+
+The source files and legacy database rows are not deleted. They must remain
+unpublished until valid replacements are supplied.
+
 `READY_FROM_BASE_MANIFEST` rows may proceed to production physical-file and checksum validation. All other rows require review before any database import.

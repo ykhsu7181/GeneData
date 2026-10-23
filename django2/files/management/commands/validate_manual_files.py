@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from files.models import Accession, DataFile
+from files.models import Accession, Annotation, DataFile
 from files.services.ingestion.file_parser import parse_ingestion_filename
 
 
@@ -188,6 +188,16 @@ class Command(BaseCommand):
 
     def inspect_database_context(self, row, parsed):
         accession = Accession.objects.filter(accession=parsed["accession_code"]).first()
+        annotation = None
+        if not accession and parsed["file_role"] == "annotation":
+            annotation = (
+                Annotation.objects.select_related("assembly__accession")
+                .filter(file_name=row["file_name"])
+                .order_by("id")
+                .first()
+            )
+            if annotation and annotation.assembly:
+                accession = annotation.assembly.accession
         if not accession:
             row["accession_state"] = "missing"
             row["assembly_state"] = "missing"
@@ -196,14 +206,27 @@ class Command(BaseCommand):
             return
 
         row["accession_state"] = "found"
-        assemblies = list(accession.assemblies.all()[:3])
+        assemblies = (
+            [annotation.assembly]
+            if annotation and annotation.assembly
+            else list(accession.assemblies.all()[:3])
+        )
         row["assembly_state"] = self.context_state(assemblies)
         if len(assemblies) > 1:
             self.add_issue(row, "warning", "ambiguous_assembly_context")
-        elif not assemblies and parsed["file_role"] in {"genome", "genome_fasta", "genome_index", "annotation"}:
+        elif not assemblies and parsed["file_role"] in {
+            "genome",
+            "genome_fasta",
+            "genome_index",
+            "annotation",
+        }:
             self.add_issue(row, "warning", "missing_assembly_context")
 
-        annotations = list(assemblies[0].annotations.all()[:3]) if len(assemblies) == 1 else []
+        annotations = (
+            [annotation]
+            if annotation
+            else list(assemblies[0].annotations.all()[:3]) if len(assemblies) == 1 else []
+        )
         row["annotation_state"] = self.context_state(annotations)
         if parsed["file_role"] == "annotation":
             if len(assemblies) != 1:
@@ -233,7 +256,11 @@ class Command(BaseCommand):
                 self.validate_gff(path)
             elif extension == "bed":
                 self.validate_bed(path)
-            elif extension.endswith(".tar.gz") or extension in {"tar", "tgz"}:
+            elif (
+                extension == "tar.gz"
+                or extension.endswith(".tar.gz")
+                or extension in {"tar", "tgz"}
+            ):
                 self.validate_tar(path)
             elif extension.endswith(".gz"):
                 self.validate_gzip(path, expect_fastq=role.startswith("transcriptome."))
@@ -290,7 +317,12 @@ class Command(BaseCommand):
 
     @staticmethod
     def validate_tar(path):
-        with tarfile.open(path, mode="r:*") as archive:
+        with tarfile.open(
+            path,
+            mode="r:*",
+            encoding="latin-1",
+            errors="strict",
+        ) as archive:
             next(iter(archive), None)
 
     def validate_gzip(self, path, *, expect_fastq=False):
