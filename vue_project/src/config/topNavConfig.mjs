@@ -20,6 +20,7 @@ export const topNavItems = [
     path: '/data-overview',
     children: [
       { labelKey: 'nav.dataOverview', path: '/data-overview' },
+      { labelKey: 'nav.publicFileCatalog', path: '/public-files' },
       { labelKey: 'nav.researchGroupRawData', path: '/raw-data' }
     ]
   },
@@ -44,7 +45,7 @@ const groupMatchers = {
   home: ['/dashboard'],
   accession: ['/accession-card', '/accession-detail', '/accession-map'],
   assembly: ['/assembly'],
-  data: ['/data', '/data-chart', '/data-overview', '/raw-data'],
+  data: ['/data', '/data-chart', '/data-overview', '/public-files', '/raw-data'],
   more: ['/annotation', '/annotation-card', '/transcriptome', '/transcriptome-overview']
 }
 

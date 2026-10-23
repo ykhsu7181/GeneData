@@ -6,7 +6,12 @@ from files.api_v1.accession_views import (
     accession_metadata,
 )
 from files.api_v1.dataset_views import dataset_manifest, dataset_manifest_tsv
-from files.api_v1.file_views import file_catalog, file_content, file_metadata
+from files.api_v1.file_views import (
+    file_catalog,
+    file_catalog_manifest_tsv,
+    file_content,
+    file_metadata,
+)
 from files.api_v1.sequence_views import assembly_sequence
 from files.api_v1.schema_views import openapi_schema
 from files.api_v1.batch_views import (
@@ -58,6 +63,7 @@ urlpatterns = [
     path("accessions/<str:accession>/files/", accession_files, name="accession-files"),
     path("accessions/<str:accession>/", accession_metadata, name="accession-metadata"),
     path("files/", file_catalog, name="file-catalog"),
+    path("files/manifest.tsv", file_catalog_manifest_tsv, name="file-catalog-manifest-tsv"),
     path("files/<str:file_identifier>/", file_metadata, name="file-metadata"),
     path(
         "files/<str:file_identifier>/content/",

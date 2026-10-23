@@ -1,6 +1,9 @@
+import csv
 from datetime import datetime, timezone as datetime_timezone
+from io import StringIO
 from pathlib import Path
 
+from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
@@ -20,7 +23,7 @@ from files.services.datafile_access_service import (
     resolve_datafile_access,
     resolve_protected_datafile_path,
 )
-from files.services.external_file_catalog_service import list_external_files
+from files.services.external_file_catalog_service import collect_external_files, list_external_files
 from files.services.external_file_urls import external_content_url
 from files.services.protected_asset_service import (
     apply_conditional_request,
@@ -52,6 +55,35 @@ def file_catalog(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
     return Response(payload)
+
+
+@api_view(["GET"])
+@authentication_classes([DataAccessTokenAuthentication])
+@permission_classes([AllowAny])
+@throttle_classes([ExternalMetadataThrottle])
+def file_catalog_manifest_tsv(request):
+    """Return the complete authorized file catalog as an Excel-friendly TSV."""
+    rows = collect_external_files(principal=request.auth)
+    output = StringIO(newline="")
+    writer = csv.writer(output, dialect="excel-tab", lineterminator="\n")
+    writer.writerow([
+        "file_code", "file_name", "accession", "assembly", "dataset",
+        "role", "format", "size", "sha256", "content_url",
+    ])
+    for item in rows:
+        writer.writerow([
+            item["file_code"], item["file_name"], ",".join(item["accessions"]),
+            ",".join(item["assemblies"]), ",".join(item["datasets"]),
+            ",".join(item["roles"]), item["format"] or "", item["size"],
+            item["sha256"], request.build_absolute_uri(item["content_url"]),
+        ])
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="text/tab-separated-values; charset=utf-8",
+    )
+    response["Content-Disposition"] = 'attachment; filename="genedata_public_files.tsv"'
+    response["X-File-Count"] = str(len(rows))
+    return response
 
 
 @api_view(["GET"])

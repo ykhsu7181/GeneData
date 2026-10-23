@@ -91,6 +91,7 @@ const zhCN = {
     dataResources: '数据资源',
     rawData: '原始数据',
     dataOverview: '数据一览表',
+    publicFileCatalog: '公开文件目录',
     transcriptomeOverview: '转录组',
     accessionMap: '地理分布图',
     accession: '品种信息',
@@ -105,6 +106,28 @@ const zhCN = {
     transcriptome: '转录组'
   },
   page: {
+    publicFileCatalog: {
+      title: '公开文件目录',
+      intro: '查询已开放的数据文件，并复制适用于服务器和计算集群的下载命令。',
+      breadcrumb: '公开文件目录路径',
+      manifest: '下载完整 TSV 清单',
+      filters: '公开文件筛选',
+      fileName: '文件名',
+      role: '文件用途',
+      format: '格式',
+      size: '文件大小',
+      list: '公开文件',
+      items: '个文件',
+      downloadNote: '目录可匿名查询；下载文件需要管理员签发的 GENEDATA_TOKEN。页面不会保存令牌。',
+      fileCode: '文件编号',
+      copyCommand: '复制下载命令',
+      empty: '没有符合条件的公开文件',
+      loadFailed: '公开文件目录加载失败',
+      copySha: '复制 SHA-256',
+      apiUrl: 'API 地址',
+      copied: '已复制',
+      copyFailed: '复制失败'
+    },
     home: {
       title: '全部数据',
       searchPlaceholder: '搜索物种 / Accession / 品种',

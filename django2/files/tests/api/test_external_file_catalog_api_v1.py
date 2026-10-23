@@ -258,3 +258,31 @@ class ExternalFileCatalogApiV1Tests(TestCase):
             authorized.json()["results"][0]["file_code"],
             internal.file_code,
         )
+
+    def test_public_catalog_manifest_is_excel_friendly_and_fail_closed(self):
+        visible = self.make_file(
+            "FILE_MANIFEST",
+            "annotation.IR64.gff",
+            accession=self.ir64,
+            assembly=self.ir64_assembly,
+            role="annotation",
+        )
+        self.make_file(
+            "FILE_MANIFEST_DRAFT",
+            "draft.gff",
+            publication_status=DataFile.PUBLICATION_DRAFT,
+            role="annotation",
+        )
+
+        response = self.client.get("/gd/api/v1/files/manifest.tsv")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["X-File-Count"], "1")
+        self.assertIn("genedata_public_files.tsv", response["Content-Disposition"])
+        text = response.content.decode("utf-8")
+        self.assertTrue(text.startswith("file_code\tfile_name\taccession\tassembly"))
+        self.assertIn(visible.file_code, text)
+        self.assertIn("annotation.IR64.gff", text)
+        self.assertIn("/gd/api/v1/files/FILE_MANIFEST/content/", text)
+        self.assertNotIn("FILE_MANIFEST_DRAFT", text)
+        self.assertNotIn(str(self.root), text)

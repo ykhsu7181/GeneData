@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GeneData External Data API",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Stable v1 API for external analysis tools. Genomic coordinates are 1-based inclusive. Tokens must never be placed in URLs or logs."
   },
   "servers": [{"url": "/", "description": "Current GeneData deployment"}],
@@ -74,6 +74,22 @@
         "responses": {
           "200": {"description": "Paginated visible file candidates", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/FileCatalog"}}}},
           "400": {"$ref": "#/components/responses/InvalidQuery"}, "429": {"$ref": "#/components/responses/RateLimited"}
+        }
+      }
+    },
+    "/gd/api/v1/files/manifest.tsv": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Download the complete authorized file catalog as TSV",
+        "description": "Excel-friendly catalog without physical storage paths.",
+        "security": [{}, {"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Tab-separated public file catalog",
+            "headers": {"X-File-Count": {"schema": {"type": "integer"}}},
+            "content": {"text/tab-separated-values": {"schema": {"type": "string"}}}
+          },
+          "429": {"$ref": "#/components/responses/RateLimited"}
         }
       }
     },

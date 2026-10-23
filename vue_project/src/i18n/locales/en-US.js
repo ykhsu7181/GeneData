@@ -91,6 +91,7 @@ const enUS = {
     dataResources: 'Data Resources',
     rawData: 'Raw Data',
     dataOverview: 'Data Overview',
+    publicFileCatalog: 'Public File Catalog',
     transcriptomeOverview: 'Transcriptome',
     accessionMap: 'Geographic Distribution',
     accession: 'Accession',
@@ -105,6 +106,28 @@ const enUS = {
     transcriptome: 'Transcriptome'
   },
   page: {
+    publicFileCatalog: {
+      title: 'Public File Catalog',
+      intro: 'Find released data files and copy download commands for servers and compute clusters.',
+      breadcrumb: 'Public file catalog breadcrumb',
+      manifest: 'Download complete TSV',
+      filters: 'Public file filters',
+      fileName: 'File name',
+      role: 'File role',
+      format: 'Format',
+      size: 'File size',
+      list: 'Public files',
+      items: 'files',
+      downloadNote: 'The catalog is public. File downloads require an administrator-issued GENEDATA_TOKEN; this page never stores tokens.',
+      fileCode: 'File code',
+      copyCommand: 'Copy download command',
+      empty: 'No matching public files',
+      loadFailed: 'Failed to load the public file catalog',
+      copySha: 'Copy SHA-256',
+      apiUrl: 'API URL',
+      copied: 'Copied',
+      copyFailed: 'Copy failed'
+    },
     home: {
       title: 'All data',
       searchPlaceholder: 'Search Organism Accession',

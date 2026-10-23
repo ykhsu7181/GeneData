@@ -79,6 +79,14 @@ const routes = [
     }
   },
   {
+    path: '/public-files',
+    name: 'public-file-catalog',
+    component: () => import('../views/PublicFileCatalogView.vue'),
+    meta: {
+      requiresAuth: false
+    }
+  },
+  {
     path: '/raw-data',
     name: 'raw-data',
     component: () => import('../views/RawDataView.vue'),

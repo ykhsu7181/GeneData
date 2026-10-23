@@ -15,12 +15,13 @@ test('top navigation exposes the agreed five first-level entries in order', () =
   )
 })
 
-test('Data and More contain only the agreed secondary entries', () => {
+test('Data and More contain the agreed secondary entries', () => {
   const data = topNavItems.find((item) => item.key === 'data')
   const more = topNavItems.find((item) => item.key === 'more')
 
   assert.deepEqual(data.children.map((item) => [item.labelKey, item.path]), [
     ['nav.dataOverview', '/data-overview'],
+    ['nav.publicFileCatalog', '/public-files'],
     ['nav.researchGroupRawData', '/raw-data']
   ])
   assert.deepEqual(more.children.map((item) => [item.labelKey, item.path]), [
@@ -46,6 +47,7 @@ test('active group mapping covers visible navigation destinations', () => {
     '/data': 'data',
     '/data-chart': 'data',
     '/data-overview': 'data',
+    '/public-files': 'data',
     '/raw-data': 'data',
     '/genome-card': null,
     '/annotation': 'more',

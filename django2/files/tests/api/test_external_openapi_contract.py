@@ -12,6 +12,7 @@ class ExternalOpenApiContractTests(SimpleTestCase):
         "/gd/api/v1/accessions/{accession}/assemblies/",
         "/gd/api/v1/accessions/{accession}/files/",
         "/gd/api/v1/files/",
+        "/gd/api/v1/files/manifest.tsv",
         "/gd/api/v1/files/{file_code}/",
         "/gd/api/v1/files/{file_code}/content/",
         "/gd/api/v1/datasets/{dataset}/manifest/",
@@ -53,7 +54,7 @@ class ExternalOpenApiContractTests(SimpleTestCase):
     def test_schema_and_human_documentation_are_served(self):
         schema_response = self.client.get("/gd/api/v1/openapi.json")
         self.assertEqual(schema_response.status_code, 200)
-        self.assertEqual(schema_response.json()["info"]["version"], "1.3.0")
+        self.assertEqual(schema_response.json()["info"]["version"], "1.4.0")
 
         docs_response = self.client.get("/docs/api/")
         self.assertEqual(docs_response.status_code, 200)
