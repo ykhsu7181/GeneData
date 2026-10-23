@@ -3,67 +3,70 @@ import { join } from 'node:path'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-const dashboardPath = join(process.cwd(), 'src', 'views', 'DashboardHomeView.vue')
-const source = readFileSync(dashboardPath, 'utf8')
+const readSource = (...segments) => readFileSync(join(process.cwd(), ...segments), 'utf8')
+const dashboardSource = readSource('src', 'views', 'DashboardHomeView.vue')
+const heroSource = readSource('src', 'components', 'HomeHero.vue')
+const featuredSource = readSource('src', 'components', 'FeaturedAccessions.vue')
+const statsSource = readSource('src', 'components', 'HomeStatsBar.vue')
 
-test('dashboard home removes distribution overview lead copy', () => {
-  assert.doesNotMatch(source, /分布概览/)
-  assert.doesNotMatch(source, /Distribution insights/i)
-  assert.doesNotMatch(source, /section-lead/)
-  assert.doesNotMatch(source, /lead-description/)
+test('portal homepage composes the three focused homepage components', () => {
+  assert.match(dashboardSource, /<HomeHero @search="handleSearch"/)
+  assert.match(dashboardSource, /<FeaturedAccessions/)
+  assert.match(dashboardSource, /<HomeStatsBar :summary="dashboard\.summary"/)
 })
 
-test('dashboard home keeps distribution panels and geo map after removing lead copy', () => {
-  assert.match(source, /<DistributionPanel/)
-  assert.match(source, /<GeoMapPanel/)
+test('portal homepage removes the legacy dashboard runtime chain', () => {
+  for (const legacyName of [
+    'DashboardHero',
+    'SpeciesCardGrid',
+    'DataResourceSummary',
+    'DistributionPanel',
+    'GeoMapPanel',
+    'RecentUpdatesBar',
+    'IntersectionObserver',
+    'defineAsyncComponent'
+  ]) {
+    assert.doesNotMatch(dashboardSource, new RegExp(legacyName))
+  }
 })
 
-test('dashboard content only overlaps the hero slightly on desktop', () => {
-  assert.match(source, /\.dashboard-overlap\s*{[\s\S]*?margin-top:\s*-28px;/)
-  assert.match(
-    source,
-    /@media\s*\(max-width:\s*960px\)[\s\S]*?\.dashboard-overlap\s*{[\s\S]*?margin-top:\s*0;/
-  )
-  assert.doesNotMatch(source, /margin-top:\s*-78px;/)
-  assert.doesNotMatch(source, /margin-top:\s*-48px;/)
+test('hero provides unified search and clickable examples', () => {
+  assert.match(heroSource, /role="search"/)
+  assert.match(heroSource, /@submit\.prevent="submitSearch"/)
+  assert.match(heroSource, /page\.home\.portalSearchPlaceholder/)
+  assert.match(heroSource, /v-for="example in searchExamples"/)
+  assert.match(heroSource, /const query = queryText\.value\.trim\(\)/)
 })
 
-test('dashboard home places data resources beside subpopulation and recent updates below geo map', () => {
-  assert.match(source, /<DataResourceSummary/)
-  assert.match(source, /class="resource-distribution-row"/)
-  assert.match(source, /title="亚群分布"[\s\S]*?:items="dashboard\.sub_population_distribution"/)
-  assert.doesNotMatch(source, /title="群体分组"/)
-  assert.match(
-    source,
-    /<section class="dashboard-map-section">[\s\S]*?<GeoMapPanel[\s\S]*?<RecentUpdatesBar/
-  )
+test('featured accessions use the canonical accession route query', () => {
+  assert.match(dashboardSource, /name: 'accession-card', query: \{ accession: item\.accession \}/)
+  assert.match(featuredSource, /page\.home\.featuredAccessions/)
+  assert.match(featuredSource, /<th scope="col">Accession<\/th>/)
+  assert.match(featuredSource, /page\.home\.country/)
+  assert.match(featuredSource, /page\.home\.annotationDatasets/)
+  assert.match(featuredSource, /species_scientific_name/)
+  assert.match(featuredSource, /td em \{ font-style: italic; \}/)
+  assert.match(featuredSource, /const MAX_ITEMS = 10/)
+  assert.match(featuredSource, /v-for="item in limitedItems"/)
+  assert.match(featuredSource, /class="featured-scroll"/)
+  assert.match(featuredSource, /overflow-y: auto/)
+  assert.match(featuredSource, /scrollbar-width: none/)
+  assert.match(featuredSource, /::-webkit-scrollbar/)
+  assert.doesNotMatch(featuredSource, /featured-pagination/)
+  assert.match(featuredSource, /@click="\$emit\('select', item\)"/)
 })
 
-test('dashboard home hides dataset type and file role distribution modules', () => {
-  assert.doesNotMatch(source, /数据集类型分布/)
-  assert.doesNotMatch(source, /文件角色分布/)
-  assert.doesNotMatch(source, /dashboard\.dataset_type_summary/)
-  assert.doesNotMatch(source, /dashboard\.file_role_summary/)
+test('stats bar exposes the agreed portal metrics', () => {
+  for (const key of ['assemblies', 'species', 'annotations', 'accessions']) {
+    assert.match(statsSource, new RegExp(`t\\('page\\.home\\.stats\\.${key}'\\)`))
+  }
+  assert.match(statsSource, /key: 'assembly_count'/)
+  assert.match(statsSource, /return '—'/)
 })
 
-test('dashboard home does not show a large featured species lead title', () => {
-  const speciesGridPath = join(process.cwd(), 'src', 'components', 'SpeciesCardGrid.vue')
-  const speciesGridSource = readFileSync(speciesGridPath, 'utf8')
-
-  assert.doesNotMatch(speciesGridSource, /Featured species/i)
-  assert.doesNotMatch(speciesGridSource, /重点物种卡片/)
-})
-
-test('species cards keep a compact dashboard proportion', () => {
-  const speciesGridPath = join(process.cwd(), 'src', 'components', 'SpeciesCardGrid.vue')
-  const speciesGridSource = readFileSync(speciesGridPath, 'utf8')
-
-  assert.match(speciesGridSource, /\.species-grid\s*{[\s\S]*?gap:\s*18px;/)
-  assert.match(speciesGridSource, /grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(220px,\s*280px\)\);/)
-  assert.match(speciesGridSource, /\.card-cover\s*{[\s\S]*?min-height:\s*56px;/)
-  assert.match(speciesGridSource, /\.card-float-mark\s*{[\s\S]*?width:\s*34px;[\s\S]*?height:\s*34px;/)
-  assert.match(speciesGridSource, /\.card-body\s*{[\s\S]*?padding:\s*18px 14px 10px;/)
-  assert.doesNotMatch(speciesGridSource, /metrics-row/)
-  assert.doesNotMatch(speciesGridSource, /metric-item/)
-  assert.doesNotMatch(speciesGridSource, /材料数|样本数|数据集数/)
+test('portal components include compact responsive behavior', () => {
+  assert.match(heroSource, /@media \(max-width: 620px\)/)
+  assert.match(featuredSource, /@media \(max-width: 680px\)/)
+  assert.match(featuredSource, /td::before \{ content: attr\(data-label\)/)
+  assert.match(statsSource, /grid-template-columns: repeat\(2, 1fr\)/)
 })

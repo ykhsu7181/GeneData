@@ -5,6 +5,8 @@ from collections import defaultdict
 from django.db.models import Q
 
 from files.models import Accession, DataFile, DatasetAccession, FileRelation
+from files.services.assembly_visibility import filter_visible_assemblies
+from files.services.resource_serializers import serialize_annotation, serialize_assembly
 
 
 def _display_size(value):
@@ -40,7 +42,7 @@ def get_accession_or_none(accession_code):
     )
 
 
-def _related_file_queryset(accession):
+def _related_relation_filter(accession):
     assembly_ids = list(accession.assemblies.values_list("id", flat=True))
     annotation_ids = list(
         accession.assemblies.values_list("annotations__id", flat=True)
@@ -50,14 +52,21 @@ def _related_file_queryset(accession):
         relation_filter |= Q(related_type="assembly", related_id__in=[str(item) for item in assembly_ids])
     if annotation_ids:
         relation_filter |= Q(related_type="annotation", related_id__in=[str(item) for item in annotation_ids if item])
+    return relation_filter
 
+
+def _related_file_queryset(accession):
+    relation_filter = _related_relation_filter(accession)
     file_ids = FileRelation.objects.filter(relation_filter).values_list("file_id", flat=True)
     return DataFile.objects.filter(id__in=file_ids).select_related("dataset", "file_type").distinct()
 
 
 def _file_rows(accession):
     files = list(_related_file_queryset(accession).order_by("file_name", "id"))
-    relations = FileRelation.objects.filter(file__in=files).order_by("file_id", "id")
+    relations = FileRelation.objects.filter(
+        _related_relation_filter(accession),
+        file__in=files,
+    ).order_by("file_id", "id")
     relation_map = defaultdict(list)
     for relation in relations:
         relation_map[relation.file_id].append({
@@ -95,52 +104,22 @@ def _file_rows(accession):
 
 
 def _assembly_rows(accession):
-    rows = []
-    for assembly in accession.assemblies.all().order_by("-is_default", "name", "id"):
-        rows.append({
-            "id": assembly.id,
-            "name": assembly.name,
-            "assembly_code": assembly.assembly_code,
-            "assembly_name": assembly.assembly_name or assembly.display_name or assembly.name,
-            "assembly_accession": assembly.assembly_accession or assembly.standard_id,
-            "assembly_level": assembly.assembly_level,
-            "display_name": assembly.display_name,
-            "standard_id": assembly.standard_id,
-            "bio_project": assembly.bio_project,
-            "reference": assembly.reference,
-            "source_database": assembly.source_database,
-            "external_project": assembly.external_project,
-            "file_name": assembly.file_name,
-            "file_type": assembly.file_type,
-            "description": assembly.description,
-            "is_default": assembly.is_default,
-        })
-    return rows
+    return [
+        serialize_assembly(assembly)
+        for assembly in filter_visible_assemblies(
+            accession.assemblies.all().order_by("-is_default", "name", "id")
+        )
+    ]
 
 
 def _annotation_rows(accession):
     rows = []
-    for assembly in accession.assemblies.all().order_by("-is_default", "name", "id"):
+    assemblies = filter_visible_assemblies(
+        accession.assemblies.all().order_by("-is_default", "name", "id")
+    )
+    for assembly in assemblies:
         for annotation in assembly.annotations.all().order_by("-is_default", "name", "id"):
-            rows.append({
-                "id": annotation.id,
-                "name": annotation.name,
-                "annotation_code": annotation.annotation_code,
-                "annotation_name": annotation.annotation_name or annotation.display_name or annotation.name,
-                "annotation_version": annotation.annotation_version or annotation.release_version,
-                "display_name": annotation.display_name,
-                "standard_id": annotation.standard_id,
-                "source_name": annotation.source_name,
-                "release_version": annotation.release_version,
-                "source_database": annotation.source_database,
-                "external_project": annotation.external_project,
-                "file_name": annotation.file_name,
-                "file_type": annotation.file_type,
-                "description": annotation.description,
-                "is_default": annotation.is_default,
-                "assembly_id": assembly.id,
-                "assembly_name": assembly.display_name or assembly.name,
-            })
+            rows.append(serialize_annotation(annotation, assembly=assembly))
     return rows
 
 

@@ -606,13 +606,25 @@ export default {
       }
 
       // 其他模块的路由跳转
+      if (moduleKey === 'genome') {
+        const target = currentSpeciesData.value?.assemblyId
+          ? {
+            name: 'assembly-detail',
+            params: { assemblyId: currentSpeciesData.value.assemblyId }
+          }
+          : {
+            name: 'accession-detail',
+            query: { accession: targetSpecies }
+          };
+        router.push(target);
+        ElMessage.success(t('messages.jumpingToPage', { species: targetSpecies, module: moduleConfig[moduleKey].name }));
+        return;
+      }
+
       let path = '';
       switch (moduleKey) {
         case 'accession':
           path = '/accession-card';
-          break;
-        case 'genome':
-          path = '/genome-card';
           break;
         case 'annotation':
           path = '/annotation-card';

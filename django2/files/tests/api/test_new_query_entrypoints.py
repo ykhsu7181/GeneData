@@ -60,6 +60,108 @@ class NewQueryEntrypointsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(self.accession_code, response.json())
 
+    def test_query_organisms_supports_species_and_subpopulation_search(self):
+        species = Species.objects.create(
+            species_code=f"RICE_{self.suffix}",
+            scientific_name=f"Oryza sativa {self.suffix}",
+            chinese_name=f"水稻{self.suffix}",
+            common_name=f"Rice {self.suffix}",
+        )
+        self.accession.species = species
+        self.accession.save(update_fields=["species"])
+
+        for term in (
+            species.species_code,
+            species.scientific_name,
+            species.chinese_name,
+            species.common_name,
+            "XI",
+        ):
+            with self.subTest(term=term):
+                response = self.client.get(
+                    "/gd/api/files/query/organisms/",
+                    {"search": term},
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(self.accession_code, response.json())
+
+    def test_query_organisms_ranks_exact_prefix_contains_then_metadata(self):
+        search = f"RANK{self.suffix}"
+        exact = Accession.objects.create(accession=search)
+        prefix = Accession.objects.create(accession=f"{search}_PREFIX")
+        contains = Accession.objects.create(accession=f"X_{search}_CONTAINS")
+        species = Species.objects.create(
+            species_code=f"SPECIES_{self.suffix}",
+            common_name=search,
+        )
+        metadata = Accession.objects.create(
+            accession=f"ZZ_METADATA_{self.suffix}",
+            species=species,
+        )
+
+        response = self.client.get(
+            "/gd/api/files/query/organisms/",
+            {"search": search},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [exact.accession, prefix.accession, contains.accession, metadata.accession],
+        )
+
+    def test_query_organisms_applies_default_and_maximum_limits(self):
+        search = f"LIMIT{self.suffix}"
+        Accession.objects.bulk_create(
+            [Accession(accession=f"{search}_{index:02d}") for index in range(55)]
+        )
+
+        default_response = self.client.get(
+            "/gd/api/files/query/organisms/",
+            {"search": search},
+        )
+        capped_response = self.client.get(
+            "/gd/api/files/query/organisms/",
+            {"search": search, "limit": 500},
+        )
+
+        self.assertEqual(default_response.status_code, 200)
+        self.assertEqual(len(default_response.json()), 20)
+        self.assertEqual(capped_response.status_code, 200)
+        self.assertEqual(len(capped_response.json()), 50)
+
+    def test_query_organisms_rejects_invalid_search_and_limit(self):
+        too_long = self.client.get(
+            "/gd/api/files/query/organisms/",
+            {"search": "x" * 101},
+        )
+        self.assertEqual(too_long.status_code, 400)
+        self.assertEqual(too_long.json()["code"], "invalid_search")
+
+        for limit in ("invalid", "0", "-1"):
+            with self.subTest(limit=limit):
+                response = self.client.get(
+                    "/gd/api/files/query/organisms/",
+                    {"search": self.accession_code, "limit": limit},
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.json()["code"], "invalid_limit")
+
+    def test_query_organisms_trims_search_and_keeps_no_search_compatibility(self):
+        searched = self.client.get(
+            "/gd/api/files/query/organisms/",
+            {"search": f"  {self.accession_code}  "},
+        )
+        unfiltered = self.client.get(
+            "/gd/api/files/query/organisms/",
+            {"limit": 1},
+        )
+
+        self.assertEqual(searched.status_code, 200)
+        self.assertEqual(searched.json(), [self.accession_code])
+        self.assertEqual(unfiltered.status_code, 200)
+        self.assertIn(self.accession_code, unfiltered.json())
+
     def test_query_sub_populations_endpoint_returns_distinct_values(self):
         response = self.client.get("/gd/api/files/query/sub-populations/")
 
@@ -100,11 +202,18 @@ class NewQueryEntrypointsTestCase(TestCase):
         self.assertEqual(payload["results"][0]["accession"], self.accession_code)
 
     def test_query_supplementary_data_includes_region_and_country(self):
+        species = Species.objects.create(
+            species_code=f"RICE_{self.suffix}",
+            scientific_name="Oryza sativa",
+            chinese_name="水稻",
+            common_name="Rice",
+        )
+        self.accession.species = species
         self.accession.country = "China"
         self.accession.region = "Yunnan"
         self.accession.longitude = 102.71
         self.accession.latitude = 25.04
-        self.accession.save(update_fields=["country", "region", "longitude", "latitude"])
+        self.accession.save(update_fields=["species", "country", "region", "longitude", "latitude"])
 
         response = self.client.get("/gd/api/files/query/supplementary-data/")
 
@@ -112,6 +221,37 @@ class NewQueryEntrypointsTestCase(TestCase):
         payload = response.json()
         self.assertEqual(payload[self.accession_code]["country"], "China")
         self.assertEqual(payload[self.accession_code]["region"], "Yunnan")
+        self.assertEqual(payload[self.accession_code]["species_code"], species.species_code)
+        self.assertEqual(payload[self.accession_code]["scientific_name"], "Oryza sativa")
+        self.assertEqual(payload[self.accession_code]["chinese_name"], "水稻")
+        self.assertEqual(payload[self.accession_code]["common_name"], "Rice")
+
+    def test_query_supplementary_data_handles_missing_species(self):
+        response = self.client.get("/gd/api/files/query/supplementary-data/")
+
+        self.assertEqual(response.status_code, 200)
+        item = response.json()[self.accession_code]
+        self.assertIsNone(item["species_code"])
+        self.assertIsNone(item["scientific_name"])
+        self.assertIsNone(item["chinese_name"])
+        self.assertIsNone(item["common_name"])
+
+    def test_query_supplementary_data_fetches_species_in_one_query(self):
+        species = Species.objects.create(
+            species_code=f"QUERY_COUNT_{self.suffix}",
+            scientific_name="Query count species",
+        )
+        Accession.objects.bulk_create(
+            [
+                Accession(accession=f"QUERY_COUNT_{self.suffix}_{index}", species=species)
+                for index in range(3)
+            ]
+        )
+
+        with self.assertNumQueries(1):
+            response = self.client.get("/gd/api/files/query/supplementary-data/")
+
+        self.assertEqual(response.status_code, 200)
 
 
 class FrontendUsesNewQueryEntrypointsTestCase(TestCase):

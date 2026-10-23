@@ -10,7 +10,15 @@ from django.test import SimpleTestCase
 from files.parsers.archive import parse_feature_file, safe_extract_zip
 from files.parsers.bed import parse_lines as parse_bed_lines
 from files.parsers.codon import load_payload
-from files.parsers.fasta import build_sequence_aliases, list_sequence_ids, parse_sequence_id, sequence_length
+from files.parsers.fasta import (
+    build_sequence_aliases,
+    fetch_sequence_region,
+    list_sequence_ids,
+    parse_sequence_id,
+    read_fai_entries,
+    sequence_length,
+)
+from files.services.fasta_index_service import build_fasta_index
 from files.parsers.gff import parse_lines as parse_gff_lines
 
 
@@ -48,6 +56,35 @@ class QueryParserTests(SimpleTestCase):
         self.assertEqual(list_sequence_ids(path), ["Chr01", "Chr02"])
         self.assertEqual(sequence_length(path, "contig_01"), 4)
         self.assertIsNone(sequence_length(path, "missing"))
+
+    def test_fasta_region_uses_full_fai_offsets_across_lf_lines(self):
+        path = self.path("reference.fasta")
+        with open(path, "wb") as handle:
+            handle.write(b">Chr01\nACGTAC\nGTAA\n>Chr02\nTTTT\n")
+        index_path, _entries = build_fasta_index(path)
+
+        entries = read_fai_entries(index_path)
+        sequence = fetch_sequence_region(path, "Chr01", 5, 9, index_path)
+
+        self.assertEqual(entries["Chr01"].length, 10)
+        self.assertEqual(entries["Chr01"].line_bases, 6)
+        self.assertEqual(entries["Chr01"].line_width, 7)
+        self.assertEqual(sequence, b"ACGTA")
+
+    def test_fasta_region_supports_crlf_and_rejects_invalid_coordinates(self):
+        path = self.path("windows.fasta")
+        with open(path, "wb") as handle:
+            handle.write(b">Chr01\r\nACGT\r\nTGCA\r\n")
+        index_path, _entries = build_fasta_index(path)
+
+        self.assertEqual(
+            fetch_sequence_region(path, "Chr01", 3, 7, index_path),
+            b"GTTGC",
+        )
+        with self.assertRaises(ValueError):
+            fetch_sequence_region(path, "Chr01", 0, 2, index_path)
+        with self.assertRaises(KeyError):
+            fetch_sequence_region(path, "missing", 1, 2, index_path)
 
     def test_gff_and_bed_parsers_preserve_response_shape(self):
         aliases = {"contig_01": "Chr01", "Chr01": "Chr01"}

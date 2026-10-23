@@ -1,5 +1,13 @@
+import hashlib
+import hmac
+import re
+import secrets
+
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class FileType(models.Model):
@@ -85,6 +93,8 @@ class Accession(models.Model):
     longitude = models.FloatField(blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    view_count = models.PositiveBigIntegerField(default=0, db_index=True)
+    last_viewed_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -308,6 +318,67 @@ class Assembly(models.Model):
     assembly_accession = models.CharField(max_length=255, blank=True, null=True)
     species_code = models.CharField(max_length=100, blank=True, null=True)
     assembly_level = models.CharField(max_length=100, blank=True, null=True)
+    biosample_accession = models.CharField(max_length=100, blank=True, null=True, db_index=True)
+    assembly_type = models.CharField(max_length=100, blank=True, null=True)
+    assembly_method = models.CharField(max_length=255, blank=True, null=True)
+    sequencing_technology = models.CharField(max_length=255, blank=True, null=True)
+    genome_size = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    chromosome_count = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    contig_count = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    n50 = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    gc_content = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    at_content = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    n_count = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    n_percentage = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    sequence_count = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
+    sequence_md5 = models.CharField(max_length=32, blank=True, null=True)
+    gap_count = models.BigIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(0)],
+    )
     source_database = models.CharField(max_length=100, blank=True, null=True)
     external_project = models.CharField(max_length=100, blank=True, null=True, db_index=True)
     file_name = models.CharField(max_length=500, blank=True, null=True)
@@ -399,6 +470,27 @@ class Annotation(models.Model):
 
 
 class DataFile(models.Model):
+    ACCESS_LEVEL_INHERITED = 'inherited'
+    ACCESS_LEVEL_PRIVATE = 'private'
+    ACCESS_LEVEL_INTERNAL = 'internal'
+    ACCESS_LEVEL_PUBLIC = 'public'
+    ACCESS_LEVEL_CHOICES = [
+        (ACCESS_LEVEL_INHERITED, 'Inherited'),
+        (ACCESS_LEVEL_PRIVATE, 'Private'),
+        (ACCESS_LEVEL_INTERNAL, 'Internal'),
+        (ACCESS_LEVEL_PUBLIC, 'Public'),
+    ]
+    PUBLICATION_DRAFT = 'draft'
+    PUBLICATION_APPROVED = 'approved'
+    PUBLICATION_RELEASED = 'released'
+    PUBLICATION_WITHDRAWN = 'withdrawn'
+    PUBLICATION_STATUS_CHOICES = [
+        (PUBLICATION_DRAFT, 'Draft'),
+        (PUBLICATION_APPROVED, 'Approved'),
+        (PUBLICATION_RELEASED, 'Released'),
+        (PUBLICATION_WITHDRAWN, 'Withdrawn'),
+    ]
+
     file_code = models.CharField(max_length=100, unique=True, db_index=True)
     dataset = models.ForeignKey(
         'Dataset',
@@ -414,12 +506,33 @@ class DataFile(models.Model):
         blank=True,
         related_name='data_files',
     )
-    file_name = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=255, db_index=True)
     original_name = models.CharField(max_length=255, blank=True, null=True)
     file_path = models.CharField(max_length=500, unique=True, db_index=True)
     file_size = models.BigIntegerField(blank=True, null=True)
     md5 = models.CharField(max_length=64, blank=True, null=True)
+    sha256 = models.CharField(max_length=64, blank=True, null=True, db_index=True)
     is_current = models.BooleanField(default=True)
+    access_level = models.CharField(
+        max_length=20,
+        choices=ACCESS_LEVEL_CHOICES,
+        default=ACCESS_LEVEL_INHERITED,
+        db_index=True,
+    )
+    publication_status = models.CharField(
+        max_length=20,
+        choices=PUBLICATION_STATUS_CHOICES,
+        default=PUBLICATION_DRAFT,
+        db_index=True,
+    )
+    published_at = models.DateTimeField(blank=True, null=True)
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='published_data_files',
+    )
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -430,6 +543,325 @@ class DataFile(models.Model):
 
     def __str__(self):
         return self.file_name
+
+    @property
+    def content_version(self):
+        digest = (self.sha256 or '').strip().lower()
+        return f'sha256:{digest}' if re.fullmatch(r'[0-9a-f]{64}', digest) else None
+
+
+class DataAccessToken(models.Model):
+    ACCESS_TIER_PUBLIC = 'public'
+    ACCESS_TIER_INTERNAL = 'internal'
+    ACCESS_TIER_CHOICES = [
+        (ACCESS_TIER_PUBLIC, 'Public data'),
+        (ACCESS_TIER_INTERNAL, 'Public and internal data'),
+    ]
+
+    SCOPE_METADATA_READ = 'metadata:read'
+    SCOPE_FILE_READ = 'file:read'
+    SCOPE_SEQUENCE_READ = 'sequence:read'
+    SCOPE_DATASET_MANIFEST = 'dataset:manifest'
+    SCOPE_BATCH_CREATE = 'batch:create'
+    SCOPE_BATCH_READ = 'batch:read'
+    SCOPE_BATCH_ARCHIVE = 'batch:archive'
+    SCOPE_BATCH_DOWNLOAD = 'batch:download'
+    ALLOWED_SCOPES = frozenset({
+        SCOPE_METADATA_READ,
+        SCOPE_FILE_READ,
+        SCOPE_SEQUENCE_READ,
+        SCOPE_DATASET_MANIFEST,
+        SCOPE_BATCH_CREATE,
+        SCOPE_BATCH_READ,
+        SCOPE_BATCH_ARCHIVE,
+        SCOPE_BATCH_DOWNLOAD,
+    })
+
+    name = models.CharField(max_length=255)
+    token_prefix = models.CharField(max_length=16, unique=True, db_index=True)
+    token_hash = models.CharField(max_length=64, unique=True)
+    scopes = models.JSONField(default=list)
+    access_tier = models.CharField(
+        max_length=20,
+        choices=ACCESS_TIER_CHOICES,
+        default=ACCESS_TIER_PUBLIC,
+    )
+    expires_at = models.DateTimeField(blank=True, null=True)
+    revoked_at = models.DateTimeField(blank=True, null=True)
+    last_used_at = models.DateTimeField(blank=True, null=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='created_data_access_tokens',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'data_access_token'
+        ordering = ['name', 'id']
+
+    def __str__(self):
+        return f'{self.name} ({self.token_prefix})'
+
+    @classmethod
+    def issue(cls, *, name, scopes, access_tier=ACCESS_TIER_PUBLIC, **extra_fields):
+        normalized_scopes = sorted(set(scopes))
+        unknown_scopes = set(normalized_scopes) - cls.ALLOWED_SCOPES
+        if unknown_scopes:
+            raise ValueError(f'Unsupported data access scopes: {sorted(unknown_scopes)}')
+
+        prefix = secrets.token_hex(6)
+        secret = secrets.token_urlsafe(32)
+        raw_token = f'gdt_{prefix}_{secret}'
+        token = cls.objects.create(
+            name=name,
+            token_prefix=prefix,
+            token_hash=cls.hash_raw_token(raw_token),
+            scopes=normalized_scopes,
+            access_tier=access_tier,
+            **extra_fields,
+        )
+        return token, raw_token
+
+    @classmethod
+    def authenticate(cls, raw_token):
+        try:
+            marker, prefix, _secret = str(raw_token).split('_', 2)
+        except ValueError:
+            return None
+        if marker != 'gdt':
+            return None
+        token = cls.objects.filter(token_prefix=prefix).first()
+        if token is None or not token.is_active:
+            return None
+        expected = cls.hash_raw_token(raw_token)
+        if not hmac.compare_digest(token.token_hash, expected):
+            return None
+        return token
+
+    @staticmethod
+    def hash_raw_token(raw_token):
+        key = settings.SECRET_KEY.encode('utf-8')
+        return hmac.new(key, str(raw_token).encode('utf-8'), hashlib.sha256).hexdigest()
+
+    @property
+    def is_active(self):
+        now = timezone.now()
+        return self.revoked_at is None and (self.expires_at is None or self.expires_at > now)
+
+    def has_scope(self, scope):
+        return scope in set(self.scopes or [])
+
+
+class ExternalFileBatch(models.Model):
+    STATUS_READY = 'ready'
+    STATUS_PARTIAL = 'partial'
+    STATUS_CHOICES = [
+        (STATUS_READY, 'Ready'),
+        (STATUS_PARTIAL, 'Partial'),
+    ]
+
+    batch_id = models.CharField(max_length=64, unique=True, db_index=True)
+    name = models.CharField(max_length=255, blank=True)
+    created_by_token = models.ForeignKey(
+        DataAccessToken,
+        on_delete=models.PROTECT,
+        related_name='external_file_batches',
+    )
+    token_prefix_snapshot = models.CharField(max_length=16)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    strict = models.BooleanField(default=True)
+    request_fingerprint = models.CharField(max_length=64, db_index=True)
+    idempotency_hash = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    file_count = models.PositiveIntegerField(default=0)
+    total_size = models.BigIntegerField(default=0)
+    snapshot_sha256 = models.CharField(max_length=64)
+    resolution_summary = models.JSONField(default=dict)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'external_file_batch'
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return self.batch_id
+
+
+class ExternalFileBatchItem(models.Model):
+    batch = models.ForeignKey(
+        ExternalFileBatch,
+        on_delete=models.CASCADE,
+        related_name='items',
+    )
+    data_file = models.ForeignKey(
+        DataFile,
+        on_delete=models.PROTECT,
+        related_name='external_batch_items',
+    )
+    position = models.PositiveIntegerField()
+    file_code = models.CharField(max_length=100)
+    file_name = models.CharField(max_length=255)
+    content_version = models.CharField(max_length=80)
+    size = models.BigIntegerField()
+    sha256 = models.CharField(max_length=64)
+    file_format = models.CharField(max_length=50, blank=True)
+    role = models.CharField(max_length=100, blank=True)
+    accession = models.CharField(max_length=100, blank=True)
+    assembly = models.CharField(max_length=100, blank=True)
+    dataset = models.CharField(max_length=100, blank=True)
+    roles = models.JSONField(default=list)
+    accessions = models.JSONField(default=list)
+    assemblies = models.JSONField(default=list)
+    datasets = models.JSONField(default=list)
+    content_url = models.CharField(max_length=500)
+
+    class Meta:
+        db_table = 'external_file_batch_item'
+        ordering = ['position', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['batch', 'position'],
+                name='uniq_external_batch_position',
+            ),
+            models.UniqueConstraint(
+                fields=['batch', 'file_code'],
+                name='uniq_external_batch_file_code',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.batch.batch_id}:{self.file_code}'
+
+
+class ExternalFileArchive(models.Model):
+    FORMAT_ZIP = 'zip'
+    FORMAT_TAR_GZ = 'tar.gz'
+    FORMAT_CHOICES = [
+        (FORMAT_ZIP, 'ZIP'),
+        (FORMAT_TAR_GZ, 'TAR.GZ'),
+    ]
+    STATUS_QUEUED = 'queued'
+    STATUS_RUNNING = 'running'
+    STATUS_READY = 'ready'
+    STATUS_FAILED = 'failed'
+    STATUS_EXPIRED = 'expired'
+    STATUS_CHOICES = [
+        (STATUS_QUEUED, 'Queued'),
+        (STATUS_RUNNING, 'Running'),
+        (STATUS_READY, 'Ready'),
+        (STATUS_FAILED, 'Failed'),
+        (STATUS_EXPIRED, 'Expired'),
+    ]
+
+    archive_id = models.CharField(max_length=64, unique=True, db_index=True)
+    batch = models.ForeignKey(
+        ExternalFileBatch,
+        on_delete=models.PROTECT,
+        related_name='archives',
+    )
+    created_by_token = models.ForeignKey(
+        DataAccessToken,
+        on_delete=models.PROTECT,
+        related_name='external_file_archives',
+    )
+    token_prefix_snapshot = models.CharField(max_length=16)
+    archive_format = models.CharField(max_length=10, choices=FORMAT_CHOICES)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_QUEUED,
+        db_index=True,
+    )
+    request_fingerprint = models.CharField(max_length=64, db_index=True)
+    idempotency_hash = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    archive_name = models.CharField(max_length=255)
+    output_relative_path = models.CharField(max_length=500, blank=True)
+    file_count = models.PositiveIntegerField(default=0)
+    total_input_size = models.BigIntegerField(default=0)
+    archive_size = models.BigIntegerField(null=True, blank=True)
+    archive_sha256 = models.CharField(max_length=64, blank=True)
+    attempt_count = models.PositiveIntegerField(default=0)
+    error_code = models.CharField(max_length=100, blank=True)
+    error_detail = models.CharField(max_length=500, blank=True)
+    expires_at = models.DateTimeField()
+    queued_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'external_file_archive'
+        ordering = ['-queued_at', '-id']
+        indexes = [
+            models.Index(fields=['status', 'queued_at'], name='ext_archive_status_queue'),
+        ]
+
+    def __str__(self):
+        return self.archive_id
+
+
+class AnnotationFeatureIndex(models.Model):
+    STATUS_BUILDING = 'building'
+    STATUS_READY = 'ready'
+    STATUS_FAILED = 'failed'
+    STATUS_CHOICES = [
+        (STATUS_BUILDING, 'Building'),
+        (STATUS_READY, 'Ready'),
+        (STATUS_FAILED, 'Failed'),
+    ]
+
+    annotation = models.OneToOneField(
+        'Annotation', on_delete=models.CASCADE, related_name='feature_index'
+    )
+    source_file = models.ForeignKey(
+        'DataFile', on_delete=models.PROTECT, related_name='annotation_feature_indexes'
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_BUILDING)
+    source_file_size = models.BigIntegerField()
+    source_file_mtime_ns = models.BigIntegerField()
+    source_file_md5 = models.CharField(max_length=64, blank=True, default='')
+    feature_count = models.BigIntegerField(default=0)
+    chromosomes = models.JSONField(default=list)
+    feature_types = models.JSONField(default=list)
+    error_message = models.TextField(blank=True, default='')
+    indexed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'annotation_feature_index'
+
+
+class AnnotationFeature(models.Model):
+    feature_index = models.ForeignKey(
+        'AnnotationFeatureIndex', on_delete=models.CASCADE, related_name='features'
+    )
+    source_line = models.BigIntegerField()
+    seqid = models.CharField(max_length=255)
+    source = models.CharField(max_length=255, blank=True, null=True)
+    feature = models.CharField(max_length=100, blank=True, null=True)
+    start = models.BigIntegerField()
+    end = models.BigIntegerField()
+    length = models.BigIntegerField()
+    score = models.CharField(max_length=100, blank=True, null=True)
+    strand = models.CharField(max_length=10, blank=True, null=True)
+    phase = models.CharField(max_length=20, blank=True, null=True)
+    attributes = models.JSONField(default=dict)
+    sequence_ontology = models.CharField(max_length=100, blank=True, null=True)
+    name = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = 'annotation_feature'
+        ordering = ['source_line', 'id']
+        indexes = [
+            models.Index(fields=['feature_index', 'seqid', 'feature', 'start'], name='idx_af_seq_type_start'),
+            models.Index(fields=['feature_index', 'feature'], name='idx_af_feature_type'),
+            models.Index(fields=['feature_index', 'seqid', 'start', 'end'], name='idx_af_seq_interval'),
+        ]
 
 
 class FileRelation(models.Model):

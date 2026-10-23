@@ -1,10 +1,20 @@
 import gzip
 import os
 import time
+from dataclasses import dataclass
 
 
 class FastaScanLimitExceeded(RuntimeError):
     """Raised when an unindexed FASTA exceeds the configured fallback budget."""
+
+
+@dataclass(frozen=True)
+class FastaIndexEntry:
+    name: str
+    length: int
+    offset: int
+    line_bases: int
+    line_width: int
 
 
 def open_text_file(file_path):
@@ -77,8 +87,80 @@ def read_fai(file_path):
             try:
                 entries[columns[0]] = int(columns[1])
             except ValueError as exc:
-                raise ValueError(f"Invalid FASTA index length at line {line_number}") from exc
+                raise ValueError(
+                    f"Invalid FASTA index length at line {line_number}"
+                ) from exc
     return entries
+
+
+def read_fai_entries(file_path):
+    """Read and validate all five standard random-access FAI columns."""
+    entries = {}
+    with open(file_path, "r", encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            columns = line.rstrip("\r\n").split("\t")
+            if len(columns) < 5 or not columns[0]:
+                raise ValueError(f"Invalid FASTA index row at line {line_number}")
+            try:
+                length, offset, line_bases, line_width = (
+                    int(value) for value in columns[1:5]
+                )
+            except ValueError as exc:
+                raise ValueError(
+                    f"Invalid FASTA index number at line {line_number}"
+                ) from exc
+            if (
+                columns[0] in entries
+                or length < 1
+                or offset < 0
+                or line_bases < 1
+                or line_width < line_bases
+            ):
+                raise ValueError(f"Invalid FASTA index row at line {line_number}")
+            entries[columns[0]] = FastaIndexEntry(
+                name=columns[0],
+                length=length,
+                offset=offset,
+                line_bases=line_bases,
+                line_width=line_width,
+            )
+    if not entries:
+        raise ValueError("FASTA index contains no sequence rows")
+    return entries
+
+
+def fetch_sequence_region(fasta_path, sequence_id, start, end, index_path):
+    """Fetch a 1-based inclusive region from an uncompressed indexed FASTA."""
+    if str(fasta_path).lower().endswith(".gz"):
+        raise ValueError("Compressed FASTA random access is not supported")
+    entries = read_fai_entries(index_path)
+    entry = entries.get(sequence_id)
+    if entry is None:
+        raise KeyError(sequence_id)
+    if start < 1 or end < start or end > entry.length:
+        raise ValueError("Invalid 1-based inclusive FASTA region")
+
+    start_zero = start - 1
+    end_zero = end - 1
+    byte_start = (
+        entry.offset
+        + (start_zero // entry.line_bases) * entry.line_width
+        + (start_zero % entry.line_bases)
+    )
+    byte_end = (
+        entry.offset
+        + (end_zero // entry.line_bases) * entry.line_width
+        + (end_zero % entry.line_bases)
+        + 1
+    )
+    with open(fasta_path, "rb") as handle:
+        handle.seek(byte_start)
+        raw = handle.read(byte_end - byte_start)
+    sequence = raw.replace(b"\n", b"").replace(b"\r", b"")
+    expected_length = end - start + 1
+    if len(sequence) != expected_length:
+        raise ValueError("FASTA content does not match its index")
+    return sequence
 
 
 def _ensure_scan_budget(file_path, max_bytes):
@@ -115,8 +197,7 @@ def list_sequence_ids(file_path, *, index_path=None, max_bytes=None, timeout_sec
 def sequence_length(file_path, sequence_id, *, index_path=None, max_bytes=None, timeout_seconds=None):
     if index_path:
         indexed_lengths = read_fai(index_path)
-        if sequence_id in indexed_lengths:
-            return indexed_lengths[sequence_id]
+        return indexed_lengths.get(sequence_id)
 
     _ensure_scan_budget(file_path, max_bytes)
     started_at = time.monotonic()

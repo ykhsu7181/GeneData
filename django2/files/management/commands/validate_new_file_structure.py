@@ -73,7 +73,9 @@ class Command(BaseCommand):
     def check_genomefile_coverage(self, detail_rows, stats):
         datafile_paths = {
             self.normalize_path(path)
-            for path in DataFile.objects.values_list("file_path", flat=True)
+            for path in DataFile.objects.filter(is_current=True).values_list(
+                "file_path", flat=True
+            )
         }
         for genome_file in GenomeFile.objects.all().order_by("id"):
             if self.normalize_path(genome_file.file_path) in datafile_paths:
@@ -93,7 +95,9 @@ class Command(BaseCommand):
 
     def check_datafile_relations(self, detail_rows, stats):
         related_file_ids = set(FileRelation.objects.values_list("file_id", flat=True))
-        for data_file in DataFile.objects.all().order_by("id"):
+        # Quarantined and retired rows intentionally have no active relation.
+        # New-only readiness concerns files that remain available to readers.
+        for data_file in DataFile.objects.filter(is_current=True).order_by("id"):
             if data_file.id in related_file_ids:
                 continue
             stats["datafile_without_relation_count"] += 1

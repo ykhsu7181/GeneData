@@ -45,6 +45,7 @@ jobs:
       GENEDATA_DB_HOST: 127.0.0.1
       GENEDATA_DB_PORT: 3306
       GENEDATA_LOG_PATH: /tmp/genedata-ci.log
+      GENEDATA_EXTERNAL_ARCHIVE_ROOT: /tmp/genedata-external-archives
     steps:
       - name: Check out source
         uses: actions/checkout@v4

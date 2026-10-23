@@ -1,0 +1,518 @@
+﻿annotation_code	accession	assembly_code	annotation_name	annotation_version	is_default	species_code	source_database	source_name	external_project	file_name	file_type	description
+ANN_02428	02428	ASM_02428	02428 annotation		true	ORYZA_SATIVA				annotation.02428.gff	GFF	
+ANN_117425	117425	ASM_117425	117425 annotation		true	ORYZA_SATIVA				annotation.117425.gff	GFF	
+ANN_117534	117534	ASM_117534	117534 annotation		true	ORYZA_SATIVA				annotation.117534.gff	GFF	
+ANN_117534_N22_18ng	117534_N22_18ng	ASM_117534_N22_18ng	117534_N22_18ng annotation		true	ORYZA_SATIVA				annotation.117534_N22_18ng.gff	GFF	
+ANN_125619	125619	ASM_125619	125619 annotation		true	ORYZA_SATIVA				annotation.125619.gff	GFF	
+ANN_125827	125827	ASM_125827	125827 annotation		true	ORYZA_SATIVA				annotation.125827.gff	GFF	
+ANN_127518	127518	ASM_127518	127518 annotation		true	ORYZA_SATIVA				annotation.127518.gff	GFF	
+ANN_127564	127564	ASM_127564	127564 annotation		true	ORYZA_SATIVA				annotation.127564.gff	GFF	
+ANN_127652	127652	ASM_127652	127652 annotation		true	ORYZA_SATIVA				annotation.127652.gff	GFF	
+ANN_127742	127742	ASM_127742	127742 annotation		true	ORYZA_SATIVA				annotation.127742.gff	GFF	
+ANN_128077	128077	ASM_128077	128077 annotation		true	ORYZA_SATIVA				annotation.128077.gff	GFF	
+ANN_13-65	13-65	ASM_13-65	13-65 annotation		true	ORYZA_SATIVA				annotation.13-65.gff	GFF	
+ANN_132278	132278	ASM_132278	132278 annotation		true	ORYZA_SATIVA				annotation.132278.gff	GFF	
+ANN_132424	132424	ASM_132424	132424 annotation		true	ORYZA_SATIVA				annotation.132424.gff	GFF	
+ANN_17S	17S	ASM_17S	17S annotation		true	ORYZA_SATIVA				annotation.17S.gff	GFF	
+ANN_18WR-118	18WR-118	ASM_18WR-118	18WR-118 annotation		true	ORYZA_SATIVA				annotation.18WR-118.gff	GFF	
+ANN_18XHB-49	18XHB-49	ASM_18XHB-49	18XHB-49 annotation		true	ORYZA_SATIVA				annotation.18XHB-49.gff	GFF	
+ANN_18XHB-57	18XHB-57	ASM_18XHB-57	18XHB-57 annotation		true	ORYZA_SATIVA				annotation.18XHB-57.gff	GFF	
+ANN_18XHB-83	18XHB-83	ASM_18XHB-83	18XHB-83 annotation		true	ORYZA_SATIVA				annotation.18XHB-83.gff	GFF	
+ANN_201B	201B	ASM_201B	201B annotation		true	ORYZA_SATIVA				annotation.201B.gff	GFF	
+ANN_2037(Rajahamsal)	2037(Rajahamsal)	ASM_2037(Rajahamsal)	2037(Rajahamsal) annotation		true	ORYZA_SATIVA				annotation.2037(Rajahamsal).gff	GFF	
+ANN_33S	33S	ASM_33S	33S annotation		true	ORYZA_SATIVA				annotation.33S.gff	GFF	
+ANN_3R11	3R11	ASM_3R11	3R11 annotation		true	ORYZA_SATIVA				annotation.3R11.gff	GFF	
+ANN_3R17	3R17	ASM_3R17	3R17 annotation		true	ORYZA_SATIVA				annotation.3R17.gff	GFF	
+ANN_3R25	3R25	ASM_3R25	3R25 annotation		true	ORYZA_SATIVA				annotation.3R25.gff	GFF	
+ANN_3R30	3R30	ASM_3R30	3R30 annotation		true	ORYZA_SATIVA				annotation.3R30.gff	GFF	
+ANN_3R34	3R34	ASM_3R34	3R34 annotation		true	ORYZA_SATIVA				annotation.3R34.gff	GFF	
+ANN_66S	66S	ASM_66S	66S annotation		true	ORYZA_SATIVA				annotation.66S.gff	GFF	
+ANN_80050YR72136-43	80050YR72136-43	ASM_80050YR72136-43	80050YR72136-43 annotation		true	ORYZA_SATIVA				annotation.80050YR72136-43.gff	GFF	
+ANN_80A97YR303-304-1-3	80A97YR303-304-1-3	ASM_80A97YR303-304-1-3	80A97YR303-304-1-3 annotation		true	ORYZA_SATIVA				annotation.80A97YR303-304-1-3.gff	GFF	
+ANN_80B	80B	ASM_80B	80B annotation		true	ORYZA_SATIVA				annotation.80B.gff	GFF	
+ANN_923	923	ASM_923	923 annotation		true	ORYZA_SATIVA				annotation.923.gff	GFF	
+ANN_9311_21cell	9311_21cell	ASM_9311_21cell	9311_21cell annotation		true	ORYZA_SATIVA				annotation.9311_21cell.gff	GFF	
+ANN_9311_22cr	9311_22cr	ASM_9311_22cr	9311_22cr annotation		true	ORYZA_SATIVA				annotation.9311_22cr.gff	GFF	
+ANN_Aerjituo	Aerjituo	ASM_Aerjituo	Aerjituo annotation		true	ORYZA_SATIVA				annotation.Aerjituo.gff	GFF	
+ANN_Aihechi	Aihechi	ASM_Aihechi	Aihechi annotation		true	ORYZA_SATIVA				annotation.Aihechi.gff	GFF	
+ANN_Aijiaonante	Aijiaonante	ASM_Aijiaonante	Aijiaonante annotation		true	ORYZA_SATIVA				annotation.Aijiaonante.gff	GFF	
+ANN_Ailuyu	Ailuyu	ASM_Ailuyu	Ailuyu annotation		true	ORYZA_SATIVA				annotation.Ailuyu.gff	GFF	
+ANN_Aimakang	Aimakang	ASM_Aimakang	Aimakang annotation		true	ORYZA_SATIVA				annotation.Aimakang.gff	GFF	
+ANN_Aituogu 151	Aituogu 151	ASM_Aituogu 151	Aituogu 151 annotation		true	ORYZA_SATIVA				annotation.Aituogu 151.gff	GFF	
+ANN_Aizizhan	Aizizhan	ASM_Aizizhan	Aizizhan annotation		true	ORYZA_SATIVA				annotation.Aizizhan.gff	GFF	
+ANN_Albania Rice	Albania Rice	ASM_Albania Rice	Albania Rice annotation		true	ORYZA_SATIVA				annotation.Albania Rice.gff	GFF	
+ANN_American Huangkedao	American Huangkedao	ASM_American Huangkedao	American Huangkedao annotation		true	ORYZA_SATIVA				annotation.American Huangkedao.gff	GFF	
+ANN_AUS449	AUS449	ASM_AUS449	AUS449 annotation		true	ORYZA_SATIVA				annotation.AUS449.gff	GFF	
+ANN_Azucena	Azucena	ASM_Azucena	Azucena annotation		true	ORYZA_SATIVA				annotation.Azucena.gff	GFF	
+ANN_Baigedao	Baigedao	ASM_Baigedao	Baigedao annotation		true	ORYZA_SATIVA				annotation.Baigedao.gff	GFF	
+ANN_Baikehanhe	Baikehanhe	ASM_Baikehanhe	Baikehanhe annotation		true	ORYZA_SATIVA				annotation.Baikehanhe.gff	GFF	
+ANN_Balilla	Balilla	ASM_Balilla	Balilla annotation		true	ORYZA_SATIVA				annotation.Balilla.gff	GFF	
+ANN_Baoxie -7B	Baoxie -7B	ASM_Baoxie -7B	Baoxie -7B annotation		true	ORYZA_SATIVA				annotation.Baoxie -7B.gff	GFF	
+ANN_Baoxuan 21	Baoxuan 21	ASM_Baoxuan 21	Baoxuan 21 annotation		true	ORYZA_SATIVA				annotation.Baoxuan 21.gff	GFF	
+ANN_Basmati1	Basmati1	ASM_Basmati1	Basmati1 annotation		true	ORYZA_SATIVA				annotation.Basmati1.gff	GFF	
+ANN_Basmati334	Basmati334	ASM_Basmati334	Basmati334 annotation		true	ORYZA_SATIVA				annotation.Basmati334.gff	GFF	
+ANN_Bawangbian 1	Bawangbian 1	ASM_Bawangbian 1	Bawangbian 1 annotation		true	ORYZA_SATIVA				annotation.Bawangbian 1.gff	GFF	
+ANN_Baxiang	Baxiang	ASM_Baxiang	Baxiang annotation		true	ORYZA_SATIVA				annotation.Baxiang.gff	GFF	
+ANN_Biwusheng	Biwusheng	ASM_Biwusheng	Biwusheng annotation		true	ORYZA_SATIVA				annotation.Biwusheng.gff	GFF	
+ANN_BRC 25-146-2-1	BRC 25-146-2-1	ASM_BRC 25-146-2-1	BRC 25-146-2-1 annotation		true	ORYZA_SATIVA				annotation.BRC 25-146-2-1.gff	GFF	
+ANN_Buleida A-75	Buleida A-75	ASM_Buleida A-75	Buleida A-75 annotation		true	ORYZA_SATIVA				annotation.Buleida A-75.gff	GFF	
+ANN_BW 293-2	BW 293-2	ASM_BW 293-2	BW 293-2 annotation		true	ORYZA_SATIVA				annotation.BW 293-2.gff	GFF	
+ANN_C 894-21	C 894-21	ASM_C 894-21	C 894-21 annotation		true	ORYZA_SATIVA				annotation.C 894-21.gff	GFF	
+ANN_C62S	C62S	ASM_C62S	C62S annotation		true	ORYZA_SATIVA				annotation.C62S.gff	GFF	
+ANN_C7	C7	ASM_C7	C7 annotation		true	ORYZA_SATIVA				annotation.C7.gff	GFF	
+ANN_CG14	CG14	ASM_CG14	CG14 annotation		true	ORYZA_SATIVA				annotation.CG14.gff	GFF	
+ANN_CG14_IGDBv1_Allset	CG14	ASM_CG14	CG14 IGDBv1.Allset annotation	IGDBv1.Allset	false	ORYZA_SATIVA				annotation.CG14.IGDBv1.Allset.gff	GFF	
+ANN_CHANH 148	CHANH 148	ASM_CHANH 148	CHANH 148 annotation		true	ORYZA_SATIVA				annotation.CHANH 148.gff	GFF	
+ANN_Chaoyangyihao B	Chaoyangyihao B	ASM_Chaoyangyihao B	Chaoyangyihao B annotation		true	ORYZA_SATIVA				annotation.Chaoyangyihao B.gff	GFF	
+ANN_Chengduai 3	Chengduai 3	ASM_Chengduai 3	Chengduai 3 annotation		true	ORYZA_SATIVA				annotation.Chengduai 3.gff	GFF	
+ANN_Chengnongshuijing	Chengnongshuijing	ASM_Chengnongshuijing	Chengnongshuijing annotation		true	ORYZA_SATIVA				annotation.Chengnongshuijing.gff	GFF	
+ANN_Chenwan 3	Chenwan 3	ASM_Chenwan 3	Chenwan 3 annotation		true	ORYZA_SATIVA				annotation.Chenwan 3.gff	GFF	
+ANN_Chimao	Chimao	ASM_Chimao	Chimao annotation		true	ORYZA_SATIVA				annotation.Chimao.gff	GFF	
+ANN_CISOKAN	CISOKAN	ASM_CISOKAN	CISOKAN annotation		true	ORYZA_SATIVA				annotation.CISOKAN.gff	GFF	
+ANN_CJS	CJS	ASM_CJS	CJS annotation		true	ORYZA_SATIVA				annotation.CJS.gff	GFF	
+ANN_CN1	CN1	ASM_CN1	CN1 annotation		true	ORYZA_SATIVA				annotation.CN1.gff	GFF	
+ANN_CO 22	CO 22	ASM_CO 22	CO 22 annotation		true	ORYZA_SATIVA				annotation.CO 22.gff	GFF	
+ANN_Cungunuo	Cungunuo	ASM_Cungunuo	Cungunuo annotation		true	ORYZA_SATIVA				annotation.Cungunuo.gff	GFF	
+ANN_Cunsanli	Cunsanli	ASM_Cunsanli	Cunsanli annotation		true	ORYZA_SATIVA				annotation.Cunsanli.gff	GFF	
+ANN_CW01	CW01	ASM_CW01	CW01 annotation		true	ORYZA_SATIVA				annotation.CW01.gff	GFF	
+ANN_CW02	CW02	ASM_CW02	CW02 annotation		true	ORYZA_SATIVA				annotation.CW02.gff	GFF	
+ANN_CW03	CW03	ASM_CW03	CW03 annotation		true	ORYZA_SATIVA				annotation.CW03.gff	GFF	
+ANN_CW05	CW05	ASM_CW05	CW05 annotation		true	ORYZA_SATIVA				annotation.CW05.gff	GFF	
+ANN_CW06	CW06	ASM_CW06	CW06 annotation		true	ORYZA_SATIVA				annotation.CW06.gff	GFF	
+ANN_CW07	CW07	ASM_CW07	CW07 annotation		true	ORYZA_SATIVA				annotation.CW07.gff	GFF	
+ANN_CW08	CW08	ASM_CW08	CW08 annotation		true	ORYZA_SATIVA				annotation.CW08.gff	GFF	
+ANN_CW09	CW09	ASM_CW09	CW09 annotation		true	ORYZA_SATIVA				annotation.CW09.gff	GFF	
+ANN_CW10	CW10	ASM_CW10	CW10 annotation		true	ORYZA_SATIVA				annotation.CW10.gff	GFF	
+ANN_CW11	CW11	ASM_CW11	CW11 annotation		true	ORYZA_SATIVA				annotation.CW11.gff	GFF	
+ANN_CW12	CW12	ASM_CW12	CW12 annotation		true	ORYZA_SATIVA				annotation.CW12.gff	GFF	
+ANN_CW13	CW13	ASM_CW13	CW13 annotation		true	ORYZA_SATIVA				annotation.CW13.gff	GFF	
+ANN_CW14	CW14	ASM_CW14	CW14 annotation		true	ORYZA_SATIVA				annotation.CW14.gff	GFF	
+ANN_CW15	CW15	ASM_CW15	CW15 annotation		true	ORYZA_SATIVA				annotation.CW15.gff	GFF	
+ANN_CW16	CW16	ASM_CW16	CW16 annotation		true	ORYZA_SATIVA				annotation.CW16.gff	GFF	
+ANN_CW17	CW17	ASM_CW17	CW17 annotation		true	ORYZA_SATIVA				annotation.CW17.gff	GFF	
+ANN_CW18	CW18	ASM_CW18	CW18 annotation		true	ORYZA_SATIVA				annotation.CW18.gff	GFF	
+ANN_CW19	CW19	ASM_CW19	CW19 annotation		true	ORYZA_SATIVA				annotation.CW19.gff	GFF	
+ANN_CW21	CW21	ASM_CW21	CW21 annotation		true	ORYZA_SATIVA				annotation.CW21.gff	GFF	
+ANN_CW22	CW22	ASM_CW22	CW22 annotation		true	ORYZA_SATIVA				annotation.CW22.gff	GFF	
+ANN_CW23	CW23	ASM_CW23	CW23 annotation		true	ORYZA_SATIVA				annotation.CW23.gff	GFF	
+ANN_CW31	CW31	ASM_CW31	CW31 annotation		true	ORYZA_SATIVA				annotation.CW31.gff	GFF	
+ANN_CW32	CW32	ASM_CW32	CW32 annotation		true	ORYZA_SATIVA				annotation.CW32.gff	GFF	
+ANN_CW33	CW33	ASM_CW33	CW33 annotation		true	ORYZA_SATIVA				annotation.CW33.gff	GFF	
+ANN_CW34	CW34	ASM_CW34	CW34 annotation		true	ORYZA_SATIVA				annotation.CW34.gff	GFF	
+ANN_CW35	CW35	ASM_CW35	CW35 annotation		true	ORYZA_SATIVA				annotation.CW35.gff	GFF	
+ANN_CW36	CW36	ASM_CW36	CW36 annotation		true	ORYZA_SATIVA				annotation.CW36.gff	GFF	
+ANN_CW37	CW37	ASM_CW37	CW37 annotation		true	ORYZA_SATIVA				annotation.CW37.gff	GFF	
+ANN_CX20	CX20	ASM_CX20	CX20 annotation		true	ORYZA_SATIVA				annotation.CX20.gff	GFF	
+ANN_CX3	CX3	ASM_CX3	CX3 annotation		true	ORYZA_SATIVA				annotation.CX3.gff	GFF	
+ANN_D62	D62	ASM_D62	D62 annotation		true	ORYZA_SATIVA				annotation.D62.gff	GFF	
+ANN_Dandongludao	Dandongludao	ASM_Dandongludao	Dandongludao annotation		true	ORYZA_SATIVA				annotation.Dandongludao.gff	GFF	
+ANN_Dangyu 5	Dangyu 5	ASM_Dangyu 5	Dangyu 5 annotation		true	ORYZA_SATIVA				annotation.Dangyu 5.gff	GFF	
+ANN_DG	DG	ASM_DG	DG annotation		true	ORYZA_SATIVA				annotation.DG.gff	GFF	
+ANN_DGB	DGB	ASM_DGB	DGB annotation		true	ORYZA_SATIVA				annotation.DGB.gff	GFF	
+ANN_DHX2	DHX2	ASM_DHX2	DHX2 annotation		true	ORYZA_SATIVA				annotation.DHX2.gff	GFF	
+ANN_Dianrui 409B	Dianrui 409B	ASM_Dianrui 409B	Dianrui 409B annotation		true	ORYZA_SATIVA				annotation.Dianrui 409B.gff	GFF	
+ANN_Djanda Mandja	Djanda Mandja	ASM_Djanda Mandja	Djanda Mandja annotation		true	ORYZA_SATIVA				annotation.Djanda Mandja.gff	GFF	
+ANN_DomSufid	DomSufid	ASM_DomSufid	DomSufid annotation		true	ORYZA_SATIVA				annotation.DomSufid.gff	GFF	
+ANN_Dongtingwanxian	Dongtingwanxian	ASM_Dongtingwanxian	Dongtingwanxian annotation		true	ORYZA_SATIVA				annotation.Dongtingwanxian.gff	GFF	
+ANN_DR1	DR1	ASM_DR1	DR1 annotation		true	ORYZA_SATIVA				annotation.DR1.gff	GFF	
+ANN_DR11	DR11	ASM_DR11	DR11 annotation		true	ORYZA_SATIVA				annotation.DR11.gff	GFF	
+ANN_DR12	DR12	ASM_DR12	DR12 annotation		true	ORYZA_SATIVA				annotation.DR12.gff	GFF	
+ANN_DR13	DR13	ASM_DR13	DR13 annotation		true	ORYZA_SATIVA				annotation.DR13.gff	GFF	
+ANN_DR14	DR14	ASM_DR14	DR14 annotation		true	ORYZA_SATIVA				annotation.DR14.gff	GFF	
+ANN_DR15	DR15	ASM_DR15	DR15 annotation		true	ORYZA_SATIVA				annotation.DR15.gff	GFF	
+ANN_DR16	DR16	ASM_DR16	DR16 annotation		true	ORYZA_SATIVA				annotation.DR16.gff	GFF	
+ANN_DR17	DR17	ASM_DR17	DR17 annotation		true	ORYZA_SATIVA				annotation.DR17.gff	GFF	
+ANN_DR18	DR18	ASM_DR18	DR18 annotation		true	ORYZA_SATIVA				annotation.DR18.gff	GFF	
+ANN_DR2	DR2	ASM_DR2	DR2 annotation		true	ORYZA_SATIVA				annotation.DR2.gff	GFF	
+ANN_DR20	DR20	ASM_DR20	DR20 annotation		true	ORYZA_SATIVA				annotation.DR20.gff	GFF	
+ANN_DR3	DR3	ASM_DR3	DR3 annotation		true	ORYZA_SATIVA				annotation.DR3.gff	GFF	
+ANN_DR4	DR4	ASM_DR4	DR4 annotation		true	ORYZA_SATIVA				annotation.DR4.gff	GFF	
+ANN_DR5	DR5	ASM_DR5	DR5 annotation		true	ORYZA_SATIVA				annotation.DR5.gff	GFF	
+ANN_DR6	DR6	ASM_DR6	DR6 annotation		true	ORYZA_SATIVA				annotation.DR6.gff	GFF	
+ANN_DR7	DR7	ASM_DR7	DR7 annotation		true	ORYZA_SATIVA				annotation.DR7.gff	GFF	
+ANN_DR8	DR8	ASM_DR8	DR8 annotation		true	ORYZA_SATIVA				annotation.DR8.gff	GFF	
+ANN_DR9	DR9	ASM_DR9	DR9 annotation		true	ORYZA_SATIVA				annotation.DR9.gff	GFF	
+ANN_Dular	Dular	ASM_Dular	Dular annotation		true	ORYZA_SATIVA				annotation.Dular.gff	GFF	
+ANN_Dumai	Dumai	ASM_Dumai	Dumai annotation		true	ORYZA_SATIVA				annotation.Dumai.gff	GFF	
+ANN_DXCWR	DXCWR	ASM_DXCWR	DXCWR annotation		true	ORYZA_SATIVA				annotation.DXCWR.gff	GFF	
+ANN_ECIA 179-S13	ECIA 179-S13	ASM_ECIA 179-S13	ECIA 179-S13 annotation		true	ORYZA_SATIVA				annotation.ECIA 179-S13.gff	GFF	
+ANN_Esiniu	Esiniu	ASM_Esiniu	Esiniu annotation		true	ORYZA_SATIVA				annotation.Esiniu.gff	GFF	
+ANN_Fanhaopi	Fanhaopi	ASM_Fanhaopi	Fanhaopi annotation		true	ORYZA_SATIVA				annotation.Fanhaopi.gff	GFF	
+ANN_FH838	FH838	ASM_FH838	FH838 annotation		true	ORYZA_SATIVA				annotation.FH838.gff	GFF	
+ANN_FS32	FS32	ASM_FS32	FS32 annotation		true	ORYZA_SATIVA				annotation.FS32.gff	GFF	
+ANN_Funingzipigengzi	Funingzipigengzi	ASM_Funingzipigengzi	Funingzipigengzi annotation		true	ORYZA_SATIVA				annotation.Funingzipigengzi.gff	GFF	
+ANN_G Zhenshan 97B	G Zhenshan 97B	ASM_G Zhenshan 97B	G Zhenshan 97B annotation		true	ORYZA_SATIVA				annotation.G Zhenshan 97B.gff	GFF	
+ANN_G46	G46	ASM_G46	G46 annotation		true	ORYZA_SATIVA				annotation.G46.gff	GFF	
+ANN_G630	G630	ASM_G630	G630 annotation		true	ORYZA_SATIVA				annotation.G630.gff	GFF	
+ANN_G8	G8	ASM_G8	G8 annotation		true	ORYZA_SATIVA				annotation.G8.gff	GFF	
+ANN_GM4	GM4	ASM_GM4	GM4 annotation		true	ORYZA_SATIVA				annotation.GM4.gff	GFF	
+ANN_Gongchengxiang	Gongchengxiang	ASM_Gongchengxiang	Gongchengxiang annotation		true	ORYZA_SATIVA				annotation.Gongchengxiang.gff	GFF	
+ANN_Gongju 73	Gongju 73	ASM_Gongju 73	Gongju 73 annotation		true	ORYZA_SATIVA				annotation.Gongju 73.gff	GFF	
+ANN_Guangluai 15-	Guangluai 15-	ASM_Guangluai 15-	Guangluai 15- annotation		true	ORYZA_SATIVA				annotation.Guangluai 15-.gff	GFF	
+ANN_Guangluai 4	Guangluai 4	ASM_Guangluai 4	Guangluai 4 annotation		true	ORYZA_SATIVA				annotation.Guangluai 4.gff	GFF	
+ANN_Guizhao 2	Guizhao 2	ASM_Guizhao 2	Guizhao 2 annotation		true	ORYZA_SATIVA				annotation.Guizhao 2.gff	GFF	
+ANN_GWX30	GWX30	ASM_GWX30	GWX30 annotation		true	ORYZA_SATIVA				annotation.GWX30.gff	GFF	
+ANN_GZ 1368-5-4	GZ 1368-5-4	ASM_GZ 1368-5-4	GZ 1368-5-4 annotation		true	ORYZA_SATIVA				annotation.GZ 1368-5-4.gff	GFF	
+ANN_Hanmadao4	Hanmadao4	ASM_Hanmadao4	Hanmadao4 annotation		true	ORYZA_SATIVA				annotation.Hanmadao4.gff	GFF	
+ANN_Haobayong 1	Haobayong 1	ASM_Haobayong 1	Haobayong 1 annotation		true	ORYZA_SATIVA				annotation.Haobayong 1.gff	GFF	
+ANN_Haomake (K)	Haomake (K)	ASM_Haomake (K)	Haomake (K) annotation		true	ORYZA_SATIVA				annotation.Haomake (K).gff	GFF	
+ANN_Haoxiang	Haoxiang	ASM_Haoxiang	Haoxiang annotation		true	ORYZA_SATIVA				annotation.Haoxiang.gff	GFF	
+ANN_HBK	HBK	ASM_HBK	HBK annotation		true	ORYZA_SATIVA				annotation.HBK.gff	GFF	
+ANN_Heibiao	Heibiao	ASM_Heibiao	Heibiao annotation		true	ORYZA_SATIVA				annotation.Heibiao.gff	GFF	
+ANN_Heidu 4	Heidu 4	ASM_Heidu 4	Heidu 4 annotation		true	ORYZA_SATIVA				annotation.Heidu 4.gff	GFF	
+ANN_Heimangdao	Heimangdao	ASM_Heimangdao	Heimangdao annotation		true	ORYZA_SATIVA				annotation.Heimangdao.gff	GFF	
+ANN_HHZ	HHZ	ASM_HHZ	HHZ annotation		true	ORYZA_SATIVA				annotation.HHZ.gff	GFF	
+ANN_HMXRS1	HMXRS1	ASM_HMXRS1	HMXRS1 annotation		true	ORYZA_SATIVA				annotation.HMXRS1.gff	GFF	
+ANN_HMZ	HMZ	ASM_HMZ	HMZ annotation		true	ORYZA_SATIVA				annotation.HMZ.gff	GFF	
+ANN_Hongainuo	Hongainuo	ASM_Hongainuo	Hongainuo annotation		true	ORYZA_SATIVA				annotation.Hongainuo.gff	GFF	
+ANN_Honggenghangu3	Honggenghangu3	ASM_Honggenghangu3	Honggenghangu3 annotation		true	ORYZA_SATIVA				annotation.Honggenghangu3.gff	GFF	
+ANN_Honggu	Honggu	ASM_Honggu	Honggu annotation		true	ORYZA_SATIVA				annotation.Honggu.gff	GFF	
+ANN_Hongmisandan	Hongmisandan	ASM_Hongmisandan	Hongmisandan annotation		true	ORYZA_SATIVA				annotation.Hongmisandan.gff	GFF	
+ANN_Hongse 90	Hongse 90	ASM_Hongse 90	Hongse 90 annotation		true	ORYZA_SATIVA				annotation.Hongse 90.gff	GFF	
+ANN_Hongwan 1	Hongwan 1	ASM_Hongwan 1	Hongwan 1 annotation		true	ORYZA_SATIVA				annotation.Hongwan 1.gff	GFF	
+ANN_Huangsiguizhan	Huangsiguizhan	ASM_Huangsiguizhan	Huangsiguizhan annotation		true	ORYZA_SATIVA				annotation.Huangsiguizhan.gff	GFF	
+ANN_Huhui 91269	Huhui 91269	ASM_Huhui 91269	Huhui 91269 annotation		true	ORYZA_SATIVA				annotation.Huhui 91269.gff	GFF	
+ANN_HZ	HZ	ASM_HZ	HZ annotation		true	ORYZA_SATIVA				annotation.HZ.gff	GFF	
+ANN_II32	II32	ASM_II32	II32 annotation		true	ORYZA_SATIVA				annotation.II32.gff	GFF	
+ANN_IR 10179-23-1-3	IR 10179-23-1-3	ASM_IR 10179-23-1-3	IR 10179-23-1-3 annotation		true	ORYZA_SATIVA				annotation.IR 10179-23-1-3.gff	GFF	
+ANN_IR 661-1	IR 661-1	ASM_IR 661-1	IR 661-1 annotation		true	ORYZA_SATIVA				annotation.IR 661-1.gff	GFF	
+ANN_IR24	IR24	ASM_IR24	IR24 annotation		true	ORYZA_SATIVA				annotation.IR24.gff	GFF	
+ANN_IR26	IR26	ASM_IR26	IR26 annotation		true	ORYZA_SATIVA				annotation.IR26.gff	GFF	
+ANN_IR64	IR64	ASM_IR64	IR64 annotation		true	ORYZA_SATIVA	Public database	Public database import		annotation.IR64.gff	GFF	IR64 annotation imported from a public database and stored as annotation.IR64.gff.
+ANN_IR64_20sd	IR64_20sd	ASM_IR64_20sd	IR64_20sd annotation		true	ORYZA_SATIVA				annotation.IR64_20sd.gff	GFF	
+ANN_IR64_21cell	IR64_21cell	ASM_IR64_21cell	IR64_21cell annotation		true	ORYZA_SATIVA				annotation.IR64_21cell.gff	GFF	
+ANN_IR64_22cr	IR64_22cr	ASM_IR64_22cr	IR64_22cr annotation		true	ORYZA_SATIVA				annotation.IR64_22cr.gff	GFF	
+ANN_IR8	IR8	ASM_IR8	IR8 annotation		true	ORYZA_SATIVA				annotation.IR8.gff	GFF	
+ANN_IRAT 10	IRAT 10	ASM_IRAT 10	IRAT 10 annotation		true	ORYZA_SATIVA				annotation.IRAT 10.gff	GFF	
+ANN_IRGC104165	IRGC104165	ASM_IRGC104165	IRGC104165 annotation		true	ORYZA_SATIVA				annotation.IRGC104165.gff	GFF	
+ANN_ITA 221	ITA 221	ASM_ITA 221	ITA 221 annotation		true	ORYZA_SATIVA				annotation.ITA 221.gff	GFF	
+ANN_J34	J34	ASM_J34	J34 annotation		true	ORYZA_SATIVA				annotation.J34.gff	GFF	
+ANN_J4155	J4155	ASM_J4155	J4155 annotation		true	ORYZA_SATIVA				annotation.J4155.gff	GFF	
+ANN_J4155S	J4155S	ASM_J4155S	J4155S annotation		true	ORYZA_SATIVA				annotation.J4155S.gff	GFF	
+ANN_Jaibattey	Jaibattey	ASM_Jaibattey	Jaibattey annotation		true	ORYZA_SATIVA				annotation.Jaibattey.gff	GFF	
+ANN_Jiabala	Jiabala	ASM_Jiabala	Jiabala annotation		true	ORYZA_SATIVA				annotation.Jiabala.gff	GFF	
+ANN_Jianghuadao	Jianghuadao	ASM_Jianghuadao	Jianghuadao annotation		true	ORYZA_SATIVA				annotation.Jianghuadao.gff	GFF	
+ANN_Jiangnongzao 1 B	Jiangnongzao 1 B	ASM_Jiangnongzao 1 B	Jiangnongzao 1 B annotation		true	ORYZA_SATIVA				annotation.Jiangnongzao 1 B.gff	GFF	
+ANN_Jiefangxian	Jiefangxian	ASM_Jiefangxian	Jiefangxian annotation		true	ORYZA_SATIVA				annotation.Jiefangxian.gff	GFF	
+ANN_Jiienuo	Jiienuo	ASM_Jiienuo	Jiienuo annotation		true	ORYZA_SATIVA				annotation.Jiienuo.gff	GFF	
+ANN_Jinbaoyin	Jinbaoyin	ASM_Jinbaoyin	Jinbaoyin annotation		true	ORYZA_SATIVA				annotation.Jinbaoyin.gff	GFF	
+ANN_Jindao 1	Jindao 1	ASM_Jindao 1	Jindao 1 annotation		true	ORYZA_SATIVA				annotation.Jindao 1.gff	GFF	
+ANN_Jinghu3 B	Jinghu3 B	ASM_Jinghu3 B	Jinghu3 B annotation		true	ORYZA_SATIVA				annotation.Jinghu3 B.gff	GFF	
+ANN_Jinnante 43B	Jinnante 43B	ASM_Jinnante 43B	Jinnante 43B annotation		true	ORYZA_SATIVA				annotation.Jinnante 43B.gff	GFF	
+ANN_Jinxibai2	Jinxibai2	ASM_Jinxibai2	Jinxibai2 annotation		true	ORYZA_SATIVA				annotation.Jinxibai2.gff	GFF	
+ANN_Jinzhinuo4	Jinzhinuo4	ASM_Jinzhinuo4	Jinzhinuo4 annotation		true	ORYZA_SATIVA				annotation.Jinzhinuo4.gff	GFF	
+ANN_JR2031	JR2031	ASM_JR2031	JR2031 annotation		true	ORYZA_SATIVA				annotation.JR2031.gff	GFF	
+ANN_JWR 221	JWR 221	ASM_JWR 221	JWR 221 annotation		true	ORYZA_SATIVA				annotation.JWR 221.gff	GFF	
+ANN_K 24	K 24	ASM_K 24	K 24 annotation		true	ORYZA_SATIVA				annotation.K 24.gff	GFF	
+ANN_Kahamu	Kahamu	ASM_Kahamu	Kahamu annotation		true	ORYZA_SATIVA				annotation.Kahamu.gff	GFF	
+ANN_Kasalath	Kasalath	ASM_Kasalath	Kasalath annotation		true	ORYZA_SATIVA				annotation.Kasalath.gff	GFF	
+ANN_Keluoduo B	Keluoduo B	ASM_Keluoduo B	Keluoduo B annotation		true	ORYZA_SATIVA				annotation.Keluoduo B.gff	GFF	
+ANN_KitaakeX	KitaakeX	ASM_KitaakeX	KitaakeX annotation		true	ORYZA_SATIVA				annotation.KitaakeX.gff	GFF	
+ANN_Kosh	Kosh	ASM_Kosh	Kosh annotation		true	ORYZA_SATIVA				annotation.Kosh.gff	GFF	
+ANN_KY131	KY131	ASM_KY131	KY131 annotation		true	ORYZA_SATIVA				annotation.KY131.gff	GFF	
+ANN_L 301B	L 301B	ASM_L 301B	L 301B annotation		true	ORYZA_SATIVA				annotation.L 301B.gff	GFF	
+ANN_Lamujia	Lamujia	ASM_Lamujia	Lamujia annotation		true	ORYZA_SATIVA				annotation.Lamujia.gff	GFF	
+ANN_LanSheng	LanSheng	ASM_LanSheng	LanSheng annotation		true	ORYZA_SATIVA				annotation.LanSheng.gff	GFF	
+ANN_Laoguangtou 83	Laoguangtou 83	ASM_Laoguangtou 83	Laoguangtou 83 annotation		true	ORYZA_SATIVA				annotation.Laoguangtou 83.gff	GFF	
+ANN_Laohongdao	Laohongdao	ASM_Laohongdao	Laohongdao annotation		true	ORYZA_SATIVA				annotation.Laohongdao.gff	GFF	
+ANN_Laozaogu	Laozaogu	ASM_Laozaogu	Laozaogu annotation		true	ORYZA_SATIVA				annotation.Laozaogu.gff	GFF	
+ANN_LDXZ	LDXZ	ASM_LDXZ	LDXZ annotation		true	ORYZA_SATIVA				annotation.LDXZ.gff	GFF	
+ANN_Lemont	Lemont	ASM_Lemont	Lemont annotation		true	ORYZA_SATIVA				annotation.Lemont.gff	GFF	
+ANN_Lemont_21cell	Lemont_21cell	ASM_Lemont_21cell	Lemont_21cell annotation		true	ORYZA_SATIVA				annotation.Lemont_21cell.gff	GFF	
+ANN_lemont_22cr	lemont_22cr	ASM_lemont_22cr	lemont_22cr annotation		true	ORYZA_SATIVA				annotation.lemont_22cr.gff	GFF	
+ANN_Lengshuigu 2	Lengshuigu 2	ASM_Lengshuigu 2	Lengshuigu 2 annotation		true	ORYZA_SATIVA				annotation.Lengshuigu 2.gff	GFF	
+ANN_Lengshuinuo	Lengshuinuo	ASM_Lengshuinuo	Lengshuinuo annotation		true	ORYZA_SATIVA				annotation.Lengshuinuo.gff	GFF	
+ANN_Liming B	Liming B	ASM_Liming B	Liming B annotation		true	ORYZA_SATIVA				annotation.Liming B.gff	GFF	
+ANN_Linguo	Linguo	ASM_Linguo	Linguo annotation		true	ORYZA_SATIVA				annotation.Linguo.gff	GFF	
+ANN_Liusha 1	Liusha 1	ASM_Liusha 1	Liusha 1 annotation		true	ORYZA_SATIVA				annotation.Liusha 1.gff	GFF	
+ANN_Liushizao	Liushizao	ASM_Liushizao	Liushizao annotation		true	ORYZA_SATIVA				annotation.Liushizao.gff	GFF	
+ANN_LJ	LJ	ASM_LJ	LJ annotation		true	ORYZA_SATIVA				annotation.LJ.gff	GFF	
+ANN_LK638S	LK638S	ASM_LK638S	LK638S annotation		true	ORYZA_SATIVA				annotation.LK638S.gff	GFF	
+ANN_Longhuamaohu	Longhuamaohu	ASM_Longhuamaohu	Longhuamaohu annotation		true	ORYZA_SATIVA				annotation.Longhuamaohu.gff	GFF	
+ANN_LTH	LTH	ASM_LTH	LTH annotation		true	ORYZA_SATIVA				annotation.LTH.gff	GFF	
+ANN_Lucaihao	Lucaihao	ASM_Lucaihao	Lucaihao annotation		true	ORYZA_SATIVA				annotation.Lucaihao.gff	GFF	
+ANN_Luke 3	Luke 3	ASM_Luke 3	Luke 3 annotation		true	ORYZA_SATIVA				annotation.Luke 3.gff	GFF	
+ANN_Malaihong	Malaihong	ASM_Malaihong	Malaihong annotation		true	ORYZA_SATIVA				annotation.Malaihong.gff	GFF	
+ANN_Mamagu	Mamagu	ASM_Mamagu	Mamagu annotation		true	ORYZA_SATIVA				annotation.Mamagu.gff	GFF	
+ANN_Meihuanuo	Meihuanuo	ASM_Meihuanuo	Meihuanuo annotation		true	ORYZA_SATIVA				annotation.Meihuanuo.gff	GFF	
+ANN_Menjiading 2	Menjiading 2	ASM_Menjiading 2	Menjiading 2 annotation		true	ORYZA_SATIVA				annotation.Menjiading 2.gff	GFF	
+ANN_Menjiagao 1	Menjiagao 1	ASM_Menjiagao 1	Menjiagao 1 annotation		true	ORYZA_SATIVA				annotation.Menjiagao 1.gff	GFF	
+ANN_MH63RS3	MH63RS3	ASM_MH63RS3	MH63RS3 annotation		true	ORYZA_SATIVA				annotation.MH63RS3.gff	GFF	
+ANN_Minbeiwanxian	Minbeiwanxian	ASM_Minbeiwanxian	Minbeiwanxian annotation		true	ORYZA_SATIVA				annotation.Minbeiwanxian.gff	GFF	
+ANN_Mitak	Mitak	ASM_Mitak	Mitak annotation		true	ORYZA_SATIVA				annotation.Mitak.gff	GFF	
+ANN_Miyang46	Miyang46	ASM_Miyang46	Miyang46 annotation		true	ORYZA_SATIVA				annotation.Miyang46.gff	GFF	
+ANN_Momi	Momi	ASM_Momi	Momi annotation		true	ORYZA_SATIVA				annotation.Momi.gff	GFF	
+ANN_Mowangguneiza	Mowangguneiza	ASM_Mowangguneiza	Mowangguneiza annotation		true	ORYZA_SATIVA				annotation.Mowangguneiza.gff	GFF	
+ANN_Muguanuo	Muguanuo	ASM_Muguanuo	Muguanuo annotation		true	ORYZA_SATIVA				annotation.Muguanuo.gff	GFF	
+ANN_Muxiqiu	Muxiqiu	ASM_Muxiqiu	Muxiqiu annotation		true	ORYZA_SATIVA				annotation.Muxiqiu.gff	GFF	
+ANN_N22_21cell	N22_21cell	ASM_N22_21cell	N22_21cell annotation		true	ORYZA_SATIVA				annotation.N22_21cell.gff	GFF	
+ANN_N22_22cr	N22_22cr	ASM_N22_22cr	N22_22cr annotation		true	ORYZA_SATIVA				annotation.N22_22cr.gff	GFF	
+ANN_Nabated A Smar	Nabated A Smar	ASM_Nabated A Smar	Nabated A Smar annotation		true	ORYZA_SATIVA				annotation.Nabated A Smar.gff	GFF	
+ANN_NamRoo	NamRoo	ASM_NamRoo	NamRoo annotation		true	ORYZA_SATIVA				annotation.NamRoo.gff	GFF	
+ANN_Nangaogu	Nangaogu	ASM_Nangaogu	Nangaogu annotation		true	ORYZA_SATIVA				annotation.Nangaogu.gff	GFF	
+ANN_Nanjing 11	Nanjing 11	ASM_Nanjing 11	Nanjing 11 annotation		true	ORYZA_SATIVA				annotation.Nanjing 11.gff	GFF	
+ANN_Nanoay P.A	Nanoay P.A	ASM_Nanoay P.A	Nanoay P.A annotation		true	ORYZA_SATIVA				annotation.Nanoay P.A.gff	GFF	
+ANN_Nantehao	Nantehao	ASM_Nantehao	Nantehao annotation		true	ORYZA_SATIVA				annotation.Nantehao.gff	GFF	
+ANN_Nanxiongzaoyouzhan	Nanxiongzaoyouzhan	ASM_Nanxiongzaoyouzhan	Nanxiongzaoyouzhan annotation		true	ORYZA_SATIVA				annotation.Nanxiongzaoyouzhan.gff	GFF	
+ANN_NH265	NH265	ASM_NH265	NH265 annotation		true	ORYZA_SATIVA				annotation.NH265.gff	GFF	
+ANN_NH266	NH266	ASM_NH266	NH266 annotation		true	ORYZA_SATIVA				annotation.NH266.gff	GFF	
+ANN_NH267	NH267	ASM_NH267	NH267 annotation		true	ORYZA_SATIVA				annotation.NH267.gff	GFF	
+ANN_NH268	NH268	ASM_NH268	NH268 annotation		true	ORYZA_SATIVA				annotation.NH268.gff	GFF	
+ANN_NH269	NH269	ASM_NH269	NH269 annotation		true	ORYZA_SATIVA				annotation.NH269.gff	GFF	
+ANN_NH270	NH270	ASM_NH270	NH270 annotation		true	ORYZA_SATIVA				annotation.NH270.gff	GFF	
+ANN_NH271	NH271	ASM_NH271	NH271 annotation		true	ORYZA_SATIVA				annotation.NH271.gff	GFF	
+ANN_NH272	NH272	ASM_NH272	NH272 annotation		true	ORYZA_SATIVA				annotation.NH272.gff	GFF	
+ANN_NH273	NH273	ASM_NH273	NH273 annotation		true	ORYZA_SATIVA				annotation.NH273.gff	GFF	
+ANN_NH274	NH274	ASM_NH274	NH274 annotation		true	ORYZA_SATIVA				annotation.NH274.gff	GFF	
+ANN_NH275	NH275	ASM_NH275	NH275 annotation		true	ORYZA_SATIVA				annotation.NH275.gff	GFF	
+ANN_NH277	NH277	ASM_NH277	NH277 annotation		true	ORYZA_SATIVA				annotation.NH277.gff	GFF	
+ANN_NH278	NH278	ASM_NH278	NH278 annotation		true	ORYZA_SATIVA				annotation.NH278.gff	GFF	
+ANN_NH279	NH279	ASM_NH279	NH279 annotation		true	ORYZA_SATIVA				annotation.NH279.gff	GFF	
+ANN_NH280	NH280	ASM_NH280	NH280 annotation		true	ORYZA_SATIVA				annotation.NH280.gff	GFF	
+ANN_NH281	NH281	ASM_NH281	NH281 annotation		true	ORYZA_SATIVA				annotation.NH281.gff	GFF	
+ANN_NH282	NH282	ASM_NH282	NH282 annotation		true	ORYZA_SATIVA				annotation.NH282.gff	GFF	
+ANN_NH283	NH283	ASM_NH283	NH283 annotation		true	ORYZA_SATIVA				annotation.NH283.gff	GFF	
+ANN_NH284	NH284	ASM_NH284	NH284 annotation		true	ORYZA_SATIVA				annotation.NH284.gff	GFF	
+ANN_NH285	NH285	ASM_NH285	NH285 annotation		true	ORYZA_SATIVA				annotation.NH285.gff	GFF	
+ANN_NH286	NH286	ASM_NH286	NH286 annotation		true	ORYZA_SATIVA				annotation.NH286.gff	GFF	
+ANN_Ninghui 21	Ninghui 21	ASM_Ninghui 21	Ninghui 21 annotation		true	ORYZA_SATIVA				annotation.Ninghui 21.gff	GFF	
+ANN_Nipponbare	Nipponbare	ASM_Nipponbare	Nipponbare annotation		true	ORYZA_SATIVA				annotation.Nipponbare.gff	GFF	
+ANN_NJ11	NJ11	ASM_NJ11	NJ11 annotation		true	ORYZA_SATIVA				annotation.NJ11.gff	GFF	
+ANN_NJ6	NJ6	ASM_NJ6	NJ6 annotation		true	ORYZA_SATIVA				annotation.NJ6.gff	GFF	
+ANN_Npb-MSU	Npb-MSU	ASM_Npb-MSU	Npb-MSU annotation		true	ORYZA_SATIVA				annotation.Npb-MSU.gff	GFF	
+ANN_Npb-T2T	Npb-T2T	ASM_Npb-T2T	Npb-T2T annotation		true	ORYZA_SATIVA				annotation.Npb-T2T.gff	GFF	
+ANN_ObarRS3	ObarRS3	ASM_ObarRS3	ObarRS3 annotation		true	ORYZA_SATIVA				annotation.ObarRS3.gff	GFF	
+ANN_OglaRS2	OglaRS2	ASM_OglaRS2	OglaRS2 annotation		true	ORYZA_SATIVA				annotation.OglaRS2.gff	GFF	
+ANN_OgluRS3	OgluRS3	ASM_OgluRS3	OgluRS3 annotation		true	ORYZA_SATIVA				annotation.OgluRS3.gff	GFF	
+ANN_OmerRS3	OmerRS3	ASM_OmerRS3	OmerRS3 annotation		true	ORYZA_SATIVA				annotation.OmerRS3.gff	GFF	
+ANN_OnivRS2	OnivRS2	ASM_OnivRS2	OnivRS2 annotation		true	ORYZA_SATIVA				annotation.OnivRS2.gff	GFF	
+ANN_P1790-5-1M-4-5M-1B-3M-B	P1790-5-1M-4-5M-1B-3M-B	ASM_P1790-5-1M-4-5M-1B-3M-B	P1790-5-1M-4-5M-1B-3M-B annotation		true	ORYZA_SATIVA				annotation.P1790-5-1M-4-5M-1B-3M-B.gff	GFF	
+ANN_P64S	P64S	ASM_P64S	P64S annotation		true	ORYZA_SATIVA				annotation.P64S.gff	GFF	
+ANN_PA64S	PA64S	ASM_PA64S	PA64S annotation		true	ORYZA_SATIVA				annotation.PA64S.gff	GFF	
+ANN_Pei C122	Pei C122	ASM_Pei C122	Pei C122 annotation		true	ORYZA_SATIVA				annotation.Pei C122.gff	GFF	
+ANN_PI653432	PI653432	ASM_PI653432	PI653432 annotation		true	ORYZA_SATIVA				annotation.PI653432.gff	GFF	
+ANN_PI653439	PI653439	ASM_PI653439	PI653439 annotation		true	ORYZA_SATIVA				annotation.PI653439.gff	GFF	
+ANN_PMS 10B	PMS 10B	ASM_PMS 10B	PMS 10B annotation		true	ORYZA_SATIVA				annotation.PMS 10B.gff	GFF	
+ANN_PPR1	PPR1	ASM_PPR1	PPR1 annotation		true	ORYZA_SATIVA				annotation.PPR1.gff	GFF	
+ANN_Qianchonglang2	Qianchonglang2	ASM_Qianchonglang2	Qianchonglang2 annotation		true	ORYZA_SATIVA				annotation.Qianchonglang2.gff	GFF	
+ANN_Qingke	Qingke	ASM_Qingke	Qingke annotation		true	ORYZA_SATIVA				annotation.Qingke.gff	GFF	
+ANN_Qingnuo Kyohatamochi	Qingnuo Kyohatamochi	ASM_Qingnuo Kyohatamochi	Qingnuo Kyohatamochi annotation		true	ORYZA_SATIVA				annotation.Qingnuo Kyohatamochi.gff	GFF	
+ANN_Qingsiai 16B	Qingsiai 16B	ASM_Qingsiai 16B	Qingsiai 16B annotation		true	ORYZA_SATIVA				annotation.Qingsiai 16B.gff	GFF	
+ANN_Qitoubaigu3	Qitoubaigu3	ASM_Qitoubaigu3	Qitoubaigu3 annotation		true	ORYZA_SATIVA				annotation.Qitoubaigu3.gff	GFF	
+ANN_Qitougu	Qitougu	ASM_Qitougu	Qitougu annotation		true	ORYZA_SATIVA				annotation.Qitougu.gff	GFF	
+ANN_Qiuqianbai	Qiuqianbai	ASM_Qiuqianbai	Qiuqianbai annotation		true	ORYZA_SATIVA				annotation.Qiuqianbai.gff	GFF	
+ANN_Qiutianxiaoting	Qiutianxiaoting	ASM_Qiutianxiaoting	Qiutianxiaoting annotation		true	ORYZA_SATIVA				annotation.Qiutianxiaoting.gff	GFF	
+ANN_R42	R42	ASM_R42	R42 annotation		true	ORYZA_SATIVA				annotation.R42.gff	GFF	
+ANN_R498	R498	ASM_R498	R498 annotation		true	ORYZA_SATIVA				annotation.R498.gff	GFF	
+ANN_R498_IGDBv1_Allset	R498	ASM_R498	R498 IGDBv1.Allset annotation	IGDBv1.Allset	false	ORYZA_SATIVA				annotation.R498.IGDBv1.Allset.gff	GFF	
+ANN_R527	R527	ASM_R527	R527 annotation		true	ORYZA_SATIVA				annotation.R527.gff	GFF	
+ANN_R70	R70	ASM_R70	R70 annotation		true	ORYZA_SATIVA				annotation.R70.gff	GFF	
+ANN_R9311	R9311	ASM_R9311	R9311 annotation		true	ORYZA_SATIVA				annotation.R9311.gff	GFF	
+ANN_RD23	RD23	ASM_RD23	RD23 annotation		true	ORYZA_SATIVA				annotation.RD23.gff	GFF	
+ANN_Rohini	Rohini	ASM_Rohini	Rohini annotation		true	ORYZA_SATIVA				annotation.Rohini.gff	GFF	
+ANN_RP 1570-44-1	RP 1570-44-1	ASM_RP 1570-44-1	RP 1570-44-1 annotation		true	ORYZA_SATIVA				annotation.RP 1570-44-1.gff	GFF	
+ANN_RY2	RY2	ASM_RY2	RY2 annotation		true	ORYZA_SATIVA				annotation.RY2.gff	GFF	
+ANN_S548	S548	ASM_S548	S548 annotation		true	ORYZA_SATIVA				annotation.S548.gff	GFF	
+ANN_Sanbaili	Sanbaili	ASM_Sanbaili	Sanbaili annotation		true	ORYZA_SATIVA				annotation.Sanbaili.gff	GFF	
+ANN_SanQishiluo	SanQishiluo	ASM_SanQishiluo	SanQishiluo annotation		true	ORYZA_SATIVA				annotation.SanQishiluo.gff	GFF	
+ANN_Sansuijin	Sansuijin	ASM_Sansuijin	Sansuijin annotation		true	ORYZA_SATIVA				annotation.Sansuijin.gff	GFF	
+ANN_Seln 244A6-20	Seln 244A6-20	ASM_Seln 244A6-20	Seln 244A6-20 annotation		true	ORYZA_SATIVA				annotation.Seln 244A6-20.gff	GFF	
+ANN_Shufeng 101	Shufeng 101	ASM_Shufeng 101	Shufeng 101 annotation		true	ORYZA_SATIVA				annotation.Shufeng 101.gff	GFF	
+ANN_SLK 2-18-2	SLK 2-18-2	ASM_SLK 2-18-2	SLK 2-18-2 annotation		true	ORYZA_SATIVA				annotation.SLK 2-18-2.gff	GFF	
+ANN_Sri Lanka 1	Sri Lanka 1	ASM_Sri Lanka 1	Sri Lanka 1 annotation		true	ORYZA_SATIVA				annotation.Sri Lanka 1.gff	GFF	
+ANN_Taidongludao	Taidongludao	ASM_Taidongludao	Taidongludao annotation		true	ORYZA_SATIVA				annotation.Taidongludao.gff	GFF	
+ANN_Taishannuo	Taishannuo	ASM_Taishannuo	Taishannuo annotation		true	ORYZA_SATIVA				annotation.Taishannuo.gff	GFF	
+ANN_Taizhongzailai 1	Taizhongzailai 1	ASM_Taizhongzailai 1	Taizhongzailai 1 annotation		true	ORYZA_SATIVA				annotation.Taizhongzailai 1.gff	GFF	
+ANN_Teqingxuanhui	Teqingxuanhui	ASM_Teqingxuanhui	Teqingxuanhui annotation		true	ORYZA_SATIVA				annotation.Teqingxuanhui.gff	GFF	
+ANN_Tetep	Tetep	ASM_Tetep	Tetep annotation		true	ORYZA_SATIVA				annotation.Tetep.gff	GFF	
+ANN_TF	TF	ASM_TF	TF annotation		true	ORYZA_SATIVA				annotation.TF.gff	GFF	
+ANN_Tjantajan	Tjantajan	ASM_Tjantajan	Tjantajan annotation		true	ORYZA_SATIVA				annotation.Tjantajan.gff	GFF	
+ANN_TM	TM	ASM_TM	TM annotation		true	ORYZA_SATIVA				annotation.TM.gff	GFF	
+ANN_TN1	TN1	ASM_TN1	TN1 annotation		true	ORYZA_SATIVA				annotation.TN1.gff	GFF	
+ANN_TQ	TQ	ASM_TQ	TQ annotation		true	ORYZA_SATIVA				annotation.TQ.gff	GFF	
+ANN_Tumba	Tumba	ASM_Tumba	Tumba annotation		true	ORYZA_SATIVA				annotation.Tumba.gff	GFF	
+ANN_Vietnam Zaodao	Vietnam Zaodao	ASM_Vietnam Zaodao	Vietnam Zaodao annotation		true	ORYZA_SATIVA				annotation.Vietnam Zaodao.gff	GFF	
+ANN_W0103_PRJEB73710	W0103	ASM_W0103_PRJEB73710	W0103 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0103.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0107_PRJEB73710	W0107	ASM_W0107_PRJEB73710	W0107 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0107.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0108_PRJEB73710	W0108	ASM_W0108_PRJEB73710	W0108 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0108.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0133_PRJEB73710	W0133	ASM_W0133_PRJEB73710	W0133 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0133.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0135_PRJEB73710	W0135	ASM_W0135_PRJEB73710	W0135 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0135.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0136_PRJEB73710	W0136	ASM_W0136_PRJEB73710	W0136 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0136.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0137_PRJEB73710	W0137	ASM_W0137_PRJEB73710	W0137 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0137.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0143_PRJEB73710	W0143	ASM_W0143_PRJEB73710	W0143 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0143.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0145_PRJEB73710	W0145	ASM_W0145_PRJEB73710	W0145 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0145.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0147_PRJEB73710	W0147	ASM_W0147_PRJEB73710	W0147 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0147.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0149_PRJEB73710	W0149	ASM_W0149_PRJEB73710	W0149 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0149.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0157_PRJEB73710	W0157	ASM_W0157_PRJEB73710	W0157 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0157.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0164_PRJEB73710	W0164	ASM_W0164_PRJEB73710	W0164 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0164.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0166_PRJEB73710	W0166	ASM_W0166_PRJEB73710	W0166 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0166.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0169_PRJEB73710	W0169	ASM_W0169_PRJEB73710	W0169 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0169.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0171_PRJEB73710	W0171	ASM_W0171_PRJEB73710	W0171 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0171.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0179_PRJEB73710	W0179	ASM_W0179_PRJEB73710	W0179 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0179.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0180_PRJEB73710	W0180	ASM_W0180_PRJEB73710	W0180 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0180.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0234_PRJEB73710	W0234	ASM_W0234_PRJEB73710	W0234 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0234.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0573_PRJEB73710	W0573	ASM_W0573_PRJEB73710	W0573 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0573.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0590_PRJEB73710	W0590	ASM_W0590_PRJEB73710	W0590 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0590.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0594_PRJEB73710	W0594	ASM_W0594_PRJEB73710	W0594 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0594.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0596_PRJEB73710	W0596	ASM_W0596_PRJEB73710	W0596 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0596.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0600_PRJEB73710	W0600	ASM_W0600_PRJEB73710	W0600 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0600.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0627_PRJEB73710	W0627	ASM_W0627_PRJEB73710	W0627 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0627.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0630_PRJEB73710	W0630	ASM_W0630_PRJEB73710	W0630 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0630.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0632_PRJEB73710	W0632	ASM_W0632_PRJEB73710	W0632 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0632.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0634_PRJEB73710	W0634	ASM_W0634_PRJEB73710	W0634 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0634.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W0639_PRJEB73710	W0639	ASM_W0639_PRJEB73710	W0639 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W0639.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1080_PRJEB73710	W1080	ASM_W1080_PRJEB73710	W1080 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1080.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1084_PRJEB73710	W1084	ASM_W1084_PRJEB73710	W1084 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1084.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1093_PRJEB73710	W1093	ASM_W1093_PRJEB73710	W1093 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1093.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1107_PRJEB73710	W1107	ASM_W1107_PRJEB73710	W1107 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1107.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1117_PRJEB73710	W1117	ASM_W1117_PRJEB73710	W1117 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1117.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1126_PRJEB73710	W1126	ASM_W1126_PRJEB73710	W1126 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1126.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1142_PRJEB73710	W1142	ASM_W1142_PRJEB73710	W1142 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1142.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1214_PRJEB73710	W1214	ASM_W1214_PRJEB73710	W1214 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1214.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1236_PRJEB73710	W1236	ASM_W1236_PRJEB73710	W1236 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1236.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1292_PRJEB73710	W1292	ASM_W1292_PRJEB73710	W1292 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1292.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1411	W1411	ASM_W1411	W1411 annotation		true	ORYZA_SATIVA				annotation.W1411.gff	GFF	
+ANN_W1536_PRJEB73710	W1536	ASM_W1536_PRJEB73710	W1536 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1536.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1547_PRJEB73710	W1547	ASM_W1547_PRJEB73710	W1547 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1547.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1550_PRJEB73710	W1550	ASM_W1550_PRJEB73710	W1550 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1550.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1552_PRJEB73710	W1552	ASM_W1552_PRJEB73710	W1552 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1552.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1553_PRJEB73710	W1553	ASM_W1553_PRJEB73710	W1553 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1553.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1556_PRJEB73710	W1556	ASM_W1556_PRJEB73710	W1556 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1556.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1557_PRJEB73710	W1557	ASM_W1557_PRJEB73710	W1557 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1557.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1559_PRJEB73710	W1559	ASM_W1559_PRJEB73710	W1559 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1559.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1619_PRJEB73710	W1619	ASM_W1619_PRJEB73710	W1619 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1619.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1666_PRJEB73710	W1666	ASM_W1666_PRJEB73710	W1666 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1666.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1668_PRJEB73710	W1668	ASM_W1668_PRJEB73710	W1668 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1668.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1677_PRJEB73710	W1677	ASM_W1677_PRJEB73710	W1677 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1677.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1679_PRJEB73710	W1679	ASM_W1679_PRJEB73710	W1679 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1679.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1718_PRJEB73710	W1718	ASM_W1718_PRJEB73710	W1718 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1718.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1719_PRJEB73710	W1719	ASM_W1719_PRJEB73710	W1719 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1719.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1723_PRJEB73710	W1723	ASM_W1723_PRJEB73710	W1723 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1723.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1725_PRJEB73710	W1725	ASM_W1725_PRJEB73710	W1725 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1725.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1726_PRJEB73710	W1726	ASM_W1726_PRJEB73710	W1726 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1726.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1731_PRJEB73710	W1731	ASM_W1731_PRJEB73710	W1731 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1731.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1732_PRJEB73710	W1732	ASM_W1732_PRJEB73710	W1732 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1732.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1735_PRJEB73710	W1735	ASM_W1735_PRJEB73710	W1735 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1735.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1736_PRJEB73710	W1736	ASM_W1736_PRJEB73710	W1736 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1736.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1737_PRJEB73710	W1737	ASM_W1737_PRJEB73710	W1737 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1737.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1742_PRJEB73710	W1742	ASM_W1742_PRJEB73710	W1742 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1742.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1748_PRJEB73710	W1748	ASM_W1748_PRJEB73710	W1748 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1748.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1750_PRJEB73710	W1750	ASM_W1750_PRJEB73710	W1750 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1750.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1777_PRJEB73710	W1777	ASM_W1777_PRJEB73710	W1777 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1777.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1783_PRJEB73710	W1783	ASM_W1783_PRJEB73710	W1783 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1783.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1787_PRJEB73710	W1787	ASM_W1787_PRJEB73710	W1787 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1787.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1809_PRJEB73710	W1809	ASM_W1809_PRJEB73710	W1809 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1809.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1810_PRJEB73710	W1810	ASM_W1810_PRJEB73710	W1810 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1810.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1825_PRJEB73710	W1825	ASM_W1825_PRJEB73710	W1825 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1825.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1839_PRJEB73710	W1839	ASM_W1839_PRJEB73710	W1839 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1839.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1859_PRJEB73710	W1859	ASM_W1859_PRJEB73710	W1859 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1859.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1865_PRJEB73710	W1865	ASM_W1865_PRJEB73710	W1865 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1865.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1880_PRJEB73710	W1880	ASM_W1880_PRJEB73710	W1880 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1880.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1890_PRJEB73710	W1890	ASM_W1890_PRJEB73710	W1890 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1890.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1895_PRJEB73710	W1895	ASM_W1895_PRJEB73710	W1895 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1895.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1919_PRJEB73710	W1919	ASM_W1919_PRJEB73710	W1919 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1919.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1943_PRJEB73710	W1943	ASM_W1943_PRJEB73710	W1943 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1943.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1970_PRJEB73710	W1970	ASM_W1970_PRJEB73710	W1970 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1970.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W1976_PRJEB73710	W1976	ASM_W1976_PRJEB73710	W1976 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W1976.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2005_PRJEB73710	W2005	ASM_W2005_PRJEB73710	W2005 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2005.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2014	W2014	ASM_W2014	W2014 annotation		true	ORYZA_SATIVA				annotation.W2014.gff	GFF	
+ANN_W2022_PRJEB73710	W2022	ASM_W2022_PRJEB73710	W2022 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2022.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2036_PRJEB73710	W2036	ASM_W2036_PRJEB73710	W2036 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2036.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2051_PRJEB73710	W2051	ASM_W2051_PRJEB73710	W2051 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2051.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2053_PRJEB73710	W2053	ASM_W2053_PRJEB73710	W2053 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2053.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2064_PRJEB73710	W2064	ASM_W2064_PRJEB73710	W2064 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2064.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2066_PRJEB73710	W2066	ASM_W2066_PRJEB73710	W2066 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2066.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2099_PRJEB73710	W2099	ASM_W2099_PRJEB73710	W2099 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2099.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2108_PRJEB73710	W2108	ASM_W2108_PRJEB73710	W2108 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2108.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2197_PRJEB73710	W2197	ASM_W2197_PRJEB73710	W2197 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2197.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2267_PRJEB73710	W2267	ASM_W2267_PRJEB73710	W2267 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2267.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2275_PRJEB73710	W2275	ASM_W2275_PRJEB73710	W2275 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2275.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2283_PRJEB73710	W2283	ASM_W2283_PRJEB73710	W2283 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2283.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2305_PRJEB73710	W2305	ASM_W2305_PRJEB73710	W2305 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2305.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2308_PRJEB73710	W2308	ASM_W2308_PRJEB73710	W2308 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2308.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2310_PRJEB73710	W2310	ASM_W2310_PRJEB73710	W2310 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2310.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2311_PRJEB73710	W2311	ASM_W2311_PRJEB73710	W2311 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2311.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2318_PRJEB73710	W2318	ASM_W2318_PRJEB73710	W2318 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2318.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2319_PRJEB73710	W2319	ASM_W2319_PRJEB73710	W2319 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2319.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2320_PRJEB73710	W2320	ASM_W2320_PRJEB73710	W2320 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2320.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2321_PRJEB73710	W2321	ASM_W2321_PRJEB73710	W2321 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2321.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W2332_PRJEB73710	W2332	ASM_W2332_PRJEB73710	W2332 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W2332.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3000_PRJEB73710	W3000	ASM_W3000_PRJEB73710	W3000 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3000.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3007_PRJEB73710	W3007	ASM_W3007_PRJEB73710	W3007 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3007.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3009_PRJEB73710	W3009	ASM_W3009_PRJEB73710	W3009 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3009.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3012_PRJEB73710	W3012	ASM_W3012_PRJEB73710	W3012 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3012.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3029_PRJEB73710	W3029	ASM_W3029_PRJEB73710	W3029 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3029.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3033_PRJEB73710	W3033	ASM_W3033_PRJEB73710	W3033 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3033.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3035_PRJEB73710	W3035	ASM_W3035_PRJEB73710	W3035 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3035.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3037_PRJEB73710	W3037	ASM_W3037_PRJEB73710	W3037 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3037.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3038_PRJEB73710	W3038	ASM_W3038_PRJEB73710	W3038 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3038.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3040_PRJEB73710	W3040	ASM_W3040_PRJEB73710	W3040 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3040.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3046_PRJEB73710	W3046	ASM_W3046_PRJEB73710	W3046 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3046.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3047_PRJEB73710	W3047	ASM_W3047_PRJEB73710	W3047 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3047.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3051_PRJEB73710	W3051	ASM_W3051_PRJEB73710	W3051 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3051.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3052_PRJEB73710	W3052	ASM_W3052_PRJEB73710	W3052 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3052.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3054_PRJEB73710	W3054	ASM_W3054_PRJEB73710	W3054 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3054.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3055_PRJEB73710	W3055	ASM_W3055_PRJEB73710	W3055 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3055.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3063_PRJEB73710	W3063	ASM_W3063_PRJEB73710	W3063 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3063.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3066_PRJEB73710	W3066	ASM_W3066_PRJEB73710	W3066 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3066.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3071_PRJEB73710	W3071	ASM_W3071_PRJEB73710	W3071 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3071.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3074_PRJEB73710	W3074	ASM_W3074_PRJEB73710	W3074 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3074.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3082_PRJEB73710	W3082	ASM_W3082_PRJEB73710	W3082 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3082.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3086_PRJEB73710	W3086	ASM_W3086_PRJEB73710	W3086 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3086.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3088_PRJEB73710	W3088	ASM_W3088_PRJEB73710	W3088 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3088.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3090_PRJEB73710	W3090	ASM_W3090_PRJEB73710	W3090 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3090.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3092_PRJEB73710	W3092	ASM_W3092_PRJEB73710	W3092 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3092.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_W3096_PRJEB73710	W3096	ASM_W3096_PRJEB73710	W3096 genome annotation		true	ORYZA_RUFIPOGON	Figshare	Figshare	PRJEB73710	annotation.W3096.gff	GFF	Genome annotation associated with rice pangenome assembly
+ANN_Wanlixian	Wanlixian	ASM_Wanlixian	Wanlixian annotation		true	ORYZA_SATIVA				annotation.Wanlixian.gff	GFF	
+ANN_Wanshi	Wanshi	ASM_Wanshi	Wanshi annotation		true	ORYZA_SATIVA				annotation.Wanshi.gff	GFF	
+ANN_Weiguo	Weiguo	ASM_Weiguo	Weiguo annotation		true	ORYZA_SATIVA				annotation.Weiguo.gff	GFF	
+ANN_Wenxiangnuo	Wenxiangnuo	ASM_Wenxiangnuo	Wenxiangnuo annotation		true	ORYZA_SATIVA				annotation.Wenxiangnuo.gff	GFF	
+ANN_WSSM	WSSM	ASM_WSSM	WSSM annotation		true	ORYZA_SATIVA				annotation.WSSM.gff	GFF	
+ANN_Wuziluosi 215	Wuziluosi 215	ASM_Wuziluosi 215	Wuziluosi 215 annotation		true	ORYZA_SATIVA				annotation.Wuziluosi 215.gff	GFF	
+ANN_WYJ3	WYJ3	ASM_WYJ3	WYJ3 annotation		true	ORYZA_SATIVA				annotation.WYJ3.gff	GFF	
+ANN_WYJ7	WYJ7	ASM_WYJ7	WYJ7 annotation		true	ORYZA_SATIVA				annotation.WYJ7.gff	GFF	
+ANN_Xiangai B	Xiangai B	ASM_Xiangai B	Xiangai B annotation		true	ORYZA_SATIVA				annotation.Xiangai B.gff	GFF	
+ANN_Xiangaizao 10hao	Xiangaizao 10hao	ASM_Xiangaizao 10hao	Xiangaizao 10hao annotation		true	ORYZA_SATIVA				annotation.Xiangaizao 10hao.gff	GFF	
+ANN_Xiangdao	Xiangdao	ASM_Xiangdao	Xiangdao annotation		true	ORYZA_SATIVA				annotation.Xiangdao.gff	GFF	
+ANN_Xianggu	Xianggu	ASM_Xianggu	Xianggu annotation		true	ORYZA_SATIVA				annotation.Xianggu.gff	GFF	
+ANN_Xiangwanxian 3	Xiangwanxian 3	ASM_Xiangwanxian 3	Xiangwanxian 3 annotation		true	ORYZA_SATIVA				annotation.Xiangwanxian 3.gff	GFF	
+ANN_Xiangzaoxian 7	Xiangzaoxian 7	ASM_Xiangzaoxian 7	Xiangzaoxian 7 annotation		true	ORYZA_SATIVA				annotation.Xiangzaoxian 7.gff	GFF	
+ANN_Xianluosichi	Xianluosichi	ASM_Xianluosichi	Xianluosichi annotation		true	ORYZA_SATIVA				annotation.Xianluosichi.gff	GFF	
+ANN_Xiaobaimi	Xiaobaimi	ASM_Xiaobaimi	Xiaobaimi annotation		true	ORYZA_SATIVA				annotation.Xiaobaimi.gff	GFF	
+ANN_Xiaohonggu	Xiaohonggu	ASM_Xiaohonggu	Xiaohonggu annotation		true	ORYZA_SATIVA				annotation.Xiaohonggu.gff	GFF	
+ANN_Xishi 15	Xishi 15	ASM_Xishi 15	Xishi 15 annotation		true	ORYZA_SATIVA				annotation.Xishi 15.gff	GFF	
+ANN_XL628S	XL628S	ASM_XL628S	XL628S annotation		true	ORYZA_SATIVA				annotation.XL628S.gff	GFF	
+ANN_XS134	XS134	ASM_XS134	XS134 annotation		true	ORYZA_SATIVA				annotation.XS134.gff	GFF	
+ANN_Xuanenchangtanqingzhan	Xuanenchangtanqingzhan	ASM_Xuanenchangtanqingzhan	Xuanenchangtanqingzhan annotation		true	ORYZA_SATIVA				annotation.Xuanenchangtanqingzhan.gff	GFF	
+ANN_Xugunuo	Xugunuo	ASM_Xugunuo	Xugunuo annotation		true	ORYZA_SATIVA				annotation.Xugunuo.gff	GFF	
+ANN_XYXZ	XYXZ	ASM_XYXZ	XYXZ annotation		true	ORYZA_SATIVA				annotation.XYXZ.gff	GFF	
+ANN_Y3551	Y3551	ASM_Y3551	Y3551 annotation		true	ORYZA_SATIVA				annotation.Y3551.gff	GFF	
+ANN_Y4B	Y4B	ASM_Y4B	Y4B annotation		true	ORYZA_SATIVA				annotation.Y4B.gff	GFF	
+ANN_Y58S	Y58S	ASM_Y58S	Y58S annotation		true	ORYZA_SATIVA				annotation.Y58S.gff	GFF	
+ANN_Yangkenuo	Yangkenuo	ASM_Yangkenuo	Yangkenuo annotation		true	ORYZA_SATIVA				annotation.Yangkenuo.gff	GFF	
+ANN_Yanshuichi	Yanshuichi	ASM_Yanshuichi	Yanshuichi annotation		true	ORYZA_SATIVA				annotation.Yanshuichi.gff	GFF	
+ANN_YCW03	YCW03	ASM_YCW03	YCW03 annotation		true	ORYZA_SATIVA				annotation.YCW03.gff	GFF	
+ANN_Yelicanghua	Yelicanghua	ASM_Yelicanghua	Yelicanghua annotation		true	ORYZA_SATIVA				annotation.Yelicanghua.gff	GFF	
+ANN_Yikong	Yikong	ASM_Yikong	Yikong annotation		true	ORYZA_SATIVA				annotation.Yikong.gff	GFF	
+ANN_YJSM	YJSM	ASM_YJSM	YJSM annotation		true	ORYZA_SATIVA				annotation.YJSM.gff	GFF	
+ANN_Younian	Younian	ASM_Younian	Younian annotation		true	ORYZA_SATIVA				annotation.Younian.gff	GFF	
+ANN_YR196	YR196	ASM_YR196	YR196 annotation		true	ORYZA_SATIVA				annotation.YR196.gff	GFF	
+ANN_Yuyannuo	Yuyannuo	ASM_Yuyannuo	Yuyannuo annotation		true	ORYZA_SATIVA				annotation.Yuyannuo.gff	GFF	
+ANN_YX1	YX1	ASM_YX1	YX1 annotation		true	ORYZA_SATIVA				annotation.YX1.gff	GFF	
+ANN_YZ-2	YZ-2	ASM_YZ-2	YZ-2 annotation		true	ORYZA_SATIVA				annotation.YZ-2.gff	GFF	
+ANN_YZX	YZX	ASM_YZX	YZX annotation		true	ORYZA_SATIVA				annotation.YZX.gff	GFF	
+ANN_Z9311S	Z9311S	ASM_Z9311S	Z9311S annotation		true	ORYZA_SATIVA				annotation.Z9311S.gff	GFF	
+ANN_Zaoshengbai	Zaoshengbai	ASM_Zaoshengbai	Zaoshengbai annotation		true	ORYZA_SATIVA				annotation.Zaoshengbai.gff	GFF	
+ANN_Zaoshunonghu 6	Zaoshunonghu 6	ASM_Zaoshunonghu 6	Zaoshunonghu 6 annotation		true	ORYZA_SATIVA				annotation.Zaoshunonghu 6.gff	GFF	
+ANN_Zaoshuxiangheimi	Zaoshuxiangheimi	ASM_Zaoshuxiangheimi	Zaoshuxiangheimi annotation		true	ORYZA_SATIVA				annotation.Zaoshuxiangheimi.gff	GFF	
+ANN_Zaoxian 240	Zaoxian 240	ASM_Zaoxian 240	Zaoxian 240 annotation		true	ORYZA_SATIVA				annotation.Zaoxian 240.gff	GFF	
+ANN_ZCD	ZCD	ASM_ZCD	ZCD annotation		true	ORYZA_SATIVA				annotation.ZCD.gff	GFF	
+ANN_ZH11	ZH11	ASM_ZH11	ZH11 annotation		true	ORYZA_SATIVA				annotation.ZH11.gff	GFF	
+ANN_Zhendao 232	Zhendao 232	ASM_Zhendao 232	Zhendao 232 annotation		true	ORYZA_SATIVA				annotation.Zhendao 232.gff	GFF	
+ANN_Zhenfu 8	Zhenfu 8	ASM_Zhenfu 8	Zhenfu 8 annotation		true	ORYZA_SATIVA				annotation.Zhenfu 8.gff	GFF	
+ANN_Zhengdao 5	Zhengdao 5	ASM_Zhengdao 5	Zhengdao 5 annotation		true	ORYZA_SATIVA				annotation.Zhengdao 5.gff	GFF	
+ANN_Zhuyuan	Zhuyuan	ASM_Zhuyuan	Zhuyuan annotation		true	ORYZA_SATIVA				annotation.Zhuyuan.gff	GFF	
+ANN_Zhuzhen B	Zhuzhen B	ASM_Zhuzhen B	Zhuzhen B annotation		true	ORYZA_SATIVA				annotation.Zhuzhen B.gff	GFF	
+ANN_Zimangfeie	Zimangfeie	ASM_Zimangfeie	Zimangfeie annotation		true	ORYZA_SATIVA				annotation.Zimangfeie.gff	GFF	
+ANN_Zinuo	Zinuo	ASM_Zinuo	Zinuo annotation		true	ORYZA_SATIVA				annotation.Zinuo.gff	GFF	
+ANN_ZS97RS3	ZS97RS3	ASM_ZS97RS3	ZS97RS3 annotation		true	ORYZA_SATIVA				annotation.ZS97RS3.gff	GFF	

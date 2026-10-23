@@ -1,0 +1,6 @@
+# Keep frozen production-manifest bytes stable across Windows and Linux checkouts.
+django2/metadata/production_full_manifest_20260922/*.tsv -text whitespace=-blank-at-eol
+django2/metadata/production_full_manifest_20260922/*.txt -text whitespace=-blank-at-eol
+
+# Preserve generated registration evidence and its recorded SHA-256 values.
+django2/metadata/external_file_registration_20261022/* -text

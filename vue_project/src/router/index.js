@@ -1,14 +1,14 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import axios from 'axios'
 
 const EmptyComponent = {
-  template: '<div class="empty-page"><h2>功能开发中，敬请期待...</h2></div>'
+  template: '<div class="empty-page"><h2>{{ $t("page.placeholder.developing") }}</h2></div>'
 }
 
 const routes = [
   {
     path: '/login',
-    name: 'login',
-    component: () => import('../views/LoginView.vue')
+    redirect: '/dashboard'
   },
   {
     path: '/',
@@ -19,7 +19,31 @@ const routes = [
     name: 'dashboard-home',
     component: () => import('../views/DashboardHomeView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/assembly',
+    name: 'assembly',
+    component: () => import('../views/AssemblyPortalView.vue'),
+    meta: {
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/assembly/:assemblyId/browser',
+    name: 'assembly-browser',
+    component: () => import('../views/GenomeBrowserView.vue'),
+    meta: {
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/assembly/:assemblyId',
+    name: 'assembly-detail',
+    component: () => import('../views/AssemblyView.vue'),
+    meta: {
+      requiresAuth: false
     }
   },
   {
@@ -27,7 +51,7 @@ const routes = [
     name: 'home',
     component: () => import('../views/HomeView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -35,7 +59,7 @@ const routes = [
     name: 'transcriptome',
     component: () => import('../views/TranscriptomeView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -43,7 +67,7 @@ const routes = [
     name: 'data-chart',
     component: () => import('../views/DataChartView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -51,7 +75,7 @@ const routes = [
     name: 'data-overview',
     component: () => import('../views/DataOverviewView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -59,7 +83,7 @@ const routes = [
     name: 'raw-data',
     component: () => import('../views/RawDataView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -67,7 +91,7 @@ const routes = [
     name: 'transcriptome-overview',
     component: () => import('../views/TranscriptomeOverviewView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -75,15 +99,29 @@ const routes = [
     name: 'accession-map',
     component: () => import('../views/AccessionMapView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
     path: '/genome-card',
     name: 'genome-card',
-    component: () => import('../views/GenomeCard.vue'),
+    redirect: (to) => {
+      const firstQueryValue = (value) => Array.isArray(value) ? value[0] : value
+      const assemblyId = String(firstQueryValue(to.query.assembly) || '').trim()
+      const accession = String(
+        firstQueryValue(to.query.accession) || firstQueryValue(to.query.organism) || ''
+      ).trim()
+
+      if (/^\d+$/.test(assemblyId)) {
+        return { name: 'assembly-detail', params: { assemblyId } }
+      }
+      if (accession) {
+        return { name: 'accession-detail', query: { accession } }
+      }
+      return { name: 'accession-card' }
+    },
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -91,7 +129,7 @@ const routes = [
     name: 'annotation',
     component: () => import('../views/AnnotationView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -99,7 +137,7 @@ const routes = [
     name: 'annotation-card',
     component: () => import('../views/AnnotationView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -107,7 +145,7 @@ const routes = [
     name: 'core-variable-blocks',
     component: () => import('../views/CoreVariableBlocks.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -115,7 +153,7 @@ const routes = [
     name: 'core-variable-blocks-card',
     component: () => import('../views/CoreVariableBlocks.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -123,7 +161,7 @@ const routes = [
     name: 'codon-card',
     component: () => import('../views/CodonCard.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -131,7 +169,7 @@ const routes = [
     name: 'accession-card',
     component: () => import('../views/AccessionCard.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -139,7 +177,7 @@ const routes = [
     name: 'accession-detail',
     component: () => import('../views/AccessionDetailTableView.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -147,7 +185,7 @@ const routes = [
     name: 'tools-codonw',
     component: () => import('../views/CodonWTool.vue'),
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -155,7 +193,7 @@ const routes = [
     name: 'placeholder',
     component: EmptyComponent,
     meta: {
-      requiresAuth: true
+      requiresAuth: false
     }
   },
   {
@@ -185,28 +223,24 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
-  const adminToken = localStorage.getItem('admin_token')
+const hasAdminSession = async () => {
+  try {
+    const response = await axios.get('/admin/session/')
+    return response.data.authenticated === true && response.data.user?.is_staff === true
+  } catch (error) {
+    return false
+  }
+}
 
+router.beforeEach(async (to, from, next) => {
   if (to.matched.some((record) => record.meta.requiresAdminAuth)) {
-    if (!adminToken) {
+    if (!(await hasAdminSession())) {
       next('/admin/login')
       return
     }
   }
 
-  if (to.matched.some((record) => record.meta.requiresAuth) && !isLoggedIn) {
-    next('/login')
-    return
-  }
-
-  if (to.path === '/login' && isLoggedIn) {
-    next('/dashboard')
-    return
-  }
-
-  if (to.path === '/admin/login' && adminToken) {
+  if (to.path === '/admin/login' && await hasAdminSession()) {
     next('/admin/dashboard')
     return
   }

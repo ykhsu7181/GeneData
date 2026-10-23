@@ -1,12 +1,14 @@
 """filemanager URL Configuration."""
 
 from django.contrib import admin
+from django.conf import settings
 from django.http import JsonResponse
 from django.urls import include, path
 
 from files.dashboard_views import warehouse_dashboard
 from files import views
 from files.archive_views import ArchivedGenomeFileViewSet
+from files.api_v1.schema_views import api_documentation
 
 try:
     from rest_framework.documentation import include_docs_urls
@@ -29,28 +31,36 @@ def debug_view(request):
             "status": "Django is working",
             "path": request.path,
             "method": request.method,
-            "headers": dict(request.headers),
         }
     )
 
 
+def debug_urlpatterns():
+    if not settings.DEBUG:
+        return []
+    return [path("gd/api/debug/", debug_view, name="debug")]
+
+
 urlpatterns = [
+    path("docs/api/", api_documentation, name="external-api-documentation"),
     path("admin/", admin.site.urls),
     path("gd/api/warehouse/dashboard/", warehouse_dashboard, name="warehouse-dashboard"),
     path("gd/api/files/", include("files.urls")),
+    path("gd/api/v1/", include("files.api_v1.urls")),
     path("gd/api/admin/", include("files.urls")),
     path("gd/api/integrations/", include("integrations.urls")),
     path("api/warehouse/dashboard/", warehouse_dashboard, name="warehouse-dashboard-api"),
     path("api/files/", include("files.urls")),
     path("api/admin/", include("files.urls")),
     path("api-auth/", include("rest_framework.urls")),
-    path("gd/api/debug/", debug_view, name="debug"),
     path(
         "gd/api/manual_download/<str:filename>",
         views.download_manual_file,
         name="legacy-manual-download",
     ),
 ]
+
+urlpatterns += debug_urlpatterns()
 
 legacy_download_view = getattr(ArchivedGenomeFileViewSet, "download_transcriptome", None)
 if legacy_download_view is not None:

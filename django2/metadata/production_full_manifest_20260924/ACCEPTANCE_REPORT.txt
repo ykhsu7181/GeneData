@@ -1,0 +1,8 @@
+GeneData hierarchy manifest package acceptance report
+manifest_dir	D:\gene_manage_system\gene_manage_system\django2\metadata\production_full_manifest_20260924
+assemblies	607
+annotations	517
+file_bindings	2240
+exceptions	31
+source_files_verified	false
+status	PASS

@@ -1,9 +1,13 @@
 from collections import OrderedDict
 
-from django.db.models import Q
+from django.db.models import Count, Q
 
 from files.models import Accession, DataFile, FileRelation, Species
-from files.services.accession_context import resolve_preferred_annotation, resolve_preferred_assembly
+from files.services.accession_context import (
+    AmbiguousContextError,
+    resolve_preferred_annotation,
+    resolve_preferred_assembly,
+)
 
 
 DATA_CATEGORIES = [
@@ -132,7 +136,12 @@ def _accessions_queryset(params):
     sub_populations = _params_get(params, "sub_populations")
     location = _params_get(params, "location")
 
-    queryset = Accession.objects.select_related("species").prefetch_related("assemblies__annotations").order_by("accession")
+    queryset = (
+        Accession.objects.select_related("species")
+        .prefetch_related("assemblies__annotations")
+        .annotate(overview_sample_count=Count("samples", distinct=True))
+        .order_by("accession")
+    )
     if search:
         queryset = queryset.filter(
             Q(accession__icontains=search)
@@ -167,10 +176,32 @@ def _accessions_queryset(params):
 
 
 def _default_assembly(accession):
+    prefetched = getattr(accession, "_prefetched_objects_cache", {}).get("assemblies")
+    if prefetched is not None:
+        assemblies = sorted(prefetched, key=lambda item: item.id)
+        defaults = [item for item in assemblies if item.is_default]
+        if len(defaults) > 1:
+            raise AmbiguousContextError("assembly", accession.accession)
+        if defaults:
+            return defaults[0]
+        if len(assemblies) > 1:
+            raise AmbiguousContextError("assembly", accession.accession)
+        return assemblies[0] if assemblies else None
     return resolve_preferred_assembly(accession)
 
 
 def _default_annotation(assembly):
+    prefetched = getattr(assembly, "_prefetched_objects_cache", {}).get("annotations")
+    if prefetched is not None:
+        annotations = sorted(prefetched, key=lambda item: item.id)
+        defaults = [item for item in annotations if item.is_default]
+        if len(defaults) > 1:
+            raise AmbiguousContextError("annotation", assembly.id)
+        if defaults:
+            return defaults[0]
+        if len(annotations) > 1:
+            raise AmbiguousContextError("annotation", assembly.id)
+        return annotations[0] if annotations else None
     return resolve_preferred_annotation(assembly)
 
 
@@ -214,15 +245,10 @@ def _file_record(relation):
     }
 
 
-def _files_for_accession(accession, params):
+def _files_from_relations(relations, params):
     dataset_type = _params_get(params, "dataset_type")
     category_filter = _params_get(params, "category") or _params_get(params, "data_category")
     file_role = _params_get(params, "file_role")
-    relations = (
-        FileRelation.objects.filter(_relation_filter_for_accession(accession))
-        .select_related("file", "file__dataset", "file__file_type")
-        .order_by("file_role", "file_id")
-    )
     files_by_category = OrderedDict((key, OrderedDict()) for key, _, _ in DATA_CATEGORIES)
     all_files = OrderedDict()
     for relation in relations:
@@ -238,6 +264,46 @@ def _files_for_accession(accession, params):
         if category in files_by_category:
             files_by_category[category].setdefault(record["file_id"], record)
     return files_by_category, all_files
+
+
+def _files_for_accession(accession, params):
+    relations = (
+        FileRelation.objects.filter(_relation_filter_for_accession(accession))
+        .select_related("file", "file__dataset", "file__file_type")
+        .order_by("file_role", "file_id")
+    )
+    return _files_from_relations(relations, params)
+
+
+def _bulk_files_for_accessions(accessions, params):
+    relation_owners = {"accession": {}, "assembly": {}, "annotation": {}}
+    for accession in accessions:
+        relation_owners["accession"][str(accession.id)] = accession.id
+        for assembly in accession.assemblies.all():
+            relation_owners["assembly"][str(assembly.id)] = accession.id
+            for annotation in assembly.annotations.all():
+                relation_owners["annotation"][str(annotation.id)] = accession.id
+
+    relation_filter = Q(pk__in=[])
+    for related_type, owners in relation_owners.items():
+        if owners:
+            relation_filter |= Q(related_type=related_type, related_id__in=owners)
+
+    grouped_relations = {accession.id: [] for accession in accessions}
+    relations = (
+        FileRelation.objects.filter(relation_filter)
+        .select_related("file", "file__dataset", "file__file_type")
+        .order_by("file_role", "file_id")
+    )
+    for relation in relations:
+        accession_id = relation_owners.get(relation.related_type, {}).get(str(relation.related_id))
+        if accession_id is not None:
+            grouped_relations[accession_id].append(relation)
+
+    return {
+        accession.id: _files_from_relations(grouped_relations[accession.id], params)
+        for accession in accessions
+    }
 
 
 def _cell_payload(category, files):
@@ -277,7 +343,9 @@ def _matrix_row(accession, files_by_category):
         "species_name": _species_name(accession.species),
         "species_latin_name": _latin_name(accession.species),
         "sub_population": _normalize_sub_population(accession.sub_population),
-        "sample_count": accession.samples.count(),
+        "sample_count": getattr(accession, "overview_sample_count", None)
+        if getattr(accession, "overview_sample_count", None) is not None
+        else accession.samples.count(),
         "country": accession.country,
         "region": accession.region,
         "location_display": ", ".join([item for item in [accession.region, accession.country] if item]) or "-",
@@ -393,8 +461,9 @@ def build_data_overview_payload(params):
     detail_rows = []
     row_file_maps = []
     selected_accessions = []
+    files_by_accession = _bulk_files_for_accessions(accessions, params)
     for accession in accessions:
-        files_by_category, all_files = _files_for_accession(accession, params)
+        files_by_category, all_files = files_by_accession[accession.id]
         has_file_filter = bool(
             _params_get(params, "dataset_type")
             or _params_get(params, "file_role")

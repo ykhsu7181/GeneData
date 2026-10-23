@@ -13,37 +13,52 @@
 
 | 页面 | 前端路由 | 主要接口 | 后端入口 | 查询 service | 数据来源 |
 | --- | --- | --- | --- | --- | --- |
-| 首页 Dashboard | `/dashboard` | `GET /gd/api/warehouse/dashboard/` | `files.dashboard_views.warehouse_dashboard` | `files.services.dashboard_service.build_dashboard_payload` | `Species / Accession / Sample / Dataset / DataFile / FileRelation` |
-| 数据一览表 | `/data-overview` | `GET /gd/api/files/query/data-overview/` | `files.query_views.query_data_overview` | `files.services.query_service.get_data_overview_payload` | `Accession + DataFile + FileRelation` |
-| 数据一览表文件抽屉 | `/data-overview` | `GET /gd/api/files/query/data-overview-files/` | `files.query_views.query_data_overview_files` | `files.services.query_service.get_data_overview_files_payload` | `DataFile + FileRelation` |
+| 首页 Portal | `/dashboard` | `GET /gd/api/warehouse/dashboard/` | `files.dashboard_views.warehouse_dashboard` | `files.services.dashboard_service.build_dashboard_payload` | `Assembly / Species / Annotation / Accession` |
+| 数据一览表 | `/data-overview` | `GET /gd/api/files/query/data-overview/` | `files.query_views.query_data_overview` | `files.services.data_overview_v2_service.build_data_overview_payload` | `DataFile + FileRelation`（文件级分页） |
+| DataFile 安全详情 | `/data-overview` | `GET /gd/api/files/data-files/<file_id>/detail/` | `files.datafile_api_views.datafile_detail` | `files.services.data_overview_v2_service.build_datafile_detail_payload` | `DataFile + FileRelation`（不返回 `file_path`） |
 | 原始数据 | `/raw-data` | `GET /gd/api/files/query/raw-data/` | `files.query_views.query_raw_data` | `files.services.query_service.get_raw_data_payload` | `DataFile.description.raw_data + FileRelation` |
-| Genome 数据列表 | `/genome-card` | `GET /gd/api/files/query/genome-list/` | `files.query_views.query_genome_list` | `files.services.query_service.get_genome_list_payload` | `Species / Accession / Assembly / DataFile / FileRelation` |
-| Genome 文件抽屉 | `/genome-card` | `GET /gd/api/files/query/genome-files/` | `files.query_views.query_genome_files` | `files.services.query_service.get_genome_files_payload` | `DataFile + FileRelation` |
+| Assembly 详情 | `/assembly/:assemblyId` | `GET /gd/api/files/assemblies/<assembly_id>/summary/` | `files.assembly_api_views.assembly_summary` | `files.services.assembly_detail_service.get_assembly_detail` | `Species / Accession / Assembly / Annotation / DataFile / FileRelation` |
+| Assembly 相关文件 | `/assembly/:assemblyId` | `GET /gd/api/files/accessions/<accession>/files/` | `files.accession_api_views.accession_files` | `files.services.accession_detail_service.get_accession_files` | `DataFile + FileRelation` |
 | Transcriptome 数据列表 | `/transcriptome-overview` | `GET /gd/api/files/query/transcriptome-list/` | `files.query_views.query_transcriptome_list` | `files.services.query_service.get_transcriptome_list_payload` | `Species / Accession / Assembly / Sample / DataFile / FileRelation` |
 | Transcriptome 文件抽屉 | `/transcriptome-overview` | `GET /gd/api/files/query/transcriptome-files/` | `files.query_views.query_transcriptome_files` | `files.services.query_service.get_transcriptome_files_payload` | `DataFile + FileRelation` |
 | Accession 合并页 | `/accession-card` | `GET /gd/api/files/accessions/<accession>/` | `files.views.accession_detail` | `files.services.file_relation_service` | `Accession / Assembly / Annotation / DataFile / FileRelation` |
 | DataFile 下载 | 所有文件列表 | `GET /gd/api/files/data-files/<file_id>/download/` | `files.views.download_datafile` | - | `DataFile.file_path` |
 
-## Dashboard 单聚合接口
+`/genome-card` 已退出导航并作为兼容路由保留：带数字 `assembly` 查询参数时重定向到对应 Assembly 详情；只有 Accession 上下文时重定向到 Accession 详情；无上下文时重定向到 Accession 选择页。旧 Genome 查询接口暂保留为后端兼容能力，不再由正式前端页面调用。
 
-首页只允许调用一个统计聚合接口：
+## 首页 Portal 接口
+
+首页只调用一个轻量接口：
 
 ```http
 GET /gd/api/warehouse/dashboard/
 ```
 
-返回内容包含：
+响应示例：
 
-- `summary`：总体统计
-- `species_cards`：首页物种卡片
-- `resource_summary`：数据资源统计
-- `sub_population_distribution`：亚群分布
-- `xi_distribution`：XI 分布
-- `geo_distribution`：地理分布
-- `recent_updates`：最近更新
-- `hot_keywords`：热门搜索词
+```json
+{
+  "summary": {
+    "assembly_count": 100,
+    "species_count": 50,
+    "annotation_count": 1000000,
+    "accession_count": 500
+  },
+  "featured_accessions": [
+    {
+      "accession": "IR64",
+      "species_scientific_name": "Oryza sativa",
+      "species_common_name": "Rice",
+      "assembly": "IRGSP-1.0",
+      "annotation": "v1.0"
+    }
+  ]
+}
+```
 
-前端不应再自行并发多个接口后拼首页统计，避免口径不一致。
+`featured_accessions` 的顺序由环境变量 `GENEDATA_FEATURED_ACCESSIONS` 控制，使用英文逗号分隔；不存在的 Accession 会被忽略，最多返回 5 条。
+
+首页不再返回物种卡片、资源概览、分布图、地图和最近更新数据。
 
 ## 查询 Service 层约定
 
@@ -55,7 +70,7 @@ GET /gd/api/warehouse/dashboard/
 
 具体查询逻辑按页面拆分：
 
-- `dashboard_service.py`：首页统计聚合
+- `dashboard_service.py`：首页四项统计与 Featured Accessions
 - `data_overview_service.py`：数据一览表矩阵和明细
 - `raw_data_service.py`：原始数据人工登记展示
 - `genome_list_service.py`：Genome 数据列表和文件抽屉

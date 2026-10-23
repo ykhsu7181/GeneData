@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GeneData 注释页面整改草图</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #eef5fd; color: #0b2f67; font: 14px Inter, "Microsoft YaHei", Arial, sans-serif; }
+    button, select, input { font: inherit; }
+    .top { height: 74px; background: #fff; border-bottom: 1px solid #dce8f6; display: flex; align-items: center; position: sticky; top: 0; z-index: 10; }
+    .nav, .page { width: min(1480px, calc(100% - 48px)); margin: auto; }
+    .nav { display: flex; align-items: center; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .leaf { width: 27px; height: 43px; border-radius: 100% 0 100% 0; background: linear-gradient(145deg, #05a2ac, #0876b5); transform: rotate(18deg); }
+    .brand b { font-size: 27px; letter-spacing: -1px; }
+    .brand small { display: block; color: #6680a3; font-weight: 600; }
+    .links { margin-left: auto; display: flex; align-items: center; gap: 38px; font-weight: 700; color: #18375f; }
+    .links .active { color: #0668dc; position: relative; }
+    .links .active::after { content: ""; position: absolute; left: 0; right: 0; bottom: -27px; height: 3px; background: #1681ee; }
+    .lang { border: 1px solid #cadcf2; padding: 12px 18px; border-radius: 10px; }
+    .page { padding: 22px 0 48px; }
+    .crumb { color: #547398; margin: 4px 0 10px; }
+    .crumb span { color: #0a6fe8; }
+    .hero { margin-bottom: 14px; }
+    .hero h1 { font-size: 34px; margin: 0; letter-spacing: -1px; }
+    .context, .summary, .card { background: #fff; border: 1px solid #cfe0f5; border-radius: 14px; box-shadow: 0 4px 18px rgba(30, 78, 134, .05); }
+    .context { padding: 18px 20px; }
+    .context-scroll { overflow-x: auto; padding-bottom: 2px; }
+    .context-top { min-width: 1180px; display: grid; grid-template-columns: minmax(140px, .8fr) minmax(210px, 1.2fr) minmax(220px, 1.3fr) minmax(145px, .75fr) minmax(155px, .8fr) 110px; gap: 12px; align-items: end; }
+    .field label { display: block; font-weight: 700; color: #294b76; margin: 0 0 8px; }
+    .control { width: 100%; height: 46px; border: 1px solid #cbdcf1; border-radius: 9px; background: #fff; color: #163a68; padding: 0 40px 0 14px; outline: none; }
+    .control:focus { border-color: #248af0; box-shadow: 0 0 0 3px rgba(36, 138, 240, .12); }
+    .primary { height: 46px; border: 0; border-radius: 9px; background: linear-gradient(135deg, #369af8, #0875df); color: #fff; font-weight: 800; cursor: pointer; }
+    .context-tools { display: flex; align-items: center; gap: 12px; border-top: 1px solid #e5edf7; margin-top: 14px; padding-top: 14px; }
+    .spacer { flex: 1; }
+    .ghost { height: 42px; padding: 0 18px; border: 1px solid #cbdcf1; border-radius: 9px; background: #fff; color: #1d5fa9; font-weight: 700; cursor: pointer; }
+    .seg { display: flex; border: 1px solid #c8dbf2; border-radius: 9px; overflow: hidden; height: 42px; }
+    .seg button { border: 0; background: #fff; color: #385b84; padding: 0 18px; font-weight: 700; cursor: pointer; }
+    .seg .on { background: #167fed; color: #fff; }
+    .active-context { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: #627b9d; }
+    .tag { padding: 5px 10px; border-radius: 999px; background: #eaf3ff; color: #0968d3; font-weight: 700; }
+    .tag.green { background: #e8f7ed; color: #278241; }
+    .summary { margin: 16px 0; display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; }
+    .metric { padding: 16px 24px; border-right: 1px solid #dfebf8; display: flex; align-items: center; justify-content: space-between; }
+    .metric:last-child { border: 0; }
+    .metric span { color: #557294; font-weight: 700; }
+    .metric b { font-size: 23px; color: #075fda; }
+    .card { padding: 18px 22px 20px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    .card-head h2 { font-size: 21px; color: #0864d7; margin: 0; display: flex; align-items: center; gap: 9px; }
+    .card-head h2::before { content: "▤"; font-size: 18px; }
+    .result { color: #6c83a0; }
+    .table-wrap { overflow: auto; border: 1px solid #dce7f3; border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+    th { background: #edf5fe; color: #1b477b; text-align: left; padding: 13px 12px; font-weight: 800; }
+    td { padding: 14px 12px; border-top: 1px solid #e2eaf4; color: #3a5272; vertical-align: top; }
+    tbody tr:hover { background: #f7fbff; }
+    .feature { color: #0568de; font-weight: 700; }
+    .attrs { line-height: 1.65; }
+    .attrs b { color: #72839a; }
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; color: #536e90; }
+    .pagebtn { min-width: 34px; height: 34px; border: 1px solid #d1e0f2; background: #fff; border-radius: 7px; color: #235b9e; }
+    .pagebtn.on { background: #167fec; color: #fff; border-color: #167fec; }
+    .note { margin-top: 12px; color: #778ba5; font-size: 12px; }
+    @media (max-width: 1000px) {
+      .links { gap: 18px; }
+      .context-tools { flex-wrap: wrap; }
+      .context-tools .spacer { display: none; }
+      .summary { grid-template-columns: 1fr; }
+      .metric { border-right: 0; border-bottom: 1px solid #dfebf8; }
+      .nav, .page { width: calc(100% - 28px); }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="nav">
+      <div class="brand"><i class="leaf"></i><div><b>GeneData</b><small>基因组数据仓库</small></div></div>
+      <nav class="links"><span>首页</span><span>品种信息</span><span>基因组</span><span>数据资源⌄</span><span class="active">更多⌄</span><span class="lang">▣ 中文</span></nav>
+    </div>
+  </header>
+  <main class="page">
+    <div class="crumb"><span>首页</span>　/　注释</div>
+    <div class="hero"><h1>注释</h1></div>
+    <section class="context" aria-label="注释检索条件">
+      <div class="context-scroll">
+        <div class="context-top">
+          <div class="field"><label for="accession">Accession</label><input id="accession" class="control" value="B7"></div>
+          <div class="field"><label for="assembly">Assembly</label><select id="assembly" class="control"><option>Demo visualization assembly</option></select></div>
+          <div class="field"><label for="annotation">Annotation</label><select id="annotation" class="control"><option>Demo visualization annotation</option></select></div>
+          <div class="field"><label for="chromosome">染色体</label><select id="chromosome" class="control"><option>全部染色体</option><option>chr1</option><option>chr2</option></select></div>
+          <div class="field"><label for="feature">特征类型</label><select id="feature" class="control"><option>全部特征</option><option>gene</option><option>mRNA</option><option>exon</option><option>CDS</option></select></div>
+          <button class="primary" type="button">检索</button>
+        </div>
+      </div>
+      <div class="context-tools">
+        <div class="active-context"><span>当前数据：</span><span class="tag">B7</span><span class="tag">Demo visualization assembly</span><span class="tag green">Demo visualization annotation</span></div>
+        <div class="spacer"></div><button class="ghost reset" type="button">重置筛选</button>
+        <div class="seg" aria-label="视图切换"><button class="on" type="button">▦ 列表</button><button type="button">▧ 图形</button></div>
+      </div>
+    </section>
+    <section class="summary">
+      <div class="metric"><span>总特征数</span><b>17</b></div><div class="metric"><span>染色体数</span><b>2</b></div><div class="metric"><span>特征类型数</span><b>4</b></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>注释数据列表</h2><div class="result">共 17 条结果</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>染色体</th><th>特征</th><th>起点 ↕</th><th>终点 ↕</th><th>长度 ↕</th><th>链</th><th>来源</th><th>评分</th><th>属性</th></tr></thead>
+        <tbody>
+          <tr><td>chr1</td><td class="feature">gene</td><td>610</td><td>900</td><td>291</td><td>−</td><td>demo</td><td>—</td><td class="attrs"><b>ID:</b> gene_chr1_2<br><b>Name:</b> DemoGene2</td></tr>
+          <tr><td>chr1</td><td class="feature">mRNA</td><td>610</td><td>900</td><td>291</td><td>−</td><td>demo</td><td>—</td><td class="attrs"><b>ID:</b> mrna_chr1_2<br><b>Parent:</b> gene_chr1_2<br><b>Name:</b> DemoTranscript2</td></tr>
+          <tr><td>chr1</td><td class="feature">exon</td><td>610</td><td>720</td><td>111</td><td>−</td><td>demo</td><td>—</td><td class="attrs"><b>ID:</b> exon_chr1_2a<br><b>Parent:</b> mrna_chr1_2</td></tr>
+          <tr><td>chr1</td><td class="feature">CDS</td><td>650</td><td>720</td><td>71</td><td>−</td><td>demo</td><td>—</td><td class="attrs"><b>ID:</b> cds_chr1_2a<br><b>Parent:</b> mrna_chr1_2</td></tr>
+          <tr><td>chr2</td><td class="feature">gene</td><td>150</td><td>760</td><td>611</td><td>+</td><td>demo</td><td>—</td><td class="attrs"><b>ID:</b> gene_chr2_1<br><b>Name:</b> DemoGene3</td></tr>
+        </tbody>
+      </table></div>
+      <div class="pagination"><span>共 17 条</span><button class="pagebtn">50 条/页⌄</button><button class="pagebtn">‹</button><button class="pagebtn on">1</button><button class="pagebtn">›</button><span>前往</span><button class="pagebtn">1</button><span>页</span></div>
+      <div class="note">草图说明：保留现有列表结构；Accession、Assembly、Annotation 为联动数据上下文，染色体与特征类型仅过滤当前注释结果。</div>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('.seg button').forEach((button) => button.addEventListener('click', () => {
+      document.querySelectorAll('.seg button').forEach((item) => item.classList.remove('on'));
+      button.classList.add('on');
+    }));
+    document.querySelector('.primary').addEventListener('click', () => document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }));
+    document.querySelector('.reset').addEventListener('click', () => {
+      document.querySelector('#chromosome').selectedIndex = 0;
+      document.querySelector('#feature').selectedIndex = 0;
+    });
+  </script>
+</body>
+</html>

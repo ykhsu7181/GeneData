@@ -1,0 +1,4 @@
+dataset_code	dataset_name	dataset_type	accession	relation_role	file_code	file_role	is_primary	sha256
+DS_IR64_REFERENCE_V1	IR64 Reference Genome and Annotation v1	genome	IR64	reference	FILE000013	genome	yes	df205b6bff738e32a72553bd7148c704ad5ff3db885190c7449c6f6864730070
+DS_IR64_REFERENCE_V1	IR64 Reference Genome and Annotation v1	genome	IR64	reference	FAI_14	genome_index	no	126ba3295604f9550ba705de62e73214784333553ad8157ed96c630e71819024
+DS_IR64_REFERENCE_V1	IR64 Reference Genome and Annotation v1	genome	IR64	reference	FILE000001	annotation	yes	1245cf9a83d5b0bbcd4f8225283e921c08f0ecc2db7ffb0054f673481e5b7d20

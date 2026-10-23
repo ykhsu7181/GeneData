@@ -33,6 +33,41 @@ MANUAL_FILES_DIR = os.environ.get(
     "GENEDATA_MANUAL_FILES_DIR",
     "/home/labuser/rdcheng/gd/manual_files",
 )
+GENEDATA_DERIVED_DATA_DIR = os.environ.get(
+    "GENEDATA_DERIVED_DATA_DIR",
+    "/home/labuser/rdcheng/gd/derived_data",
+)
+GENEDATA_JBROWSE_DATA_DIR = os.environ.get(
+    "GENEDATA_JBROWSE_DATA_DIR",
+    os.path.join(GENEDATA_DERIVED_DATA_DIR, "jbrowse"),
+)
+GENEDATA_BGZIP_COMMAND = os.environ.get("GENEDATA_BGZIP_COMMAND", "bgzip")
+GENEDATA_TABIX_COMMAND = os.environ.get("GENEDATA_TABIX_COMMAND", "tabix")
+GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX = os.environ.get(
+    "GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX",
+    "/_protected_manual_files/",
+)
+GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX = os.environ.get(
+    "GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX",
+    "/_protected_derived_data/",
+)
+GENEDATA_EXTERNAL_ARCHIVE_ROOT = required_environment(
+    "GENEDATA_EXTERNAL_ARCHIVE_ROOT"
+)
+GENEDATA_EXTERNAL_ARCHIVE_INTERNAL_URI = os.environ.get(
+    "GENEDATA_EXTERNAL_ARCHIVE_INTERNAL_URI",
+    "/_protected_external_archives/",
+)
+GENEDATA_PROTECTED_FILE_ROOTS = {
+    "manual": {
+        "path": MANUAL_FILES_DIR,
+        "internal_uri": GENEDATA_JBROWSE_MANUAL_INTERNAL_PREFIX,
+    },
+    "derived": {
+        "path": GENEDATA_DERIVED_DATA_DIR,
+        "internal_uri": GENEDATA_JBROWSE_DERIVED_INTERNAL_PREFIX,
+    },
+}
 
 LOGGING = {
     "version": 1,
@@ -83,3 +118,23 @@ X_FRAME_OPTIONS = "DENY"
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = ["https://riceome.hzau.edu.cn"]
 CORS_ALLOW_CREDENTIALS = True
+
+# HTTPS is terminated by the production reverse proxy. Cookie protections are
+# unconditional; redirect and HSTS require an explicit operator decision after
+# the proxy headers and HTTPS redirect have been verified.
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = os.environ.get(
+    "GENEDATA_SECURE_SSL_REDIRECT", "false"
+).strip().lower() in {"1", "true", "yes"}
+SECURE_HSTS_SECONDS = int(os.environ.get("GENEDATA_SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get(
+    "GENEDATA_SECURE_HSTS_INCLUDE_SUBDOMAINS", "false"
+).strip().lower() in {"1", "true", "yes"}
+SECURE_HSTS_PRELOAD = os.environ.get(
+    "GENEDATA_SECURE_HSTS_PRELOAD", "false"
+).strip().lower() in {"1", "true", "yes"}
+if os.environ.get("GENEDATA_TRUST_X_FORWARDED_PROTO", "false").strip().lower() in {
+    "1", "true", "yes",
+}:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

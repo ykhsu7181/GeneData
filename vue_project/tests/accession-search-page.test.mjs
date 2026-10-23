@@ -11,19 +11,19 @@ const source = fs.readFileSync(
 );
 
 test('accession card is a searchable landing page', () => {
-  assert.match(source, /v-model="selectedAccession"/);
-  assert.match(source, /搜索 Accession \/ 品种 \/ 亚群/);
-  assert.match(source, /\/files\/query\/organisms\//);
-  assert.match(source, /<el-empty[^>]+description=/);
-  assert.match(source, /<AccessionDetailTableView v-if="routeAccession" embedded/);
+  assert.match(source, /<template v-if="!routeAccession">/);
+  assert.match(source, /<AccessionPortalHeader/);
+  assert.match(source, /<AccessionSearchPanel @select="openAccession"/);
+  assert.match(source, /<AccessionDetailTableView v-else embedded/);
   assert.doesNotMatch(source, /page-kicker">\s*ACCESSION\s*</);
   assert.doesNotMatch(source, /\/files\/accessions\//);
   assert.doesNotMatch(source, /accessionDetail/);
+  assert.doesNotMatch(source, /localStorage/);
 });
 
 test('selecting an accession keeps the canonical page and expands inline details', () => {
   assert.match(source, /name:\s*'accession-card'/);
   assert.match(source, /accession:\s*normalizedAccession/);
-  assert.match(source, /handleSearchVisibleChange/);
-  assert.match(source, /fetchAccessions\(''\)/);
+  assert.match(source, /delete query\.organism/);
+  assert.match(source, /<AccessionDetailTableView v-else embedded/);
 });
