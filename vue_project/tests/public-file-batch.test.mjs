@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   buildFilteredManifestUrl,
+  buildPublicFileBatchScript,
   buildPublicFileCacheScript,
   expandDownloadFiles,
 } from '../src/utils/publicFileBatch.mjs'
@@ -69,4 +70,19 @@ test('rejects cross-origin content URLs before adding the bearer token', () => {
     }], { baseUrl: 'https://genedata.example/' }),
     /Cross-origin content URL rejected/,
   )
+})
+
+test('builds a strict immutable batch workflow without embedding a token', () => {
+  const script = buildPublicFileBatchScript([genome], {
+    baseUrl: 'https://genedata.example/public-files',
+  })
+
+  assert.match(script, /batch:create and batch:read scopes/)
+  assert.match(script, /\/gd\/api\/v1\/file-batches\//)
+  assert.match(script, /"strict":true/)
+  assert.match(script, /FILE000957/)
+  assert.match(script, /FILE003921/)
+  assert.match(script, /manifest_tsv_url/)
+  assert.match(script, /GENEDATA_IDEMPOTENCY_KEY/)
+  assert.doesNotMatch(script, /Bearer [A-Za-z0-9_-]{10,}/)
 })

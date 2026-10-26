@@ -92,6 +92,57 @@ export const buildPublicFileCacheScript = (
   ].join('\n')
 }
 
+export const buildPublicFileBatchScript = (
+  rows,
+  { baseUrl, includeCompanions = true, name = 'public-catalog-selection' } = {},
+) => {
+  const files = expandDownloadFiles(rows, { includeCompanions })
+  if (!files.length) return ''
+  const origin = new URL(baseUrl).origin
+  const payload = JSON.stringify({
+    name: normalizedText(name).slice(0, 255),
+    strict: true,
+    file_codes: files.map(file => file.fileCode),
+  })
+  return [
+    '#!/usr/bin/env bash',
+    'set -euo pipefail',
+    '',
+    ': "${GENEDATA_TOKEN:?Please export GENEDATA_TOKEN with batch:create and batch:read scopes}"',
+    `BASE_URL=${shellQuote(origin)}`,
+    'OUTPUT_DIR="${GENEDATA_BATCH_OUTPUT_DIR:-$PWD/genedata_batch}"',
+    'BATCH_JSON="$OUTPUT_DIR/batch.json"',
+    'MANIFEST_TSV="$OUTPUT_DIR/manifest.tsv"',
+    'mkdir -p "$OUTPUT_DIR"',
+    '',
+    'curl_args=(',
+    '  --fail-with-body --silent --show-error',
+    '  -X POST "$BASE_URL/gd/api/v1/file-batches/"',
+    '  -H "Authorization: Bearer $GENEDATA_TOKEN"',
+    '  -H "Content-Type: application/json"',
+    `  --data ${shellQuote(payload)}`,
+    '  -o "$BATCH_JSON"',
+    ')',
+    'if [ -n "${GENEDATA_IDEMPOTENCY_KEY:-}" ]; then',
+    '  curl_args+=( -H "Idempotency-Key: $GENEDATA_IDEMPOTENCY_KEY" )',
+    'fi',
+    'if ! curl "${curl_args[@]}"; then',
+    '  cat "$BATCH_JSON" >&2 || true',
+    '  exit 1',
+    'fi',
+    '',
+    'read -r BATCH_ID MANIFEST_URL SNAPSHOT_SHA256 < <(',
+    '  python3 -c \'import json,sys; p=json.load(open(sys.argv[1], encoding="utf-8")); print(p["batch_id"], p["manifest_tsv_url"], p["snapshot_sha256"])\' "$BATCH_JSON"',
+    ')',
+    'curl --fail-with-body --silent --show-error \\',
+    '  -H "Authorization: Bearer $GENEDATA_TOKEN" \\',
+    '  "$BASE_URL$MANIFEST_URL" \\',
+    '  -o "$MANIFEST_TSV"',
+    'printf \'batch_id=%s\\nsnapshot_sha256=%s\\nmanifest=%s\\n\' \\',
+    '  "$BATCH_ID" "$SNAPSHOT_SHA256" "$MANIFEST_TSV"',
+  ].join('\n')
+}
+
 export const buildFilteredManifestUrl = (manifestPath, filters, baseUrl) => {
   const url = new URL(manifestPath, baseUrl)
   for (const [key, value] of Object.entries(filters || {})) {

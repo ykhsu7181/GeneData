@@ -43,8 +43,11 @@
         <div class="batch-actions">
           <el-checkbox v-model="includeCompanions" :disabled="!selectedRows.length">{{ labels.includeIndexes }}</el-checkbox>
           <el-button :disabled="!selectedRows.length" @click="clearSelection">{{ labels.clearSelection }}</el-button>
-          <el-button type="primary" :disabled="!selectedRows.length" @click="openBatchScript">
-            {{ labels.generateScript }}
+          <el-button :disabled="!selectedRows.length" @click="openBatchApiScript">
+            {{ labels.generateBatchScript }}
+          </el-button>
+          <el-button type="primary" :disabled="!selectedRows.length" @click="openCacheScript">
+            {{ labels.generateCacheScript }}
           </el-button>
         </div>
       </header>
@@ -128,10 +131,10 @@
       </div>
     </el-drawer>
 
-    <el-dialog v-model="batchDialogOpen" :title="labels.cacheTitle" width="min(860px, 94vw)">
-      <el-alert :title="labels.cacheIntro" type="info" show-icon :closable="false" />
+    <el-dialog v-model="batchDialogOpen" :title="scriptDialogTitle" width="min(860px, 94vw)">
+      <el-alert :title="scriptDialogIntro" type="info" show-icon :closable="false" />
       <p class="batch-dialog-summary">
-        {{ labels.downloadFiles.replace('{count}', selectedDownloadCount) }}
+        {{ scriptDialogSummary.replace('{count}', selectedDownloadCount) }}
       </p>
       <el-input v-model="batchScript" type="textarea" :rows="18" readonly class="batch-script" />
       <template #footer>
@@ -151,6 +154,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { fetchPublicFileDetail, fetchPublicFiles, publicFileManifestUrl } from '@/services/publicFileCatalog'
 import {
   buildFilteredManifestUrl,
+  buildPublicFileBatchScript,
   buildPublicFileCacheScript,
   expandDownloadFiles,
 } from '@/utils/publicFileBatch.mjs'
@@ -162,8 +166,9 @@ const labels = computed(() => Object.fromEntries([
   'title', 'intro', 'breadcrumb', 'manifest', 'filters', 'fileName', 'role', 'format',
   'size', 'list', 'items', 'downloadNote', 'fileCode', 'copyCommand', 'empty',
   'loadFailed', 'copySha', 'apiUrl', 'copied', 'copyFailed', 'selected',
-  'includeIndexes', 'clearSelection', 'generateScript', 'cacheTitle', 'cacheIntro',
-  'downloadFiles', 'copyScript', 'generationFailed'
+  'includeIndexes', 'clearSelection', 'generateCacheScript', 'generateBatchScript',
+  'cacheTitle', 'cacheIntro', 'downloadFiles', 'batchTitle', 'batchIntro',
+  'batchFiles', 'copyScript', 'generationFailed'
 ].map(key => [key, t(`page.publicFileCatalog.${key}`)]).concat([
   ['home', t('nav.home')], ['search', t('common.search')], ['reset', t('common.reset')],
   ['actions', t('common.actions')], ['details', t('common.details')], ['retry', t('common.retry')],
@@ -188,6 +193,7 @@ const selectedRows = ref([])
 const includeCompanions = ref(true)
 const batchDialogOpen = ref(false)
 const batchScript = ref('')
+const scriptMode = ref('cache')
 let listController = null
 let detailController = null
 
@@ -201,6 +207,9 @@ const selectedFiles = computed(() => expandDownloadFiles(selectedRows.value, {
 }))
 const selectedDownloadCount = computed(() => selectedFiles.value.length)
 const selectedSize = computed(() => selectedFiles.value.reduce((total, item) => total + item.size, 0))
+const scriptDialogTitle = computed(() => scriptMode.value === 'batch' ? labels.value.batchTitle : labels.value.cacheTitle)
+const scriptDialogIntro = computed(() => scriptMode.value === 'batch' ? labels.value.batchIntro : labels.value.cacheIntro)
+const scriptDialogSummary = computed(() => scriptMode.value === 'batch' ? labels.value.batchFiles : labels.value.downloadFiles)
 
 const queryValue = value => Array.isArray(value) ? value[0] : value
 const routeQuery = () => {
@@ -253,9 +262,9 @@ const clearSelection = () => {
   catalogTable.value?.clearSelection()
   selectedRows.value = []
 }
-const openBatchScript = () => {
+const openScriptDialog = (mode, builder) => {
   try {
-    batchScript.value = buildPublicFileCacheScript(selectedRows.value, {
+    batchScript.value = builder(selectedRows.value, {
       baseUrl: window.location.origin,
       includeCompanions: includeCompanions.value,
     })
@@ -264,8 +273,11 @@ const openBatchScript = () => {
     return
   }
   if (!batchScript.value) return
+  scriptMode.value = mode
   batchDialogOpen.value = true
 }
+const openCacheScript = () => openScriptDialog('cache', buildPublicFileCacheScript)
+const openBatchApiScript = () => openScriptDialog('batch', buildPublicFileBatchScript)
 const openDetail = async fileCode => {
   detailController?.abort()
   detailController = new AbortController()
