@@ -11,7 +11,7 @@
           <h1>{{ labels.title }}</h1>
           <p>{{ labels.intro }}</p>
         </div>
-        <a class="manifest-button" :href="manifestUrl">
+        <a class="manifest-button" :href="filteredManifestUrl">
           <el-icon><Download /></el-icon>{{ labels.manifest }}
         </a>
       </div>
@@ -34,14 +34,37 @@
 
     <section class="catalog-card">
       <header class="catalog-heading">
-        <h2>{{ labels.list }} <small>{{ totalCount }} {{ labels.items }}</small></h2>
+        <div>
+          <h2>{{ labels.list }} <small>{{ totalCount }} {{ labels.items }}</small></h2>
+          <p v-if="selectedRows.length" class="selection-summary">
+            {{ labels.selected.replace('{count}', selectedRows.length).replace('{size}', formatBytes(selectedSize)) }}
+          </p>
+        </div>
+        <div class="batch-actions">
+          <el-checkbox v-model="includeCompanions" :disabled="!selectedRows.length">{{ labels.includeIndexes }}</el-checkbox>
+          <el-button :disabled="!selectedRows.length" @click="clearSelection">{{ labels.clearSelection }}</el-button>
+          <el-button type="primary" :disabled="!selectedRows.length" @click="openBatchScript">
+            {{ labels.generateScript }}
+          </el-button>
+        </div>
       </header>
 
       <el-alert v-if="loadError" :title="labels.loadFailed" type="error" show-icon :closable="false">
         <template #default><el-button size="small" @click="loadFiles">{{ labels.retry }}</el-button></template>
       </el-alert>
 
-      <el-table v-loading="loading" :data="rows" border stripe row-key="file_code" class="catalog-table" :empty-text="labels.empty">
+      <el-table
+        ref="catalogTable"
+        v-loading="loading"
+        :data="rows"
+        border
+        stripe
+        row-key="file_code"
+        class="catalog-table"
+        :empty-text="labels.empty"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="48" fixed="left" reserve-selection />
         <el-table-column prop="file_code" :label="labels.fileCode" width="132" fixed="left" />
         <el-table-column prop="file_name" :label="labels.fileName" min-width="270" show-overflow-tooltip />
         <el-table-column prop="accession" label="Accession" width="135">
@@ -104,6 +127,18 @@
         </footer>
       </div>
     </el-drawer>
+
+    <el-dialog v-model="batchDialogOpen" :title="labels.cacheTitle" width="min(860px, 94vw)">
+      <el-alert :title="labels.cacheIntro" type="info" show-icon :closable="false" />
+      <p class="batch-dialog-summary">
+        {{ labels.downloadFiles.replace('{count}', selectedDownloadCount) }}
+      </p>
+      <el-input v-model="batchScript" type="textarea" :rows="18" readonly class="batch-script" />
+      <template #footer>
+        <el-button @click="batchDialogOpen = false">{{ labels.close }}</el-button>
+        <el-button type="primary" @click="copyText(batchScript, labels.copyScript)">{{ labels.copyScript }}</el-button>
+      </template>
+    </el-dialog>
   </main>
 </template>
 
@@ -114,6 +149,11 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchPublicFileDetail, fetchPublicFiles, publicFileManifestUrl } from '@/services/publicFileCatalog'
+import {
+  buildFilteredManifestUrl,
+  buildPublicFileCacheScript,
+  expandDownloadFiles,
+} from '@/utils/publicFileBatch.mjs'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -121,13 +161,15 @@ const router = useRouter()
 const labels = computed(() => Object.fromEntries([
   'title', 'intro', 'breadcrumb', 'manifest', 'filters', 'fileName', 'role', 'format',
   'size', 'list', 'items', 'downloadNote', 'fileCode', 'copyCommand', 'empty',
-  'loadFailed', 'copySha', 'apiUrl', 'copied', 'copyFailed'
+  'loadFailed', 'copySha', 'apiUrl', 'copied', 'copyFailed', 'selected',
+  'includeIndexes', 'clearSelection', 'generateScript', 'cacheTitle', 'cacheIntro',
+  'downloadFiles', 'copyScript', 'generationFailed'
 ].map(key => [key, t(`page.publicFileCatalog.${key}`)]).concat([
   ['home', t('nav.home')], ['search', t('common.search')], ['reset', t('common.reset')],
-  ['actions', t('common.actions')], ['details', t('common.details')], ['retry', t('common.retry')]
+  ['actions', t('common.actions')], ['details', t('common.details')], ['retry', t('common.retry')],
+  ['close', t('common.close')]
 ])))
 
-const manifestUrl = publicFileManifestUrl
 const filterKeys = ['name_contains', 'accession', 'assembly', 'role', 'format', 'dataset']
 const draft = reactive(Object.fromEntries(filterKeys.map(key => [key, ''])))
 const applied = reactive(Object.fromEntries(filterKeys.map(key => [key, ''])))
@@ -141,8 +183,24 @@ const drawerOpen = ref(false)
 const detailLoading = ref(false)
 const detailError = ref(false)
 const detail = ref(null)
+const catalogTable = ref(null)
+const selectedRows = ref([])
+const includeCompanions = ref(true)
+const batchDialogOpen = ref(false)
+const batchScript = ref('')
 let listController = null
 let detailController = null
+
+const filteredManifestUrl = computed(() => buildFilteredManifestUrl(
+  publicFileManifestUrl,
+  Object.fromEntries(filterKeys.map(key => [key, applied[key]])),
+  window.location.origin,
+))
+const selectedFiles = computed(() => expandDownloadFiles(selectedRows.value, {
+  includeCompanions: includeCompanions.value,
+}))
+const selectedDownloadCount = computed(() => selectedFiles.value.length)
+const selectedSize = computed(() => selectedFiles.value.reduce((total, item) => total + item.size, 0))
 
 const queryValue = value => Array.isArray(value) ? value[0] : value
 const routeQuery = () => {
@@ -190,6 +248,24 @@ const resetFilters = () => {
 }
 const changePage = () => navigate()
 const changePageSize = () => { currentPage.value = 1; navigate() }
+const handleSelectionChange = selection => { selectedRows.value = selection }
+const clearSelection = () => {
+  catalogTable.value?.clearSelection()
+  selectedRows.value = []
+}
+const openBatchScript = () => {
+  try {
+    batchScript.value = buildPublicFileCacheScript(selectedRows.value, {
+      baseUrl: window.location.origin,
+      includeCompanions: includeCompanions.value,
+    })
+  } catch (_) {
+    ElMessage.error(labels.value.generationFailed)
+    return
+  }
+  if (!batchScript.value) return
+  batchDialogOpen.value = true
+}
 const openDetail = async fileCode => {
   detailController?.abort()
   detailController = new AbortController()
@@ -251,5 +327,5 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.public-files-page{min-height:calc(100vh - 160px);color:#102c55}.breadcrumb{display:flex;gap:8px;align-items:center;margin-bottom:8px;color:#4b6693;font-size:13px}.breadcrumb a{color:#31558f;text-decoration:none}.heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.page-heading h1{margin:0;color:#0a2b73;font-size:30px}.page-heading p{margin:8px 0 0;color:#607896}.manifest-button{display:inline-flex;align-items:center;gap:7px;padding:11px 16px;border-radius:9px;background:#0874e8;color:#fff;font-weight:700;text-decoration:none;white-space:nowrap}.filter-panel{display:grid;grid-template-columns:2fr repeat(5,minmax(125px,1fr)) auto auto;gap:10px;margin:18px 0;padding:16px;border:1px solid #d9e6f5;border-radius:14px;background:#fff}.download-note{margin-bottom:16px}.catalog-card{overflow:hidden;border:1px solid #d8e5f4;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.07)}.catalog-heading{padding:14px 18px}.catalog-heading h2{margin:0;color:#123a72;font-size:18px}.catalog-heading small{margin-left:8px;color:#647996;font-size:13px;font-weight:500}.catalog-table{width:100%}.checksum-button{padding:0;border:0;background:transparent;color:#315b91;font-family:monospace;cursor:pointer}.pagination-bar{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;color:#58708e}.detail-content{min-height:220px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;margin:0;border:1px solid #e1e9f4;border-radius:10px;overflow:hidden}.detail-grid>div{display:grid;grid-template-columns:110px 1fr;min-height:46px;padding:0 12px;align-items:center;border-right:1px solid #e7edf5;border-bottom:1px solid #e7edf5}.detail-grid .wide{grid-column:1/-1}.detail-grid dt{color:#6b7c95;font-size:12px}.detail-grid dd{min-width:0;margin:0;overflow-wrap:anywhere}.checksum{font-family:monospace}.drawer-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:1400px){.filter-panel{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:760px){.heading-row,.pagination-bar{align-items:stretch;flex-direction:column}.manifest-button{justify-content:center}.filter-panel{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}.detail-grid .wide{grid-column:auto}}
+.public-files-page{min-height:calc(100vh - 160px);color:#102c55}.breadcrumb{display:flex;gap:8px;align-items:center;margin-bottom:8px;color:#4b6693;font-size:13px}.breadcrumb a{color:#31558f;text-decoration:none}.heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.page-heading h1{margin:0;color:#0a2b73;font-size:30px}.page-heading p{margin:8px 0 0;color:#607896}.manifest-button{display:inline-flex;align-items:center;gap:7px;padding:11px 16px;border-radius:9px;background:#0874e8;color:#fff;font-weight:700;text-decoration:none;white-space:nowrap}.filter-panel{display:grid;grid-template-columns:2fr repeat(5,minmax(125px,1fr)) auto auto;gap:10px;margin:18px 0;padding:16px;border:1px solid #d9e6f5;border-radius:14px;background:#fff}.download-note{margin-bottom:16px}.catalog-card{overflow:hidden;border:1px solid #d8e5f4;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(35,83,139,.07)}.catalog-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 18px}.catalog-heading h2{margin:0;color:#123a72;font-size:18px}.catalog-heading small{margin-left:8px;color:#647996;font-size:13px;font-weight:500}.selection-summary{margin:5px 0 0;color:#516b8d;font-size:13px}.batch-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.catalog-table{width:100%}.checksum-button{padding:0;border:0;background:transparent;color:#315b91;font-family:monospace;cursor:pointer}.pagination-bar{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;color:#58708e}.detail-content{min-height:220px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;margin:0;border:1px solid #e1e9f4;border-radius:10px;overflow:hidden}.detail-grid>div{display:grid;grid-template-columns:110px 1fr;min-height:46px;padding:0 12px;align-items:center;border-right:1px solid #e7edf5;border-bottom:1px solid #e7edf5}.detail-grid .wide{grid-column:1/-1}.detail-grid dt{color:#6b7c95;font-size:12px}.detail-grid dd{min-width:0;margin:0;overflow-wrap:anywhere}.checksum{font-family:monospace}.drawer-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.batch-dialog-summary{margin:14px 0 8px;color:#425f83}.batch-script :deep(textarea){font-family:Consolas,"Liberation Mono",monospace;font-size:12px;line-height:1.55}@media(max-width:1400px){.filter-panel{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:760px){.heading-row,.catalog-heading,.pagination-bar{align-items:stretch;flex-direction:column}.batch-actions{align-items:stretch}.manifest-button{justify-content:center}.filter-panel{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}.detail-grid .wide{grid-column:auto}}
 </style>

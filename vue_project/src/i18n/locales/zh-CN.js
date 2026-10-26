@@ -126,7 +126,16 @@ const zhCN = {
       copySha: '复制 SHA-256',
       apiUrl: 'API 地址',
       copied: '已复制',
-      copyFailed: '复制失败'
+      copyFailed: '复制失败',
+      selected: '已选择 {count} 个目录文件，预计缓存 {size}',
+      includeIndexes: '自动包含 FASTA 索引（.fai）',
+      clearSelection: '清空选择',
+      generateScript: '生成批量缓存脚本',
+      cacheTitle: '登录节点批量缓存脚本',
+      cacheIntro: '请先设置 GENEDATA_TOKEN，并在登录节点运行。可通过 GENEDATA_CACHE_DIR 指定计算节点可读的共享目录；脚本支持断点续传、SHA-256 校验和原子落盘。',
+      downloadFiles: '脚本将缓存 {count} 个文件（已去重）。',
+      copyScript: '复制脚本',
+      generationFailed: '无法生成脚本：文件下载地址无效'
     },
     home: {
       title: '全部数据',

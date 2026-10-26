@@ -126,7 +126,16 @@ const enUS = {
       copySha: 'Copy SHA-256',
       apiUrl: 'API URL',
       copied: 'Copied',
-      copyFailed: 'Copy failed'
+      copyFailed: 'Copy failed',
+      selected: '{count} catalog files selected; estimated cache size {size}',
+      includeIndexes: 'Include FASTA indexes (.fai)',
+      clearSelection: 'Clear selection',
+      generateScript: 'Generate cache script',
+      cacheTitle: 'Login-node batch cache script',
+      cacheIntro: 'Set GENEDATA_TOKEN first and run this script on a login node. Set GENEDATA_CACHE_DIR to a shared directory visible to compute nodes. Downloads resume, verify SHA-256, and move into place atomically.',
+      downloadFiles: 'The script will cache {count} deduplicated files.',
+      copyScript: 'Copy script',
+      generationFailed: 'Cannot generate script: a file download URL is invalid'
     },
     home: {
       title: 'All data',

@@ -1,0 +1,72 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+
+import {
+  buildFilteredManifestUrl,
+  buildPublicFileCacheScript,
+  expandDownloadFiles,
+} from '../src/utils/publicFileBatch.mjs'
+
+const sha = character => character.repeat(64)
+const genome = {
+  file_code: 'FILE000957',
+  file_name: "genome.O'Brien.fasta",
+  sha256: sha('a'),
+  content_url: '/gd/api/v1/files/FILE000957/content/',
+  companions: [{
+    type: 'fai',
+    file_code: 'FILE003921',
+    file_name: "genome.O'Brien.fasta.fai",
+    sha256: sha('b'),
+    content_url: '/gd/api/v1/files/FILE003921/content/',
+  }],
+}
+
+test('expands authorized companions once and can exclude them', () => {
+  assert.deepEqual(
+    expandDownloadFiles([genome, genome]).map(item => item.fileCode),
+    ['FILE000957', 'FILE003921'],
+  )
+  assert.deepEqual(
+    expandDownloadFiles([genome], { includeCompanions: false }).map(item => item.fileCode),
+    ['FILE000957'],
+  )
+})
+
+test('builds a resumable verified cache script without embedding a token', () => {
+  const script = buildPublicFileCacheScript([genome], {
+    baseUrl: 'https://genedata.example/gd/',
+  })
+
+  assert.match(script, /GENEDATA_TOKEN:\?Please export GENEDATA_TOKEN first/)
+  assert.match(script, /GENEDATA_CACHE_DIR/)
+  assert.match(script, /--continue-at -/)
+  assert.match(script, /sha256sum -c -/)
+  assert.match(script, /mv -f "\$partial" "\$target"/)
+  assert.match(script, /FILE000957/)
+  assert.match(script, /FILE003921/)
+  assert.match(script, /O'"'"'Brien/, 'single quotes in file names are shell escaped')
+  assert.doesNotMatch(script, /Bearer [A-Za-z0-9_-]{10,}/)
+})
+
+test('builds a filtered manifest link and omits empty filters', () => {
+  assert.equal(
+    buildFilteredManifestUrl(
+      '/gd/api/v1/files/manifest.tsv',
+      { accession: 'IR64', role: 'genome_fasta', dataset: '' },
+      'https://genedata.example/public-files',
+    ),
+    '/gd/api/v1/files/manifest.tsv?accession=IR64&role=genome_fasta',
+  )
+})
+
+test('rejects cross-origin content URLs before adding the bearer token', () => {
+  assert.throws(
+    () => buildPublicFileCacheScript([{
+      ...genome,
+      content_url: 'https://attacker.example/collect',
+      companions: [],
+    }], { baseUrl: 'https://genedata.example/' }),
+    /Cross-origin content URL rejected/,
+  )
+})
