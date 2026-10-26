@@ -37,20 +37,17 @@
         <div>
           <h2>{{ labels.list }} <small>{{ totalCount }} {{ labels.items }}</small></h2>
           <p v-if="selectedRows.length" class="selection-summary">
-            {{ labels.selected.replace('{count}', selectedRows.length).replace('{size}', formatBytes(selectedSize)) }}
+            {{ labels.selected.replace('{count}', selectedDownloadCount).replace('{size}', formatBytes(selectedSize)) }}
           </p>
         </div>
         <div class="batch-actions">
           <el-checkbox v-model="includeCompanions" :disabled="!selectedRows.length">{{ labels.includeIndexes }}</el-checkbox>
           <el-button :disabled="!selectedRows.length" @click="clearSelection">{{ labels.clearSelection }}</el-button>
           <el-button :disabled="!selectedRows.length" @click="openBatchApiScript">
-            {{ labels.generateBatchScript }}
-          </el-button>
-          <el-button :disabled="!selectedRows.length" @click="openArchiveScript">
-            {{ labels.generateArchiveScript }}
+            {{ labels.streamFiles }}
           </el-button>
           <el-button type="primary" :disabled="!selectedRows.length" @click="openCacheScript">
-            {{ labels.generateCacheScript }}
+            {{ labels.getFiles }}
           </el-button>
         </div>
       </header>
@@ -157,7 +154,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { fetchPublicFileDetail, fetchPublicFiles, publicFileManifestUrl } from '@/services/publicFileCatalog'
 import {
   buildFilteredManifestUrl,
-  buildPublicFileArchiveScript,
   buildPublicFileBatchScript,
   buildPublicFileCacheScript,
   expandDownloadFiles,
@@ -170,9 +166,9 @@ const labels = computed(() => Object.fromEntries([
   'title', 'intro', 'breadcrumb', 'manifest', 'filters', 'fileName', 'role', 'format',
   'size', 'list', 'items', 'downloadNote', 'fileCode', 'copyCommand', 'empty',
   'loadFailed', 'copySha', 'apiUrl', 'copied', 'copyFailed', 'selected',
-  'includeIndexes', 'clearSelection', 'generateCacheScript', 'generateBatchScript', 'generateArchiveScript',
+  'includeIndexes', 'clearSelection', 'getFiles', 'streamFiles',
   'cacheTitle', 'cacheIntro', 'downloadFiles', 'batchTitle', 'batchIntro',
-  'batchFiles', 'archiveTitle', 'archiveIntro', 'archiveFiles', 'copyScript', 'generationFailed'
+  'batchFiles', 'copyScript', 'generationFailed'
 ].map(key => [key, t(`page.publicFileCatalog.${key}`)]).concat([
   ['home', t('nav.home')], ['search', t('common.search')], ['reset', t('common.reset')],
   ['actions', t('common.actions')], ['details', t('common.details')], ['retry', t('common.retry')],
@@ -214,7 +210,6 @@ const selectedSize = computed(() => selectedFiles.value.reduce((total, item) => 
 const scriptDialogLabels = computed(() => ({
   cache: { title: labels.value.cacheTitle, intro: labels.value.cacheIntro, summary: labels.value.downloadFiles },
   batch: { title: labels.value.batchTitle, intro: labels.value.batchIntro, summary: labels.value.batchFiles },
-  archive: { title: labels.value.archiveTitle, intro: labels.value.archiveIntro, summary: labels.value.archiveFiles },
 })[scriptMode.value])
 const scriptDialogTitle = computed(() => scriptDialogLabels.value.title)
 const scriptDialogIntro = computed(() => scriptDialogLabels.value.intro)
@@ -287,7 +282,6 @@ const openScriptDialog = (mode, builder) => {
 }
 const openCacheScript = () => openScriptDialog('cache', buildPublicFileCacheScript)
 const openBatchApiScript = () => openScriptDialog('batch', buildPublicFileBatchScript)
-const openArchiveScript = () => openScriptDialog('archive', buildPublicFileArchiveScript)
 const openDetail = async fileCode => {
   detailController?.abort()
   detailController = new AbortController()
