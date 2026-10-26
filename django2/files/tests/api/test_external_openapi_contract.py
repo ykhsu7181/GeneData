@@ -50,11 +50,22 @@ class ExternalOpenApiContractTests(SimpleTestCase):
         self.assertIn("Idempotency-Key", [item["name"] for item in batch_create["parameters"]])
         archive_create = schema["paths"]["/gd/api/v1/file-batches/{batch_id}/archives/"]["post"]
         self.assertEqual(archive_create["responses"]["202"]["content"]["application/json"]["schema"]["$ref"], "#/components/schemas/FileArchive")
+        manifest = schema["paths"]["/gd/api/v1/files/manifest.tsv"]["get"]
+        self.assertEqual(
+            {item["name"] for item in manifest["parameters"]},
+            {"file_name", "name_contains", "accession", "assembly", "dataset", "role", "format"},
+        )
+        catalog_extension = schema["components"]["schemas"]["CatalogFile"]["allOf"][1]
+        self.assertIn("companions", catalog_extension["required"])
+        self.assertEqual(
+            catalog_extension["properties"]["companions"]["items"]["$ref"],
+            "#/components/schemas/CompanionFile",
+        )
 
     def test_schema_and_human_documentation_are_served(self):
         schema_response = self.client.get("/gd/api/v1/openapi.json")
         self.assertEqual(schema_response.status_code, 200)
-        self.assertEqual(schema_response.json()["info"]["version"], "1.4.0")
+        self.assertEqual(schema_response.json()["info"]["version"], "1.5.0")
 
         docs_response = self.client.get("/docs/api/")
         self.assertEqual(docs_response.status_code, 200)

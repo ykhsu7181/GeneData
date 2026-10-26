@@ -39,13 +39,7 @@ def file_catalog(request):
     try:
         payload = list_external_files(
             principal=request.auth,
-            file_name=request.query_params.get("file_name"),
-            name_contains=request.query_params.get("name_contains"),
-            accession=request.query_params.get("accession"),
-            assembly=request.query_params.get("assembly"),
-            dataset=request.query_params.get("dataset"),
-            role=request.query_params.get("role"),
-            file_format=request.query_params.get("format"),
+            **_catalog_filters(request),
             page=request.query_params.get("page", 1),
             page_size=request.query_params.get("page_size", 100),
         )
@@ -62,8 +56,11 @@ def file_catalog(request):
 @permission_classes([AllowAny])
 @throttle_classes([ExternalMetadataThrottle])
 def file_catalog_manifest_tsv(request):
-    """Return the complete authorized file catalog as an Excel-friendly TSV."""
-    rows = collect_external_files(principal=request.auth)
+    """Return the filtered authorized file catalog as an Excel-friendly TSV."""
+    rows = collect_external_files(
+        principal=request.auth,
+        **_catalog_filters(request),
+    )
     output = StringIO(newline="")
     writer = csv.writer(output, dialect="excel-tab", lineterminator="\n")
     writer.writerow([
@@ -84,6 +81,18 @@ def file_catalog_manifest_tsv(request):
     response["Content-Disposition"] = 'attachment; filename="genedata_public_files.tsv"'
     response["X-File-Count"] = str(len(rows))
     return response
+
+
+def _catalog_filters(request):
+    return {
+        "file_name": request.query_params.get("file_name"),
+        "name_contains": request.query_params.get("name_contains"),
+        "accession": request.query_params.get("accession"),
+        "assembly": request.query_params.get("assembly"),
+        "dataset": request.query_params.get("dataset"),
+        "role": request.query_params.get("role"),
+        "file_format": request.query_params.get("format"),
+    }
 
 
 @api_view(["GET"])

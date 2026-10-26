@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GeneData External Data API",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "description": "Stable v1 API for external analysis tools. Genomic coordinates are 1-based inclusive. Tokens must never be placed in URLs or logs."
   },
   "servers": [{"url": "/", "description": "Current GeneData deployment"}],
@@ -80,9 +80,18 @@
     "/gd/api/v1/files/manifest.tsv": {
       "get": {
         "tags": ["Discovery"],
-        "summary": "Download the complete authorized file catalog as TSV",
-        "description": "Excel-friendly catalog without physical storage paths.",
+        "summary": "Download the filtered authorized file catalog as TSV",
+        "description": "Excel-friendly catalog using the same filters as the JSON catalog and without physical storage paths.",
         "security": [{}, {"bearerAuth": []}],
+        "parameters": [
+          {"name": "file_name", "in": "query", "description": "Exact file name; Unicode NFC normalized and case-insensitive", "schema": {"type": "string"}},
+          {"name": "name_contains", "in": "query", "description": "Case-insensitive file-name substring", "schema": {"type": "string"}},
+          {"name": "accession", "in": "query", "schema": {"type": "string"}},
+          {"name": "assembly", "in": "query", "description": "Assembly code, accession, or unique name", "schema": {"type": "string"}},
+          {"name": "dataset", "in": "query", "description": "Dataset code or BioProject accession", "schema": {"type": "string"}},
+          {"name": "role", "in": "query", "description": "genome and genome_fasta are treated as compatible roles", "schema": {"type": "string"}},
+          {"name": "format", "in": "query", "schema": {"type": "string"}}
+        ],
         "responses": {
           "200": {
             "description": "Tab-separated public file catalog",
@@ -239,7 +248,8 @@
       "Assembly": {"type": "object", "required": ["assembly_id", "assembly_code", "assembly_name", "assembly_accession", "assembly_level", "is_default"], "properties": {"assembly_id": {"type": "integer"}, "assembly_code": {"type": "string"}, "assembly_name": {"type": "string", "nullable": true}, "assembly_accession": {"type": "string", "nullable": true}, "assembly_level": {"type": "string", "nullable": true}, "is_default": {"type": "boolean"}}},
       "AssemblyList": {"type": "object", "required": ["accession", "count", "assemblies"], "properties": {"accession": {"type": "string"}, "count": {"type": "integer"}, "assemblies": {"type": "array", "items": {"$ref": "#/components/schemas/Assembly"}}}},
       "File": {"type": "object", "required": ["id", "file_code", "file_name", "format", "role", "size", "sha256", "md5", "content_version", "dataset", "content_url"], "properties": {"id": {"type": "integer"}, "file_code": {"type": "string"}, "file_name": {"type": "string"}, "format": {"type": "string", "nullable": true}, "role": {"type": "string", "nullable": true}, "size": {"type": "integer", "format": "int64"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "md5": {"type": "string", "nullable": true}, "content_version": {"type": "string", "nullable": true}, "dataset": {"type": "string", "nullable": true}, "last_modified": {"type": "string", "format": "date-time"}, "content_url": {"type": "string"}}},
-      "CatalogFile": {"allOf": [{"$ref": "#/components/schemas/File"}, {"type": "object", "required": ["roles", "accession", "accessions", "assembly", "assemblies", "datasets"], "properties": {"roles": {"type": "array", "items": {"type": "string"}}, "accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}, "assembly": {"type": "string", "nullable": true}, "assemblies": {"type": "array", "items": {"type": "string"}}, "datasets": {"type": "array", "items": {"type": "string"}}}}]},
+      "CompanionFile": {"type": "object", "required": ["type", "file_code", "file_name", "size", "sha256", "content_version", "content_url"], "properties": {"type": {"type": "string", "enum": ["fai"]}, "file_code": {"type": "string"}, "file_name": {"type": "string"}, "size": {"type": "integer", "format": "int64"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "content_version": {"type": "string", "nullable": true}, "content_url": {"type": "string"}}},
+      "CatalogFile": {"allOf": [{"$ref": "#/components/schemas/File"}, {"type": "object", "required": ["roles", "accession", "accessions", "assembly", "assemblies", "datasets", "companions"], "properties": {"roles": {"type": "array", "items": {"type": "string"}}, "accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}, "assembly": {"type": "string", "nullable": true}, "assemblies": {"type": "array", "items": {"type": "string"}}, "datasets": {"type": "array", "items": {"type": "string"}}, "companions": {"type": "array", "description": "Authorized released sidecar files for this catalog item", "items": {"$ref": "#/components/schemas/CompanionFile"}}}}]},
       "FileCatalog": {"type": "object", "required": ["count", "page", "page_size", "results"], "properties": {"count": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "results": {"type": "array", "items": {"$ref": "#/components/schemas/CatalogFile"}}}},
       "FileDiscovery": {"type": "object", "required": ["accession", "count", "page", "page_size", "results"], "properties": {"accession": {"type": "string"}, "count": {"type": "integer"}, "page": {"type": "integer"}, "page_size": {"type": "integer"}, "results": {"type": "array", "items": {"$ref": "#/components/schemas/File"}}}},
       "ManifestFile": {"allOf": [{"$ref": "#/components/schemas/File"}, {"type": "object", "required": ["accession", "accessions"], "properties": {"accession": {"type": "string", "nullable": true}, "accessions": {"type": "array", "items": {"type": "string"}}}}]},

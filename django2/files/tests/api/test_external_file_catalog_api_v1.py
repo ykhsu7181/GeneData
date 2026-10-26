@@ -183,6 +183,52 @@ class ExternalFileCatalogApiV1Tests(TestCase):
         self.assertEqual(payload["results"][0]["assemblies"], ["ASM_IR64"])
         self.assertEqual(payload["results"][0]["datasets"], ["DS_IR64"])
 
+    def test_legacy_genome_role_matches_and_returns_authorized_fai_companion(self):
+        genome = self.make_file(
+            "FILE_GENOME",
+            "genome.IR64.fasta",
+            assembly=self.ir64_assembly,
+            role="genome",
+        )
+        index = self.make_file(
+            "FILE_INDEX",
+            "genome.IR64.fasta.fai",
+            assembly=self.ir64_assembly,
+            role="genome_index",
+        )
+        self.make_file(
+            "FILE_PRIVATE_INDEX",
+            "genome.IR64.fasta.fai",
+            assembly=self.ir64_assembly,
+            role="genome_index",
+            access_level=DataFile.ACCESS_LEVEL_INTERNAL,
+        )
+
+        response = self.client.get(
+            "/gd/api/v1/files/",
+            {"role": "genome_fasta", "format": "FASTA"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["count"], 1)
+        item = payload["results"][0]
+        self.assertEqual(item["file_code"], genome.file_code)
+        self.assertEqual(
+            item["companions"],
+            [{
+                "type": "fai",
+                "file_code": index.file_code,
+                "file_name": index.file_name,
+                "size": index.file_size,
+                "sha256": index.sha256,
+                "content_version": index.content_version,
+                "content_url": f"/gd/api/v1/files/{index.file_code}/content/",
+            }],
+        )
+        self.assertNotIn("FILE_PRIVATE_INDEX", str(payload))
+        self.assertNotIn(str(self.root), str(payload))
+
     def test_special_file_name_and_name_contains_are_safe(self):
         expected = self.make_file(
             "FILE000401",
@@ -286,3 +332,30 @@ class ExternalFileCatalogApiV1Tests(TestCase):
         self.assertIn("/gd/api/v1/files/FILE_MANIFEST/content/", text)
         self.assertNotIn("FILE_MANIFEST_DRAFT", text)
         self.assertNotIn(str(self.root), text)
+
+    def test_public_catalog_manifest_applies_catalog_filters_and_role_aliases(self):
+        selected = self.make_file(
+            "FILE_MANIFEST_IR64",
+            "genome.IR64.fasta",
+            accession=self.ir64,
+            assembly=self.ir64_assembly,
+            role="genome",
+        )
+        excluded = self.make_file(
+            "FILE_MANIFEST_NIPPONBARE",
+            "genome.Nipponbare.fasta",
+            accession=self.nipponbare,
+            assembly=self.nipponbare_assembly,
+            role="genome_fasta",
+        )
+
+        response = self.client.get(
+            "/gd/api/v1/files/manifest.tsv",
+            {"accession": "IR64", "role": "genome_fasta", "format": "FASTA"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["X-File-Count"], "1")
+        text = response.content.decode("utf-8")
+        self.assertIn(selected.file_code, text)
+        self.assertNotIn(excluded.file_code, text)

@@ -24,6 +24,9 @@ from files.services.external_file_urls import external_content_url
 
 
 MAX_PAGE_SIZE = 500
+GENOME_FASTA_ROLES = frozenset({"genome", "genome_fasta"})
+FASTA_INDEX_ROLES = frozenset({"genome_index", "fai", "fasta_index"})
+ROLE_ALIAS_GROUPS = (GENOME_FASTA_ROLES, FASTA_INDEX_ROLES)
 
 
 def list_external_files(
@@ -107,7 +110,7 @@ def collect_external_files(
         relation_map[relation.file_id].append(relation)
     context = _build_context(relations, files)
 
-    results = []
+    catalog_items = []
     for data_file in files:
         decision = resolve_datafile_access(
             data_file,
@@ -130,6 +133,12 @@ def collect_external_files(
             context,
             stat,
         )
+        catalog_items.append(item)
+
+    _attach_fasta_companions(catalog_items)
+
+    results = []
+    for item in catalog_items:
         if not _matches_filters(item, filters):
             continue
         results.append(item)
@@ -147,6 +156,7 @@ def _serialize_file(data_file, relations, context, stat):
     roles = list(dict.fromkeys(item.file_role for item in relations))
     accessions = set()
     assemblies = set()
+    assembly_ids = set()
     assembly_aliases = set()
     dataset_ids = set()
 
@@ -165,6 +175,7 @@ def _serialize_file(data_file, relations, context, stat):
         elif relation.related_type == "assembly":
             value = context["assemblies"].get(related_id)
             if value:
+                assembly_ids.add(related_id)
                 assemblies.add(value["code"])
                 assembly_aliases.update(value["aliases"])
                 if value["accession"]:
@@ -213,10 +224,45 @@ def _serialize_file(data_file, relations, context, stat):
         "assemblies": assemblies,
         "dataset": datasets[0] if len(datasets) == 1 else None,
         "datasets": datasets,
+        "companions": [],
         "content_url": external_content_url(data_file.file_code),
+        "_assembly_ids": sorted(assembly_ids),
         "_assembly_aliases": sorted(assembly_aliases),
         "_dataset_aliases": sorted(dataset_aliases),
     }
+
+
+def _attach_fasta_companions(items):
+    """Attach authorized, released FAI metadata without guessing storage paths."""
+    indexes_by_assembly = defaultdict(list)
+    for item in items:
+        if not any(_normalized_role(role) in FASTA_INDEX_ROLES for role in item["roles"]):
+            continue
+        for assembly_id in item["_assembly_ids"]:
+            indexes_by_assembly[assembly_id].append(item)
+
+    for item in items:
+        if not any(_normalized_role(role) in GENOME_FASTA_ROLES for role in item["roles"]):
+            continue
+        expected_name = normalize_file_name(f'{item["file_name"]}.fai')
+        matches = {}
+        for assembly_id in item["_assembly_ids"]:
+            for candidate in indexes_by_assembly[assembly_id]:
+                if normalize_file_name(candidate["file_name"]) != expected_name:
+                    continue
+                matches[candidate["file_code"]] = candidate
+        item["companions"] = [
+            {
+                "type": "fai",
+                "file_code": candidate["file_code"],
+                "file_name": candidate["file_name"],
+                "size": candidate["size"],
+                "sha256": candidate["sha256"],
+                "content_version": candidate["content_version"],
+                "content_url": candidate["content_url"],
+            }
+            for candidate in sorted(matches.values(), key=lambda value: value["file_code"])
+        ]
 
 
 def _matches_filters(item, filters):
@@ -236,7 +282,7 @@ def _matches_filters(item, filters):
         list(item["datasets"]) + list(item["_dataset_aliases"]),
     ):
         return False
-    if filters["role"] and not _matches(filters["role"], item["roles"]):
+    if filters["role"] and not role_matches(filters["role"], item["roles"]):
         return False
     if filters["format"] and filters["format"] != normalize_file_name(item["format"]):
         return False
@@ -320,6 +366,20 @@ def _assembly_context(assembly):
 
 def _matches(expected, values):
     return any(expected == normalize_file_name(value) for value in values)
+
+
+def role_matches(expected, roles):
+    """Match canonical and legacy role names used by the external catalog."""
+    expected = _normalized_role(expected)
+    actual = {_normalized_role(role) for role in roles}
+    for aliases in ROLE_ALIAS_GROUPS:
+        if expected in aliases:
+            return bool(actual & aliases)
+    return expected in actual
+
+
+def _normalized_role(value):
+    return normalize_file_name(value).replace("-", "_")
 
 
 def normalize_file_name(value):
