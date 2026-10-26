@@ -22,6 +22,7 @@ assert.match(view, /GENEDATA_TOKEN/, 'download command documents token use witho
 assert.match(view, /type="selection"/, 'catalog supports selecting multiple files')
 assert.match(view, /buildPublicFileCacheScript/, 'catalog generates an inspectable cache script')
 assert.match(view, /buildPublicFileBatchScript/, 'catalog generates an immutable batch API workflow')
+assert.match(view, /buildPublicFileArchiveScript/, 'catalog generates an explicit server archive workflow')
 assert.match(view, /includeCompanions/, 'catalog can include authorized companion indexes')
 assert.match(view, /filteredManifestUrl/, 'manifest export follows the active catalog filters')
 assert.doesNotMatch(view, /localStorage.*TOKEN|file_path/, 'the public page exposes neither tokens nor storage paths')

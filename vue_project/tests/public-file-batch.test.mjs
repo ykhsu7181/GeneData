@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   buildFilteredManifestUrl,
+  buildPublicFileArchiveScript,
   buildPublicFileBatchScript,
   buildPublicFileCacheScript,
   expandDownloadFiles,
@@ -84,5 +85,22 @@ test('builds a strict immutable batch workflow without embedding a token', () =>
   assert.match(script, /FILE003921/)
   assert.match(script, /manifest_tsv_url/)
   assert.match(script, /GENEDATA_IDEMPOTENCY_KEY/)
+  assert.doesNotMatch(script, /Bearer [A-Za-z0-9_-]{10,}/)
+})
+
+test('builds a bounded archive queue, poll, download and verification workflow', () => {
+  const script = buildPublicFileArchiveScript([genome], {
+    baseUrl: 'https://genedata.example/public-files',
+  })
+
+  assert.match(script, /batch:create, batch:read, batch:archive and batch:download scopes/)
+  assert.match(script, /file-batches\/\$BATCH_ID\/archives\//)
+  assert.match(script, /queued\|running/)
+  assert.match(script, /GENEDATA_ARCHIVE_MAX_POLLS/)
+  assert.match(script, /--continue-at -/)
+  assert.match(script, /sha256sum -c -/)
+  assert.match(script, /mv -f "\$ARCHIVE_PART" "\$ARCHIVE_FILE"/)
+  assert.match(script, /FILE000957/)
+  assert.match(script, /FILE003921/)
   assert.doesNotMatch(script, /Bearer [A-Za-z0-9_-]{10,}/)
 })
