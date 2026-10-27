@@ -6,7 +6,9 @@ import {
   buildPublicFileArchiveScript,
   buildPublicFileBatchScript,
   buildPublicFileCacheScript,
+  buildSelectedFilesTsv,
   expandDownloadFiles,
+  resolveDownloadSelection,
 } from '../src/utils/publicFileBatch.mjs'
 
 const sha = character => character.repeat(64)
@@ -15,11 +17,18 @@ const genome = {
   file_name: "genome.O'Brien.fasta",
   sha256: sha('a'),
   content_url: '/gd/api/v1/files/FILE000957/content/',
+  accessions: ['IR64'],
+  assemblies: ['ASM_IR64'],
+  datasets: ['DS_IR64'],
+  roles: ['genome_fasta'],
+  format: 'FASTA',
+  size: 100,
   companions: [{
     type: 'fai',
     file_code: 'FILE003921',
     file_name: "genome.O'Brien.fasta.fai",
     sha256: sha('b'),
+    size: 20,
     content_url: '/gd/api/v1/files/FILE003921/content/',
   }],
 }
@@ -32,6 +41,61 @@ test('expands authorized companions once and can exclude them', () => {
   assert.deepEqual(
     expandDownloadFiles([genome], { includeCompanions: false }).map(item => item.fileCode),
     ['FILE000957'],
+  )
+})
+
+test('builds a selected TSV with a fixed contract, stable order, and explicit companion', () => {
+  const manifest = buildSelectedFilesTsv([genome], {
+    baseUrl: 'https://genedata.example/public-files',
+  })
+  const lines = manifest.content.trimEnd().split('\n')
+
+  assert.equal(lines[0], 'file_code\tfile_name\taccession\tassembly\tdataset\trole\tformat\tsize\tsha256\tcontent_url')
+  assert.match(lines[1], /^FILE000957\tgenome\.O'Brien\.fasta\tIR64\tASM_IR64\tDS_IR64\tgenome_fasta\tFASTA\t100\t/)
+  assert.match(lines[2], /^FILE003921\tgenome\.O'Brien\.fasta\.fai\t\t\t\t\tFAI\t20\t/)
+  assert.equal(manifest.fileCount, 2)
+  assert.equal(manifest.totalSize, 120)
+  assert.deepEqual(manifest.warnings, [])
+})
+
+test('selected TSV de-duplicates file codes and prevents spreadsheet formulas', () => {
+  const manifest = buildSelectedFilesTsv([{ ...genome, file_name: '=CMD()', companions: [] }, genome], {
+    baseUrl: 'https://genedata.example/',
+    includeCompanions: false,
+  })
+
+  assert.equal(manifest.fileCount, 1)
+  assert.match(manifest.content, /FILE000957\t'=CMD\(\)/)
+})
+
+test('missing FAI warns while ambiguous FAI blocks selected output and scripts', () => {
+  const missing = resolveDownloadSelection([{ ...genome, companions: [] }])
+  assert.equal(missing.warnings.length, 1)
+  assert.equal(missing.errors.length, 0)
+
+  const ambiguous = {
+    ...genome,
+    companions: [genome.companions[0], { ...genome.companions[0], file_code: 'FILE003922' }],
+  }
+  assert.equal(resolveDownloadSelection([ambiguous]).errors.length, 1)
+  assert.throws(
+    () => buildSelectedFilesTsv([ambiguous], { baseUrl: 'https://genedata.example/' }),
+    /Ambiguous FAI companions/,
+  )
+  assert.throws(
+    () => buildPublicFileBatchScript([ambiguous], { baseUrl: 'https://genedata.example/' }),
+    /Ambiguous FAI companions/,
+  )
+})
+
+test('selected TSV rejects cross-origin content URLs', () => {
+  assert.throws(
+    () => buildSelectedFilesTsv([{
+      ...genome,
+      content_url: 'https://attacker.example/collect',
+      companions: [],
+    }], { baseUrl: 'https://genedata.example/' }),
+    /Cross-origin content URL rejected/,
   )
 })
 

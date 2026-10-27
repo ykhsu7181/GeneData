@@ -25,16 +25,89 @@ const downloadItem = item => {
   return { fileCode, fileName, sha256, contentUrl, size: Number.isFinite(size) ? size : 0 }
 }
 
-export const expandDownloadFiles = (rows, { includeCompanions = true } = {}) => {
+const isFasta = row => {
+  const roles = Array.isArray(row?.roles) ? row.roles : [row?.role]
+  return normalizedText(row?.format).toUpperCase() === 'FASTA'
+    || roles.some(role => ['genome', 'genome_fasta'].includes(normalizedText(role).toLowerCase()))
+}
+
+export const resolveDownloadSelection = (rows, { includeCompanions = true } = {}) => {
   const files = new Map()
+  const warnings = []
+  const errors = []
   for (const row of rows || []) {
-    const candidates = includeCompanions ? [row, ...(row?.companions || [])] : [row]
+    const companions = Array.isArray(row?.companions) ? row.companions : []
+    if (includeCompanions && isFasta(row)) {
+      if (companions.length === 0) warnings.push(`Missing FAI companion for ${normalizedText(row?.file_code)}`)
+      if (companions.length > 1) errors.push(`Ambiguous FAI companions for ${normalizedText(row?.file_code)}`)
+    }
+    const candidates = includeCompanions && companions.length <= 1 ? [row, ...companions] : [row]
     for (const candidate of candidates) {
       const item = downloadItem(candidate)
-      if (item && !files.has(item.fileCode)) files.set(item.fileCode, item)
+      if (item && !files.has(item.fileCode)) files.set(item.fileCode, { ...item, source: candidate, parent: row })
     }
   }
-  return [...files.values()]
+  return { files: [...files.values()], warnings, errors }
+}
+
+export const expandDownloadFiles = (rows, { includeCompanions = true } = {}) => {
+  const result = resolveDownloadSelection(rows, { includeCompanions })
+  if (result.errors.length) throw new Error(result.errors.join('; '))
+  return result.files
+}
+
+const listValue = (values, fallback = '') => {
+  if (Array.isArray(values) && values.length) return values.join(',')
+  return normalizedText(fallback)
+}
+
+const spreadsheetSafe = value => {
+  const text = String(value ?? '')
+  return /^[=+\-@]/.test(text) ? `'${text}` : text
+}
+
+const tsvCell = value => {
+  const text = spreadsheetSafe(value)
+  return /[\t\r\n"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
+export const buildSelectedFilesTsv = (
+  rows,
+  { baseUrl, includeCompanions = true } = {},
+) => {
+  const selection = resolveDownloadSelection(rows, { includeCompanions })
+  if (selection.errors.length) throw new Error(selection.errors.join('; '))
+  const origin = new URL(baseUrl).origin
+  const headers = [
+    'file_code', 'file_name', 'accession', 'assembly', 'dataset',
+    'role', 'format', 'size', 'sha256', 'content_url',
+  ]
+  const lines = selection.files.map(file => {
+    const source = file.source || {}
+    const parent = file.parent || {}
+    const isCompanion = source !== parent
+    const resolvedUrl = new URL(file.contentUrl, origin)
+    if (resolvedUrl.origin !== origin) throw new Error(`Cross-origin content URL rejected for ${file.fileCode}`)
+    const values = [
+      file.fileCode,
+      file.fileName,
+      isCompanion ? '' : listValue(source.accessions, source.accession),
+      isCompanion ? '' : listValue(source.assemblies, source.assembly),
+      isCompanion ? '' : listValue(source.datasets, source.dataset),
+      isCompanion ? '' : listValue(source.roles, source.role),
+      isCompanion ? normalizedText(source.type).toUpperCase() : normalizedText(source.format),
+      Math.max(0, Math.trunc(file.size)),
+      file.sha256,
+      resolvedUrl.toString(),
+    ]
+    return values.map(tsvCell).join('\t')
+  })
+  return {
+    content: [headers.join('\t'), ...lines].join('\n') + '\n',
+    fileCount: selection.files.length,
+    totalSize: selection.files.reduce((total, file) => total + file.size, 0),
+    warnings: selection.warnings,
+  }
 }
 
 export const buildPublicFileCacheScript = (

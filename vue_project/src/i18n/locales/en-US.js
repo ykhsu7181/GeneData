@@ -118,9 +118,9 @@ const enUS = {
       size: 'File size',
       list: 'Public files',
       items: 'files',
-      downloadNote: 'The catalog is public. File downloads require an administrator-issued GENEDATA_TOKEN; this page never stores tokens.',
+      downloadNote: 'Public files can be downloaded individually without a token. Multi-file retrieval, automatic index inclusion, and server batches require GENEDATA_TOKEN.',
       fileCode: 'File code',
-      copyCommand: 'Copy download command',
+      downloadFile: 'Download file',
       empty: 'No matching public files',
       loadFailed: 'Failed to load the public file catalog',
       copySha: 'Copy SHA-256',
@@ -132,6 +132,11 @@ const enUS = {
       clearSelection: 'Clear selection',
       getFiles: 'Get files',
       streamFiles: 'Stream via API',
+      exportSelected: 'Export selected TSV',
+      exportedSelected: 'Exported a selection manifest containing {count} files',
+      missingIndexes: '{count} selected FASTA files have no explicit FAI companion; other files can still be processed.',
+      ambiguousIndexes: '{count} selected FASTA files have multiple FAI companions. Batch actions are blocked until an administrator fixes the relationships.',
+      selectionTooLarge: 'The selection exceeds 1,000 files or 500 GiB. Reduce the selection before exporting.',
       cacheTitle: 'Get files',
       cacheIntro: 'Download the selected files to a directory. Cluster users should run this script on a login node so compute nodes can read the files from shared storage. The script supports resumed downloads and SHA-256 verification.',
       downloadFiles: 'This will retrieve {count} deduplicated files.',
@@ -139,7 +144,7 @@ const enUS = {
       batchIntro: 'For tools that support URLs or standard input. The script creates a fixed manifest whose content_url entries can be read one at a time, without downloading source files or creating an archive.',
       batchFiles: 'The manifest will contain {count} deduplicated files.',
       copyScript: 'Copy script',
-      generationFailed: 'Cannot generate script: a file download URL is invalid'
+      generationFailed: 'Cannot generate output: a file relationship or download URL is invalid'
     },
     home: {
       title: 'All data',

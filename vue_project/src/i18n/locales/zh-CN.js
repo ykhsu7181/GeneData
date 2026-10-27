@@ -118,9 +118,9 @@ const zhCN = {
       size: '文件大小',
       list: '公开文件',
       items: '个文件',
-      downloadNote: '目录可匿名查询；下载文件需要管理员签发的 GENEDATA_TOKEN。页面不会保存令牌。',
+      downloadNote: '公开单文件可直接下载。多文件批量获取、自动包含索引和服务器批次操作需要 GENEDATA_TOKEN。',
       fileCode: '文件编号',
-      copyCommand: '复制下载命令',
+      downloadFile: '下载文件',
       empty: '没有符合条件的公开文件',
       loadFailed: '公开文件目录加载失败',
       copySha: '复制 SHA-256',
@@ -132,6 +132,11 @@ const zhCN = {
       clearSelection: '清空选择',
       getFiles: '获取文件',
       streamFiles: '流式调用',
+      exportSelected: '导出所选清单 TSV',
+      exportedSelected: '已导出 {count} 个文件的选择清单',
+      missingIndexes: '有 {count} 个已选 FASTA 没有明确的 FAI 索引，将继续处理其他文件。',
+      ambiguousIndexes: '有 {count} 个已选 FASTA 对应多个 FAI，已停止批量操作，请联系管理员修复关系。',
+      selectionTooLarge: '所选文件超过 1000 个或总大小超过 500 GiB，请缩小选择范围。',
       cacheTitle: '获取文件',
       cacheIntro: '将所选文件下载到指定目录。集群用户请在登录节点运行脚本，下载后的文件可供计算节点通过共享目录读取。脚本支持断点续传和 SHA-256 校验。',
       downloadFiles: '将获取 {count} 个文件（已去重）。',
@@ -139,7 +144,7 @@ const zhCN = {
       batchIntro: '适合支持 URL 或标准输入的程序。脚本会生成固定的文件清单，程序可按清单中的 content_url 逐个读取，不会下载原始文件或创建归档。',
       batchFiles: '调用清单包含 {count} 个文件（已去重）。',
       copyScript: '复制脚本',
-      generationFailed: '无法生成脚本：文件下载地址无效'
+      generationFailed: '无法生成：文件关系或下载地址无效'
     },
     home: {
       title: '全部数据',

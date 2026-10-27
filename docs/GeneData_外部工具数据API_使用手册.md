@@ -1,6 +1,6 @@
 # GeneData 外部工具数据 API v1 使用手册
 
-适用版本：OpenAPI `1.1.0`。机器可读契约位于 `/gd/api/v1/openapi.json`，简明入口位于 `/docs/api/`。
+适用版本：OpenAPI `1.6.0`。机器可读契约位于 `/gd/api/v1/openapi.json`，简明入口位于 `/docs/api/`。
 
 ## 1. 基本约定
 
@@ -9,6 +9,7 @@
 - FASTA Region 坐标为 **1-based inclusive**；`start=1&end=120` 返回 120 bp。
 - 文件内容由 API 鉴权后交给 Nginx 发送。调用方无需先把 FASTA 下载到 GeneData 应用服务器；分析工具若支持 URL/流输入可直接消费。需要随机访问或工具只接受路径时，调用方仍应下载到自己的任务工作目录，并同时下载索引。
 - JSON/TSV Manifest 不返回服务器物理路径，只返回受控 API URL、校验和与版本。
+- 已发布且有效访问级别为 `public` 的单个文件可匿名下载；内部文件、批次、归档、Dataset Manifest 和序列接口仍需相应 Token。
 
 ## 2. 安全地配置 Token
 
@@ -72,11 +73,10 @@ curl --fail-with-body --silent --show-error \
   "$GENEDATA_BASE_URL/gd/api/v1/datasets/DS_IR64_REFERENCE_V1/manifest.tsv"
 ```
 
-下载文件并校验：
+匿名下载单个公开文件并校验：
 
 ```bash
 curl --fail-with-body --location \
-  -H "Authorization: Bearer $GENEDATA_TOKEN" \
   -o reference.fa \
   "$GENEDATA_BASE_URL/gd/api/v1/files/FILE000013/content/"
 sha256sum reference.fa
@@ -88,7 +88,6 @@ sha256sum reference.fa
 curl --fail-with-body --location \
   --etag-save FILE000013.etag \
   --etag-compare FILE000013.etag \
-  -H "Authorization: Bearer $GENEDATA_TOKEN" \
   -o reference.fa \
   "$GENEDATA_BASE_URL/gd/api/v1/files/FILE000013/content/"
 ```
