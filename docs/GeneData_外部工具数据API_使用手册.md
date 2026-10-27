@@ -160,7 +160,36 @@ process IR64_REGION {
 }
 ```
 
-## 5. 状态码处理
+## 5. `genedata` CLI
+
+从仓库构建 wheel：
+
+```bash
+cd genedata_cli
+python3 -m pip wheel . --no-deps --no-build-isolation --wheel-dir dist
+python3 -m pip install dist/genedata_cli-0.1.0-py3-none-any.whl
+```
+
+查询、详情和匿名单文件下载：
+
+```bash
+genedata search files --accession IR64 --format FASTA
+genedata show FILE000013
+genedata download FILE000013 --output ./data
+```
+
+使用网页导出的所选清单：
+
+```bash
+genedata download manifest selected-files.tsv --preview
+genedata download manifest selected-files.tsv \
+  --jobs 2 \
+  --output /public/home/$USER/genedata_cache
+```
+
+预览和正式批次均要求 `GENEDATA_TOKEN`。CLI 只采信选择清单中的 `file_code`；正式下载使用服务器不可变 Manifest 中的文件名、大小、摘要和同源内容地址。选择清单和服务器快照不一致时会在下载前停止。
+
+## 6. 状态码处理
 
 | 状态码 | 含义 | 调用方动作 |
 | --- | --- | --- |
