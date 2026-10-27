@@ -35,7 +35,11 @@ class ExternalOpenApiContractTests(SimpleTestCase):
         self.assertIn("bearerAuth", schema["components"]["securitySchemes"])
         self.assertEqual(
             schema["paths"]["/gd/api/v1/files/{file_code}/content/"]["get"]["security"],
-            [{"bearerAuth": []}],
+            [{}, {"bearerAuth": []}],
+        )
+        self.assertEqual(
+            schema["paths"]["/gd/api/v1/files/{file_code}/content/"]["head"]["security"],
+            [{}, {"bearerAuth": []}],
         )
         self.assertEqual(
             schema["paths"]["/gd/api/v1/files/"]["get"]["responses"]["200"]
@@ -65,7 +69,7 @@ class ExternalOpenApiContractTests(SimpleTestCase):
     def test_schema_and_human_documentation_are_served(self):
         schema_response = self.client.get("/gd/api/v1/openapi.json")
         self.assertEqual(schema_response.status_code, 200)
-        self.assertEqual(schema_response.json()["info"]["version"], "1.5.0")
+        self.assertEqual(schema_response.json()["info"]["version"], "1.6.0")
 
         docs_response = self.client.get("/docs/api/")
         self.assertEqual(docs_response.status_code, 200)

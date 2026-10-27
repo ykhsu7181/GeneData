@@ -77,6 +77,17 @@ def resolve_datafile_access(data_file, *, principal=None, action=ACTION_METADATA
             effective_access_level=effective_level,
             required_scope=required_scope,
         )
+    if (
+        action == ACTION_CONTENT
+        and effective_level == DataFile.ACCESS_LEVEL_PUBLIC
+        and getattr(settings, 'GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT', False)
+    ):
+        return DataFileAccessDecision(
+            allowed=True,
+            reason='public_content',
+            effective_access_level=effective_level,
+            required_scope=required_scope,
+        )
 
     if principal is None:
         return _deny(

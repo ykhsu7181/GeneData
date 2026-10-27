@@ -11,6 +11,7 @@ from django.utils import timezone
 from files.models import DataAccessToken, DataFile, Dataset, FileRelation
 
 
+@override_settings(GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT=True)
 class ExternalFileApiV1Tests(TestCase):
     def setUp(self):
         cache.clear()
@@ -91,21 +92,27 @@ class ExternalFileApiV1Tests(TestCase):
                 self.assertEqual(response.status_code, 404)
                 self.assertEqual(response.json()["code"], "not_found")
 
-    def test_content_requires_bearer_token_and_file_read_scope(self):
+    def test_public_content_allows_anonymous_get_and_head(self):
         data_file = self.make_file()
-        _metadata_token, metadata_raw = self.issue([DataAccessToken.SCOPE_METADATA_READ])
 
-        anonymous = self.client.get(f"/gd/api/v1/files/{data_file.id}/content/")
-        wrong_scope = self.client.get(
-            f"/gd/api/v1/files/{data_file.id}/content/",
-            **self.bearer(metadata_raw),
-        )
+        get_response = self.client.get(f"/gd/api/v1/files/{data_file.id}/content/")
+        head_response = self.client.head(f"/gd/api/v1/files/{data_file.id}/content/")
 
-        self.assertEqual(anonymous.status_code, 401)
-        self.assertEqual(anonymous["WWW-Authenticate"], "Bearer")
-        self.assertEqual(anonymous.json()["code"], "authentication_required")
-        self.assertEqual(wrong_scope.status_code, 403)
-        self.assertEqual(wrong_scope.json()["code"], "insufficient_scope")
+        for response in (get_response, head_response):
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response["Content-Length"], "11")
+            self.assertEqual(response["Accept-Ranges"], "bytes")
+            self.assertIn("attachment", response["Content-Disposition"])
+
+    @override_settings(GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT=False)
+    def test_feature_switch_restores_file_read_token_requirement(self):
+        data_file = self.make_file()
+
+        response = self.client.get(f"/gd/api/v1/files/{data_file.id}/content/")
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response["WWW-Authenticate"], "Bearer")
+        self.assertEqual(response.json()["code"], "authentication_required")
 
     def test_valid_token_returns_protected_get_and_head_headers(self):
         data_file = self.make_file(relative="IR64 folder/genome IR64.fasta")
@@ -211,13 +218,30 @@ class ExternalFileApiV1Tests(TestCase):
         self.assertEqual(internal.status_code, 200)
         self.assertEqual(internal.json()["dataset"], dataset.dataset_code)
 
+    def test_internal_content_is_not_exposed_anonymously(self):
+        dataset = Dataset.objects.create(
+            dataset_code="DS_INTERNAL_CONTENT_V1",
+            visibility="lab_internal",
+            status="released",
+        )
+        data_file = self.make_file(
+            "INTERNAL_CONTENT",
+            dataset=dataset,
+            access_level=DataFile.ACCESS_LEVEL_INHERITED,
+        )
+
+        anonymous = self.client.get(f"/gd/api/v1/files/{data_file.id}/content/")
+
+        self.assertEqual(anonymous.status_code, 401)
+        self.assertEqual(anonymous.json()["code"], "authentication_required")
+
     def test_content_requests_are_rate_limited_per_token(self):
         cache.clear()
         data_file = self.make_file()
         _token, raw_token = self.issue([DataAccessToken.SCOPE_FILE_READ])
 
         with patch(
-            "files.api_v1.throttles.ExternalContentThrottle.get_rate",
+            "files.api_v1.throttles.ExternalAuthenticatedContentThrottle.get_rate",
             return_value="2/minute",
         ):
             responses = [
@@ -232,3 +256,35 @@ class ExternalFileApiV1Tests(TestCase):
         self.assertIn("Retry-After", responses[-1])
         self.assertNotIn(raw_token, responses[-1].content.decode("utf-8"))
         self.assertNotIn(str(self.root), responses[-1].content.decode("utf-8"))
+
+    def test_anonymous_content_requests_use_ip_burst_limit(self):
+        cache.clear()
+        data_file = self.make_file()
+
+        with patch(
+            "files.api_v1.throttles.ExternalAnonymousContentThrottle.get_rate",
+            return_value="2/minute",
+        ):
+            responses = [
+                self.client.head(f"/gd/api/v1/files/{data_file.id}/content/")
+                for _index in range(3)
+            ]
+
+        self.assertEqual([response.status_code for response in responses], [200, 200, 429])
+        self.assertIn("Retry-After", responses[-1])
+
+    def test_anonymous_content_requests_use_ip_daily_limit(self):
+        cache.clear()
+        data_file = self.make_file()
+
+        with patch(
+            "files.api_v1.throttles.ExternalAnonymousContentDailyThrottle.get_rate",
+            return_value="2/day",
+        ):
+            responses = [
+                self.client.head(f"/gd/api/v1/files/{data_file.id}/content/")
+                for _index in range(3)
+            ]
+
+        self.assertEqual([response.status_code for response in responses], [200, 200, 429])
+        self.assertIn("Retry-After", responses[-1])

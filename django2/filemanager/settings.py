@@ -40,12 +40,19 @@ REST_FRAMEWORK = {
     'URL_FORMAT_OVERRIDE': None,
     'DEFAULT_THROTTLE_RATES': {
         'external_metadata': os.environ.get('GENEDATA_METADATA_RATE', '120/minute'),
-        'external_content': os.environ.get('GENEDATA_CONTENT_RATE', '30/minute'),
+        'external_anonymous_content': os.environ.get('GENEDATA_ANON_CONTENT_RATE', '5/minute'),
+        'external_anonymous_content_daily': os.environ.get('GENEDATA_ANON_CONTENT_DAILY_RATE', '20/day'),
+        'external_authenticated_content': os.environ.get('GENEDATA_TOKEN_CONTENT_RATE', '30/minute'),
         'external_manifest': os.environ.get('GENEDATA_MANIFEST_RATE', '30/minute'),
         'external_sequence': os.environ.get('GENEDATA_SEQUENCE_RATE', '60/minute'),
         'external_batch': os.environ.get('GENEDATA_BATCH_RATE', '30/minute'),
     },
 }
+
+GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT = (
+    os.environ.get('GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT', 'false').strip().lower()
+    in {'1', 'true', 'yes', 'on'}
+)
 
 GENEDATA_SEQUENCE_MAX_BASES = int(
     os.environ.get('GENEDATA_SEQUENCE_MAX_BASES', '1000000')

@@ -15,7 +15,12 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from files.api_v1.authentication import DataAccessTokenAuthentication
-from files.api_v1.throttles import ExternalContentThrottle, ExternalMetadataThrottle
+from files.api_v1.throttles import (
+    ExternalAnonymousContentDailyThrottle,
+    ExternalAnonymousContentThrottle,
+    ExternalAuthenticatedContentThrottle,
+    ExternalMetadataThrottle,
+)
 from files.models import DataFile, Dataset
 from files.services.datafile_access_service import (
     ACTION_CONTENT,
@@ -143,7 +148,11 @@ def file_metadata(request, file_identifier):
 @api_view(["GET", "HEAD"])
 @authentication_classes([DataAccessTokenAuthentication])
 @permission_classes([AllowAny])
-@throttle_classes([ExternalContentThrottle])
+@throttle_classes([
+    ExternalAnonymousContentThrottle,
+    ExternalAnonymousContentDailyThrottle,
+    ExternalAuthenticatedContentThrottle,
+])
 def file_content(request, file_identifier):
     data_file = _data_file(file_identifier)
     if data_file is None:

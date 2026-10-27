@@ -4,7 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 from unittest import skipUnless
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from files.models import DataAccessToken, DataFile, Dataset, FileRelation
@@ -97,7 +97,8 @@ class DataFileAccessServiceTests(TestCase):
         self.assertTrue(decision.allowed)
         self.assertEqual(decision.effective_access_level, DataFile.ACCESS_LEVEL_PUBLIC)
 
-    def test_public_content_requires_token_and_scope(self):
+    @override_settings(GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT=False)
+    def test_public_content_requires_token_and_scope_while_feature_is_disabled(self):
         data_file = self.create_file('DF_PUBLIC_CONTENT')
         metadata_only = self.issue_token(scopes=[DataAccessToken.SCOPE_METADATA_READ])
         file_reader = self.issue_token(scopes=[DataAccessToken.SCOPE_FILE_READ])
@@ -113,6 +114,25 @@ class DataFileAccessServiceTests(TestCase):
         self.assertEqual(anonymous.reason, 'authentication_required')
         self.assertEqual(wrong_scope.reason, 'insufficient_scope')
         self.assertTrue(allowed.allowed)
+
+    @override_settings(GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT=True)
+    def test_public_content_allows_anonymous_access_when_feature_is_enabled(self):
+        data_file = self.create_file('DF_PUBLIC_ANONYMOUS_CONTENT')
+
+        decision = resolve_datafile_access(data_file, action=ACTION_CONTENT)
+
+        self.assertTrue(decision.allowed)
+        self.assertEqual(decision.reason, 'public_content')
+        self.assertEqual(decision.effective_access_level, DataFile.ACCESS_LEVEL_PUBLIC)
+
+    @override_settings(GENEDATA_ALLOW_ANONYMOUS_PUBLIC_CONTENT=True)
+    def test_internal_content_still_requires_an_internal_file_reader(self):
+        data_file = self.create_file('DF_INTERNAL_ANONYMOUS', dataset=self.internal_dataset)
+
+        decision = resolve_datafile_access(data_file, action=ACTION_CONTENT)
+
+        self.assertFalse(decision.allowed)
+        self.assertEqual(decision.reason, 'authentication_required')
 
     def test_each_action_requires_its_own_scope(self):
         data_file = self.create_file('DF_ACTION_SCOPES')

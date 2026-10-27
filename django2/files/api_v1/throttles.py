@@ -16,8 +16,26 @@ class ExternalMetadataThrottle(DataAccessRateThrottle):
     scope = "external_metadata"
 
 
-class ExternalContentThrottle(DataAccessRateThrottle):
-    scope = "external_content"
+class ExternalAnonymousContentThrottle(DataAccessRateThrottle):
+    scope = "external_anonymous_content"
+
+    def get_cache_key(self, request, view):
+        if isinstance(request.auth, DataAccessToken):
+            return None
+        return super().get_cache_key(request, view)
+
+
+class ExternalAnonymousContentDailyThrottle(ExternalAnonymousContentThrottle):
+    scope = "external_anonymous_content_daily"
+
+
+class ExternalAuthenticatedContentThrottle(DataAccessRateThrottle):
+    scope = "external_authenticated_content"
+
+    def get_cache_key(self, request, view):
+        if not isinstance(request.auth, DataAccessToken):
+            return None
+        return super().get_cache_key(request, view)
 
 
 class ExternalManifestThrottle(DataAccessRateThrottle):

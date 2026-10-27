@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "GeneData External Data API",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Stable v1 API for external analysis tools. Genomic coordinates are 1-based inclusive. Tokens must never be placed in URLs or logs."
   },
   "servers": [{"url": "/", "description": "Current GeneData deployment"}],
@@ -115,7 +115,7 @@
     },
     "/gd/api/v1/files/{file_code}/content/": {
       "get": {
-        "tags": ["Files"], "summary": "Download file content", "security": [{"bearerAuth": []}],
+        "tags": ["Files"], "summary": "Download file content", "description": "Released public files may be downloaded anonymously when anonymous public content is enabled. Internal files require a Bearer token with file:read scope and internal access tier. Anonymous and authenticated requests use separate rate limits.", "security": [{}, {"bearerAuth": []}],
         "parameters": [{"$ref": "#/components/parameters/FileCode"}, {"name": "Range", "in": "header", "description": "Optional byte range, for example bytes=0-1023", "schema": {"type": "string"}}, {"name": "If-None-Match", "in": "header", "schema": {"type": "string"}}, {"name": "If-Modified-Since", "in": "header", "schema": {"type": "string"}}, {"name": "If-Range", "in": "header", "schema": {"type": "string"}}],
         "responses": {
           "200": {"description": "Complete attachment", "headers": {"Accept-Ranges": {"schema": {"type": "string", "example": "bytes"}}, "Content-Disposition": {"schema": {"type": "string"}}}, "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}},
@@ -125,7 +125,7 @@
         }
       },
       "head": {
-        "tags": ["Files"], "summary": "Inspect downloadable file headers", "security": [{"bearerAuth": []}],
+        "tags": ["Files"], "summary": "Inspect downloadable file headers", "description": "Authentication is optional for released public files and required for internal files.", "security": [{}, {"bearerAuth": []}],
         "parameters": [{"$ref": "#/components/parameters/FileCode"}],
         "responses": {"200": {"description": "Download headers"}, "401": {"$ref": "#/components/responses/AuthenticationRequired"}, "403": {"$ref": "#/components/responses/Forbidden"}, "404": {"$ref": "#/components/responses/NotFound"}, "429": {"$ref": "#/components/responses/RateLimited"}}
       }
