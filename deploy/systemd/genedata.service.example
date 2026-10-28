@@ -1,0 +1,33 @@
+[Unit]
+Description=GeneData Django API
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=rdcheng
+Group=labuser
+
+# Update this path for every immutable backend release.
+WorkingDirectory=/home/labuser/rdcheng/gd/releases/django2-d8312dd
+Environment=HOME=/home/labuser/rdcheng
+Environment=PYTHONUSERBASE=/home/labuser/rdcheng/.local
+EnvironmentFile=/home/labuser/rdcheng/gd/config/genedata-production.env
+
+UMask=0027
+
+ExecStartPre=/home/Software/anaconda3/envs/django2_env/bin/python3.9 -c "import gunicorn; print('gunicorn=' + gunicorn.__version__)"
+ExecStartPre=/home/Software/anaconda3/envs/django2_env/bin/python3.9 manage.py check --settings=filemanager.settings_production
+
+# Nginx proxies to localhost:2025. Bind both loopback families because this
+# host resolves localhost to ::1 before 127.0.0.1.
+ExecStart=/home/Software/anaconda3/envs/django2_env/bin/python3.9 -m gunicorn --bind 127.0.0.1:2025 --bind [::1]:2025 --workers 1 --threads 4 --timeout 300 --graceful-timeout 30 --keep-alive 5 --access-logfile - --error-logfile - --capture-output filemanager.wsgi:application
+
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=60
+TimeoutStopSec=330
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
