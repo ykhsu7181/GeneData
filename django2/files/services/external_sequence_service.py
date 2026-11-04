@@ -19,7 +19,7 @@ from files.services.datafile_access_service import (
     resolve_protected_datafile_path,
 )
 from files.services.file_relation_service import (
-    GenomeFileSelectionError,
+    GenomeAssetSelectionError,
     get_primary_genome_file_for_assembly,
 )
 from files.services.reference_name_service import (
@@ -166,7 +166,7 @@ def _resolve_reference_files(assembly, principal):
 def _select_reference_files(assembly):
     try:
         selected = get_primary_genome_file_for_assembly(assembly.id)
-    except GenomeFileSelectionError as exc:
+    except GenomeAssetSelectionError as exc:
         raise SequenceRegionError("genome_ambiguous", str(exc), 409) from exc
     if not selected:
         raise SequenceRegionError(

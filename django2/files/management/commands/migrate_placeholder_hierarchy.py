@@ -113,12 +113,14 @@ class Command(BaseCommand):
         migrated_or_ready = sum(item["status"] in {"ready", "migrated"} for item in plans)
         self.stdout.write(
             f"mode\t{'DRY_RUN' if dry_run else 'APPLY'}\n"
+            f"accession_scope\t{','.join(sorted(accessions)) if accessions else 'ALL'}\n"
             f"placeholder_total\t{len(plans)}\n"
             f"ready_or_migrated\t{migrated_or_ready}\n"
             f"blocked\t{blocked}\n"
             f"relations_to_move\t{sum(item['relations_to_move'] for item in plans)}\n"
             f"relations_to_reuse\t{sum(item['relations_to_reuse'] for item in plans)}\n"
-            f"legacy_files_to_move\t{sum(item['legacy_files_to_move'] for item in plans)}\n"
+            "legacy_genomefile_references\t"
+            f"{sum(item['legacy_genomefile_references'] for item in plans)}\n"
             f"report\t{report_path}"
         )
 
@@ -227,6 +229,8 @@ class Command(BaseCommand):
                 for relation in relations
             )
         legacy_files = GenomeFile.objects.filter(assembly_id=placeholder.id).count()
+        if legacy_files:
+            reasons.append(f"legacy_genomefile_references={legacy_files}")
 
         return {
             "status": "blocked" if reasons else "ready",
@@ -237,7 +241,7 @@ class Command(BaseCommand):
             "target_assembly_code": target.assembly_code if target else (codes[0] if len(codes) == 1 else ""),
             "relations_to_move": len(relations) - relations_to_reuse,
             "relations_to_reuse": relations_to_reuse,
-            "legacy_files_to_move": legacy_files,
+            "legacy_genomefile_references": legacy_files,
             "metadata_fields_to_copy": ",".join(
                 field
                 for field in COPY_IF_BLANK_FIELDS
@@ -270,8 +274,6 @@ class Command(BaseCommand):
                 relation.related_code = target.assembly_code
                 relation.save(update_fields=["related_id", "related_code", "updated_at"])
 
-        GenomeFile.objects.filter(assembly_id=placeholder.id).update(assembly_id=target.id)
-
         copied_fields = []
         for field in COPY_IF_BLANK_FIELDS:
             old_value = getattr(placeholder, field)
@@ -300,7 +302,7 @@ class Command(BaseCommand):
             "target_assembly_code",
             "relations_to_move",
             "relations_to_reuse",
-            "legacy_files_to_move",
+            "legacy_genomefile_references",
             "metadata_fields_to_copy",
             "reason",
         )

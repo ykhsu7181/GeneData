@@ -4,6 +4,7 @@ import tempfile
 from io import StringIO
 
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 
 from files.models import (
@@ -67,8 +68,8 @@ class BackfillGenomeFileToDataFileCommandTestCase(TestCase):
             size=0,
         )
 
-        self.call_backfill()
-        self.call_backfill()
+        self.call_backfill("--apply")
+        self.call_backfill("--apply")
 
         data_file = DataFile.objects.get(file_path=file_path)
         self.assertEqual(data_file.file_code, "FILE000001")
@@ -102,10 +103,11 @@ class BackfillGenomeFileToDataFileCommandTestCase(TestCase):
             size=0,
         )
 
-        self.call_backfill("--dry-run")
+        output = self.call_backfill()
 
         self.assertEqual(DataFile.objects.count(), 0)
         self.assertEqual(FileRelation.objects.count(), 0)
+        self.assertIn("mode=DRY_RUN", output)
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "migration_log.txt")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "unmapped_files.tsv")))
 
@@ -120,7 +122,7 @@ class BackfillGenomeFileToDataFileCommandTestCase(TestCase):
             size=0,
         )
 
-        self.call_backfill()
+        self.call_backfill("--apply")
 
         data_file = DataFile.objects.get(file_path=missing_path)
         self.assertIsNone(data_file.file_size)
@@ -147,7 +149,11 @@ class BackfillGenomeFileToDataFileCommandTestCase(TestCase):
             size=0,
         )
 
-        self.call_backfill("--with-md5")
+        self.call_backfill("--apply", "--with-md5")
 
         data_file = DataFile.objects.get(file_path=file_path)
         self.assertEqual(data_file.md5, hashlib.md5(content).hexdigest())
+
+    def test_apply_and_dry_run_are_mutually_exclusive(self):
+        with self.assertRaises(CommandError):
+            self.call_backfill("--apply", "--dry-run")

@@ -180,6 +180,12 @@ class AccessionDetailFileRelationIntegrationTestCase(TestCase):
         self.assertEqual(data["projects"][0]["project_code"], "PRJ-C7")
         self.assertEqual(data["datasets"][0]["dataset_code"], "DS-C7-001")
         self.assertEqual(len(data["files"]), 2)
+        assembly_payload = data["assemblies"][0]
+        self.assertEqual(assembly_payload["files"][0]["id"], shared_file.id)
+        self.assertEqual(assembly_payload["files"][0]["category"], "genome")
+        annotation_payload = assembly_payload["annotations"][0]
+        self.assertEqual(annotation_payload["files"][0]["id"], annotation_file.id)
+        self.assertEqual(annotation_payload["files"][0]["category"], "annotation")
         genome_file = next(item for item in data["files"] if item["file_role"] == "genome")
         self.assertEqual(genome_file["related_type"], "accession")
         self.assertEqual(

@@ -14,7 +14,7 @@ from files.models import DataFile, FileRelation
 from files.services.assembly_visibility import visible_assembly_queryset
 from files.services.fasta_index_service import build_fasta_index
 from files.services.file_relation_service import (
-    GenomeFileSelectionError,
+    GenomeAssetSelectionError,
     get_primary_genome_file_for_assembly,
 )
 from files.services.file_write_service import (
@@ -54,7 +54,7 @@ def inspect_jbrowse_assembly(assembly_id, output_root=None):
 
     try:
         genome = get_primary_genome_file_for_assembly(assembly.id)
-    except GenomeFileSelectionError as exc:
+    except GenomeAssetSelectionError as exc:
         result.update(status="ambiguous_genome", error=str(exc))
         return result
     if genome is None:

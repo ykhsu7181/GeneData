@@ -9,7 +9,7 @@ PRIMARY_GENOME_FILE_ROLE = "genome_fasta"
 COMPATIBLE_GENOME_FILE_ROLE = "genome"
 
 
-class GenomeFileSelectionError(ValueError):
+class GenomeAssetSelectionError(ValueError):
     """Raised when an Assembly has no deterministic current genome FASTA."""
 
 
@@ -83,7 +83,7 @@ def get_primary_genome_file_for_assembly(assembly_id):
             f"genome FASTA files (role={selected_role})"
         )
         logger.error(message)
-        raise GenomeFileSelectionError(message)
+        raise GenomeAssetSelectionError(message)
     if primary_relations:
         return _format_relation_file(primary_relations[0])
     if len(relations) == 1:
@@ -94,7 +94,7 @@ def get_primary_genome_file_for_assembly(assembly_id):
             f"genome FASTA files (role={selected_role})"
         )
         logger.error(message)
-        raise GenomeFileSelectionError(message)
+        raise GenomeAssetSelectionError(message)
     return None
 
 

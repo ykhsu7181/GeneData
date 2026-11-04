@@ -4,6 +4,7 @@ from django.test import SimpleTestCase
 
 from files.management.command_lifecycle import (
     COMMAND_LIFECYCLE,
+    DISABLED,
     RETIRE_PENDING_USAGE_CONFIRMATION,
 )
 
@@ -19,11 +20,17 @@ class ManagementCommandLifecycleTests(SimpleTestCase):
 
         self.assertEqual(set(COMMAND_LIFECYCLE), command_names)
 
-    def test_demo_and_one_off_cleanup_commands_require_usage_confirmation(self):
+    def test_legacy_genomefile_mutation_commands_are_disabled(self):
         self.assertEqual(
             COMMAND_LIFECYCLE["cleanup_data"],
-            RETIRE_PENDING_USAGE_CONFIRMATION,
+            DISABLED,
         )
+        self.assertEqual(
+            COMMAND_LIFECYCLE["link_genomefiles_to_accessions"],
+            DISABLED,
+        )
+
+    def test_demo_command_still_requires_usage_confirmation(self):
         self.assertEqual(
             COMMAND_LIFECYCLE["seed_ir64_demo_hierarchy"],
             RETIRE_PENDING_USAGE_CONFIRMATION,

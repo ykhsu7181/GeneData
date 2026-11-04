@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Accession, Annotation, Assembly, FileCategory, FileType, GenomeFile, Organism
+from .models import Accession, Annotation, Assembly, FileCategory, FileRelation, FileType, Organism
 from .services.accession_context import classify_file_scope
 from .services.assembly_visibility import filter_visible_assemblies
 
@@ -23,22 +23,6 @@ class FileCategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class GenomeFileSerializer(serializers.ModelSerializer):
-    file_type_name = serializers.ReadOnlyField(source='file_type.name')
-
-    class Meta:
-        model = GenomeFile
-        fields = '__all__'
-
-
-class GenomeFileListSerializer(serializers.ModelSerializer):
-    file_type_name = serializers.ReadOnlyField(source='file_type.name')
-
-    class Meta:
-        model = GenomeFile
-        fields = ['id', 'name', 'organism', 'category', 'file_type_name', 'size', 'created_at']
-
-
 class AccessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Accession
@@ -58,32 +42,38 @@ class AccessionSerializer(serializers.ModelSerializer):
         ]
 
 
-class AccessionGenomeFileSerializer(serializers.ModelSerializer):
-    file_type_name = serializers.ReadOnlyField(source='file_type.name')
-    accession_id = serializers.IntegerField(source='accession.id', read_only=True)
-    assembly_id = serializers.IntegerField(source='assembly.id', read_only=True)
-    annotation_id = serializers.IntegerField(source='annotation.id', read_only=True)
-    scope = serializers.SerializerMethodField()
+def _file_relations_for(obj, related_type):
+    prefetched_relations = getattr(obj, 'prefetched_file_relations', None)
+    if prefetched_relations is not None:
+        return prefetched_relations
+    return FileRelation.objects.filter(
+        related_type=related_type,
+        related_id=str(obj.id),
+    ).select_related('file__file_type').order_by('file_role', 'file__file_name', 'id')
 
-    class Meta:
-        model = GenomeFile
-        fields = [
-            'id',
-            'name',
-            'organism',
-            'category',
-            'file_type_name',
-            'file_path',
-            'size',
-            'created_at',
-            'accession_id',
-            'assembly_id',
-            'annotation_id',
-            'scope',
-        ]
 
-    def get_scope(self, obj):
-        return classify_file_scope(obj.category)
+def _serialize_file_relations(obj, related_type):
+    accession = obj.accession if related_type == 'assembly' else obj.assembly.accession
+    assembly_id = obj.id if related_type == 'assembly' else obj.assembly_id
+    annotation_id = obj.id if related_type == 'annotation' else None
+    payload = []
+    for relation in _file_relations_for(obj, related_type):
+        data_file = relation.file
+        payload.append({
+            'id': data_file.id,
+            'name': data_file.file_name,
+            'organism': accession.accession,
+            'category': relation.file_role,
+            'file_type_name': data_file.file_type.name if data_file.file_type else None,
+            'file_path': data_file.file_path,
+            'size': data_file.file_size,
+            'created_at': data_file.created_at,
+            'accession_id': accession.id,
+            'assembly_id': assembly_id,
+            'annotation_id': annotation_id,
+            'scope': classify_file_scope(relation.file_role),
+        })
+    return payload
 
 
 class AnnotationDetailSerializer(serializers.ModelSerializer):
@@ -114,10 +104,7 @@ class AnnotationDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_files(self, obj):
-        files = getattr(obj, 'prefetched_files', None)
-        if files is None:
-            files = obj.files.select_related('file_type').order_by('category', 'name')
-        return AccessionGenomeFileSerializer(files, many=True).data
+        return _serialize_file_relations(obj, 'annotation')
 
     def _get_summary(self, obj):
         return getattr(obj, 'summary_metadata', {}) or {}
@@ -157,10 +144,7 @@ class AssemblyDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_files(self, obj):
-        files = getattr(obj, 'prefetched_files', None)
-        if files is None:
-            files = obj.files.select_related('file_type').filter(annotation__isnull=True).order_by('category', 'name')
-        return AccessionGenomeFileSerializer(files, many=True).data
+        return _serialize_file_relations(obj, 'assembly')
 
     def get_annotations(self, obj):
         annotations = getattr(obj, 'prefetched_annotations', None)

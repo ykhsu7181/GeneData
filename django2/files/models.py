@@ -9,6 +9,8 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
+from .file_categories import FILE_CATEGORY_CHOICES
+
 
 class FileType(models.Model):
     """文件类型模型"""
@@ -757,26 +759,6 @@ class FileRelation(models.Model):
 class GenomeFile(models.Model):
     """基因组文件模型"""
 
-    FILE_CATEGORY_CHOICES = [
-        ('variableBlocks', 'Variable Blocks'),
-        ('genome', 'Genome'),
-        ('transcriptome.all', 'Transcriptome-All'),
-        ('transcriptome.root', 'Transcriptome-Root'),
-        ('transcriptome.stem', 'Transcriptome-Stem'),
-        ('transcriptome.leaf', 'Transcriptome-Leaf'),
-        ('transcriptome.panicles', 'Transcriptome-Panicles'),
-        ('transcriptome.shoot', 'Transcriptome-Shoot'),
-        ('miRNA', 'miRNA'),
-        ('tRNA', 'tRNA'),
-        ('rRNA', 'rRNA'),
-        ('codon', 'Codon'),
-        ('centromere', 'Centromere'),
-        ('TEs', 'TEs'),
-        ('annotation', 'Annotation'),
-        ('coreBlocks', 'Core Blocks'),
-        ('other', 'Other'),
-    ]
-
     name = models.CharField(max_length=255, verbose_name='文件名')
     organism = models.CharField(max_length=50, verbose_name='生物体')
     accession = models.ForeignKey(
@@ -817,42 +799,3 @@ class GenomeFile(models.Model):
 
     def __str__(self):
         return f"{self.organism}-{self.category}-{self.name}"
-
-    @staticmethod
-    def get_all_organisms():
-        """获取所有可用的生物体选项"""
-        tissue_types = ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']
-
-        try:
-            organisms_from_db = list(
-                GenomeFile.objects.exclude(organism__isnull=True)
-                .exclude(organism='')
-                .exclude(organism='unknown')
-                .values_list('organism', flat=True)
-                .distinct()
-            )
-            organisms_from_db = [org for org in organisms_from_db if org not in tissue_types]
-
-            all_organisms = [org for org in organisms_from_db if org and org != 'unknown']
-            all_organisms.sort()
-            return all_organisms
-        except Exception as e:
-            import logging
-
-            logger = logging.getLogger(__name__)
-            logger.error(f"获取生物体列表时发生错误: {str(e)}")
-            return []
-
-    @staticmethod
-    def get_all_categories():
-        """获取所有可用的文件类别选项"""
-        categories_from_db = list(FileCategory.objects.all().values_list('code', flat=True))
-        fixed_categories = [choice[0] for choice in GenomeFile.FILE_CATEGORY_CHOICES]
-        all_categories = list(set(categories_from_db + fixed_categories))
-        all_categories.sort()
-        return all_categories
-
-    @staticmethod
-    def get_transcriptome_types():
-        """获取所有转录组类型"""
-        return ['all', 'root', 'stem', 'leaf', 'panicles', 'shoot']

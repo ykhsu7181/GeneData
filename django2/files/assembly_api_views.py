@@ -11,7 +11,7 @@ from files.models import Assembly
 from files.serializers import AssemblyListSerializer
 from files.services.assembly_detail_service import get_assembly_detail
 from files.services.assembly_visibility import public_assembly_list_queryset
-from files.services.file_relation_service import GenomeFileSelectionError
+from files.services.file_relation_service import GenomeAssetSelectionError
 
 
 DEFAULT_PAGE_SIZE = 20
@@ -97,7 +97,7 @@ def assembly_summary(request, assembly_id):
             {"success": False, "message": f'Assembly "{assembly_id}" 不存在'},
             status=status.HTTP_404_NOT_FOUND,
         )
-    except GenomeFileSelectionError as exc:
+    except GenomeAssetSelectionError as exc:
         return Response(
             {
                 "success": False,

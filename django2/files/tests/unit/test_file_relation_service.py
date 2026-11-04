@@ -2,7 +2,7 @@ from django.test import TestCase
 
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
 from files.services.file_relation_service import (
-    GenomeFileSelectionError,
+    GenomeAssetSelectionError,
     get_files_for_accession,
     get_files_for_annotation,
     get_files_for_assembly,
@@ -195,14 +195,14 @@ class FileRelationServiceTestCase(TestCase):
         self.add_assembly_genome_file("GENOME_PRIMARY_A", is_primary=True)
         self.add_assembly_genome_file("GENOME_PRIMARY_B", is_primary=True)
 
-        with self.assertRaisesRegex(GenomeFileSelectionError, "multiple current primary"):
+        with self.assertRaisesRegex(GenomeAssetSelectionError, "multiple current primary"):
             get_primary_genome_file_for_assembly(self.assembly.id)
 
     def test_assembly_genome_selector_rejects_multiple_unmarked_candidates(self):
         self.add_assembly_genome_file("GENOME_A")
         self.add_assembly_genome_file("GENOME_B")
 
-        with self.assertRaisesRegex(GenomeFileSelectionError, "multiple current unmarked"):
+        with self.assertRaisesRegex(GenomeAssetSelectionError, "multiple current unmarked"):
             get_primary_genome_file_for_assembly(self.assembly.id)
 
     def test_assembly_genome_selector_accepts_named_legacy_genome_role_in_exact_scope(self):

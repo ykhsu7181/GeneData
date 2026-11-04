@@ -1,10 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .archive_views import ArchivedGenomeFileViewSet
+from .codonw_views import CodonWViewSet
 from .download_views import download_datafile
 from .datafile_api_views import datafile_detail
 from .views import (
-    FileTypeViewSet, GenomeFileViewSet,
+    FileTypeViewSet,
     OrganismViewSet, FileCategoryViewSet,
     admin_session, admin_login, admin_logout, admin_files_list, admin_delete_file,
     admin_batch_delete, admin_batch_download, admin_upload_file, admin_statistics,
@@ -101,13 +102,13 @@ urlpatterns = [
     path('query/variable-blocks/', query_variableblocks, name='query-variableblocks'),
     path('query/rna-data/', query_rna_data, name='query-rna-data'),
     path('query/codon-data/', query_codon_data, name='query-codon-data'),
-    path('codonw/analysis/', GenomeFileViewSet.as_view({'post': 'codonw_analysis'}), name='codonw-analysis'),
-    path('codonw/status/<str:task_id>/', GenomeFileViewSet.as_view({'get': 'codonw_status'}), name='codonw-status'),
-    path('codonw/history/', GenomeFileViewSet.as_view({'get': 'codonw_history'}), name='codonw-history'),
-    path('codonw/download/<str:task_id>/', GenomeFileViewSet.as_view({'get': 'codonw_download'}), name='codonw-download'),
-    path('codonw/delete/<str:task_id>/', GenomeFileViewSet.as_view({'delete': 'codonw_delete'}), name='codonw-delete'),
-    path('codonw/results/<str:task_id>/', GenomeFileViewSet.as_view({'get': 'codonw_results'}), name='codonw-results'),
-    path('codonw/result-upload/', GenomeFileViewSet.as_view({'post': 'codonw_result_upload'}), name='codonw-result-upload'),
+    path('codonw/analysis/', CodonWViewSet.as_view({'post': 'codonw_analysis'}), name='codonw-analysis'),
+    path('codonw/status/<str:task_id>/', CodonWViewSet.as_view({'get': 'codonw_status'}), name='codonw-status'),
+    path('codonw/history/', CodonWViewSet.as_view({'get': 'codonw_history'}), name='codonw-history'),
+    path('codonw/download/<str:task_id>/', CodonWViewSet.as_view({'get': 'codonw_download'}), name='codonw-download'),
+    path('codonw/delete/<str:task_id>/', CodonWViewSet.as_view({'delete': 'codonw_delete'}), name='codonw-delete'),
+    path('codonw/results/<str:task_id>/', CodonWViewSet.as_view({'get': 'codonw_results'}), name='codonw-results'),
+    path('codonw/result-upload/', CodonWViewSet.as_view({'post': 'codonw_result_upload'}), name='codonw-result-upload'),
     path('download-transcriptome/', ArchivedGenomeFileViewSet.as_view({'get': 'download_transcriptome'}), name='download-transcriptome'),
     path('transcriptome-types/', ArchivedGenomeFileViewSet.as_view({'get': 'transcriptome_types'}), name='transcriptome-types'),
     path('genome-files/get_chromosomes/', ArchivedGenomeFileViewSet.as_view({'get': 'get_chromosomes'}), name='get-chromosomes'),

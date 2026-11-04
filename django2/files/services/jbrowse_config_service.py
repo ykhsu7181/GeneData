@@ -12,7 +12,7 @@ from files.services.annotation_feature_index_service import (
 )
 from files.services.assembly_visibility import visible_assembly_queryset
 from files.services.file_relation_service import (
-    GenomeFileSelectionError,
+    GenomeAssetSelectionError,
     get_primary_genome_file_for_assembly,
 )
 from files.services.reference_name_service import (
@@ -115,7 +115,7 @@ def _resolve_context(assembly_id, annotation_id=None):
     }
     try:
         genome_info = get_primary_genome_file_for_assembly(assembly.id)
-    except GenomeFileSelectionError as exc:
+    except GenomeAssetSelectionError as exc:
         return _failed(context, "ambiguous_genome", str(exc))
     if genome_info is None:
         return _failed(context, "missing_genome", "No current genome FASTA is related.")

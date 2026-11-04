@@ -4,6 +4,7 @@ ACTIVE = "active"
 RETAIN_AUDIT = "retain_audit"
 LEGACY_REPAIR = "legacy_repair"
 RETIRE_PENDING_USAGE_CONFIRMATION = "retire_pending_usage_confirmation"
+DISABLED = "disabled"
 
 
 COMMAND_LIFECYCLE = {
@@ -23,7 +24,7 @@ COMMAND_LIFECYCLE = {
     "build_annotation_feature_indexes": ACTIVE,
     "build_fasta_indexes": ACTIVE,
     "build_jbrowse_indexes": ACTIVE,
-    "cleanup_data": RETIRE_PENDING_USAGE_CONFIRMATION,
+    "cleanup_data": DISABLED,
     "cleanup_placeholder_hierarchy": LEGACY_REPAIR,
     "compare_accession_files": RETAIN_AUDIT,
     "compare_annotation_files": RETAIN_AUDIT,
@@ -44,7 +45,7 @@ COMMAND_LIFECYCLE = {
     "import_raw_data_manifest": ACTIVE,
     "import_sample_manifest": ACTIVE,
     "issue_data_access_token": ACTIVE,
-    "link_genomefiles_to_accessions": LEGACY_REPAIR,
+    "link_genomefiles_to_accessions": DISABLED,
     "migrate_placeholder_hierarchy": LEGACY_REPAIR,
     "reconcile_assembly_annotation_context": LEGACY_REPAIR,
     "refresh_dashboard_cache": ACTIVE,

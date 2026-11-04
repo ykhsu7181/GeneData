@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from files.models import DataFile, FileRelation
 from files.services.file_relation_service import (
-    GenomeFileSelectionError,
+    GenomeAssetSelectionError,
     get_primary_genome_file_for_assembly,
 )
 from files.services.file_write_service import (
@@ -274,7 +274,7 @@ def resolve_refname(payload, alias):
 def select_mapping_inputs(assembly):
     try:
         genome = get_primary_genome_file_for_assembly(assembly.id)
-    except GenomeFileSelectionError as exc:
+    except GenomeAssetSelectionError as exc:
         raise ReferenceNameError(str(exc), code="genome_ambiguous") from exc
     if not genome:
         raise ReferenceNameError("No current Assembly FASTA exists", code="genome_missing")

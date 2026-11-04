@@ -5,6 +5,7 @@ from django.urls import reverse
 from filemanager.urls import debug_urlpatterns
 from rest_framework.test import APITestCase
 
+from files.file_categories import FILE_CATEGORY_CHOICES
 from files.models import (
     Accession,
     Annotation,
@@ -30,7 +31,7 @@ class ProjectRoutingSmokeTest(SimpleTestCase):
 
 class GenomeFileModelTestCase(TestCase):
     def test_coreblocks_category_in_choices(self):
-        categories = [choice[0] for choice in GenomeFile.FILE_CATEGORY_CHOICES]
+        categories = [choice[0] for choice in FILE_CATEGORY_CHOICES]
         self.assertIn('coreBlocks', categories)
 
     def test_create_genome_file_str(self):

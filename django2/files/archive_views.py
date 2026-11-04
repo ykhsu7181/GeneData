@@ -4,9 +4,6 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from files.models import GenomeFile
-
-
 logger = logging.getLogger(__name__)
 
 GENOMEFILE_ARCHIVE_MESSAGE = "GenomeFile API is archived, use DataFile API instead."
@@ -15,8 +12,6 @@ GENOMEFILE_DOWNLOAD_ARCHIVE_MESSAGE = "GenomeFile download is archived, use Data
 
 class ArchivedGenomeFileViewSet(viewsets.ViewSet):
     """Stable 410 adapter for retired GenomeFile URLs."""
-
-    queryset = GenomeFile._meta.default_manager.none()
 
     def _gone(self, request, message=GENOMEFILE_ARCHIVE_MESSAGE):
         logger.warning(

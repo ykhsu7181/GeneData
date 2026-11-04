@@ -3,7 +3,7 @@ import os
 import re
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -20,7 +20,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="Preview changes and write reports without creating or updating records.",
+            help="Preview changes and write reports (the default mode).",
+        )
+        parser.add_argument(
+            "--apply",
+            action="store_true",
+            help="Explicitly create or update DataFile and FileRelation records.",
         )
         parser.add_argument(
             "--with-md5",
@@ -40,7 +45,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        dry_run = options["dry_run"]
+        if options["apply"] and options["dry_run"]:
+            raise CommandError("Use either --apply or --dry-run, not both.")
+        dry_run = not options["apply"]
         with_md5 = options["with_md5"]
         limit = options["limit"]
         output_dir = options["output_dir"] or str(settings.BASE_DIR)
@@ -80,6 +87,7 @@ class Command(BaseCommand):
         next_file_number = self.get_next_file_number()
 
         log_lines.append(f"started_at\t{timezone.now().isoformat()}")
+        log_lines.append(f"mode\t{'DRY_RUN' if dry_run else 'APPLY'}")
         log_lines.append(f"dry_run\t{dry_run}")
         log_lines.append(f"with_md5\t{with_md5}")
         log_lines.append(f"limit\t{limit if limit is not None else ''}")
@@ -156,10 +164,12 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Backfill completed. "
+                f"mode={'DRY_RUN' if dry_run else 'APPLY'}. "
+                "GenomeFile scope is read-only; only DataFile/FileRelation are planned or changed. "
+                f"Limit: {limit if limit is not None else 'ALL'}, "
                 f"Scanned: {stats['scanned']}, "
-                f"DataFiles created: {stats['datafile_created']}, "
-                f"Relations created: {stats['relation_created']}, "
+                f"DataFiles {'planned' if dry_run else 'created'}: {stats['datafile_created']}, "
+                f"Relations {'planned' if dry_run else 'created'}: {stats['relation_created']}, "
                 f"Unmapped: {stats['unmapped']}, "
                 f"Missing files: {stats['missing_files']}. "
                 f"Reports: {log_path}, {unmapped_path}"
@@ -265,12 +275,14 @@ class Command(BaseCommand):
         return relations
 
     def ensure_relation(self, data_file, relation, dry_run):
-        existing = FileRelation.objects.filter(
-            file=data_file,
-            related_type=relation["related_type"],
-            related_id=relation["related_id"],
-            file_role=relation["file_role"],
-        ).exists()
+        existing = False
+        if data_file.pk is not None:
+            existing = FileRelation.objects.filter(
+                file=data_file,
+                related_type=relation["related_type"],
+                related_id=relation["related_id"],
+                file_role=relation["file_role"],
+            ).exists()
         if existing:
             return False
 

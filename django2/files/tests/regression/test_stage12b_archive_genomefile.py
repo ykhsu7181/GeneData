@@ -4,12 +4,12 @@ import tempfile
 import uuid
 from io import StringIO
 
-from django.contrib.admin.sites import AdminSite
+from django.contrib import admin
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TransactionTestCase
 
-from files.admin import GenomeFileAdmin
+from files import admin as files_admin
 import files.views as file_views
 from files.archive_views import ArchivedGenomeFileViewSet
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
@@ -266,17 +266,9 @@ class Stage12BArchiveGenomeFileTestCase(TransactionTestCase):
             self.assertNotIn("legacy_genomefile", source, name)
             self.assertNotIn("organism_fallback", source, name)
 
-    def test_genomefile_admin_is_readonly_archive(self):
-        admin_obj = GenomeFileAdmin(GenomeFile, AdminSite())
-        genome_file = self.create_genome_file("admin.archive.fasta")
-
-        self.assertFalse(admin_obj.has_add_permission(None))
-        self.assertFalse(admin_obj.has_change_permission(None, genome_file))
-        self.assertFalse(admin_obj.has_delete_permission(None, genome_file))
-        readonly_fields = set(admin_obj.get_readonly_fields(None, genome_file))
-        model_field_names = {field.name for field in GenomeFile._meta.fields}
-        self.assertTrue(model_field_names.issubset(readonly_fields))
-        self.assertEqual(admin_obj.archive_status(genome_file), "archived")
+    def test_genomefile_is_not_registered_in_admin(self):
+        self.assertIsNotNone(files_admin)
+        self.assertNotIn(GenomeFile, admin.site._registry)
 
     def test_report_genomefile_archive_status_generates_readonly_report(self):
         genome_file = self.create_genome_file("archive.report.fasta")

@@ -1,9 +1,7 @@
-import os
-
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from files.models import Accession, Annotation, Assembly, GenomeFile
+from files.models import Accession, Annotation, Assembly, FileRelation
 from files.services.accession_context import classify_file_scope
 
 
@@ -100,8 +98,18 @@ class Command(BaseCommand):
             )
             return
 
-        source_assembly_files = list(source_assembly.files.order_by("id"))
-        source_annotation_files = list(source_annotation.files.order_by("id"))
+        source_assembly_files = list(
+            FileRelation.objects.filter(
+                related_type="assembly",
+                related_id=str(source_assembly.id),
+            ).select_related("file").order_by("id")
+        )
+        source_annotation_files = list(
+            FileRelation.objects.filter(
+                related_type="annotation",
+                related_id=str(source_annotation.id),
+            ).select_related("file").order_by("id")
+        )
 
         if not source_assembly_files:
             self.stdout.write(
@@ -122,7 +130,7 @@ class Command(BaseCommand):
 
         created_assemblies = 0
         created_annotations = 0
-        created_files = 0
+        created_relations = 0
 
         for annotation_spec in EXTRA_DEFAULT_ASSEMBLY_ANNOTATIONS:
             _, annotation_created = Annotation.objects.update_or_create(
@@ -137,10 +145,8 @@ class Command(BaseCommand):
                 created_annotations += 1
 
             target_annotation = source_assembly.annotations.get(name=annotation_spec["name"])
-            created_files += self.clone_files_to_annotation(
+            created_relations += self.clone_files_to_annotation(
                 source_files=source_annotation_files,
-                accession=accession,
-                target_assembly=source_assembly,
                 target_annotation=target_annotation,
             )
 
@@ -157,9 +163,8 @@ class Command(BaseCommand):
                 created_assemblies += 1
 
             target_assembly = accession.assemblies.get(name=assembly_spec["name"])
-            created_files += self.clone_files_to_assembly(
+            created_relations += self.clone_files_to_assembly(
                 source_files=source_assembly_files,
-                accession=accession,
                 target_assembly=target_assembly,
             )
 
@@ -176,10 +181,8 @@ class Command(BaseCommand):
                     created_annotations += 1
 
                 target_annotation = target_assembly.annotations.get(name=annotation_spec["name"])
-                created_files += self.clone_files_to_annotation(
+                created_relations += self.clone_files_to_annotation(
                     source_files=source_annotation_files,
-                    accession=accession,
-                    target_assembly=target_assembly,
                     target_annotation=target_annotation,
                 )
 
@@ -188,101 +191,51 @@ class Command(BaseCommand):
                 "Demo hierarchy seed completed. "
                 f"Assemblies created: {created_assemblies}, "
                 f"Annotations created: {created_annotations}, "
-                f"Files created: {created_files}"
+                f"FileRelations created: {created_relations}"
             )
         )
 
-    def clone_files_to_assembly(self, *, source_files, accession, target_assembly):
+    def clone_files_to_assembly(self, *, source_files, target_assembly):
         created = 0
-        for source_file in source_files:
-            scope = classify_file_scope(source_file.category)
+        for source_relation in source_files:
+            scope = classify_file_scope(source_relation.file_role)
             if scope not in {"assembly", "compatibility_assembly"}:
                 continue
 
-            defaults = self.build_file_defaults(
-                source_file=source_file,
-                accession=accession,
-                target_assembly=target_assembly,
-                target_annotation=None,
-            )
-            _, was_created = GenomeFile.objects.update_or_create(
-                assembly=target_assembly,
-                annotation=None,
-                category=source_file.category,
-                name=defaults["name"],
-                defaults=defaults,
+            _, was_created = FileRelation.objects.get_or_create(
+                file=source_relation.file,
+                related_type="assembly",
+                related_id=str(target_assembly.id),
+                file_role=source_relation.file_role,
+                defaults={
+                    "related_code": target_assembly.assembly_code or target_assembly.name,
+                    "is_primary": source_relation.is_primary,
+                    "description": source_relation.description,
+                },
             )
             if was_created:
                 created += 1
         return created
 
-    def clone_files_to_annotation(
-        self, *, source_files, accession, target_assembly, target_annotation
-    ):
+    def clone_files_to_annotation(self, *, source_files, target_annotation):
         created = 0
-        for source_file in source_files:
-            scope = classify_file_scope(source_file.category)
+        for source_relation in source_files:
+            scope = classify_file_scope(source_relation.file_role)
             if scope != "annotation":
                 continue
 
-            defaults = self.build_file_defaults(
-                source_file=source_file,
-                accession=accession,
-                target_assembly=target_assembly,
-                target_annotation=target_annotation,
-            )
-            _, was_created = GenomeFile.objects.update_or_create(
-                assembly=target_assembly,
-                annotation=target_annotation,
-                category=source_file.category,
-                name=defaults["name"],
-                defaults=defaults,
+            _, was_created = FileRelation.objects.get_or_create(
+                file=source_relation.file,
+                related_type="annotation",
+                related_id=str(target_annotation.id),
+                file_role=source_relation.file_role,
+                defaults={
+                    "related_code": target_annotation.annotation_code
+                    or target_annotation.name,
+                    "is_primary": source_relation.is_primary,
+                    "description": source_relation.description,
+                },
             )
             if was_created:
                 created += 1
         return created
-
-    def build_file_defaults(
-        self, *, source_file, accession, target_assembly, target_annotation
-    ):
-        return {
-            "name": self.build_demo_name(
-                source_name=source_file.name,
-                assembly_name=target_assembly.name,
-                annotation_name=target_annotation.name if target_annotation else None,
-            ),
-            "organism": accession.accession,
-            "accession": accession,
-            "assembly": target_assembly,
-            "annotation": target_annotation,
-            "category": source_file.category,
-            "file_path": source_file.file_path,
-            "file_type": source_file.file_type,
-            "description": self.build_demo_description(
-                source_file=source_file,
-                target_assembly=target_assembly,
-                target_annotation=target_annotation,
-            ),
-            "size": source_file.size,
-        }
-
-    def build_demo_name(self, *, source_name, assembly_name, annotation_name=None):
-        stem, suffix = self.split_name(source_name)
-        parts = [stem, assembly_name]
-        if annotation_name:
-            parts.append(annotation_name)
-        return ".".join(parts) + suffix
-
-    def build_demo_description(self, *, source_file, target_assembly, target_annotation):
-        scope_label = f"assembly={target_assembly.name}"
-        if target_annotation:
-            scope_label += f", annotation={target_annotation.name}"
-
-        source_description = source_file.description or "Cloned from existing IR64 source file."
-        return f"{source_description} [demo clone: {scope_label}]"
-
-    def split_name(self, filename):
-        if filename.endswith(".tar.gz"):
-            return filename[:-7], ".tar.gz"
-        stem, ext = os.path.splitext(filename)
-        return stem, ext

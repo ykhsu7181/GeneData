@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from files.models import Assembly
 from files.services.fasta_statistics_service import calculate_fasta_statistics
 from files.services.file_relation_service import (
-    GenomeFileSelectionError,
+    GenomeAssetSelectionError,
     get_primary_genome_file_for_assembly,
 )
 
@@ -67,7 +67,7 @@ class Command(BaseCommand):
                 updated += 1
                 fields = ",".join(sorted(updates))
                 self.stdout.write(f"assembly={assembly.id} updated={fields}")
-            except (GenomeFileSelectionError, OSError, ValueError) as exc:
+            except (GenomeAssetSelectionError, OSError, ValueError) as exc:
                 failed += 1
                 self.stderr.write(f"assembly={assembly.id} error={exc}")
 
