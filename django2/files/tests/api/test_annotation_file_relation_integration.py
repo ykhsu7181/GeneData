@@ -1,11 +1,8 @@
 import os
 import tempfile
-from io import StringIO
-
-from django.core.management import call_command
 from django.test import TestCase
 
-from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
+from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType
 from files.services.annotation_feature_index_service import build_annotation_feature_index
 
 
@@ -36,7 +33,6 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
 
     def test_annotation_endpoint_uses_file_relation_file(self):
         new_path = self.create_annotation_file("annotation.new.IR64.gff3")
-        old_path = self.create_annotation_file("annotation.old.IR64.gff3")
         data_file = DataFile.objects.create(
             file_code="FILE000020",
             file_name="annotation.new.IR64.gff3",
@@ -50,18 +46,6 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
             file_role="annotation",
         )
         build_annotation_feature_index(self.annotation)
-        GenomeFile.objects.create(
-            name="annotation.old.IR64.gff3",
-            organism="IR64",
-            accession=self.accession,
-            assembly=self.assembly,
-            annotation=self.annotation,
-            category="annotation",
-            file_path=old_path,
-            file_type=self.file_type,
-            size=os.path.getsize(old_path),
-        )
-
         response = self.client.get(
             f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
         )
@@ -177,91 +161,10 @@ class AnnotationFileRelationIntegrationTestCase(TestCase):
         self.assertEqual(stale_response.status_code, 503)
         self.assertEqual(stale_response.json()["index_status"], "stale")
 
-    def test_annotation_endpoint_does_not_fallback_to_genomefile(self):
-        legacy_path = self.create_annotation_file("annotation.legacy.IR64.gff3")
-        GenomeFile.objects.create(
-            name="annotation.legacy.IR64.gff3",
-            organism="IR64",
-            accession=self.accession,
-            assembly=self.assembly,
-            annotation=self.annotation,
-            category="annotation",
-            file_path=legacy_path,
-            file_type=self.file_type,
-            size=os.path.getsize(legacy_path),
-        )
-
-        response = self.client.get(
-            f"/gd/api/files/query/annotation-data/?annotation_id={self.annotation.id}"
-        )
-
-        self.assertEqual(response.status_code, 404)
-        payload = response.json()
-        self.assertIn("未找到", payload["error"])
-        self.assertNotIn("annotation_file", payload)
-
     def test_genomefile_download_endpoint_is_archived(self):
-        file_path = self.create_annotation_file("annotation.download.IR64.gff3")
-        genome_file = GenomeFile.objects.create(
-            name="annotation.download.IR64.gff3",
-            organism="IR64",
-            accession=self.accession,
-            assembly=self.assembly,
-            annotation=self.annotation,
-            category="annotation",
-            file_path=file_path,
-            file_type=self.file_type,
-            size=os.path.getsize(file_path),
-        )
-
-        response = self.client.get(f"/gd/api/files/genome-files/{genome_file.id}/download/")
+        response = self.client.get("/gd/api/files/genome-files/987654/download/")
 
         self.assertEqual(response.status_code, 410)
         payload = response.json()
         self.assertTrue(payload["archived"])
         self.assertIn("GenomeFile download is archived", payload["message"])
-
-    def test_compare_annotation_files_command_writes_report(self):
-        file_path = self.create_annotation_file("annotation.compare.IR64.gff3")
-        GenomeFile.objects.create(
-            name="annotation.compare.IR64.gff3",
-            organism="IR64",
-            accession=self.accession,
-            assembly=self.assembly,
-            annotation=self.annotation,
-            category="annotation",
-            file_path=file_path,
-            file_type=self.file_type,
-            size=os.path.getsize(file_path),
-        )
-        data_file = DataFile.objects.create(
-            file_code="FILE000021",
-            file_name="annotation.compare.IR64.gff3",
-            file_path=file_path,
-            file_size=os.path.getsize(file_path),
-        )
-        FileRelation.objects.create(
-            file=data_file,
-            related_type="annotation",
-            related_id=str(self.annotation.id),
-            file_role="annotation",
-        )
-        stdout = StringIO()
-
-        call_command(
-            "compare_annotation_files",
-            annotation_id=self.annotation.id,
-            output_dir=self.temp_dir.name,
-            stdout=stdout,
-        )
-
-        output = stdout.getvalue()
-        self.assertIn("old_count\t1", output)
-        self.assertIn("new_count\t1", output)
-        self.assertIn("matched_files\t1", output)
-
-        report_path = os.path.join(self.temp_dir.name, "compare_annotation_files.tsv")
-        with open(report_path, "r", encoding="utf-8") as handle:
-            report = handle.read()
-        self.assertIn("matched", report)
-        self.assertIn(file_path, report)

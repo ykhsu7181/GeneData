@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, GenomeFile
+from files.models import Accession, Annotation, Assembly, DataFile, FileRelation
 
 
 class MigratePlaceholderHierarchyCommandTestCase(TestCase):
@@ -121,29 +121,6 @@ class MigratePlaceholderHierarchyCommandTestCase(TestCase):
         self.assertEqual(target.genome_size, 123)
         self.assertEqual(relation.related_id, str(target.id))
         self.assertEqual(relation.related_code, target.assembly_code)
-
-    def test_apply_refuses_legacy_genomefile_references_without_mutation(self):
-        placeholder, target = self.hierarchy("LEGACY_REF")
-        assembly_path, files_path = self.manifests(
-            [("LEGACY_REF", "ASM_LEGACY_REF")]
-        )
-        legacy = GenomeFile.objects.create(
-            name="genome.LEGACY_REF.fasta",
-            organism="LEGACY_REF",
-            accession=placeholder.accession,
-            assembly=placeholder,
-            category="genome",
-            file_path="/production/manual_files/genome.LEGACY_REF.fasta",
-        )
-
-        with self.assertRaises(CommandError):
-            self.run_command(assembly_path, files_path, "--apply")
-
-        legacy.refresh_from_db()
-        target.refresh_from_db()
-        self.assertEqual(legacy.assembly_id, placeholder.id)
-        self.assertTrue(Assembly.objects.filter(id=placeholder.id).exists())
-        self.assertFalse(target.is_default)
 
     def test_apply_reuses_duplicate_target_relation(self):
         placeholder, target = self.hierarchy("R498")

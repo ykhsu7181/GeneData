@@ -4,7 +4,7 @@ import uuid
 
 from django.test import TransactionTestCase
 
-from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
+from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType
 from files.services.annotation_feature_index_service import build_annotation_feature_index
 
 
@@ -121,19 +121,7 @@ class DataFileDownloadTestCase(TransactionTestCase):
         self.assert_datafile_download_links(overview_response.json()["results"][0]["genome"], accession_file)
 
     def test_legacy_genomefile_download_is_archived(self):
-        file_path = self.create_disk_file("legacy-genomefile-download.fasta")
-        genome_file = GenomeFile.objects.create(
-            name="legacy-genomefile-download.fasta",
-            organism=self.accession_code,
-            accession=self.accession,
-            assembly=self.assembly,
-            category="genome",
-            file_path=file_path,
-            file_type=self.file_type,
-            size=os.path.getsize(file_path),
-        )
-
-        response = self.client.get(f"/gd/api/files/genome-files/{genome_file.id}/download/")
+        response = self.client.get("/gd/api/files/genome-files/987654/download/")
 
         self.assertEqual(response.status_code, 410)
         payload = response.json()

@@ -4,14 +4,11 @@ ACTIVE = "active"
 RETAIN_AUDIT = "retain_audit"
 LEGACY_REPAIR = "legacy_repair"
 RETIRE_PENDING_USAGE_CONFIRMATION = "retire_pending_usage_confirmation"
-DISABLED = "disabled"
 
 
 COMMAND_LIFECYCLE = {
-    "audit_file_migration": RETAIN_AUDIT,
     "audit_file_relations": ACTIVE,
     "audit_genome_transcriptome_readiness": ACTIVE,
-    "audit_legacy_fallback": RETAIN_AUDIT,
     "audit_datafile_access": ACTIVE,
     "audit_external_api_readiness": ACTIVE,
     "audit_public_fasta_indexes": ACTIVE,
@@ -19,17 +16,11 @@ COMMAND_LIFECYCLE = {
     "backfill_jbrowse_refname_aliases": ACTIVE,
     "backfill_datafile_sha256": ACTIVE,
     "backfill_assembly_from_genome_relations": LEGACY_REPAIR,
-    "backfill_genomefile_to_datafile": LEGACY_REPAIR,
     "bind_manual_files": ACTIVE,
     "build_annotation_feature_indexes": ACTIVE,
     "build_fasta_indexes": ACTIVE,
     "build_jbrowse_indexes": ACTIVE,
-    "cleanup_data": DISABLED,
     "cleanup_placeholder_hierarchy": LEGACY_REPAIR,
-    "compare_accession_files": RETAIN_AUDIT,
-    "compare_annotation_files": RETAIN_AUDIT,
-    "compare_overview_files": RETAIN_AUDIT,
-    "generate_legacy_fix_todo": RETAIN_AUDIT,
     "generate_hierarchy_manifests_from_file_list": ACTIVE,
     "import_accession_external_mapping_manifest": ACTIVE,
     "import_accession_hierarchy_metadata": LEGACY_REPAIR,
@@ -45,13 +36,10 @@ COMMAND_LIFECYCLE = {
     "import_raw_data_manifest": ACTIVE,
     "import_sample_manifest": ACTIVE,
     "issue_data_access_token": ACTIVE,
-    "link_genomefiles_to_accessions": DISABLED,
     "migrate_placeholder_hierarchy": LEGACY_REPAIR,
     "reconcile_assembly_annotation_context": LEGACY_REPAIR,
     "refresh_dashboard_cache": ACTIVE,
     "quarantine_invalid_manual_files": LEGACY_REPAIR,
-    "report_genomefile_archive_status": RETAIN_AUDIT,
-    "report_legacy_usage": RETAIN_AUDIT,
     "list_data_access_tokens": ACTIVE,
     "publish_datafiles": ACTIVE,
     "publish_external_datasets": ACTIVE,

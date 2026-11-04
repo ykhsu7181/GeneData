@@ -9,9 +9,6 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
-from .file_categories import FILE_CATEGORY_CHOICES
-
-
 class FileType(models.Model):
     """文件类型模型"""
 
@@ -754,48 +751,3 @@ class FileRelation(models.Model):
 
     def __str__(self):
         return f"{self.file_id}:{self.related_type}:{self.related_id}:{self.file_role}"
-
-
-class GenomeFile(models.Model):
-    """基因组文件模型"""
-
-    name = models.CharField(max_length=255, verbose_name='文件名')
-    organism = models.CharField(max_length=50, verbose_name='生物体')
-    accession = models.ForeignKey(
-        'Accession',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='files',
-        verbose_name='Accession',
-    )
-    assembly = models.ForeignKey(
-        'Assembly',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='files',
-        verbose_name='Assembly',
-    )
-    annotation = models.ForeignKey(
-        'Annotation',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='files',
-        verbose_name='Annotation',
-    )
-    category = models.CharField(max_length=50, choices=FILE_CATEGORY_CHOICES, verbose_name='File Category')
-    file_path = models.CharField(max_length=500, verbose_name='文件路径')
-    file_type = models.ForeignKey(FileType, on_delete=models.SET_NULL, null=True, verbose_name='文件类型')
-    description = models.TextField(blank=True, null=True, verbose_name='描述')
-    size = models.BigIntegerField(default=0, verbose_name='文件大小(字节)')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
-
-    class Meta:
-        verbose_name = '基因组文件'
-        verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return f"{self.organism}-{self.category}-{self.name}"

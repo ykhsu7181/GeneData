@@ -3,7 +3,6 @@ import inspect
 from django.test import SimpleTestCase
 
 from files import archive_views, download_views, query_views
-from files.management.commands import report_genomefile_archive_status
 from files.services import accession_context, data_overview_service, transcriptome_list_service
 
 
@@ -47,10 +46,3 @@ class StageBQueryBoundaryTests(SimpleTestCase):
 
         self.assertIn("HTTP_410_GONE", source)
         self.assertNotIn("GenomeFile.objects", source)
-
-    def test_archive_report_audits_active_query_modules(self):
-        source = inspect.getsource(report_genomefile_archive_status.Command)
-
-        self.assertIn("inspect.getsource(query_views)", source)
-        self.assertIn("inspect.getsource(query_view_helpers)", source)
-        self.assertNotIn("inspect.getsource(ArchivedGenomeFileViewSet.get_annotation_data)", source)

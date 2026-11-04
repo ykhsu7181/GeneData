@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType, GenomeFile
+from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, FileType
 from files.services.file_relation_service import (
     GenomeAssetSelectionError,
     get_files_for_accession,
@@ -119,35 +119,6 @@ class FileRelationServiceTestCase(TestCase):
         self.assertEqual(len(files), 1)
         self.assertEqual(files[0]["file_code"], "FILE000002")
         self.assertEqual(files[0]["file_role"], "transcriptome.root")
-
-    def test_returns_empty_when_relation_missing_even_if_genome_file_exists(self):
-        GenomeFile.objects.create(
-            name="annotation.IR64.gff",
-            organism="IR64",
-            accession=self.accession,
-            category="annotation",
-            file_path="/tmp/annotation.IR64.gff",
-            file_type=self.file_type,
-            size=5678,
-        )
-
-        files = get_files_for_accession(self.accession.id, file_role="annotation")
-
-        self.assertEqual(files, [])
-
-    def test_returns_empty_when_only_organism_matches_legacy_file(self):
-        GenomeFile.objects.create(
-            name="organism.IR64.fasta",
-            organism=self.accession.accession,
-            category="genome",
-            file_path="/tmp/organism.IR64.fasta",
-            file_type=self.file_type,
-            size=5678,
-        )
-
-        files = get_files_for_accession(self.accession.id)
-
-        self.assertEqual(files, [])
 
     def test_get_primary_file_prefers_primary_relation(self):
         self.add_relation("accession", self.accession.id, file_role="genome", is_primary=False)

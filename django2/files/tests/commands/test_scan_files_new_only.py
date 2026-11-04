@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TransactionTestCase
 
-from files.models import Accession, Annotation, Assembly, DataFile, FileRelation, GenomeFile
+from files.models import Accession, Annotation, Assembly, DataFile, FileRelation
 from files.services.file_relation_service import (
     get_files_for_accession,
     get_files_for_annotation,
@@ -61,7 +61,6 @@ class ScanFilesNewOnlyTestCase(TransactionTestCase):
                 file_role="genome",
             ).exists()
         )
-        self.assertFalse(GenomeFile.objects.filter(file_path=genome_path).exists())
 
     def test_dry_run_does_not_write_any_file_tables(self):
         self.write_scan_file(f"genome.{self.accession_code}.fasta")
@@ -71,7 +70,6 @@ class ScanFilesNewOnlyTestCase(TransactionTestCase):
 
         self.assertEqual(DataFile.objects.count(), 0)
         self.assertEqual(FileRelation.objects.count(), 0)
-        self.assertEqual(GenomeFile.objects.count(), 0)
         output = stdout.getvalue()
         self.assertIn("created_datafile_count=1", output)
         self.assertIn("created_filerelation_count=2", output)
@@ -91,7 +89,6 @@ class ScanFilesNewOnlyTestCase(TransactionTestCase):
             ).count(),
             1,
         )
-        self.assertEqual(GenomeFile.objects.count(), 0)
 
     def test_write_mode_legacy_is_unsupported(self):
         self.write_scan_file(f"genome.{self.accession_code}.fasta")
@@ -133,7 +130,6 @@ class ScanFilesNewOnlyTestCase(TransactionTestCase):
 
         self.assertEqual(DataFile.objects.count(), 0)
         self.assertEqual(FileRelation.objects.count(), 0)
-        self.assertEqual(GenomeFile.objects.count(), 0)
         report_files = [
             name for name in os.listdir(self.output_dir.name)
             if name.startswith("scan_files_unmapped_") and name.endswith(".tsv")

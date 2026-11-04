@@ -3,7 +3,6 @@ from io import StringIO
 from pathlib import Path
 
 from django.core.management import call_command
-from django.core.management.base import CommandError
 from django.test import SimpleTestCase, TestCase
 
 from files.models import (
@@ -12,7 +11,6 @@ from files.models import (
     Assembly,
     DataFile,
     FileRelation,
-    GenomeFile,
 )
 
 GENOMEFILE_WRITE_METHODS = {
@@ -25,13 +23,6 @@ GENOMEFILE_WRITE_METHODS = {
     "update",
     "delete",
 }
-
-
-class DisabledGenomeFileCommandTests(TestCase):
-    def test_retired_mutation_commands_fail_closed(self):
-        for command_name in ("cleanup_data", "link_genomefiles_to_accessions"):
-            with self.subTest(command=command_name), self.assertRaises(CommandError):
-                call_command(command_name, stdout=StringIO())
 
 
 class SeedIr64DemoHierarchyTests(TestCase):
@@ -75,14 +66,13 @@ class SeedIr64DemoHierarchyTests(TestCase):
             is_primary=True,
         )
 
-    def test_seed_reuses_datafiles_through_relations_without_genomefile_writes(self):
+    def test_seed_reuses_datafiles_through_relations(self):
         first_stdout = StringIO()
         second_stdout = StringIO()
 
         call_command("seed_ir64_demo_hierarchy", stdout=first_stdout)
         call_command("seed_ir64_demo_hierarchy", stdout=second_stdout)
 
-        self.assertEqual(GenomeFile.objects.count(), 0)
         self.assertEqual(DataFile.objects.count(), 2)
         self.assertIn("FileRelations created: 8", first_stdout.getvalue())
         self.assertIn("FileRelations created: 0", second_stdout.getvalue())

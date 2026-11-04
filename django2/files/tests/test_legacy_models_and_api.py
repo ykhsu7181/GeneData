@@ -14,7 +14,6 @@ from files.models import (
     Dataset,
     FileRelation,
     FileType,
-    GenomeFile,
     Project,
     Sample,
     Species,
@@ -29,28 +28,10 @@ class ProjectRoutingSmokeTest(SimpleTestCase):
         self.assertEqual(str(patterns[0].pattern), 'gd/api/debug/')
 
 
-class GenomeFileModelTestCase(TestCase):
+class FileCategoryCompatibilityTestCase(TestCase):
     def test_coreblocks_category_in_choices(self):
         categories = [choice[0] for choice in FILE_CATEGORY_CHOICES]
         self.assertIn('coreBlocks', categories)
-
-    def test_create_genome_file_str(self):
-        file_type = FileType.objects.create(
-            name='BED',
-            extension='bed',
-        )
-
-        genome_file = GenomeFile.objects.create(
-            name='coreBlocks.IR64.bed',
-            organism='IR64',
-            category='coreBlocks',
-            file_path='/tmp/coreBlocks.IR64.bed',
-            file_type=file_type,
-            size=1000,
-        )
-
-        self.assertEqual(str(genome_file), 'IR64-coreBlocks-coreBlocks.IR64.bed')
-
 
 class AccessionHierarchyModelTestCase(TestCase):
     def setUp(self):
@@ -209,28 +190,6 @@ class AccessionDetailApiTestCase(APITestCase):
             extension='gff',
         )
 
-        GenomeFile.objects.create(
-            name='genome.IR64.fasta',
-            organism='IR64',
-            accession=self.accession,
-            assembly=self.default_assembly,
-            category='genome',
-            file_path='/tmp/genome.IR64.fasta',
-            file_type=self.file_type,
-            size=1234,
-        )
-        GenomeFile.objects.create(
-            name='annotation.IR64.gff',
-            organism='IR64',
-            accession=self.accession,
-            assembly=self.default_assembly,
-            annotation=self.default_annotation,
-            category='annotation',
-            file_path='/tmp/annotation.IR64.gff',
-            file_type=self.gff_type,
-            size=5678,
-        )
-
         genome_data_file = DataFile.objects.create(
             file_code='FILE-ACCESSION-DETAIL-GENOME',
             file_type=self.file_type,
@@ -280,36 +239,6 @@ class AccessionDetailApiTestCase(APITestCase):
         self.assertTrue(response.data['data']['file_status']['genome'])
         self.assertTrue(response.data['data']['file_status']['annotation'])
 
-    def test_accession_detail_does_not_fallback_to_legacy_organism_files(self):
-        legacy_accession = Accession.objects.create(accession='LEGACY')
-        legacy_assembly = Assembly.objects.create(
-            accession=legacy_accession,
-            name='default',
-            is_default=True,
-        )
-        Annotation.objects.create(
-            assembly=legacy_assembly,
-            name='default-annotation',
-            is_default=True,
-        )
-
-        GenomeFile.objects.create(
-            name='genome.LEGACY.fasta',
-            organism='LEGACY',
-            category='genome',
-            file_path='/tmp/genome.LEGACY.fasta',
-            file_type=self.file_type,
-            size=100,
-        )
-
-        response = self.client.get('/gd/api/files/accessions/LEGACY/')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.data['success'])
-        self.assertEqual(response.data['data']['file_count'], 0)
-        self.assertFalse(response.data['data']['file_status']['genome'])
-        self.assertEqual(len(response.data['data']['assemblies']), 1)
-
     def test_accession_detail_not_found(self):
         response = self.client.get('/gd/api/files/accessions/NOT_EXISTS/')
 
@@ -318,71 +247,6 @@ class AccessionDetailApiTestCase(APITestCase):
 
 
 class PaginatedOverviewApiTestCase(APITestCase):
-    def setUp(self):
-        self.accession = Accession.objects.create(
-            accession='IR64',
-            sub_population='XI',
-            seq_data='https://example.com/IR64',
-            longitude=114.3,
-            latitude=30.5,
-        )
-        self.default_assembly = Assembly.objects.create(
-            accession=self.accession,
-            name='default',
-            is_default=True,
-        )
-        self.alt_assembly = Assembly.objects.create(
-            accession=self.accession,
-            name='alt-v2',
-            is_default=False,
-        )
-        self.default_annotation = Annotation.objects.create(
-            assembly=self.default_assembly,
-            name='default-annotation',
-            is_default=True,
-        )
-        Annotation.objects.create(
-            assembly=self.alt_assembly,
-            name='alt-annotation',
-            is_default=True,
-        )
-
-        self.file_type = FileType.objects.create(name='FASTA', extension='fasta')
-        self.gff_type = FileType.objects.create(name='GFF', extension='gff')
-        self.tar_type = FileType.objects.create(name='TAR.GZ', extension='tar.gz')
-
-        GenomeFile.objects.create(
-            name='genome.IR64.fasta',
-            organism='IR64',
-            accession=self.accession,
-            assembly=self.default_assembly,
-            category='genome',
-            file_path='/tmp/genome.IR64.fasta',
-            file_type=self.file_type,
-            size=1234,
-        )
-        GenomeFile.objects.create(
-            name='annotation.IR64.gff',
-            organism='IR64',
-            accession=self.accession,
-            assembly=self.default_assembly,
-            annotation=self.default_annotation,
-            category='annotation',
-            file_path='/tmp/annotation.IR64.gff',
-            file_type=self.gff_type,
-            size=5678,
-        )
-        GenomeFile.objects.create(
-            name='transcriptome.root.IR64.tar.gz',
-            organism='IR64',
-            accession=self.accession,
-            assembly=self.default_assembly,
-            category='transcriptome.root',
-            file_path='/tmp/transcriptome.root.IR64.tar.gz',
-            file_type=self.tar_type,
-            size=7890,
-        )
-
     def test_legacy_paginated_overview_is_archived(self):
         response = self.client.get('/gd/api/files/genome-files/paginated_overview/')
 

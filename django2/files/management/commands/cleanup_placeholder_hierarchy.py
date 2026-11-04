@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from files.models import Annotation, Assembly, FileRelation, GenomeFile
+from files.models import Annotation, Assembly, FileRelation
 
 
 ASSEMBLY_METADATA_FIELDS = (
@@ -100,9 +100,6 @@ class Command(BaseCommand):
                 reasons.append("placeholder_has_metadata")
             if self.has_relations("assembly", assembly.id):
                 reasons.append("assembly_has_file_relations")
-            if GenomeFile.objects.filter(assembly=assembly).exists():
-                reasons.append("assembly_has_legacy_files")
-
             unsafe_children = []
             for annotation in assembly.annotations.all():
                 if annotation.name != "default-annotation":
@@ -112,8 +109,6 @@ class Command(BaseCommand):
                     unsafe_children.append(f"annotation_metadata:{annotation.id}")
                 if self.has_relations("annotation", annotation.id):
                     unsafe_children.append(f"annotation_relations:{annotation.id}")
-                if GenomeFile.objects.filter(annotation=annotation).exists():
-                    unsafe_children.append(f"annotation_legacy_files:{annotation.id}")
             if unsafe_children:
                 reasons.append("unsafe_child_annotations=" + ",".join(unsafe_children))
 
@@ -151,9 +146,6 @@ class Command(BaseCommand):
                 reasons.append("placeholder_has_metadata")
             if self.has_relations("annotation", annotation.id):
                 reasons.append("annotation_has_file_relations")
-            if GenomeFile.objects.filter(annotation=annotation).exists():
-                reasons.append("annotation_has_legacy_files")
-
             status = "blocked" if reasons else "candidate"
             if status == "candidate" and not parent_will_be_deleted:
                 candidates.append(annotation)

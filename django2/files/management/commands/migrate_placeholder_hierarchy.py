@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from files.models import Assembly, FileRelation, GenomeFile
+from files.models import Assembly, FileRelation
 
 
 PLACEHOLDER_NAME = "default"
@@ -119,8 +119,6 @@ class Command(BaseCommand):
             f"blocked\t{blocked}\n"
             f"relations_to_move\t{sum(item['relations_to_move'] for item in plans)}\n"
             f"relations_to_reuse\t{sum(item['relations_to_reuse'] for item in plans)}\n"
-            "legacy_genomefile_references\t"
-            f"{sum(item['legacy_genomefile_references'] for item in plans)}\n"
             f"report\t{report_path}"
         )
 
@@ -228,10 +226,6 @@ class Command(BaseCommand):
                 ).exists()
                 for relation in relations
             )
-        legacy_files = GenomeFile.objects.filter(assembly_id=placeholder.id).count()
-        if legacy_files:
-            reasons.append(f"legacy_genomefile_references={legacy_files}")
-
         return {
             "status": "blocked" if reasons else "ready",
             "accession": accession,
@@ -241,7 +235,6 @@ class Command(BaseCommand):
             "target_assembly_code": target.assembly_code if target else (codes[0] if len(codes) == 1 else ""),
             "relations_to_move": len(relations) - relations_to_reuse,
             "relations_to_reuse": relations_to_reuse,
-            "legacy_genomefile_references": legacy_files,
             "metadata_fields_to_copy": ",".join(
                 field
                 for field in COPY_IF_BLANK_FIELDS
@@ -302,7 +295,6 @@ class Command(BaseCommand):
             "target_assembly_code",
             "relations_to_move",
             "relations_to_reuse",
-            "legacy_genomefile_references",
             "metadata_fields_to_copy",
             "reason",
         )
