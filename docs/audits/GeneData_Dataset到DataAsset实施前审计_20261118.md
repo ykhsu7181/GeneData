@@ -228,7 +228,7 @@ Species、Accession、Sample、Assembly 和 Annotation 均为可选上下文或�
 | 仓库代码调用面审计 | 已完成 | 当前报告 |
 | DataAsset 稳定架构 ADR | 已完成 | `docs/adr/ADR-001-dataasset-unified-identity.md` |
 | 通用科研数据仓库总体设计 | 已完成 | `docs/architecture/GeneData_通用科研数据仓库总体设计.md` |
-| 生产数据只读审计 | 待执行 | 需要生产只读授权和独立证据 |
+| 生产数据只读审计 | 命令已实现，生产待执行 | `audit_dataset_migration_readiness` 已通过本地测试；仍需生产只读授权和独立证据 |
 | 最小 DataAsset schema/constraint ADR | 待执行 | 不在本报告中决定全部字段 |
 | 权限与发布状态 ADR | 待执行 | 必须保持 fail-closed |
 | Collection/Release/Manifest 语义决策 | 待执行 | 依赖生产案例和消费者审计 |
@@ -237,6 +237,8 @@ Species、Accession、Sample、Assembly 和 Annotation 均为可选上下文或�
 
 ## 10. 建议的下一实施任务
 
-下一任务应是“生产 Dataset T0 只读审计方案与可重复命令”，而不是直接创建全部 DataAsset、Masterdata、AnalysisRun 和前端页面。
+可重复命令 `audit_dataset_migration_readiness` 已实现。下一任务是在获批生产只读会话中执行该命令，
+核对报告，并补充 Collection/Release/Manifest 真实案例及 API 调用日志；此后才能编写最小
+DataAsset schema/constraint ADR。
 
-该任务应只生成只读统计、冲突清单和脱敏证据，不执行回填或生产变更。
+生产 T0 任务只生成只读统计、冲突清单和脱敏证据，不执行回填或生产变更。

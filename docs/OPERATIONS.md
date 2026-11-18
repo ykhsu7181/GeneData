@@ -77,7 +77,29 @@ npm run build
 失败时停止继续写入，保存日志和报告，然后按已批准顺序恢复旧代码与配置、恢复数据库或撤销本次
 数据发布状态。不要通过删除物理科研文件代替回滚。回滚后重新执行健康、权限和数据一致性检查。
 
-## 4. 外部数据 API 运维
+## 4. Dataset T0 只读审计
+
+专用命令只读取数据库并向私有目录写入五份 TSV；它拒绝覆盖同名报告，不输出 `file_path`、文件名、
+描述或负责人。生产执行必须使用获批的只读数据库账号，并为每次运行创建新的权限为 `0700` 的目录。
+
+```bash
+cd django2
+umask 077
+AUDIT_DIR="/approved/private/path/dataset-t0-$(date -u +%Y%m%dT%H%M%SZ)"
+install -d -m 700 "$AUDIT_DIR"
+
+python manage.py audit_dataset_migration_readiness \
+  --settings=filemanager.settings_production \
+  --output-dir "$AUDIT_DIR" \
+  2>&1 | tee "$AUDIT_DIR/command.log"
+```
+
+命令生成 `summary`、`datasets`、`accessions`、`file_links` 和 `duplicates` 五份报告，覆盖 Dataset
+分布、缺失上下文、Accession 基数、两条文件关系路径、无效关系、多 Dataset 文件和重复业务键。
+Collection/Release/Manifest 的真实业务语义、API 调用日志和未来 DataAsset 映射仍需人工证据，不能由
+结构审计自动推断。报告不得提交 Git 或存放到 Web 可访问目录。
+
+## 5. 外部数据 API 运维
 
 相关命令的参数以 `python manage.py <command> --help` 和代码为准。核心活动命令包括：
 
@@ -99,7 +121,7 @@ audit_external_api_readiness
 - Nginx 内部文件位置必须是 `internal`，Range、HEAD 和权限均需验收。
 - 监控 `/gd/api/v1/` 的状态码、响应字节和耗时，不记录 Authorization 头。
 
-## 5. JBrowse 运维
+## 6. JBrowse 运维
 
 索引命令仍是活动能力：
 
@@ -113,12 +135,12 @@ python manage.py build_jbrowse_indexes --assembly-id <id> --apply
 `failed_checkpoint_count=0` 才能描述为本批完成。上线前还需核对参考序列、注释 seqid、索引新鲜度、
 文件授权、Nginx Range 和浏览器实际加载。
 
-## 6. Management command 生命周期
+## 7. Management command 生命周期
 
 机器可读事实来源是 `files.management.command_lifecycle.COMMAND_LIFECYCLE`。新增或删除命令时必须同步
 更新该注册表并通过回归测试。没有源码调用者不能证明生产脚本、定时任务或人工流程未使用该命令。
 
-## 7. 安全与验收
+## 8. 安全与验收
 
 - 生产必须显式提供安全配置，缺失时安全失败。
 - 当前已知安全例外见 `docs/security_exceptions.md`，在关闭条件满足前不得宣称 Security Gate 全部通过。
