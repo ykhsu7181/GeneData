@@ -17,7 +17,7 @@ supersedes: null
 | 文件管理主链路 | `DataFile + FileRelation` 当前实现 | active |
 | DataAsset 统一科研数据身份 | `docs/adr/ADR-001-dataasset-unified-identity.md` | active |
 | DataAsset 最小 schema、文件成员和发布边界 | `docs/adr/ADR-002-dataasset-minimum-schema.md` | active |
-| DataAsset T3 新增结构实施 | `docs/architecture/GeneData_DataAsset_T3新增结构实施方案.md` | active |
+| DataAsset T3 新增结构实施 | `docs/architecture/GeneData_DataAsset_T3新增结构实施方案.md` | active；开发完成，生产未部署 |
 | 通用科研数据仓库总体设计 | `docs/architecture/GeneData_通用科研数据仓库总体设计.md` | active |
 | Dataset 到 DataAsset 代码审计 | `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md` | reference |
 | API 使用与接口边界 | `docs/api_pages.md` | active |

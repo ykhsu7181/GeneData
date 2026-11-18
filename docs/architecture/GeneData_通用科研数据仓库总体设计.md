@@ -278,8 +278,8 @@ AssetRelation 只表达 `annotates`、`uses_reference`、`part_of`、`version_of
 1. 仓库调用面审计——已完成；
 2. 生产数据只读审计——T0、T1 已完成，证据在仓库外受控保存；
 3. 最小 schema、权限和 Collection/Release 边界 ADR——已合并为 ADR-002 并批准；
-4. 新增结构和测试，不切换活动读写；
-5. Dataset -> DataAsset dry-run 映射；
+4. 新增结构和测试，不切换活动读写——T3 开发完成，migration `0026` 尚未部署生产；
+5. Dataset -> DataAsset dry-run 映射——未开始；
 6. 分批、幂等回填；
 7. 核对记录、关系、权限和 checksum；
 8. 一次性切换活动读写；
@@ -308,12 +308,13 @@ AssetRelation 只表达 `annotates`、`uses_reference`、`part_of`、`version_of
 
 1. 生产 Dataset T0 只读审计方案与脱敏输出；
 2. DataAsset 最小 schema/constraint ADR——已批准；
-3. 版本控制 Masterdata/Profile/Schema Registry 原型；
-4. T3 最小 DataAsset、文件成员和授权 service 实施方案；
-5. 最小 DataAsset + 文件成员后端和测试；
-6. IR64、显微图像、普通表格三个试点；
-7. API、Vue 与外部工具切换；
-8. Dataset 分阶段回填、切换和退役。
+3. 版本控制 Masterdata/Profile/Schema Registry 原型——T3 开发完成；
+4. T3 最小 DataAsset、文件成员和授权 service 实施方案——已批准并完成开发；
+5. 最小 DataAsset + 文件成员后端和测试——开发验证完成，生产 migration 未执行；
+6. T4 Dataset -> DataAsset 只读 dry-run 映射和回填准备；
+7. IR64、显微图像、普通表格三个试点；
+8. API、Vue 与外部工具切换；
+9. Dataset 分阶段回填、切换和退役。
 
 每个阶段必须有独立范围、验收、回滚和完成证据，不自动开始下一阶段。
 

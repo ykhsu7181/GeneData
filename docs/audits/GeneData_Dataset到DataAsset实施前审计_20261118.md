@@ -230,17 +230,18 @@ Species、Accession、Sample、Assembly 和 Annotation 均为可选上下文或�
 | 通用科研数据仓库总体设计 | 已完成 | `docs/architecture/GeneData_通用科研数据仓库总体设计.md` |
 | Dataset T0 生产只读审计 | 已完成，证据在仓库外受控保存 | 用户提供的报告显示 289 个 Dataset、4500 个 DataFile，文件均无 Dataset 归属；该结果不是仓库内置数据快照 |
 | DataFile T1 归属审计 | 已完成，证据在仓库外受控保存 | 4500 个文件中 390 个唯一类型候选、397 个需语义规则、3713 个无 Dataset 候选；无无效关系 |
-| 最小 DataAsset schema/constraint ADR | 已批准 | `docs/adr/ADR-002-dataasset-minimum-schema.md`；尚未实现 model 或 migration |
+| 最小 DataAsset schema/constraint ADR | 已批准 | `docs/adr/ADR-002-dataasset-minimum-schema.md` |
 | 最小权限与发布边界 | 已批准 | 已并入 ADR-002，必须保持 fail-closed |
 | Collection/Release/Manifest 语义决策 | 第一阶段边界已批准 | ADR-002 暂不增加 Collection/Release 表，Manifest 为生成视图 |
-| Dataset -> DataAsset 映射 dry-run 工具 | 未开始 | T1 归属审计和 schema 批准后开发 |
-| model/migration/API/frontend 实施 | 未开始 | 必须分阶段批准 |
+| DataAsset T3 新增结构 | 开发完成，生产未部署 | 三个模型、migration `0026`、注册表及最小 service 已通过 470 项 `files` 测试；未执行生产 migration |
+| Dataset -> DataAsset 映射 dry-run 工具 | 未开始 | T4 单独实施，不执行回填 |
+| API/frontend 实施 | 未开始 | T3 明确排除，必须后续单独批准 |
 
 ## 10. 建议的下一实施任务
 
 T0、T1 报告已经核对，生产审计只生成了脱敏 TSV，没有执行回填或生产变更。ADR-002 已批准最小
-schema、权限、发布和 Manifest 边界，避免建立无证据的 Collection/Release 表。下一任务是单独完成
-注册表原型和 T3 最小 model/migration/授权 service 实施方案。
+schema、权限、发布和 Manifest 边界；T3 新增结构已完成开发验证，但 migration `0026` 尚未在生产执行，
+没有 DataAsset 生产记录。下一任务是 T4 只读 dry-run 映射和回填准备，不直接回填或切换。
 
 T1 候选匹配结果不能直接升级为迁移事实。尤其不能把 annotation 文件自动挂到 WGS 资产，也不能只按
 Accession 合并 raw reads 或 transcriptome。

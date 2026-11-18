@@ -23,6 +23,20 @@ T3 只完成“新增结构并验证，不切换活动读写”：
 4. 用模型、约束、注册表和权限测试证明结构可用；
 5. 保持 `Dataset` 为当前活动事实来源，不回填、不双写、不切换 API 或前端。
 
+### 1.1 实施结果
+
+T3 已在开发分支完成，尚未部署生产：
+
+- `4ce83f0`：版本控制注册表、唯一加载/校验入口和注册表测试；
+- `c91f2cd`：三个目标模型、migration `0026_auto_20261118_1523` 和数据库约束测试；
+- `0211590`：最小创建 service、资产—文件授权组合入口和针对性测试；
+- `python manage.py test files --noinput`：470 项通过，1 项既有跳过；
+- `python manage.py makemigrations --check --dry-run files`：无 migration 漂移；
+- 生产设置检查无 ERROR，保留现有 HSTS 和 SSL redirect 两项 WARNING。
+
+本结果不表示 migration `0026` 已在生产执行，也不表示存在 DataAsset 生产数据、API、前端、回填或
+Dataset 切换。
+
 ## 2. 已核实的实现约束
 
 - 后端为 Django 3.2，数据库和 CI 目标为 MySQL 8；
@@ -30,7 +44,7 @@ T3 只完成“新增结构并验证，不切换活动读写”：
 - 当前文件授权集中在 `files/services/datafile_access_service.py`，仍通过 `DataFile.dataset` 和
   `FileRelation(dataset)` 计算 Dataset 策略；
 - 当前没有可直接复用的 Project 成员关系模型；
-- 当前没有 JSON Schema 库或 DataAsset 注册表实现；
+- T3-A 已引入 `jsonschema` 和唯一 DataAsset 注册表入口；新增普通类型不需要新增数据库表；
 - MySQL 不会实施 Django 3.2 的条件 `UniqueConstraint(condition=...)`，不能用看似存在、实际未落库的
   条件唯一约束实现 primary 不变量。
 
