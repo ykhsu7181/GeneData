@@ -115,6 +115,9 @@ DataAsset 不保存：
 
 完整字段、状态机、索引和数据库约束由最小 schema ADR 决定。
 
+T2 已批准决策见 `docs/adr/ADR-002-dataasset-minimum-schema.md`。该 ADR 是后续实施依据，但不表示
+model、migration、API、权限、前端、回填或生产切换已经完成。
+
 ### 4.3 DataFile
 
 继续复用 DataFile 作为唯一物理文件实体：
@@ -273,8 +276,8 @@ AssetRelation 只表达 `annotates`、`uses_reference`、`part_of`、`version_of
 ### 8.2 固定阶段
 
 1. 仓库调用面审计——已完成；
-2. 生产数据只读审计——待执行；
-3. 最小 schema、权限、Collection/Release 子 ADR；
+2. 生产数据只读审计——T0、T1 已完成，证据在仓库外受控保存；
+3. 最小 schema、权限和 Collection/Release 边界 ADR——已合并为 ADR-002 并批准；
 4. 新增结构和测试，不切换活动读写；
 5. Dataset -> DataAsset dry-run 映射；
 6. 分批、幂等回填；
@@ -304,14 +307,13 @@ AssetRelation 只表达 `annotates`、`uses_reference`、`part_of`、`version_of
 按以下顺序单独评审和实施：
 
 1. 生产 Dataset T0 只读审计方案与脱敏输出；
-2. DataAsset 最小 schema/constraint ADR；
-3. Project/DataAsset/DataFile 权限与发布 ADR；
-4. Collection/Release/Manifest 语义 ADR；
-5. 版本控制 Masterdata/Profile/Schema Registry 原型；
-6. 最小 DataAsset + 文件成员后端和测试；
-7. IR64、显微图像、普通表格三个试点；
-8. API、Vue 与外部工具切换；
-9. Dataset 分阶段回填、切换和退役。
+2. DataAsset 最小 schema/constraint ADR——已批准；
+3. 版本控制 Masterdata/Profile/Schema Registry 原型；
+4. T3 最小 DataAsset、文件成员和授权 service 实施方案；
+5. 最小 DataAsset + 文件成员后端和测试；
+6. IR64、显微图像、普通表格三个试点；
+7. API、Vue 与外部工具切换；
+8. Dataset 分阶段回填、切换和退役。
 
 每个阶段必须有独立范围、验收、回滚和完成证据，不自动开始下一阶段。
 
