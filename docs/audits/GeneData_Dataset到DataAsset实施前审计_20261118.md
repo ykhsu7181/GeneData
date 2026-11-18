@@ -228,17 +228,19 @@ Species、Accession、Sample、Assembly 和 Annotation 均为可选上下文或�
 | 仓库代码调用面审计 | 已完成 | 当前报告 |
 | DataAsset 稳定架构 ADR | 已完成 | `docs/adr/ADR-001-dataasset-unified-identity.md` |
 | 通用科研数据仓库总体设计 | 已完成 | `docs/architecture/GeneData_通用科研数据仓库总体设计.md` |
-| 生产数据只读审计 | 命令已实现，生产待执行 | `audit_dataset_migration_readiness` 已通过本地测试；仍需生产只读授权和独立证据 |
+| Dataset T0 生产只读审计 | 已完成，证据在仓库外受控保存 | 用户提供的报告显示 289 个 Dataset、4500 个 DataFile，文件均无 Dataset 归属；该结果不是仓库内置数据快照 |
+| DataFile T1 归属审计 | 命令已实现，生产待执行 | `audit_datafile_asset_mapping_readiness` 已通过本地测试；生产结果需独立验收 |
 | 最小 DataAsset schema/constraint ADR | 待执行 | 不在本报告中决定全部字段 |
 | 权限与发布状态 ADR | 待执行 | 必须保持 fail-closed |
 | Collection/Release/Manifest 语义决策 | 待执行 | 依赖生产案例和消费者审计 |
-| Dataset 映射 dry-run 工具 | 未开始 | 生产审计和 schema 批准后开发 |
+| Dataset -> DataAsset 映射 dry-run 工具 | 未开始 | T1 归属审计和 schema 批准后开发 |
 | model/migration/API/frontend 实施 | 未开始 | 必须分阶段批准 |
 
 ## 10. 建议的下一实施任务
 
-可重复命令 `audit_dataset_migration_readiness` 已实现。下一任务是在获批生产只读会话中执行该命令，
-核对报告，并补充 Collection/Release/Manifest 真实案例及 API 调用日志；此后才能编写最小
+T0 报告已经核对。下一任务是在获批生产只读会话中执行
+`audit_datafile_asset_mapping_readiness`，分析文件归属、唯一候选、语义不确定项和无上下文记录；同时
+补充 Collection/Release/Manifest 真实案例及 API 调用日志。完成 T1 证据核对后，才能编写最小
 DataAsset schema/constraint ADR。
 
-生产 T0 任务只生成只读统计、冲突清单和脱敏证据，不执行回填或生产变更。
+生产 T1 只生成脱敏 TSV，不执行回填或生产变更。候选匹配结果不能直接升级为迁移事实。

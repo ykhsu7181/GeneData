@@ -10,6 +10,7 @@ COMMAND_LIFECYCLE = {
     "audit_file_relations": ACTIVE,
     "audit_genome_transcriptome_readiness": ACTIVE,
     "audit_datafile_access": ACTIVE,
+    "audit_datafile_asset_mapping_readiness": ACTIVE,
     "audit_dataset_migration_readiness": ACTIVE,
     "audit_external_api_readiness": ACTIVE,
     "audit_public_fasta_indexes": ACTIVE,

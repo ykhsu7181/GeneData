@@ -99,6 +99,42 @@ python manage.py audit_dataset_migration_readiness \
 Collection/Release/Manifest 的真实业务语义、API 调用日志和未来 DataAsset 映射仍需人工证据，不能由
 结构审计自动推断。报告不得提交 Git 或存放到 Web 可访问目录。
 
+### 4.1 DataFile T1 归属审计
+
+T1 命令盘点每个 `DataFile` 的现有 `FileRelation` 上下文，并给出可解释的 Dataset 候选。候选仅用于
+发现需要回填或人工决策的记录，不是 DataAsset 迁移规则，也不会写入数据库。命令只对 genome、
+transcriptome、annotation 和 Hi-C 的明确文件角色进行同类型候选匹配；无法精确对应的角色保留为
+`needs_semantic_rule`，不得自动归类。
+
+开发环境先运行相关测试：
+
+```bash
+cd django2
+python manage.py test \
+  files.tests.commands.test_audit_datafile_asset_mapping_readiness \
+  files.tests.regression.test_management_command_lifecycle \
+  --settings=filemanager.settings_sqlite_test --noinput
+```
+
+生产数据审计是独立 Gate。只有在代码版本获批并使用生产只读数据库配置时，才在新的私有目录执行：
+
+```bash
+cd django2
+umask 077
+AUDIT_DIR="/approved/private/path/datafile-t1-$(date -u +%Y%m%dT%H%M%SZ)"
+install -d -m 700 "$AUDIT_DIR"
+
+python manage.py audit_datafile_asset_mapping_readiness \
+  --settings=filemanager.settings_production \
+  --output-dir "$AUDIT_DIR" \
+  2>&1 | tee "$AUDIT_DIR/command.log"
+```
+
+输出为 `datafile_t1_summary.tsv`、`datafile_t1_files.tsv` 和 `datafile_t1_relations.tsv`。其中
+`unique_type_candidate` 仍只是候选；`invalid_context`、`multiple_type_candidates`、
+`needs_semantic_rule`、`no_dataset_candidate` 和 `no_accession_context` 必须人工核对。报告不包含文件名、
+物理路径、描述或负责人，不得提交 Git 或放入 Web 可访问目录。
+
 ## 5. 外部数据 API 运维
 
 相关命令的参数以 `python manage.py <command> --help` 和代码为准。核心活动命令包括：
