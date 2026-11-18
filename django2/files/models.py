@@ -302,6 +302,232 @@ class DatasetAccession(models.Model):
         return f"{self.dataset.dataset_code}:{self.accession.accession}"
 
 
+class DataAsset(models.Model):
+    """Target identity for a versioned, publishable scientific data unit."""
+
+    VISIBILITY_PRIVATE = "private"
+    VISIBILITY_INTERNAL = "lab_internal"
+    VISIBILITY_PUBLIC = "public"
+    VISIBILITY_CHOICES = [
+        (VISIBILITY_PRIVATE, "Private"),
+        (VISIBILITY_INTERNAL, "Lab internal"),
+        (VISIBILITY_PUBLIC, "Public"),
+    ]
+
+    STATUS_DRAFT = "draft"
+    STATUS_SUBMITTED = "submitted"
+    STATUS_APPROVED = "approved"
+    STATUS_RELEASED = "released"
+    STATUS_ARCHIVED = "archived"
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "Draft"),
+        (STATUS_SUBMITTED, "Submitted"),
+        (STATUS_APPROVED, "Approved"),
+        (STATUS_RELEASED, "Released"),
+        (STATUS_ARCHIVED, "Archived"),
+    ]
+
+    asset_code = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=255, blank=True, default="")
+    project = models.ForeignKey(
+        "Project",
+        on_delete=models.PROTECT,
+        related_name="data_assets",
+    )
+    data_type_key = models.CharField(max_length=100)
+    profile_key = models.CharField(max_length=100)
+    schema_version = models.CharField(max_length=50)
+    schema_digest = models.CharField(max_length=64)
+    version = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default=STATUS_DRAFT,
+    )
+    visibility = models.CharField(
+        max_length=50,
+        choices=VISIBILITY_CHOICES,
+        default=VISIBILITY_PRIVATE,
+    )
+    metadata = models.JSONField(default=dict)
+    description = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="created_data_assets",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    published_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        db_table = "data_asset"
+        ordering = ["asset_code"]
+        indexes = [
+            models.Index(fields=["project", "status"], name="idx_da_project_status"),
+            models.Index(fields=["project", "data_type_key"], name="idx_da_project_type"),
+            models.Index(fields=["visibility", "status"], name="idx_da_visibility_status"),
+        ]
+        constraints = [
+            models.CheckConstraint(check=~Q(asset_code=""), name="chk_da_code_nonempty"),
+            models.CheckConstraint(check=~Q(data_type_key=""), name="chk_da_type_nonempty"),
+            models.CheckConstraint(check=~Q(profile_key=""), name="chk_da_profile_nonempty"),
+            models.CheckConstraint(check=~Q(schema_version=""), name="chk_da_schema_ver_nonempty"),
+            models.CheckConstraint(check=~Q(schema_digest=""), name="chk_da_schema_hash_nonempty"),
+        ]
+
+    def __str__(self):
+        return self.name or self.asset_code
+
+
+class AssetFileMembership(models.Model):
+    """Explicit membership between a DataAsset and the canonical DataFile."""
+
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="file_memberships",
+    )
+    data_file = models.ForeignKey(
+        "DataFile",
+        on_delete=models.PROTECT,
+        related_name="asset_memberships",
+    )
+    file_role = models.CharField(max_length=100)
+    position = models.PositiveIntegerField(default=0)
+    is_primary = models.BooleanField(default=False)
+    primary_slot = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        editable=False,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="created_asset_file_memberships",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "asset_file_membership"
+        ordering = ["asset_id", "file_role", "position", "id"]
+        indexes = [
+            models.Index(
+                fields=["asset", "file_role", "position"],
+                name="idx_afm_asset_role_pos",
+            ),
+            models.Index(fields=["data_file", "asset"], name="idx_afm_file_asset"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "data_file"],
+                name="uniq_asset_data_file",
+            ),
+            models.UniqueConstraint(
+                fields=["asset", "file_role", "position"],
+                name="uniq_asset_role_position",
+            ),
+            models.UniqueConstraint(
+                fields=["asset", "file_role", "primary_slot"],
+                name="uniq_asset_role_primary_file",
+            ),
+            models.CheckConstraint(
+                check=(
+                    (
+                        Q(is_primary=True)
+                        & Q(primary_slot__isnull=False)
+                        & Q(primary_slot=1)
+                    )
+                    | (Q(is_primary=False) & Q(primary_slot__isnull=True))
+                ),
+                name="chk_afm_primary_guard",
+            ),
+            models.CheckConstraint(check=Q(position__gte=0), name="chk_afm_position_gte_0"),
+            models.CheckConstraint(check=~Q(file_role=""), name="chk_afm_role_nonempty"),
+        ]
+
+    def __str__(self):
+        return f"{self.asset_id}:{self.data_file_id}:{self.file_role}"
+
+
+class DataAssetAccession(models.Model):
+    """Optional biological context for a DataAsset."""
+
+    ROLE_PRIMARY = "primary"
+    ROLE_DERIVED = "derived"
+    ROLE_REFERENCE = "reference"
+    RELATION_ROLE_CHOICES = [
+        (ROLE_PRIMARY, "Primary"),
+        (ROLE_DERIVED, "Derived"),
+        (ROLE_REFERENCE, "Reference"),
+    ]
+
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="accession_links",
+    )
+    accession = models.ForeignKey(
+        "Accession",
+        on_delete=models.PROTECT,
+        related_name="data_asset_links",
+    )
+    relation_role = models.CharField(
+        max_length=50,
+        choices=RELATION_ROLE_CHOICES,
+        default=ROLE_PRIMARY,
+    )
+    source = models.CharField(max_length=100, blank=True, default="")
+    primary_slot = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        editable=False,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "data_asset_accession"
+        ordering = ["asset_id", "accession_id"]
+        indexes = [
+            models.Index(fields=["accession", "asset"], name="idx_daa_accession_asset"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "accession"],
+                name="uniq_data_asset_accession",
+            ),
+            models.UniqueConstraint(
+                fields=["asset", "primary_slot"],
+                name="uniq_asset_primary_accession",
+            ),
+            models.CheckConstraint(
+                check=(
+                    (
+                        Q(relation_role="primary")
+                        & Q(primary_slot__isnull=False)
+                        & Q(primary_slot=1)
+                    )
+                    | (
+                        Q(relation_role__in=["derived", "reference"])
+                        & Q(primary_slot__isnull=True)
+                    )
+                ),
+                name="chk_daa_primary_guard",
+            ),
+            models.CheckConstraint(
+                check=Q(relation_role__in=["primary", "derived", "reference"]),
+                name="chk_daa_relation_role",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.asset_id}:{self.accession_id}:{self.relation_role}"
+
+
 class Assembly(models.Model):
     accession = models.ForeignKey(
         'Accession',
