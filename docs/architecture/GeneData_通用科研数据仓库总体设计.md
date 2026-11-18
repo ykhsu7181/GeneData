@@ -48,11 +48,11 @@ GeneData 面向跨物种、跨组学、跨课题组的长期科研数据管理�
 ### 3.1 当前已验证状态
 
 - 当前存在 `Project`、`Dataset`、`DatasetAccession`、`DataFile`、`FileRelation`、`Assembly`、`Annotation` 等模型；
-- 当前不存在 DataAsset 应用模型和 migration；
+- 当前已存在 `DataAsset`、`AssetFileMembership`、`DataAssetAccession` 及 migration `0026`，但尚未部署生产，也没有生产 DataAsset 记录；
 - `DataFile` 是当前正式物理文件实体；
 - `Dataset` 同时承担身份、类型、版本、发布、可见性、文件分组、Accession 和 Manifest 语义；
 - Dataset 文件关系同时存在 `DataFile.dataset` 外键和 `FileRelation(dataset)` 两条路径；
-- 当前代码调用面审计已完成，生产数据只读审计尚未执行；
+- 当前代码调用面审计和 T0、T1 生产只读审计已完成；T4 dry-run 工具仅在开发环境完成，尚未使用生产数据运行；
 - 部分 Dataset API 已进入 OpenAPI、测试和前端契约。
 
 ### 3.2 目标结构
@@ -115,8 +115,8 @@ DataAsset 不保存：
 
 完整字段、状态机、索引和数据库约束由最小 schema ADR 决定。
 
-T2 已批准决策见 `docs/adr/ADR-002-dataasset-minimum-schema.md`。该 ADR 是后续实施依据，但不表示
-model、migration、API、权限、前端、回填或生产切换已经完成。
+T2 已批准决策见 `docs/adr/ADR-002-dataasset-minimum-schema.md`。T3 已完成 model、migration 和最小 service
+的开发验证，但不表示 migration 已部署生产，也不表示 API、前端、回填或生产切换已经完成。
 
 ### 4.3 DataFile
 
@@ -279,7 +279,7 @@ AssetRelation 只表达 `annotates`、`uses_reference`、`part_of`、`version_of
 2. 生产数据只读审计——T0、T1 已完成，证据在仓库外受控保存；
 3. 最小 schema、权限和 Collection/Release 边界 ADR——已合并为 ADR-002 并批准；
 4. 新增结构和测试，不切换活动读写——T3 开发完成，migration `0026` 尚未部署生产；
-5. Dataset -> DataAsset dry-run 映射——未开始；
+5. Dataset -> DataAsset dry-run 映射——T4 开发完成，尚未在生产运行；
 6. 分批、幂等回填；
 7. 核对记录、关系、权限和 checksum；
 8. 一次性切换活动读写；
@@ -311,7 +311,7 @@ AssetRelation 只表达 `annotates`、`uses_reference`、`part_of`、`version_of
 3. 版本控制 Masterdata/Profile/Schema Registry 原型——T3 开发完成；
 4. T3 最小 DataAsset、文件成员和授权 service 实施方案——已批准并完成开发；
 5. 最小 DataAsset + 文件成员后端和测试——开发验证完成，生产 migration 未执行；
-6. T4 Dataset -> DataAsset 只读 dry-run 映射和回填准备；
+6. T4 Dataset -> DataAsset 只读 dry-run 映射和回填准备——开发完成，生产执行待单独批准；
 7. IR64、显微图像、普通表格三个试点；
 8. API、Vue 与外部工具切换；
 9. Dataset 分阶段回填、切换和退役。

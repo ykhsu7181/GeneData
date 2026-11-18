@@ -24,7 +24,7 @@ supersedes: null
 | 开发、CI、部署与运维 | `docs/OPERATIONS.md` | active |
 | Metadata TSV 数据准备 | `docs/metadata_tsv_source_guide.md` | active |
 | 已知安全例外 | `docs/security_exceptions.md` | active |
-| Dataset/DataFile 生产数据审计与迁移 | T0、T1 生产只读证据已核对；尚未回填或切换 | draft |
+| Dataset/DataFile 生产数据审计与迁移 | T0、T1 生产只读证据已核对；T4 dry-run 工具已完成开发但尚未在生产运行；尚未回填或切换 | draft |
 | GenomeFile 退役 | 当前代码与 `0025_delete_genomefile`；生产 migration 和数据状态独立验收 | active |
 | 数据血缘模型 | 尚未批准最终模型 | draft |
 

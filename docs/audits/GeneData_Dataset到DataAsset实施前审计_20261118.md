@@ -234,14 +234,24 @@ Species、Accession、Sample、Assembly 和 Annotation 均为可选上下文或�
 | 最小权限与发布边界 | 已批准 | 已并入 ADR-002，必须保持 fail-closed |
 | Collection/Release/Manifest 语义决策 | 第一阶段边界已批准 | ADR-002 暂不增加 Collection/Release 表，Manifest 为生成视图 |
 | DataAsset T3 新增结构 | 开发完成，生产未部署 | 三个模型、migration `0026`、注册表及最小 service 已通过 470 项 `files` 测试；未执行生产 migration |
-| Dataset -> DataAsset 映射 dry-run 工具 | 未开始 | T4 单独实施，不执行回填 |
+| Dataset -> DataAsset 映射 dry-run 工具 | 开发完成，生产未运行 | 复用 T1 候选逻辑，输出资产、Accession、文件成员、问题和权限对比 TSV；不写数据库、不执行回填 |
 | API/frontend 实施 | 未开始 | T3 明确排除，必须后续单独批准 |
 
 ## 10. 建议的下一实施任务
 
 T0、T1 报告已经核对，生产审计只生成了脱敏 TSV，没有执行回填或生产变更。ADR-002 已批准最小
 schema、权限、发布和 Manifest 边界；T3 新增结构已完成开发验证，但 migration `0026` 尚未在生产执行，
-没有 DataAsset 生产记录。下一任务是 T4 只读 dry-run 映射和回填准备，不直接回填或切换。
+没有 DataAsset 生产记录。T4 只读 dry-run 工具已在开发环境完成，不直接回填或切换；下一 Gate 是在独立
+生产临时目录运行该只读工具并人工核对所有 `review`、`blocked` 和权限变化记录，需另行批准。
 
 T1 候选匹配结果不能直接升级为迁移事实。尤其不能把 annotation 文件自动挂到 WGS 资产，也不能只按
 Accession 合并 raw reads 或 transcriptome。
+
+T4 当前仅批准确定性的 `genome -> genome/reference_genome` 映射。未注册的 Dataset 类型、缺失 Project、
+冲突的既有 DataAsset、无法唯一确定的文件归属或文件角色、权限放宽等情况必须进入阻断或人工复核清单，
+不得由回填程序猜测。
+
+T4 映射报告保留 Dataset 名称、描述和 DatasetAccession 来源；BioProject 进入受 Schema 约束的
+`external_identifiers.bioproject` metadata。Species 仅在 Dataset Species 与全部 Accession Species 一致时
+记为由 Accession 上下文承接，否则进入人工复核。既有 DataAsset 只能报告为 `existing_core_match`，其
+Accession 和文件成员关系仍必须独立核对，不能把核心字段一致误报为完整迁移一致。
