@@ -49,7 +49,7 @@ GeneData 是长期演进的通用科研数据管理平台，必须支持跨物�
 - 该替代必须通过已批准 ADR 和渐进迁移完成；不得长期双读、双写、fallback，或让 `Dataset` 与 `DataAsset` 同时成为活动事实来源。
 - `Assembly`、`Annotation`、`Sample` 等专业实体承载各自领域事实。没有 Accession 或 Annotation 的数据也必须能够仅通过通用资产、文件、项目和权限结构进入仓库。
 - 通用模型只保存通用字段；专业字段留在专业实体或经批准的扩展结构中。不得复制整套专业字段形成第二份事实来源。
-- `DataAsset` 的字段、关系、状态机和迁移阶段以已批准设计文档或 ADR 为准；当前 `docs/drafts/` 下的 DataAsset 方案不得直接指导实现。
+- `DataAsset` 的字段、关系、状态机和迁移阶段以已批准设计文档或 ADR 为准；已删除或被替代的历史草案不得直接指导实现。
 
 ### 3.2 物理文件
 
@@ -72,10 +72,11 @@ GeneData 是长期演进的通用科研数据管理平台，必须支持跨物�
 
 ### 3.4 `GenomeFile` 遗留边界
 
-- `GenomeFile` 是待退役遗留模型；新功能不得新增其写入、查询、前端入口或业务依赖。
+- 当前代码已删除 `GenomeFile` model，并以 `0025_delete_genomefile` 表达目标 schema；这不证明该 migration 已在生产执行或完成数据验收。
+- 新功能不得重新引入其 model、写入、查询、前端入口或业务依赖。
 - 不得新增 `GenomeFile -> DataFile` fallback、双读、双写、无期限 adapter、feature flag 或变相替代模型。
-- 普通功能任务不得顺带批量删除遗留 model、serializer、view、admin、路由、测试、migration 或审计工具。
-- 只有经批准的退役任务完成引用审计、数据核对、备份与恢复验证、migration/回滚设计和生产确认后，才能分阶段删除。
+- 历史 migration 必须保留；当前 410 archive 路由和兼容提示只能在批准的退役任务完成调用审计后删除。
+- 生产删表状态必须由 migration 记录、备份/恢复证据和生产验收独立确认；不得从代码存在推断生产已经完成。
 - 历史 migration 和已归档证据不得改写。
 
 ### 3.5 唯一实现原则

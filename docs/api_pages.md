@@ -1,109 +1,111 @@
-# 基因数据仓库 API 页面调用说明
+---
+title: GeneData API 使用说明
+status: active
+owner: 徐杨珂
+last_reviewed: 2026-11-18
+supersedes:
+  - GeneData_外部工具数据API_使用手册.md
+---
 
-本项目后端接口当前遵循 new-only 文件体系：
+# GeneData API 使用说明
 
-- 正式文件资产表：`DataFile`
-- 正式文件归属表：`FileRelation`
-- 历史归档表：`GenomeFile`
-- 业务查询禁止返回 `legacy_genomefile`
-- 业务下载禁止返回 `/genome-files/`
-- 新下载入口统一使用 `/gd/api/files/data-files/<file_id>/download/`
+本文只记录当前活动 API 的稳定入口和使用边界。机器可读的外部 API 契约以
+`/gd/api/v1/openapi.json` 为准；实现状态以代码和自动化测试为准。
 
-## 页面与接口总览
+## 1. 数据与安全边界
 
-| 页面 | 前端路由 | 主要接口 | 后端入口 | 查询 service | 数据来源 |
-| --- | --- | --- | --- | --- | --- |
-| 首页 Portal | `/dashboard` | `GET /gd/api/warehouse/dashboard/` | `files.dashboard_views.warehouse_dashboard` | `files.services.dashboard_service.build_dashboard_payload` | `Assembly / Species / Annotation / Accession` |
-| 数据一览表 | `/data-overview` | `GET /gd/api/files/query/data-overview/` | `files.query_views.query_data_overview` | `files.services.data_overview_v2_service.build_data_overview_payload` | `DataFile + FileRelation`（文件级分页） |
-| DataFile 安全详情 | `/data-overview` | `GET /gd/api/files/data-files/<file_id>/detail/` | `files.datafile_api_views.datafile_detail` | `files.services.data_overview_v2_service.build_datafile_detail_payload` | `DataFile + FileRelation`（不返回 `file_path`） |
-| 原始数据 | `/raw-data` | `GET /gd/api/files/query/raw-data/` | `files.query_views.query_raw_data` | `files.services.query_service.get_raw_data_payload` | `DataFile.description.raw_data + FileRelation` |
-| Assembly 详情 | `/assembly/:assemblyId` | `GET /gd/api/files/assemblies/<assembly_id>/summary/` | `files.assembly_api_views.assembly_summary` | `files.services.assembly_detail_service.get_assembly_detail` | `Species / Accession / Assembly / Annotation / DataFile / FileRelation` |
-| Assembly 相关文件 | `/assembly/:assemblyId` | `GET /gd/api/files/accessions/<accession>/files/` | `files.accession_api_views.accession_files` | `files.services.accession_detail_service.get_accession_files` | `DataFile + FileRelation` |
-| Transcriptome 数据列表 | `/transcriptome-overview` | `GET /gd/api/files/query/transcriptome-list/` | `files.query_views.query_transcriptome_list` | `files.services.query_service.get_transcriptome_list_payload` | `Species / Accession / Assembly / Sample / DataFile / FileRelation` |
-| Transcriptome 文件抽屉 | `/transcriptome-overview` | `GET /gd/api/files/query/transcriptome-files/` | `files.query_views.query_transcriptome_files` | `files.services.query_service.get_transcriptome_files_payload` | `DataFile + FileRelation` |
-| Accession 合并页 | `/accession-card` | `GET /gd/api/files/accessions/<accession>/` | `files.views.accession_detail` | `files.services.file_relation_service` | `Accession / Assembly / Annotation / DataFile / FileRelation` |
-| DataFile 下载 | 所有文件列表 | `GET /gd/api/files/data-files/<file_id>/download/` | `files.views.download_datafile` | - | `DataFile.file_path` |
+- 文件统一使用 `DataFile` 表示，归属关系使用 `FileRelation` 表示。
+- API 不得返回服务器物理路径 `file_path`。
+- 页面下载统一使用 `/gd/api/files/data-files/<file_id>/download/`。
+- 外部工具读取文件统一使用 `/gd/api/v1/files/<file_id>/content/`。
+- 私有对象、未发布对象和无权访问对象必须在服务端重新授权，不能依赖前端隐藏。
+- `GenomeFile` 已从当前模型状态删除；历史 migration 仅用于重建历史数据库状态。
 
-`/genome-card` 已退出导航并作为兼容路由保留：带数字 `assembly` 查询参数时重定向到对应 Assembly 详情；只有 Accession 上下文时重定向到 Accession 详情；无上下文时重定向到 Accession 选择页。旧 Genome 查询接口暂保留为后端兼容能力，不再由正式前端页面调用。
+## 2. 页面 API
 
-## 首页 Portal 接口
+| 功能 | 主要接口 | 主要数据来源 |
+| --- | --- | --- |
+| 首页 Portal | `GET /gd/api/warehouse/dashboard/` | `Assembly / Species / Annotation / Accession` |
+| 数据一览 | `GET /gd/api/files/query/data-overview/` | `DataFile + FileRelation` |
+| DataFile 详情 | `GET /gd/api/files/data-files/<id>/detail/` | `DataFile + FileRelation` |
+| DataFile 下载 | `GET /gd/api/files/data-files/<id>/download/` | `DataFile` |
+| Assembly 详情 | `GET /gd/api/files/assemblies/<id>/summary/` | Assembly 及关联实体 |
+| Accession 文件 | `GET /gd/api/files/accessions/<accession>/files/` | `DataFile + FileRelation` |
+| Transcriptome 列表 | `GET /gd/api/files/query/transcriptome-list/` | 业务实体及文件关系 |
+| Transcriptome 文件 | `GET /gd/api/files/query/transcriptome-files/` | `DataFile + FileRelation` |
 
-首页只调用一个轻量接口：
+复杂查询应放入 `django2/files/services/`，view 只负责参数、service 调用和响应。
 
-```http
-GET /gd/api/warehouse/dashboard/
-```
+## 3. 外部工具 API v1
 
-响应示例：
-
-```json
-{
-  "summary": {
-    "assembly_count": 100,
-    "species_count": 50,
-    "annotation_count": 1000000,
-    "accession_count": 500
-  },
-  "featured_accessions": [
-    {
-      "accession": "IR64",
-      "species_scientific_name": "Oryza sativa",
-      "species_common_name": "Rice",
-      "assembly": "IRGSP-1.0",
-      "annotation": "v1.0"
-    }
-  ]
-}
-```
-
-`featured_accessions` 的顺序由环境变量 `GENEDATA_FEATURED_ACCESSIONS` 控制，使用英文逗号分隔；不存在的 Accession 会被忽略，最多返回 5 条。
-
-首页不再返回物种卡片、资源概览、分布图、地图和最近更新数据。
-
-## 查询 Service 层约定
-
-`files.query_views` 只做三件事：
-
-1. 读取 HTTP 参数；
-2. 调用 `files.services.query_service`；
-3. 返回 `Response`。
-
-具体查询逻辑按页面拆分：
-
-- `dashboard_service.py`：首页四项统计与 Featured Accessions
-- `data_overview_service.py`：数据一览表矩阵和明细
-- `raw_data_service.py`：原始数据人工登记展示
-- `genome_list_service.py`：Genome 数据列表和文件抽屉
-- `transcriptome_list_service.py`：Transcriptome 数据列表和文件抽屉
-- `file_relation_service.py`：统一文件归属查询，new-only
-
-后续新增页面时，优先新增 service，再让 view 调用 service；不要把复杂 ORM 查询直接写进 view。
-
-## 导入日志标准字段
-
-导入命令日志统一使用 key-value 文本格式，并至少包含：
+契约入口：
 
 ```text
-command: import_raw_data_manifest
-input_path: metadata/raw_data_manifest.normalized.tsv
-dry_run: False
-started_at: 2026-08-14T10:00:00
-finished_at: 2026-08-14T10:00:02
-scanned_count: 100
-created_count: 20
-reused_count: 80
-updated_count: 5
-skipped_count: 0
-unmapped_count: 0
-error_count: 0
+GET /gd/api/v1/openapi.json
+GET /docs/api/
 ```
 
-命令可以继续输出业务专用字段，例如：
+当前活动接口：
 
-- `created_accession_count`
-- `updated_accession_count`
-- `created_datafile_count`
-- `created_filerelation_count`
-- `reused_filerelation_count`
+```text
+GET /gd/api/v1/accessions/<accession>/
+GET /gd/api/v1/accessions/<accession>/files/
+GET /gd/api/v1/files/<file_id>/content/
+GET /gd/api/v1/datasets/<dataset>/manifest/
+GET /gd/api/v1/datasets/<dataset>/manifest.tsv
+GET /gd/api/v1/assemblies/<assembly>/sequence/?sequence=<name>&start=<1-based>&end=<inclusive>
+```
 
-这样既方便人工排查，也方便后续自动汇总。
+不要根据本文猜测响应字段；客户端应以 OpenAPI 契约为准。
+
+### 3.1 Token
+
+Token 只能通过环境变量或密钥管理器注入，不得写入脚本、仓库、命令历史或日志。
+
+```bash
+export GENEDATA_BASE_URL="https://example.org"
+export GENEDATA_TOKEN="<token>"
+```
+
+PowerShell：
+
+```powershell
+$env:GENEDATA_BASE_URL = "https://example.org"
+$env:GENEDATA_TOKEN = "<token>"
+```
+
+### 3.2 查询和下载
+
+```bash
+curl --fail-with-body --silent --show-error \
+  -H "Authorization: Bearer $GENEDATA_TOKEN" \
+  "$GENEDATA_BASE_URL/gd/api/v1/accessions/IR64/files/?role=genome&format=FASTA"
+
+curl --fail-with-body --location \
+  -H "Authorization: Bearer $GENEDATA_TOKEN" \
+  -o input.fasta \
+  "$GENEDATA_BASE_URL/gd/api/v1/files/14/content/"
+
+curl --fail-with-body --silent --show-error \
+  -H "Authorization: Bearer $GENEDATA_TOKEN" \
+  "$GENEDATA_BASE_URL/gd/api/v1/assemblies/ASM_IR64/sequence/?sequence=Chr01&start=1&end=120"
+```
+
+调用方必须检查非 2xx 状态、响应校验值和内容长度。不要用忽略 `curl` 失败的管道继续分析。
+
+## 4. 状态码
+
+| 状态码 | 调用方处理 |
+| --- | --- |
+| `200/206` | 接收完整内容或 Range 内容，并校验响应 |
+| `400` | 修正参数，不自动重试 |
+| `401/403` | 停止任务并检查 Token、scope 和对象权限 |
+| `404` | 核对标识符和发布状态；不要据此推断私有对象是否存在 |
+| `409` | 停止任务，报告 Assembly 歧义或 FASTA/索引冲突 |
+| `429` | 按 `Retry-After` 退避 |
+| `5xx` | 有上限地重试并保留 request id |
+
+## 5. 导入日志约定
+
+导入命令至少记录命令、输入路径、dry-run、开始/结束时间以及 scanned、created、
+updated、skipped、unmapped、error 等计数。真实数据导入必须先 dry-run，并保存报告和输入文件校验值。

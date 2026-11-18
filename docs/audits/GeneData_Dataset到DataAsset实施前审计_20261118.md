@@ -32,7 +32,7 @@ supersedes: null
 - 分支：`feature/external-tool-data-api-v1`
 - 审计基线提交：`9a231564d3a5590f35205d74b674505455b8e6ae`
 - 审计日期：2026-11-18
-- 范围：tracked Django、Vue、migration、测试、命令、API 契约及 DataAsset v0.2 草案
+- 范围：tracked Django、Vue、migration、测试、命令、API 契约及当时的 DataAsset v0.2 草案；草案的稳定内容现已整合到 active 总体设计
 - 未执行：生产数据库查询、生产文件扫描、生产日志分析、schema 修改、数据回填、API 或前端修改
 
 本报告区分：
@@ -227,6 +227,7 @@ Species、Accession、Sample、Assembly 和 Annotation 均为可选上下文或�
 | --- | --- | --- |
 | 仓库代码调用面审计 | 已完成 | 当前报告 |
 | DataAsset 稳定架构 ADR | 已完成 | `docs/adr/ADR-001-dataasset-unified-identity.md` |
+| 通用科研数据仓库总体设计 | 已完成 | `docs/architecture/GeneData_通用科研数据仓库总体设计.md` |
 | 生产数据只读审计 | 待执行 | 需要生产只读授权和独立证据 |
 | 最小 DataAsset schema/constraint ADR | 待执行 | 不在本报告中决定全部字段 |
 | 权限与发布状态 ADR | 待执行 | 必须保持 fail-closed |

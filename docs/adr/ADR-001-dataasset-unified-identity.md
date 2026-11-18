@@ -127,7 +127,7 @@ Dataset 当前字段原则上映射到 DataAsset，但生产审计若证明存�
 - Assembly、Annotation 与 DataAsset 的具体迁移顺序；
 - 生产回填批次、维护窗口和旧 API 下线日期。
 
-`docs/drafts/GeneData_DataAsset通用科研数据仓库整体设计方案_v0.2.md` 继续作为详细候选设计，不因本 ADR 自动变为全部 active。
+`docs/architecture/GeneData_通用科研数据仓库总体设计.md` 负责维护当前 active 总体设计；具体字段和物理结构仍须由子 ADR 批准。
 
 ## 被否决的方案
 
@@ -184,5 +184,5 @@ Dataset 当前字段原则上映射到 DataAsset，但生产审计若证明存�
 
 - `AGENTS.md`
 - `docs/ACTIVE_DOCUMENTS.md`
+- `docs/architecture/GeneData_通用科研数据仓库总体设计.md`
 - `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md`
-- `docs/drafts/GeneData_DataAsset通用科研数据仓库整体设计方案_v0.2.md`

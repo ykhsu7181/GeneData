@@ -1,3 +1,11 @@
+---
+title: GeneData Security Exceptions
+status: active
+owner: 徐杨珂
+last_reviewed: 2026-11-18
+supersedes: null
+---
+
 # Security exceptions
 
 ## SEC-DB-001: Historical database credential exposure

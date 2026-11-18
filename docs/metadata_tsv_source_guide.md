@@ -1,4 +1,12 @@
-﻿# Metadata TSV 内容获取与补充指南
+---
+title: Metadata TSV 内容获取与补充指南
+status: active
+owner: 徐杨珂
+last_reviewed: 2026-11-18
+supersedes: null
+---
+
+# Metadata TSV 内容获取与补充指南
 
 本文档用于说明：补充 `metadata` 目录下各类 TSV 表时，数据应该从哪里来，以及是否需要根据 Accession 到 NCBI 逐个检索后人工录入。
 
