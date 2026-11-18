@@ -1,0 +1,89 @@
+{
+  "registry_version": "1",
+  "profiles": [
+    {
+      "data_type_key": "genome",
+      "profile_key": "reference_genome",
+      "schema_version": "1.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_roles": ["primary_data", "fasta_index", "compression_index", "metadata"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "assembly_method": {"type": "string", "minLength": 1},
+          "sequencing_platforms": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          },
+          "coverage": {"type": "number", "minimum": 0},
+          "external_identifiers": {
+            "type": "object",
+            "additionalProperties": {"type": "string", "minLength": 1}
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "microscopy",
+      "profile_key": "image_set",
+      "schema_version": "1.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_roles": ["primary_image", "thumbnail", "acquisition_metadata"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "instrument": {"type": "string", "minLength": 1},
+          "modality": {"type": "string", "minLength": 1},
+          "pixel_size": {
+            "type": "object",
+            "properties": {
+              "value": {"type": "number", "exclusiveMinimum": 0},
+              "unit": {"type": "string", "enum": ["nm", "um", "mm"]}
+            },
+            "required": ["value", "unit"],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "tabular",
+      "profile_key": "research_table",
+      "schema_version": "1.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_roles": ["primary_table", "data_dictionary", "metadata"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "delimiter": {"type": "string", "enum": ["tab", "comma", "semicolon"]},
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string", "minLength": 1},
+                "data_type": {
+                  "type": "string",
+                  "enum": ["string", "integer", "number", "boolean", "date", "datetime"]
+                },
+                "unit": {"type": "string", "minLength": 1}
+              },
+              "required": ["name", "data_type"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ]
+}
