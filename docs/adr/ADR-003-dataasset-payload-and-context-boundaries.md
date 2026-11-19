@@ -13,6 +13,9 @@ amends: ADR-002 sections 4 and 7
 
 Accepted，2026-11-19。
 
+截至 2026-11-19，实施顺序第 1 步已在开发分支完成：新增三张显式上下文关系表、migration `0027` 和
+模型测试；尚未部署生产。Registry v2、创建 service、T4 重构、生产审计、回填和切换仍未实施。
+
 本文定义下一阶段拟采用的稳定架构边界，不表示相关 Registry、service、model、migration、API、前端、
 生产部署或数据回填已经完成。批准本 ADR 只允许按本文顺序进入开发环境实施；生产 schema、回填和切换仍需
 独立审批。

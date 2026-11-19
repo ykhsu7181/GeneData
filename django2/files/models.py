@@ -528,6 +528,114 @@ class DataAssetAccession(models.Model):
         return f"{self.asset_id}:{self.accession_id}:{self.relation_role}"
 
 
+class DataAssetSample(models.Model):
+    """Explicit Sample context for a DataAsset."""
+
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="sample_links",
+    )
+    sample = models.ForeignKey(
+        "Sample",
+        on_delete=models.PROTECT,
+        related_name="data_asset_links",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="created_data_asset_sample_links",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "data_asset_sample"
+        ordering = ["asset_id", "sample_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "sample"],
+                name="uniq_data_asset_sample",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.asset_id}:{self.sample_id}"
+
+
+class DataAssetAssembly(models.Model):
+    """Explicit Assembly context for a DataAsset."""
+
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="assembly_links",
+    )
+    assembly = models.ForeignKey(
+        "Assembly",
+        on_delete=models.PROTECT,
+        related_name="data_asset_links",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="created_data_asset_assembly_links",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "data_asset_assembly"
+        ordering = ["asset_id", "assembly_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "assembly"],
+                name="uniq_data_asset_assembly",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.asset_id}:{self.assembly_id}"
+
+
+class DataAssetAnnotation(models.Model):
+    """Explicit Annotation context for a DataAsset."""
+
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="annotation_links",
+    )
+    annotation = models.ForeignKey(
+        "Annotation",
+        on_delete=models.PROTECT,
+        related_name="data_asset_links",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="created_data_asset_annotation_links",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "data_asset_annotation"
+        ordering = ["asset_id", "annotation_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "annotation"],
+                name="uniq_data_asset_annotation",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.asset_id}:{self.annotation_id}"
+
+
 class Assembly(models.Model):
     accession = models.ForeignKey(
         'Accession',

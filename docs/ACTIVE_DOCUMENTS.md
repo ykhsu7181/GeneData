@@ -19,7 +19,7 @@ supersedes: null
 | DataAsset 最小 schema、文件成员和发布边界 | `docs/adr/ADR-002-dataasset-minimum-schema.md` | active |
 | DataAsset T3 新增结构实施 | `docs/architecture/GeneData_DataAsset_T3新增结构实施方案.md` | active；开发完成，生产未部署 |
 | 通用科研数据仓库总体设计 | `docs/architecture/GeneData_通用科研数据仓库总体设计.md` | active |
-| DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；已批准，尚未实施 |
+| DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；第一阶段开发完成，生产未部署 |
 | Dataset 到 DataAsset 代码审计 | `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md` | reference |
 | API 使用与接口边界 | `docs/api_pages.md` | active |
 | 开发、CI、部署与运维 | `docs/OPERATIONS.md` | active |

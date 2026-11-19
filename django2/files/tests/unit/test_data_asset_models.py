@@ -5,11 +5,17 @@ from django.test import TestCase
 
 from files.models import (
     Accession,
+    Annotation,
+    Assembly,
     AssetFileMembership,
     DataAsset,
     DataAssetAccession,
+    DataAssetAnnotation,
+    DataAssetAssembly,
+    DataAssetSample,
     DataFile,
     Project,
+    Sample,
     Species,
 )
 from files.services.data_asset_registry_service import load_data_asset_registry
@@ -30,6 +36,17 @@ class DataAssetModelTests(TestCase):
         self.accession_b = Accession.objects.create(
             accession="ACC_ASSET_B",
             species=self.species,
+        )
+        self.sample_a = Sample.objects.create(sample_code="SAMPLE_ASSET_A")
+        self.sample_b = Sample.objects.create(sample_code="SAMPLE_ASSET_B")
+        self.assembly = Assembly.objects.create(
+            accession=self.accession_a,
+            name="ASSEMBLY_ASSET_TEST",
+        )
+        self.annotation = Annotation.objects.create(
+            assembly=self.assembly,
+            accession=self.accession_a,
+            name="ANNOTATION_ASSET_TEST",
         )
         self.data_file = DataFile.objects.create(
             file_code="FILE_ASSET_TEST",
@@ -183,3 +200,62 @@ class DataAssetModelTests(TestCase):
             self.accession_a.delete()
         with self.assertRaises(ProtectedError):
             self.project.delete()
+
+    def test_asset_can_link_multiple_samples_without_roles(self):
+        asset = self.create_asset("ASSET_SAMPLE_CONTEXTS")
+
+        DataAssetSample.objects.create(
+            asset=asset,
+            sample=self.sample_a,
+            created_by=self.user,
+        )
+        DataAssetSample.objects.create(
+            asset=asset,
+            sample=self.sample_b,
+            created_by=self.user,
+        )
+
+        self.assertEqual(asset.sample_links.count(), 2)
+        field_names = {field.name for field in DataAssetSample._meta.fields}
+        self.assertFalse({"relation_role", "is_primary", "primary_slot"} & field_names)
+
+    def test_context_links_reject_duplicate_targets(self):
+        asset = self.create_asset("ASSET_DUPLICATE_CONTEXTS")
+        relations = (
+            (DataAssetSample, "sample", self.sample_a),
+            (DataAssetAssembly, "assembly", self.assembly),
+            (DataAssetAnnotation, "annotation", self.annotation),
+        )
+
+        for model, target_field, target in relations:
+            with self.subTest(model=model.__name__):
+                values = {"asset": asset, target_field: target}
+                model.objects.create(**values)
+                with self.assertRaises(IntegrityError), transaction.atomic():
+                    model.objects.create(**values)
+
+    def test_context_targets_are_protected_while_linked(self):
+        asset = self.create_asset("ASSET_PROTECTED_CONTEXTS")
+        DataAssetSample.objects.create(asset=asset, sample=self.sample_a)
+        DataAssetAssembly.objects.create(asset=asset, assembly=self.assembly)
+        DataAssetAnnotation.objects.create(asset=asset, annotation=self.annotation)
+
+        for target in (self.sample_a, self.assembly, self.annotation):
+            with self.subTest(target=target.__class__.__name__):
+                with self.assertRaises(ProtectedError):
+                    target.delete()
+
+    def test_deleting_asset_cascades_context_links_only(self):
+        asset = self.create_asset("ASSET_CONTEXT_CASCADE")
+        DataAssetSample.objects.create(asset=asset, sample=self.sample_a)
+        DataAssetAssembly.objects.create(asset=asset, assembly=self.assembly)
+        DataAssetAnnotation.objects.create(asset=asset, annotation=self.annotation)
+
+        asset.delete()
+
+        self.assertFalse(DataAssetSample.objects.exists())
+        self.assertFalse(DataAssetAssembly.objects.exists())
+        self.assertFalse(DataAssetAnnotation.objects.exists())
+        self.assertTrue(Sample.objects.filter(pk=self.sample_a.pk).exists())
+        self.assertTrue(Assembly.objects.filter(pk=self.assembly.pk).exists())
+        self.assertTrue(Annotation.objects.filter(pk=self.annotation.pk).exists())
