@@ -13,10 +13,12 @@ amends: ADR-002 sections 4 and 7
 
 Accepted，2026-11-19。
 
-截至 2026-11-19，实施顺序第 1、2 步已在开发分支完成：新增三张显式上下文关系表和 migration `0027`；
+截至 2026-11-19，实施顺序第 1 至 3 步已在开发分支完成：新增三张显式上下文关系表和 migration `0027`；
 Registry 已切换到 v2 稳定 key、`file_role_rules`、`context_rules` 和完整 Profile digest；canonical validator、
-唯一创建 service 及 T4 新 key/role 最小适配已完成并通过开发测试。上述结构尚未部署生产；T4 完整语义重构、
-生产审计、回填和切换仍未实施。
+唯一创建 service 以及基于专业实体、真实 DataFile 和显式 FileRelation 的 T4 只读候选算法已完成并通过开发测试。
+T4 会分别输出 assets、memberships、contexts、exclusions、conflicts、permissions 和 checksums；当前只为已批准
+Profile 生成正式候选，未批准的 GFF、FASTQ、BED 和矩阵等 Profile 进入人工复核，不进行类型猜测。上述结构
+尚未部署生产；新版生产只读审计、回填和切换仍未实施。
 
 本文定义下一阶段拟采用的稳定架构边界，不表示相关 Registry、service、model、migration、API、前端、
 生产部署或数据回填已经完成。批准本 ADR 只允许按本文顺序进入开发环境实施；生产 schema、回填和切换仍需

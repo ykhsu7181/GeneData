@@ -609,13 +609,13 @@ draft 可以硬删除。普通新增和弃用不应要求修改后端核心模�
 
 ### 8.2 T4 dry-run 的目标输出
 
-当前 T4 工具是只读映射准备，不写数据库。下一版映射规则必须避免以 Dataset 壳作为唯一驱动，至少输出：
+当前 T4 工具已在开发环境重构为只读候选审计，不写数据库，也不再以 Dataset 壳作为候选驱动。它输出：
 
-1. `assets`：可成立的资产候选及 Profile、专业上下文和判定证据；
+1. `assets`：由已批准 Profile 覆盖的专业实体和显式文件关系生成的资产候选；
 2. `memberships`：核心/辅助文件角色、顺序和 primary；
 3. `contexts`：Accession、Sample、Assembly、Annotation 显式关联；
 4. `exclusions`：159 条 metadata-only 等不应创建资产的记录和原因；
-5. `conflicts`：多上下文、归属歧义、重复内容、缺失物理文件和角色冲突；
+5. `conflicts`：多上下文、归属歧义、未批准 Profile、缺失物理文件和角色冲突；
 6. `permissions`：迁移前后权限对比，任何放宽均阻断；
 7. `checksums`：文件存在性、checksum 和发布状态核对。
 
@@ -630,8 +630,8 @@ draft 可以硬删除。普通新增和弃用不应要求修改后端核心模�
 3. 最小 schema、权限和 Collection/Release 边界 ADR——已合并为 ADR-002 并批准；
 4. 新增结构和测试，不切换活动读写——T3 开发完成，migration `0026` 尚未部署生产；
 5. Dataset -> DataAsset dry-run 映射——T4 生产只读运行已完成；结论表明原映射假设需要按本文修订；
-6. 在开发环境调整 Profile 核心文件规则、上下文关系和 T4 候选算法；
-7. 在生产独立临时目录重新只读 dry-run，并完成人工核对；
+6. 在开发环境调整 Profile 核心文件规则、上下文关系和 T4 候选算法——已完成开发验证；
+7. 在生产独立临时目录重新只读 dry-run，并完成人工核对——尚未执行；
 8. 分批、幂等回填；
 9. 核对记录、关系、权限和 checksum；
 10. 一次性切换活动读写；
@@ -675,8 +675,9 @@ draft 可以硬删除。普通新增和弃用不应要求修改后端核心模�
 
 1. 新增最小显式上下文关系及数据库约束，不改变现有 Registry 或活动读写；
 2. 在一个原子提交中切换 Registry v2、`file_role_rules`、完整 digest、创建 service 和 T4 最小适配；
-3. 独立重构 T4 dry-run，使候选由专业实体、真实文件和已核对关系驱动；
-4. 增加 `excluded_not_asset`、context、archive inspection、物理存在性和 checksum 报告；
+3. 独立重构 T4 dry-run，使候选由专业实体、真实文件和已核对关系驱动——已完成；
+4. 增加 `excluded_not_asset`、context、物理存在性、checksum 和权限报告——已完成；archive inspection
+   仍只作为需要人工复核的冲突，不在本阶段解包生产归档；
 5. 在开发/脱敏样本上完成幂等、冲突、权限收紧和回滚测试。
 
 本阶段不开发 API/前端，不运行生产 migration，不回填生产数据，不建立 AnalysisRun 或运行时 Registry UI。
@@ -714,7 +715,7 @@ draft 可以硬删除。普通新增和弃用不应要求修改后端核心模�
 以下事项尚未完成或仍需独立决策：
 
 - migration `0026`、`0027` 和 Registry v2 的生产部署与真实数据验收；
-- T4 基于专业实体和真实 payload 的完整语义重构，以及新的生产只读审计；
+- 重构后 T4 的生产只读复审、报告核对和候选边界验收；
 - DataAsset 发布 service 的物理文件存在性、checksum 和发布状态校验；
 - 96 个 transcriptome 与 111 个 codon 归档的包内真实内容和资产边界；
 - 4500 条 DataFile 与 2852 条物理文件清单差异的处置；
