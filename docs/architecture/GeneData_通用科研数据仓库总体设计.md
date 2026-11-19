@@ -452,9 +452,9 @@ DataType 表示 payload 的结构大类，必须保持少而稳定。Profile 表
 data_type_key: sequence
 profile_key: reference_genome
 schema_version: 1
-allowed_file_roles: [genome_fasta, fasta_index]
-primary_file_roles: [genome_fasta]
-minimum_primary_files: 1
+file_role_rules:
+  genome_fasta: {class: core, min: 1, max: 1}
+  fasta_index: {class: auxiliary, min: 0, max: 1}
 context_rules:
   assembly: {min: 1, max: 1}
 metadata_schema: {...}
@@ -462,11 +462,12 @@ metadata_schema: {...}
 
 含义：
 
-- `allowed_file_roles`：该资产允许包含哪些角色；
-- `primary_file_roles`：哪些角色能够证明核心 payload 存在；
-- `minimum_primary_files`：正式资产成立的最小核心文件数；
+- `file_role_rules`：以角色为 key，统一声明 core/auxiliary 和逐角色 `min/max`；
 - `context_rules`：允许或要求的上下文类型和基数；
 - `metadata_schema`：仅保存该 Profile 特有且不属于专业实体事实的扩展字段。
+
+成员关系的 `is_primary` 只表示同一角色中的代表文件，不决定文件是否为核心载荷。角色的 core/auxiliary
+性质和数量要求只由 `file_role_rules` 决定，从而能够配置成对 reads、多 lane 文件、多个核心图像和可选索引。
 
 参考规则：
 
@@ -532,7 +533,7 @@ draft 可以硬删除。普通新增和弃用不应要求修改后端核心模�
   -> 选择 DataType/Profile
   -> 校验 metadata 与 schema version
   -> 登记 DataFile 和 checksum
-  -> 校验核心文件角色和最小数量
+  -> 校验文件角色的 core/auxiliary 与逐角色 min/max
   -> 关联最精确的 Sample/Assembly/Annotation/Accession 上下文
   -> 在同一事务中创建 DataAsset 和文件成员关系
   -> 输出审计结果
@@ -671,12 +672,11 @@ draft 可以硬删除。普通新增和弃用不应要求修改后端核心模�
 
 按独立提交顺序实施：
 
-1. 扩展现有 Registry/Profile 契约：核心角色、最小核心文件数和上下文规则；
-2. 修改现有唯一创建 service，使正式资产不能无文件或缺少核心 payload，并补充测试；
-3. 批准并新增最小显式上下文关系与数据库约束；不增加按数据类型划分的表；
-4. 重构 T4 dry-run，使候选由专业实体、真实文件和已核对关系驱动；
-5. 增加 `excluded_not_asset`、context、archive inspection、物理存在性和 checksum 报告；
-6. 在开发/脱敏样本上完成幂等、冲突、权限收紧和回滚测试。
+1. 新增最小显式上下文关系及数据库约束，不改变现有 Registry 或活动读写；
+2. 在一个原子提交中切换 Registry v2、`file_role_rules`、完整 digest、创建 service 和 T4 最小适配；
+3. 独立重构 T4 dry-run，使候选由专业实体、真实文件和已核对关系驱动；
+4. 增加 `excluded_not_asset`、context、archive inspection、物理存在性和 checksum 报告；
+5. 在开发/脱敏样本上完成幂等、冲突、权限收紧和回滚测试。
 
 本阶段不开发 API/前端，不运行生产 migration，不回填生产数据，不建立 AnalysisRun 或运行时 Registry UI。
 
