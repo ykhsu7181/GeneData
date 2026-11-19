@@ -1,13 +1,21 @@
 {
-  "registry_version": "1",
+  "registry_version": "2",
   "profiles": [
     {
-      "data_type_key": "genome",
+      "data_type_key": "sequence",
       "profile_key": "reference_genome",
-      "schema_version": "1.0.0",
+      "schema_version": "2.0.0",
       "deprecated": false,
       "replacement": null,
-      "file_roles": ["primary_data", "fasta_index", "compression_index", "metadata"],
+      "file_role_rules": {
+        "genome_fasta": {"class": "core", "min": 1, "max": 1},
+        "fasta_index": {"class": "auxiliary", "min": 0, "max": 1},
+        "compression_index": {"class": "auxiliary", "min": 0, "max": 1},
+        "metadata": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {
+        "assembly": {"min": 1, "max": 1}
+      },
       "metadata_schema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -28,12 +36,19 @@
       }
     },
     {
-      "data_type_key": "microscopy",
-      "profile_key": "image_set",
-      "schema_version": "1.0.0",
+      "data_type_key": "image",
+      "profile_key": "microscopy_image_set",
+      "schema_version": "2.0.0",
       "deprecated": false,
       "replacement": null,
-      "file_roles": ["primary_image", "thumbnail", "acquisition_metadata"],
+      "file_role_rules": {
+        "primary_image": {"class": "core", "min": 1, "max": null},
+        "thumbnail": {"class": "auxiliary", "min": 0, "max": null},
+        "acquisition_metadata": {"class": "auxiliary", "min": 0, "max": 1}
+      },
+      "context_rules": {
+        "sample": {"min": 0, "max": null}
+      },
       "metadata_schema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
@@ -54,12 +69,21 @@
       }
     },
     {
-      "data_type_key": "tabular",
+      "data_type_key": "table",
       "profile_key": "research_table",
-      "schema_version": "1.0.0",
+      "schema_version": "2.0.0",
       "deprecated": false,
       "replacement": null,
-      "file_roles": ["primary_table", "data_dictionary", "metadata"],
+      "file_role_rules": {
+        "primary_table": {"class": "core", "min": 1, "max": null},
+        "data_dictionary": {"class": "auxiliary", "min": 0, "max": 1},
+        "metadata": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {
+        "sample": {"min": 0, "max": null},
+        "assembly": {"min": 0, "max": null},
+        "annotation": {"min": 0, "max": null}
+      },
       "metadata_schema": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",

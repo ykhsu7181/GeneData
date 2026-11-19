@@ -12,9 +12,9 @@ class DataAssetAccessServiceTests(TestCase):
         self.asset = DataAsset.objects.create(
             asset_code="ASSET_ACCESS",
             project=self.project,
-            data_type_key="genome",
+            data_type_key="sequence",
             profile_key="reference_genome",
-            schema_version="1.0.0",
+            schema_version="2.0.0",
             schema_digest="a" * 64,
             status=DataAsset.STATUS_RELEASED,
             visibility=DataAsset.VISIBILITY_PUBLIC,
@@ -33,7 +33,7 @@ class DataAssetAccessServiceTests(TestCase):
         AssetFileMembership.objects.create(
             asset=self.asset,
             data_file=self.data_file,
-            file_role="primary_data",
+            file_role="genome_fasta",
             is_primary=True,
             primary_slot=1,
         )

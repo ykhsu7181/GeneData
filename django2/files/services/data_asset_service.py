@@ -5,9 +5,15 @@ from dataclasses import dataclass
 from django.db import IntegrityError, transaction
 
 from files.models import (
+    Annotation,
+    Assembly,
     AssetFileMembership,
     DataAsset,
     DataAssetAccession,
+    DataAssetAnnotation,
+    DataAssetAssembly,
+    DataAssetSample,
+    Sample,
 )
 from files.services.data_asset_registry_service import (
     DataAssetRegistryError,
@@ -48,6 +54,9 @@ def create_data_asset(
     metadata=None,
     file_memberships=(),
     accession_links=(),
+    sample_links=(),
+    assembly_links=(),
+    annotation_links=(),
     name="",
     version=None,
     description="",
@@ -63,10 +72,37 @@ def create_data_asset(
     if visibility not in dict(DataAsset.VISIBILITY_CHOICES):
         raise DataAssetServiceError(f"Unsupported DataAsset visibility: {visibility}")
 
+    file_memberships = tuple(file_memberships)
+    accession_links = tuple(accession_links)
+    sample_links = tuple(sample_links)
+    assembly_links = tuple(assembly_links)
+    annotation_links = tuple(annotation_links)
+    _validate_file_inputs(file_memberships)
+    _validate_accession_inputs(accession_links)
+    _validate_context_objects(sample_links, Sample, "sample_links")
+    _validate_context_objects(assembly_links, Assembly, "assembly_links")
+    _validate_context_objects(annotation_links, Annotation, "annotation_links")
+
     registry = registry or load_data_asset_registry()
     metadata = {} if metadata is None else metadata
+    context_counts = {
+        name: count
+        for name, count in (
+            ("accession", len(accession_links)),
+            ("sample", len(sample_links)),
+            ("assembly", len(assembly_links)),
+            ("annotation", len(annotation_links)),
+        )
+        if count
+    }
     try:
-        profile = registry.validate_metadata(data_type_key, profile_key, metadata)
+        profile = registry.validate_asset_contract(
+            data_type_key,
+            profile_key,
+            metadata=metadata,
+            file_roles=[item.file_role for item in file_memberships],
+            context_counts=context_counts,
+        )
     except DataAssetRegistryError as exc:
         raise DataAssetServiceError(str(exc)) from exc
     if profile.deprecated:
@@ -74,13 +110,9 @@ def create_data_asset(
             f"Deprecated DataAsset profile: {data_type_key}/{profile_key}"
         )
 
-    file_memberships = tuple(file_memberships)
-    accession_links = tuple(accession_links)
-    _validate_file_inputs(registry, profile, file_memberships)
-    _validate_accession_inputs(accession_links)
-
     try:
         with transaction.atomic():
+            _reject_reused_profile_version(profile)
             asset = DataAsset.objects.create(
                 asset_code=asset_code,
                 name=name or "",
@@ -117,12 +149,52 @@ def create_data_asset(
                         else None
                     ),
                 )
+            for sample in sample_links:
+                DataAssetSample.objects.create(
+                    asset=asset,
+                    sample=sample,
+                    created_by=created_by,
+                )
+            for assembly in assembly_links:
+                DataAssetAssembly.objects.create(
+                    asset=asset,
+                    assembly=assembly,
+                    created_by=created_by,
+                )
+            for annotation in annotation_links:
+                DataAssetAnnotation.objects.create(
+                    asset=asset,
+                    annotation=annotation,
+                    created_by=created_by,
+                )
+    except DataAssetConflictError:
+        raise
     except (IntegrityError, ValueError) as exc:
         raise DataAssetConflictError("DataAsset creation violated a database invariant") from exc
     return asset
 
 
-def _validate_file_inputs(registry, profile, items):
+def _reject_reused_profile_version(profile):
+    conflicting_digest = (
+        DataAsset.objects.select_for_update()
+        .filter(
+            data_type_key=profile.data_type_key,
+            profile_key=profile.profile_key,
+            schema_version=profile.schema_version,
+        )
+        .exclude(schema_digest=profile.schema_digest)
+        .values_list("schema_digest", flat=True)
+        .first()
+    )
+    if conflicting_digest is not None:
+        profile_name = f"{profile.data_type_key}/{profile.profile_key}"
+        raise DataAssetConflictError(
+            f"Profile {profile_name} version {profile.schema_version} "
+            "is already used with a different schema digest"
+        )
+
+
+def _validate_file_inputs(items):
     seen_files = set()
     seen_positions = set()
     primary_roles = set()
@@ -133,14 +205,6 @@ def _validate_file_inputs(registry, profile, items):
             raise DataAssetServiceError("DataAsset members must be saved DataFile objects")
         if isinstance(item.position, bool) or not isinstance(item.position, int) or item.position < 0:
             raise DataAssetServiceError("DataAsset member position must be a non-negative integer")
-        try:
-            registry.validate_file_role(
-                profile.data_type_key,
-                profile.profile_key,
-                item.file_role,
-            )
-        except DataAssetRegistryError as exc:
-            raise DataAssetServiceError(str(exc)) from exc
         if item.data_file.pk in seen_files:
             raise DataAssetServiceError("A DataFile may appear only once in one DataAsset")
         role_position = (item.file_role, item.position)
@@ -174,6 +238,20 @@ def _validate_accession_inputs(items):
             primary_count += 1
     if primary_count > 1:
         raise DataAssetServiceError("Only one primary Accession is allowed per DataAsset")
+
+
+def _validate_context_objects(items, expected_model, field_name):
+    seen = set()
+    for item in items:
+        if not isinstance(item, expected_model) or item.pk is None:
+            raise DataAssetServiceError(
+                f"{field_name} must contain saved {expected_model.__name__} objects"
+            )
+        if item.pk in seen:
+            raise DataAssetServiceError(
+                f"A {expected_model.__name__} may appear only once in one DataAsset"
+            )
+        seen.add(item.pk)
 
 
 def _required_text(value, field):

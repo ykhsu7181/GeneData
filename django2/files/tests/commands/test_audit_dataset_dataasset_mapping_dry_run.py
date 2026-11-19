@@ -73,7 +73,7 @@ class DatasetDataAssetMappingDryRunTests(TestCase):
         annotation_file = self.make_file("T4_ANNOTATION")
         self.relate(annotation_file, "accession", self.accession.id, "annotation")
 
-        profile = load_data_asset_registry().get_profile("genome", "reference_genome")
+        profile = load_data_asset_registry().get_profile("sequence", "reference_genome")
         DataAsset.objects.create(
             asset_code=self.conflict.dataset_code,
             name="different existing name",
@@ -162,7 +162,9 @@ class DatasetDataAssetMappingDryRunTests(TestCase):
         )
 
         assets = {row["dataset_code"]: row for row in self.read_rows("assets")}
-        self.assertEqual(assets["T4_READY"]["data_type_key"], "genome")
+        self.assertEqual(assets["T4_READY"]["data_type_key"], "sequence")
+        self.assertEqual(assets["T4_READY"]["profile_key"], "reference_genome")
+        self.assertEqual(assets["T4_READY"]["schema_version"], "2.0.0")
         self.assertEqual(assets["T4_READY"]["mapping_status"], "ready")
         self.assertEqual(assets["T4_READY"]["proposed_name"], "T4 ready dataset")
         self.assertEqual(
@@ -192,7 +194,7 @@ class DatasetDataAssetMappingDryRunTests(TestCase):
         }
         self.assertEqual(memberships["T4_PRIMARY"]["dataset_code"], "T4_READY")
         self.assertEqual(
-            memberships["T4_PRIMARY"]["proposed_file_role"], "primary_data"
+            memberships["T4_PRIMARY"]["proposed_file_role"], "genome_fasta"
         )
         self.assertEqual(memberships["T4_PRIMARY"]["proposed_is_primary"], "1")
         self.assertEqual(memberships["T4_INDEX"]["proposed_file_role"], "fasta_index")

@@ -92,14 +92,14 @@ REPORT_NAMES = {
 # Migration-only mapping. Missing entries are intentionally blocked until a
 # profile is approved; this does not expand the core DataAsset model.
 LEGACY_DATASET_PROFILE_MAP = {
-    "genome": ("genome", "reference_genome"),
+    "genome": ("sequence", "reference_genome"),
 }
 
 LEGACY_FILE_ROLE_MAP = {
-    "genome": "primary_data",
-    "genome_fasta": "primary_data",
-    "fasta": "primary_data",
-    "fa": "primary_data",
+    "genome": "genome_fasta",
+    "genome_fasta": "genome_fasta",
+    "fasta": "genome_fasta",
+    "fa": "genome_fasta",
     "genome_index": "fasta_index",
     "fai": "fasta_index",
     "compression_index": "compression_index",

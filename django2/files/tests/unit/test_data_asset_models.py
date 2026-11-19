@@ -54,7 +54,7 @@ class DataAssetModelTests(TestCase):
             file_path="/not-used/asset.fasta",
         )
         self.profile = load_data_asset_registry().get_profile(
-            "genome", "reference_genome"
+            "sequence", "reference_genome"
         )
 
     def create_asset(self, code):
@@ -84,14 +84,14 @@ class DataAssetModelTests(TestCase):
         AssetFileMembership.objects.create(
             asset=first,
             data_file=self.data_file,
-            file_role="primary_data",
+            file_role="genome_fasta",
             is_primary=True,
             primary_slot=1,
         )
         AssetFileMembership.objects.create(
             asset=second,
             data_file=self.data_file,
-            file_role="primary_data",
+            file_role="genome_fasta",
             is_primary=True,
             primary_slot=1,
         )
@@ -104,7 +104,7 @@ class DataAssetModelTests(TestCase):
         AssetFileMembership.objects.create(
             asset=asset,
             data_file=self.data_file,
-            file_role="primary_data",
+            file_role="genome_fasta",
             is_primary=True,
             primary_slot=1,
         )
@@ -118,7 +118,7 @@ class DataAssetModelTests(TestCase):
             AssetFileMembership.objects.create(
                 asset=asset,
                 data_file=other_file,
-                file_role="primary_data",
+                file_role="genome_fasta",
                 position=1,
                 is_primary=True,
                 primary_slot=1,
@@ -137,7 +137,7 @@ class DataAssetModelTests(TestCase):
             AssetFileMembership.objects.create(
                 asset=asset,
                 data_file=self.data_file,
-                file_role="primary_data",
+                file_role="genome_fasta",
                 is_primary=True,
                 primary_slot=None,
             )
@@ -183,7 +183,7 @@ class DataAssetModelTests(TestCase):
         AssetFileMembership.objects.create(
             asset=asset,
             data_file=self.data_file,
-            file_role="primary_data",
+            file_role="genome_fasta",
             is_primary=True,
             primary_slot=1,
         )

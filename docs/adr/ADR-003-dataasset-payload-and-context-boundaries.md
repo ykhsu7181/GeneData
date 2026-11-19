@@ -13,8 +13,10 @@ amends: ADR-002 sections 4 and 7
 
 Accepted，2026-11-19。
 
-截至 2026-11-19，实施顺序第 1 步已在开发分支完成：新增三张显式上下文关系表、migration `0027` 和
-模型测试；尚未部署生产。Registry v2、创建 service、T4 重构、生产审计、回填和切换仍未实施。
+截至 2026-11-19，实施顺序第 1、2 步已在开发分支完成：新增三张显式上下文关系表和 migration `0027`；
+Registry 已切换到 v2 稳定 key、`file_role_rules`、`context_rules` 和完整 Profile digest；canonical validator、
+唯一创建 service 及 T4 新 key/role 最小适配已完成并通过开发测试。上述结构尚未部署生产；T4 完整语义重构、
+生产审计、回填和切换仍未实施。
 
 本文定义下一阶段拟采用的稳定架构边界，不表示相关 Registry、service、model、migration、API、前端、
 生产部署或数据回填已经完成。批准本 ADR 只允许按本文顺序进入开发环境实施；生产 schema、回填和切换仍需
@@ -31,9 +33,9 @@ ADR-001 已确定 `DataAsset` 是目标唯一科研数据身份，ADR-002 已批
 - `AssetFileMembership`；
 - `DataAssetAccession`。
 
-T3 已完成开发验证，但 migration `0026` 尚未部署生产。当前唯一创建 service 仍允许
+本 ADR 批准时，T3 已完成开发验证，但 migration `0026` 尚未部署生产；当时唯一创建 service 仍允许
 `file_memberships=()`，静态 Registry 也只声明允许的文件角色，没有声明 core/auxiliary 分类、角色基数或
-专业上下文规则。当前 Registry 的 DataType key 是 `genome`、`microscopy`、`tabular`，且
+专业上下文规则。当时 Registry 的 DataType key 是 `genome`、`microscopy`、`tabular`，且
 `schema_digest` 只覆盖 metadata JSON Schema，没有覆盖文件与上下文规则。
 
 T0、T1、T4 生产只读审计和生产文件清单核对进一步表明：
@@ -123,9 +125,9 @@ SHA-256，而不再只计算 metadata JSON Schema。规范化 digest 至少覆�
 | 关系 | 目标对象 | 状态 |
 | --- | --- | --- |
 | `DataAssetAccession` | Accession | 当前已实现 |
-| `DataAssetSample` | Sample | 目标新增 |
-| `DataAssetAssembly` | Assembly | 目标新增 |
-| `DataAssetAnnotation` | Annotation | 目标新增 |
+| `DataAssetSample` | Sample | 开发已实现；生产未部署 |
+| `DataAssetAssembly` | Assembly | 开发已实现；生产未部署 |
+| `DataAssetAnnotation` | Annotation | 开发已实现；生产未部署 |
 
 这四张关系表是固定专业上下文集合，不按 DataType、Profile、文件格式、实验技术或课题组继续增表。
 

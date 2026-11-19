@@ -181,14 +181,15 @@ DataAsset 不保存：
 正式 DataAsset 不是描述卡片或外部链接容器。目标创建与发布不变量是：
 
 1. 至少包含一个 `DataFile`；
-2. 至少包含 Profile 声明的最小数量核心文件；
-3. 至少一个成员承担 Profile 允许的 primary/core role；
+2. 每个文件角色满足 Profile 声明的 core/auxiliary 分类和逐角色 `min/max`；
+3. 至少一个 core 角色的 `min` 大于或等于 1，且实际成员满足该要求；
 4. Project、状态和权限完整；
-5. metadata 通过固定 schema version/digest 校验；
+5. metadata、文件规则和 context 通过固定 schema version/digest 契约校验；
 6. 发布前核心文件存在且 checksum 已验证。
 
-当前 T3 service 仍允许 `file_memberships=()`，因此“正式资产必须有核心文件”是本轮批准的目标设计，
-尚未由当前 service 和测试落实。实施时必须修改现有唯一创建 service，不新增第二套写入入口。
+当前 canonical creation service 已拒绝无核心文件或不满足 context 规则的正式创建，并复用 Registry v2
+唯一契约校验入口；直接 ORM 仍可用于 migration、测试或事务内暂态对象，但不是受支持的业务写入路径。
+发布前的物理存在性、checksum 和文件发布状态校验仍属于后续发布 service，不能从创建校验推断为已完成。
 
 当前最小字段、状态机、索引和数据库约束以 ADR-002 与 migration `0026` 为准；后续扩展必须通过
 独立 ADR 或批准任务，不得在实现中顺带扩大。
@@ -249,9 +250,9 @@ Species、Accession、Sample、Assembly 和 Annotation 均为可选上下文或�
 目标上下文采用少量固定显式关系，不按每个科研数据类型增表：
 
 - `DataAssetAccession`：关联材料或外部登录上下文，当前已实现；
-- `DataAssetSample`：关联一个或多个实验样本，目标设计，尚未实现；
-- `DataAssetAssembly`：关联准确组装，目标设计，尚未实现；
-- `DataAssetAnnotation`：关联准确注释版本，目标设计，尚未实现。
+- `DataAssetSample`：关联一个或多个实验样本，开发已实现，生产未部署；
+- `DataAssetAssembly`：关联准确组装，开发已实现，生产未部署；
+- `DataAssetAnnotation`：关联准确注释版本，开发已实现，生产未部署。
 
 API 可以把这些关系组合成统一 `contexts` 视图，但数据库仍使用真实外键和显式中间表。禁止新增
 `context_type + context_id` 或 `GenericForeignKey` 通用多态关系。
@@ -710,10 +711,11 @@ draft 可以硬删除。普通新增和弃用不应要求修改后端核心模�
 
 ## 11. 未决事项
 
-以下事项不是已实现或已批准的物理结构：
+以下事项尚未完成或仍需独立决策：
 
-- 正式 DataAsset 核心文件不变量的具体 service/数据库约束边界；
-- `DataAssetSample`、`DataAssetAssembly`、`DataAssetAnnotation` 的字段、基数约束和 migration；
+- migration `0026`、`0027` 和 Registry v2 的生产部署与真实数据验收；
+- T4 基于专业实体和真实 payload 的完整语义重构，以及新的生产只读审计；
+- DataAsset 发布 service 的物理文件存在性、checksum 和发布状态校验；
 - 96 个 transcriptome 与 111 个 codon 归档的包内真实内容和资产边界；
 - 4500 条 DataFile 与 2852 条物理文件清单差异的处置；
 - Project 成员、共享和公开发布权限；
