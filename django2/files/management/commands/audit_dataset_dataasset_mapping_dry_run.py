@@ -70,6 +70,8 @@ REPORT_FIELDS = {
 }
 
 REFERENCE_PROFILE = ("sequence", "reference_genome")
+CHECKSUM_MODE_FULL = "full"
+CHECKSUM_MODE_FAST = "fast"
 REFERENCE_ROLE_MAP = {
     "genome": "genome_fasta",
     "genome_fasta": "genome_fasta",
@@ -122,6 +124,15 @@ class Command(BaseCommand):
             required=True,
             help="Private directory for deterministic DataAsset T4 TSV reports.",
         )
+        parser.add_argument(
+            "--checksum-mode",
+            choices=(CHECKSUM_MODE_FULL, CHECKSUM_MODE_FAST),
+            default=CHECKSUM_MODE_FULL,
+            help=(
+                "Use 'full' to verify recorded SHA-256 values or 'fast' to "
+                "check file existence and size without reading file contents."
+            ),
+        )
 
     def handle(self, *args, **options):
         output_dir = Path(options["output_dir"]).resolve()
@@ -137,12 +148,14 @@ class Command(BaseCommand):
         registry = load_data_asset_registry()
         with transaction.atomic():
             snapshot = self.load_database_snapshot()
-        reports = self.collect_reports(registry, snapshot)
+        checksum_mode = options["checksum_mode"]
+        reports = self.collect_reports(registry, snapshot, checksum_mode)
 
         for name, path in paths.items():
             write_tsv(path, REPORT_FIELDS[name], reports[name])
 
         self.stdout.write("mode\tREAD_ONLY_DRY_RUN")
+        self.stdout.write(f"checksum_mode\t{checksum_mode}")
         for name in REPORT_NAMES:
             self.stdout.write(f"{name}\t{len(reports[name])}\t{paths[name]}")
 
@@ -166,7 +179,7 @@ class Command(BaseCommand):
             "target_table_available": target_table_available,
         }
 
-    def collect_reports(self, registry, snapshot):
+    def collect_reports(self, registry, snapshot, checksum_mode):
         profile = registry.get_profile(*REFERENCE_PROFILE)
         datasets = snapshot["datasets"]
         data_files = snapshot["data_files"]
@@ -178,7 +191,10 @@ class Command(BaseCommand):
             if link.dataset.dataset_type == "genome":
                 datasets_by_accession[link.accession_id].append(link.dataset)
 
-        checksums = [self.audit_file(data_file) for data_file in data_files]
+        checksums = [
+            self.audit_file(data_file, checksum_mode=checksum_mode)
+            for data_file in data_files
+        ]
         checksum_by_file = {row["data_file_id"]: row for row in checksums}
         conflicts = []
         files_by_checksum = defaultdict(list)
@@ -337,6 +353,9 @@ class Command(BaseCommand):
             "checksums": checksums,
         }
         reports["summary"] = self.build_summary(reports)
+        reports["summary"].append(
+            {"metric": f"checksum_mode:{checksum_mode}", "value": 1}
+        )
         reports["summary"].append(
             {
                 "metric": "target_table_available",
@@ -652,7 +671,7 @@ class Command(BaseCommand):
             "issues": ",".join(issues or ["no_asset_candidate"]),
         }
 
-    def audit_file(self, data_file):
+    def audit_file(self, data_file, *, checksum_mode=CHECKSUM_MODE_FULL):
         issues = []
         physical_status = "missing"
         size_status = "not_checked"
@@ -673,9 +692,13 @@ class Command(BaseCommand):
 
                 expected = (data_file.sha256 or "").strip().lower()
                 if len(expected) == 64 and all(char in "0123456789abcdef" for char in expected):
-                    checksum_status = "verified" if self.sha256(path) == expected else "mismatch"
-                    if checksum_status == "mismatch":
-                        issues.append("file_checksum_mismatch")
+                    if checksum_mode == CHECKSUM_MODE_FAST:
+                        checksum_status = "recorded_not_verified"
+                        issues.append("file_checksum_not_verified_fast_mode")
+                    else:
+                        checksum_status = "verified" if self.sha256(path) == expected else "mismatch"
+                        if checksum_status == "mismatch":
+                            issues.append("file_checksum_mismatch")
                 else:
                     checksum_status = "not_recorded"
                     issues.append("file_checksum_unverified")

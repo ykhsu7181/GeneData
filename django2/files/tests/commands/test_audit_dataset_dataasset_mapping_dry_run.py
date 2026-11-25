@@ -448,3 +448,35 @@ class DatasetDataAssetMappingTransactionBoundaryTests(TransactionTestCase):
             )
 
         self.assertEqual(transaction_states, [False])
+
+    def test_fast_mode_skips_content_hashing_and_marks_checksum_unverified(self):
+        report_dir = self.root / "fast-reports"
+
+        with patch.object(Command, "sha256", side_effect=AssertionError("hash called")):
+            call_command(
+                "audit_dataset_dataasset_mapping_dry_run",
+                "--output-dir",
+                str(report_dir),
+                "--checksum-mode",
+                "fast",
+                stdout=StringIO(),
+            )
+
+        with (report_dir / "dataasset_t4_checksums.tsv").open(
+            encoding="utf-8", newline=""
+        ) as handle:
+            checksum = next(csv.DictReader(handle, delimiter="\t"))
+        self.assertEqual(checksum["physical_status"], "present")
+        self.assertEqual(checksum["size_status"], "verified")
+        self.assertEqual(checksum["checksum_status"], "recorded_not_verified")
+        self.assertEqual(checksum["mapping_status"], "review")
+        self.assertIn("file_checksum_not_verified_fast_mode", checksum["issues"])
+
+        with (report_dir / "dataasset_t4_summary.tsv").open(
+            encoding="utf-8", newline=""
+        ) as handle:
+            summary = {
+                row["metric"]: row["value"]
+                for row in csv.DictReader(handle, delimiter="\t")
+            }
+        self.assertEqual(summary["checksum_mode:fast"], "1")
