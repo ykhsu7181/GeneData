@@ -2,7 +2,7 @@
 title: ADR-002 DataAsset 最小 Schema、文件成员与发布边界
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-18
+last_reviewed: 2026-11-25
 supersedes: null
 ---
 
@@ -14,6 +14,8 @@ Accepted，2026-11-18。
 
 本 ADR 是已批准的 T2 设计成果，只定义第一阶段目标结构和约束，不表示 model、migration、API、权限、前端、
 回填或生产切换已经实现。
+
+> **2026-11-25 修订说明：** `DataAsset`、`AssetFileMembership`、DataType/Profile、数据库约束和发布边界继续有效。第 5 节中针对旧权限迁移的要求、第 7 节 T1 到 T2 映射、第 8 节渐进回填路线及其他以旧生产数据转换为前提的内容，已由 ADR-004 替代，仅作为历史设计依据保留。新仓不导入旧业务数据和关系，并通过后续正向 migration 移除旧活动结构。
 
 ## 背景与生产证据
 

@@ -2,7 +2,7 @@
 title: ADR-003 DataAsset 核心载荷与专业上下文边界
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-25
 supersedes: null
 amends: ADR-002 sections 4 and 7
 ---
@@ -23,6 +23,8 @@ Profile 生成正式候选，未批准的 GFF、FASTQ、BED 和矩阵等 Profile
 本文定义下一阶段拟采用的稳定架构边界，不表示相关 Registry、service、model、migration、API、前端、
 生产部署或数据回填已经完成。批准本 ADR 只允许按本文顺序进入开发环境实施；生产 schema、回填和切换仍需
 独立审批。
+
+> **2026-11-25 修订说明：** 真实核心载荷、Profile 文件规则、显式专业上下文和核心/辅助文件边界继续有效。第 2.4 节中的迁移冲突处理、第 2.7 节 metadata-only Dataset 处理、第 3～4 节中的 T4/回填实施与验收、第 7～9 节中的生产迁移路线，已由 ADR-004 替代，仅作为历史审计和设计证据保留。新仓不从旧 Dataset 或其他旧业务记录生成 DataAsset。
 
 本 ADR 修订 ADR-002 的 Registry 契约和 Dataset 映射边界，不改写 ADR-002 的历史正文。两者发生
 冲突时，以本 ADR 对核心载荷、Profile 契约、上下文和 metadata-only Dataset 的决策为准。

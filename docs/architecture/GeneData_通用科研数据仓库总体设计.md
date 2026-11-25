@@ -1,16 +1,19 @@
 ---
 title: GeneData 通用科研数据仓库总体设计
-status: active
+status: superseded
 owner: 徐杨珂
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-25
 supersedes: GeneData DataAsset 通用科研数据仓库整体设计方案 v0.2
+superseded_by: docs/architecture/GeneData_通用科研数据仓库重新定位说明.md
 ---
 
 # GeneData 通用科研数据仓库总体设计
 
+> **文档状态：superseded。** 本文保留为 2026-11-19 时点的历史设计记录，不再指导实施。当前总体入口为 `docs/architecture/GeneData_通用科研数据仓库重新定位说明.md`，旧生产业务数据的映射、回填、一致性切换和迁移后退役路线已由 ADR-004 替代。本文后续涉及旧文件完整备份、迁移或在线保留的内容同样不再适用；当前规则是旧数据库独立备份恢复、`manual_files` 原地停止写入并登记清单但不保证恢复、旧文件按需核验后复制到新仓。
+
 ## 1. 文档定位
 
-本文是 GeneData 数据仓库的 active 总体设计，负责说明稳定目标、对象边界、扩展方式、迁移顺序和实施门禁。
+本文曾是 GeneData 数据仓库的 active 总体设计，负责记录当时的稳定目标、对象边界、扩展方式、迁移顺序和实施门禁。
 
 本文不表示目标 model、migration、API、权限、前端或生产数据迁移已经完成。当前实现以代码、migration、测试和 CI 为准；具体表字段、约束和接口必须由后续子 ADR 与分阶段任务批准。
 

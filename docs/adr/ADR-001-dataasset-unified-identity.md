@@ -2,7 +2,7 @@
 title: ADR-001 DataAsset 统一科研数据身份与 Dataset 退役边界
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-18
+last_reviewed: 2026-11-25
 supersedes: null
 ---
 
@@ -13,6 +13,8 @@ supersedes: null
 Accepted，2026-11-18。
 
 本 ADR 批准长期稳定架构边界，不表示 DataAsset model、migration、API、权限、前端或生产迁移已经实现。
+
+> **2026-11-25 修订说明：** `DataAsset` 作为新仓统一科研数据身份、`DataFile` 作为物理文件事实来源、禁止长期双读双写等稳定边界继续有效。第 1 节中基于旧系统切换事实来源的迁移描述、第 4 节对旧文件关系的迁移要求、第 6 节旧权限迁移比较、第 7～8 节和“实施 Gate”中的旧数据映射、回填、切换及迁移后退役路线，已由 ADR-004 的“新仓空库启用、旧系统离线收口”决策替代，不再指导实施。
 
 ## 背景
 

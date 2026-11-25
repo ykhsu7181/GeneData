@@ -2,7 +2,7 @@
 title: GeneData 开发、部署与运维手册
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-18
+last_reviewed: 2026-11-25
 supersedes:
   - ci_gate.md
   - GeneData_生产环境部署与开发环境准备手册.md
@@ -14,6 +14,10 @@ supersedes:
 
 本文是唯一活动运维入口。它不绑定某个提交号、服务器目录或一次发布；具体生产参数由部署负责人
 在发布执行单中临时填写，执行单不作为长期架构文档提交。
+
+ADR-004 的 G1/G2 旧系统离线收口使用
+`docs/GeneData_ADR004_G1_G2离线收口操作清单.md`。该清单只授权冻结测试写入、数据库独立备份和
+`manual_files` 元数据清单，不授权停止服务、删除数据或初始化新仓。
 
 ## 1. 状态边界
 
@@ -70,7 +74,9 @@ npm run build
 8. 收集静态文件，运行 `nginx -t`，再按现场批准命令切换服务。
 9. 验证健康检查、关键页面、权限边界、下载、Range 和真实数据关系。
 
-仓库文档不固化 `systemctl` 服务名、生产绝对路径或数据库凭据；这些值由生产环境配置提供。
+长期通用手册不固化 `systemctl` 服务名、生产绝对路径或数据库凭据；这些值由生产环境配置提供。
+经批准的阶段操作清单可以记录已经核验的当前路径和端口，但执行时仍须从真实生产进程重新验证，
+不得把文档中的旧值直接当成当前事实。任何文档都不得记录数据库凭据。
 
 ### 3.3 回滚
 
@@ -134,6 +140,14 @@ python manage.py audit_datafile_asset_mapping_readiness \
 `unique_type_candidate` 仍只是候选；`invalid_context`、`multiple_type_candidates`、
 `needs_semantic_rule`、`no_dataset_candidate` 和 `no_accession_context` 必须人工核对。报告不包含文件名、
 物理路径、描述或负责人，不得提交 Git 或放入 Web 可访问目录。
+
+### 4.2 DataAsset T4 只读候选审计
+
+`audit_dataset_dataasset_mapping_dry_run` 默认使用 `--checksum-mode full`，读取文件内容并核验已登记的 SHA-256。生产只读复核可使用
+`--checksum-mode fast` 缩短执行时间；该模式只检查文件是否存在和文件大小，不读取文件内容，已登记校验值会标记为
+`recorded_not_verified`，并产生 `file_checksum_not_verified_fast_mode` 复核项。快速模式不能替代文件完整性验收。
+
+ADR-004 已终止旧生产业务数据的全量迁移，因此该命令只保留为历史数据观察和只读证据工具，不得将输出直接写入新仓。
 
 ## 5. 外部数据 API 运维
 
