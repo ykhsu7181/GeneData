@@ -18,6 +18,8 @@ Accepted，2026-11-26。
 
 本文批准新仓目标结构、授权边界和旧结构退出前置条件，不表示相关 model、migration、service、API、前端、删除 migration、生产部署或真实数据验收已经完成。实施仍须按第 6 节拆分为独立阶段，并分别评审、测试和验收。
 
+> **2026-11-26 实施分组修订：** 原 11 个顺序步骤合并为 4 个大阶段，原步骤保留为阶段内部 Gate。该修订只简化项目管理和汇报层级，不改变技术顺序、验收标准、独立提交边界或破坏性删除审批要求。
+
 ## 1. 背景
 
 ADR-001 至 ADR-003 已形成并在开发环境实现部分 DataAsset 基础：
@@ -563,21 +565,49 @@ ADR-005 批准后采用“新增替代结构、切换唯一 service、清除旧�
 
 ## 6. 实施顺序与独立提交边界
 
-本 ADR 只有在批准后才能进入本地开发实施，顺序为：
+本 ADR 按 4 个大阶段管理。每个大阶段形成一份阶段实施方案、一次阶段评审和一次阶段收口；阶段内部 Gate 仍须按风险拆分小提交和针对性测试。
 
-1. **注册规则与状态机**：固定 Namespace Registry、Relation Registry、首批资产/Context Profile、条目版本/digest、公开字段契约、DataAsset 状态转换和校验时机，不改现有业务入口；
-2. **Project 用户权限**：新增 `ProjectMembership`、约束、唯一 Project service 和模型/并发测试；
-3. **通用上下文与外部标识**：新增 `ContextEntity`、三类关系、`ExternalIdentifier` 及约束测试；
-4. **唯一创建、关系和状态转换 service**：实现 Context、ExternalIdentifier、关系、DataAsset 分层校验、审批和发布；
-5. **DataAsset/DataFile 授权收敛**：建立基于真实用户、ProjectMembership、资产 membership 和 DataFile 物理阻断状态的 fail-closed 权限；
-6. **保留能力切换**：重构 JBrowse、索引、导入和查询，使其不再依赖 Dataset/FileRelation/旧专业实体；
-7. **旧入口清除**：删除或停用旧命令、API 路由和前端入口，使应用在旧表不存在时仍可启动；
-8. **删除附录与正向 migration**：先逐项完成退出候选的调用者、替代结构、测试和回滚清单，再按独立审批退出 `DataFile.dataset`、`DatasetAccession`、`FileRelation`、`Dataset`、四张固定专业关系表、经附录批准的旧专业实体和重复的 DataFile 权限/发布字段；
-9. **G5 空库验证**：在新的空 MySQL 执行完整 migration 链、系统检查、最终表清单和测试；
-10. **G6 最小后端流程**：从零创建用户、Project、成员、Profile、Context、DataAsset 和文件成员并验证授权；
-11. **G7 API 与前端**：设计资产搜索、详情、文件成员、上下文、外部标识和管理流程；机器访问前另行批准 Token ADR。
+### 阶段一：新核心基础
 
-每一步独立提交。不得把模型、权限、API、前端和破坏性 migration 合成一次跨层修改。
+目标是在不切换现有业务入口的前提下建立并验证新仓核心：
+
+- **注册规则与状态机 Gate**：固定 Namespace Registry、Relation Registry、首批资产/Context Profile、条目版本/digest、公开字段契约、DataAsset 状态转换和校验时机；
+- **Project 用户权限 Gate**：新增 `ProjectMembership`、约束、唯一 Project service 和模型/并发测试；
+- **通用上下文与外部标识 Gate**：新增 `ContextEntity`、三类关系、`ExternalIdentifier` 及数据库约束测试；
+- **唯一业务 service Gate**：实现 Context、ExternalIdentifier、关系、DataAsset 分层校验、审批和发布。
+
+阶段完成标准：新结构和唯一 service 在开发环境通过模型、约束、Registry、状态转换及并发测试，但 Dataset/FileRelation 仍是未切换的当前遗留入口。
+
+### 阶段二：权限与保留能力切换
+
+目标是使需要继续保留的后端能力只依赖新结构：
+
+- **DataAsset/DataFile 授权 Gate**：建立基于真实用户、ProjectMembership、资产 membership 和 DataFile 物理阻断状态的 fail-closed 唯一授权路径；
+- **保留能力切换 Gate**：重构 JBrowse、索引、导入和查询，使其不再依赖 Dataset、FileRelation 或旧专业实体提供活动事实。
+
+阶段完成标准：逐节点授权、文件访问、JBrowse、索引、导入和查询测试通过，已切换能力不存在旧关系 fallback。该阶段不删除旧表。
+
+### 阶段三：旧结构退出与空库验收
+
+目标是清除旧活动入口，形成最终 schema，并验证空仓最小流程：
+
+- **旧入口清除 Gate**：删除或停用旧命令、API 路由和前端入口，使应用在旧表不存在时仍可启动；
+- **删除附录与正向 migration Gate**：逐项完成退出候选的调用者、替代结构、测试和回滚清单，再分别审批退出 `DataFile.dataset`、`DatasetAccession`、`FileRelation`、`Dataset`、四张固定专业关系表、经附录批准的旧专业实体和重复的 DataFile 权限/发布字段；
+- **G5 空库验证 Gate**：在新的空 MySQL 执行完整 migration 链、系统检查、最终表清单和测试；
+- **G6 最小后端流程 Gate**：从零创建用户、Project、成员、Profile、Context、DataAsset 和文件成员并验证授权、提交、审批和发布。
+
+阶段完成标准：最终 model、migration、活动调用和空库 schema 一致，G5/G6 证据完整。破坏性 migration 仍须逐项审批、独立提交和具备回滚边界，不能因为归入同一大阶段而合并删除。
+
+### 阶段四：API 与前端建设
+
+目标是向普通科研用户提供新仓正式业务入口：
+
+- **G7 API 与前端 Gate**：实现资产搜索、详情、文件成员、上下文、外部标识、Project 成员和审核管理流程；
+- 机器访问、服务账号、scope 和凭证审计在本阶段开始前另行批准 Token ADR，不得顺带沿用当前不成熟方案。
+
+阶段完成标准：新 API 和前端只使用新仓身份、关系和授权路径，不存在 Dataset/旧专业关系双读、双写或 fallback。
+
+四个大阶段按顺序验收。不得把一个大阶段理解为一个大提交，也不得把模型、权限、API、前端和破坏性 migration 合成一次跨层修改。
 
 ADR-004 的 G2 隔离恢复和 G3 旧服务离线状态仍需单独完成；批准本文不代表生产部署、旧表删除或真实数据验收完成。
 
