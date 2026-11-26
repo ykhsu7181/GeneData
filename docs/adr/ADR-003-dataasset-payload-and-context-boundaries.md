@@ -2,9 +2,10 @@
 title: ADR-003 DataAsset 核心载荷与专业上下文边界
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-25
+last_reviewed: 2026-11-26
 supersedes: null
 amends: ADR-002 sections 4 and 7
+amended_by: ADR-005 sections 3.3-3.8
 ---
 
 # ADR-003：DataAsset 核心载荷与专业上下文边界
@@ -25,6 +26,8 @@ Profile 生成正式候选，未批准的 GFF、FASTQ、BED 和矩阵等 Profile
 独立审批。
 
 > **2026-11-25 修订说明：** 真实核心载荷、Profile 文件规则、显式专业上下文和核心/辅助文件边界继续有效。第 2.4 节中的迁移冲突处理、第 2.7 节 metadata-only Dataset 处理、第 3～4 节中的 T4/回填实施与验收、第 7～9 节中的生产迁移路线，已由 ADR-004 替代，仅作为历史审计和设计证据保留。新仓不从旧 Dataset 或其他旧业务记录生成 DataAsset。
+
+> **2026-11-26 ADR-005 修订说明：** 真实核心载荷、Profile 文件角色、逐角色基数、完整 Profile digest 和 metadata-only 内容不创建资产等边界继续有效。第 2.3～2.4 节固定 `DataAssetAccession`、`DataAssetSample`、`DataAssetAssembly`、`DataAssetAnnotation` 及专业实体直接关联的目标方案，第 4～5 节相应验收和批准含义，已由 ADR-005 的 `ContextEntity`、`ExternalIdentifier`、`DataAssetRelation`、`AssetContextLink`、`ContextRelation` 和 Project 授权边界替代。现有四张关系表和旧专业实体在调用切换、测试及独立正向删除 migration 完成前仍是当前实现，不得因本说明直接删除。
 
 本 ADR 修订 ADR-002 的 Registry 契约和 Dataset 映射边界，不改写 ADR-002 的历史正文。两者发生
 冲突时，以本 ADR 对核心载荷、Profile 契约、上下文和 metadata-only Dataset 的决策为准。

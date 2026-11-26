@@ -15,12 +15,13 @@ supersedes: null
 | 仓库开发规则 | `/AGENTS.md` | active |
 | 当前实现状态 | 代码、migration、测试和 CI | active |
 | 文件管理主链路 | `DataFile + FileRelation` 是当前遗留实现；新仓目标由 ADR-004 及空库代码审计决定 | active implementation fact；不是目标设计 |
-| DataAsset 统一科研数据身份 | `docs/adr/ADR-001-dataasset-unified-identity.md` | active；旧数据迁移段落已被 ADR-004 替代 |
-| DataAsset 最小 schema、文件成员和发布边界 | `docs/adr/ADR-002-dataasset-minimum-schema.md` | active；旧数据回填段落已被 ADR-004 替代 |
-| DataAsset T3 新增结构实施 | `docs/architecture/GeneData_DataAsset_T3新增结构实施方案.md` | active；开发完成，生产未部署 |
+| DataAsset 统一科研数据身份 | `docs/adr/ADR-001-dataasset-unified-identity.md` | active；旧数据迁移段落已被 ADR-004 替代，固定专业实体目标已被 ADR-005 修订 |
+| DataAsset 最小 schema、文件成员和发布边界 | `docs/adr/ADR-002-dataasset-minimum-schema.md` | active；旧数据回填段落已被 ADR-004 替代，DataAssetAccession 目标已被 ADR-005 替代 |
+| DataAsset T3 新增结构实施历史 | `docs/architecture/GeneData_DataAsset_T3新增结构实施方案.md` | reference；开发结果保留，固定专业关系目标已被 ADR-005 替代，生产未部署 |
 | 通用科研数据仓库总体设计 | `docs/architecture/GeneData_通用科研数据仓库重新定位说明.md` | active；替代原总体设计 |
 | 新仓空库启用与旧系统离线收口 | `docs/adr/ADR-004-greenfield-data-layer-and-legacy-archive.md` | active；旧数据库要求独立备份恢复，`manual_files` 原地保留且不保证恢复；未授权生产操作 |
-| DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；迁移实施段落已被 ADR-004 替代 |
+| DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；迁移实施段落已被 ADR-004 替代，固定专业实体关系目标已被 ADR-005 替代 |
+| DataAsset 通用上下文、外部标识与 Project 授权 | `docs/adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md` | active；批准目标结构和分阶段实施边界，不表示代码、删除 migration 或生产验收完成 |
 | Dataset 到 DataAsset 代码审计 | `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md` | reference |
 | ADR-004 G4 代码适用性与调用面审计 | `docs/audits/GeneData_ADR004_G4代码适用性与调用面审计_20261126.md` | reference；本地审计交付物完成，G2 隔离恢复和 G3 仍未验收，不授权删除或实施 |
 | API 使用与接口边界 | `docs/api_pages.md` | active |

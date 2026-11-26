@@ -1,9 +1,10 @@
 ---
 title: GeneData DataAsset T3 新增结构实施方案
-status: active
+status: superseded
 owner: 徐杨珂
-last_reviewed: 2026-11-18
+last_reviewed: 2026-11-26
 supersedes: null
+superseded_by: docs/adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md
 ---
 
 # GeneData DataAsset T3 新增结构实施方案
@@ -11,6 +12,8 @@ supersedes: null
 ## 1. 状态与目标
 
 Accepted，2026-11-18。
+
+> **2026-11-26 状态说明：** 本文记录的 T3 开发实施结果继续作为历史代码证据保留，但其中 `DataAssetAccession` 及固定专业关系作为目标结构的方案已被 ADR-005 替代，不再指导新仓实施。现有 model 和 migration 在替代结构、调用切换、测试及独立正向删除 migration 完成前仍不得直接删除。
 
 本方案是 ADR-002 获批后的 T3 实施门禁。批准范围仅限本文列出的开发环境新增结构与验证，不包含
 API、前端、生产部署、回填或 Dataset 切换。

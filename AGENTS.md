@@ -4,7 +4,7 @@
 >
 > 文档状态：active
 >
-> 最近审阅：2026-11-18
+> 最近审阅：2026-11-26
 
 ## 1. 项目目标与目录
 
@@ -45,10 +45,11 @@ GeneData 是长期演进的通用科研数据管理平台，必须支持跨物�
 
 ### 3.1 科研数据身份与专业实体
 
-- 长期目标是由 `DataAsset` 取代现有 `Dataset`，成为所有科研数据的统一身份；当前 `DataAsset` 尚未实现，`Dataset` 仍是当前模型。
-- 该替代必须通过已批准 ADR 和渐进迁移完成；不得长期双读、双写、fallback，或让 `Dataset` 与 `DataAsset` 同时成为活动事实来源。
-- `Assembly`、`Annotation`、`Sample` 等专业实体承载各自领域事实。没有 Accession 或 Annotation 的数据也必须能够仅通过通用资产、文件、项目和权限结构进入仓库。
-- 通用模型只保存通用字段；专业字段留在专业实体或经批准的扩展结构中。不得复制整套专业字段形成第二份事实来源。
+- 长期目标是由 `DataAsset` 取代现有 `Dataset`，成为所有科研数据的统一身份。当前开发代码已包含 DataAsset 基础 model、migration 和最小 service，但正式业务 API、前端、唯一授权路径和生产验收尚未完成；`Dataset`、`FileRelation` 和旧专业实体仍属于当前遗留实现，不能把目标设计描述成当前完成状态。
+- 该替代必须通过已批准 ADR，按“新增替代结构 -> 切换唯一 service 和调用 -> 独立正向 migration 删除旧结构”完成；新仓不迁移旧业务数据和关系，不得长期双读、双写、fallback，或让 `Dataset` 与 `DataAsset` 同时成为活动事实来源。
+- 专业事实由受版本化 Profile 约束的 `DataAsset`、`ContextEntity`，或经独立 ADR 批准的专门实体承载，不得丢失或重复保存。具有核心文件的 Assembly、Annotation 在目标结构中分别表达为 Reference Genome、Annotation DataAsset；Sample、Subject、Experiment 表达为 ContextEntity；外部编号表达为 ExternalIdentifier。
+- 通用核心模型只保存通用字段；类型特有字段进入严格 Schema 校验并版本固化的 Profile metadata。不得使用自由 JSON 代替稳定关系、外部标识、权限或血缘，也不得复制整套专业字段形成第二份事实来源。
+- 旧 `Accession`、`Sample`、`Assembly`、`Annotation` 及四张固定 DataAsset 专业关系表只能在替代结构、调用切换、测试和逐项删除审批完成后，通过新的正向 migration 退出；历史 migration 必须保留。
 - `DataAsset` 的字段、关系、状态机和迁移阶段以已批准设计文档或 ADR 为准；已删除或被替代的历史草案不得直接指导实现。
 
 ### 3.2 物理文件

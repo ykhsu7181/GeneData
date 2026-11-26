@@ -2,13 +2,13 @@
 title: GeneData通用科研数据仓库重新定位说明
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-25
+last_reviewed: 2026-11-26
 supersedes: docs/architecture/GeneData_通用科研数据仓库总体设计.md
 ---
 
 # GeneData通用科研数据仓库重新定位说明
 
-> 本文是 GeneData 数据仓库当前 active 总体入口。ADR-004 已批准数据层重新开库、旧系统离线收口和继续基于 GeneData 建设；当前实现状态仍以代码、migration、测试和 CI 为准，本文不授权任何生产操作。
+> 本文是 GeneData 数据仓库当前 active 总体入口。ADR-004 已批准数据层重新开库、旧系统离线收口和继续基于 GeneData 建设；ADR-005 已批准新仓通用上下文、外部标识、Project 授权和旧专业实体退出目标。当前实现状态仍以代码、migration、测试和 CI 为准，本文不授权任何生产操作。
 
 ## 一、调整背景
 
@@ -71,14 +71,16 @@ supersedes: docs/architecture/GeneData_通用科研数据仓库总体设计.md
 
 - `DataAsset`、`DataFile` 和 `AssetFileMembership` 的通用职责；
 - DataType/Profile 注册表及校验机制；
-- 明确的专业上下文关系；
+- `ContextEntity`、`ExternalIdentifier` 和三类显式通用关系的目标设计；
 - 通用认证、授权、文件访问、审计和基础服务。
 
 只服务于旧数据识别、候选映射、全量回填、双写或长期兼容的代码不再扩展。是否保留或删除必须先做调用面和测试审计，不得因为路线调整而修改历史 migration 或直接删除仍被使用的实现。
 
 ### 新仓目标 schema
 
-空仓不只表示“旧表中没有数据”。新仓最终 schema 不再保留 `Dataset`、`DatasetAccession`、`FileRelation` 等只服务于旧业务体系的活动表和写入入口。
+空仓不只表示“旧表中没有数据”。新仓最终 schema 不再保留 `Dataset`、`DatasetAccession`、`FileRelation`、四张固定 DataAsset 专业关系表，以及经 ADR-005 删除附录逐项批准退出的旧专业实体和活动写入入口。
+
+目标核心由 `Project + ProjectMembership`、`DataAsset`、`AssetFileMembership + DataFile`、`ContextEntity`、`ExternalIdentifier`、`DataAssetRelation`、`AssetContextLink`、`ContextRelation` 和受版本控制的 Profile/Registry 组成。该目标不表示这些结构已经全部实现；当前代码仍包含旧表和旧调用，必须先新增替代结构、切换唯一 service 与调用，再通过独立正向 migration 逐项删除。
 
 历史 migration 必须保留。实施时先完成模型、命令、API、测试和前端调用面审计，再通过新的正向 migration 删除旧结构。在新的开发数据库从头执行完整 migration 链时，可以经历“创建旧表后再删除旧表”，但最终 schema、当前模型和活动业务入口必须保持一致。稳定运行后是否压缩 migration 历史另行决定，当前阶段不进行 migration squash。
 
@@ -92,12 +94,16 @@ supersedes: docs/architecture/GeneData_通用科研数据仓库总体设计.md
 
 ```text
 Project
+ProjectMembership
 DataAsset
 DataFile
 AssetFileMembership
-DataType
-Profile
-专业科研上下文关系
+ContextEntity
+ExternalIdentifier
+DataAssetRelation
+AssetContextLink
+ContextRelation
+DataType / Profile / Relation / Namespace Registry
 权限与审计
 ```
 
@@ -111,26 +117,27 @@ Profile
 参考基因组资产
 ├── genome.fa        core
 ├── genome.fa.fai    auxiliary
-└── Assembly 上下文
+├── Assembly accession  ExternalIdentifier
+└── 可选 Sample/Subject ContextEntity
 ```
 
 ```text
 基因组注释资产
 ├── annotation.gff3  core
 ├── statistics.tsv   auxiliary
-└── Assembly、Annotation 上下文
+└── uses_reference → 参考基因组 DataAsset
 ```
 
 ```text
 原始测序数据资产
 ├── sample_R1.fastq.gz  core
 ├── sample_R2.fastq.gz  core
-└── Sample 上下文
+└── source_sample → sample ContextEntity
 ```
 
 ### 4.3 DataFile 是物理文件事实来源
 
-`DataFile` 只描述真实物理文件，例如文件标识、名称、大小、校验值、物理状态、发布状态和受控访问位置。
+`DataFile` 只描述真实物理文件，例如文件标识、名称、大小、校验值、受控访问位置和只会拒绝访问的物理可用状态。资产发布和可见性的唯一事实来源是 `DataAsset.status + DataAsset.visibility`；DataFile 不再独立决定 Project 范围、业务发布状态或公开权限。
 
 不得再建立平行的物理文件模型。
 
@@ -170,17 +177,21 @@ raw_reads/paired_end_reads
 matrix/contact_matrix
 ```
 
-Profile 定义元数据字段、必填字段、核心与辅助文件角色、文件数量规则、允许的科研上下文及校验规则。
+Profile 定义元数据字段、必填字段、核心与辅助文件角色、文件数量规则、允许的资产/上下文关系及校验规则。Relation Registry 定义关系的稳定语义和安全上限，Namespace Registry 定义外部标识格式和规范化规则；稳定 key、条目版本、digest 和完整历史规则共同保证追溯。
 
-以后新增或停用科研数据类型，目标上通过受控的 DataType/Profile 治理流程完成，而不是增加数据库表或后端类型分支。由谁配置、如何审批、版本如何发布以及是否需要管理界面，暂不在当前阶段决定；这些规则应在实际登记流程稳定后单独设计。
+以后新增或停用科研数据类型，目标上通过受控的 DataType/Profile 治理流程完成，而不是增加数据库表或后端类型分支。第一阶段 Registry/Profile 由 Git 管理并禁止任意规则代码执行；由特权普通用户在线创建、审批和停用 Profile 的治理流程与管理界面后续单独设计。
 
-### 4.6 专业实体是科研上下文
+### 4.6 文件型专业对象、科研上下文和外部编号分层表达
 
-`Sample`、`Accession`、`Assembly` 和 `Annotation` 继续保存专业领域事实，分别回答数据来自哪个样本、对应哪个公共数据库编号、描述哪个组装版本或对应哪套注释。
+专业事实不能全部放入自由 metadata，也不再固定为 `Sample`、`Accession`、`Assembly`、`Annotation` 四类活动实体：
 
-它们不是 `DataAsset` 的组成文件，也不是平行的数据资产模型。
+- 具有真实核心文件的 Assembly、Annotation 分别表达为 Reference Genome、Annotation DataAsset；
+- Sample、Subject、Experiment 表达为受 Profile 约束的 ContextEntity；
+- BioProject、BioSample、Assembly accession、SRA Run 等外部编号按真实目标登记为 ExternalIdentifier；
+- 资产之间使用 DataAssetRelation，资产与上下文使用 AssetContextLink，上下文之间使用 ContextRelation；
+- 真实处理过程仍由后续独立运行模型表达，不能由上述关系代替。
 
-一个 `DataAsset` 可以选择性关联零个、一个或多个专业上下文。没有 Accession、Assembly 或 Annotation 的数据也必须能够进入仓库。
+专业字段进入对应 DataAsset/Context Profile 严格 Schema 校验并版本固化的 metadata。只有通用结构无法满足跨类型长期复用、数据库唯一约束和独立生命周期时，才通过新 ADR 评审专门实体。旧专业模型在调用切换和独立删除审批完成前仍属于当前实现，不得直接删除。
 
 ### 4.7 分离不同维度
 
@@ -188,11 +199,13 @@ Profile 定义元数据字段、必填字段、核心与辅助文件角色、文
 
 - 数据是什么：`DataType + Profile`；
 - 数据由什么文件组成：`AssetFileMembership`；
-- 数据描述什么对象：专业上下文关系；
-- 数据属于哪个项目：`Project`；
+- 数据描述什么对象：`AssetContextLink + ContextEntity`；
+- 数据之间如何引用或替代：`DataAssetRelation`；
+- 外部系统如何标识对象：`ExternalIdentifier`；
+- 数据属于哪个项目及谁可操作：`Project + ProjectMembership`；
 - 数据如何产生：独立的数据血缘或分析运行结构。
 
-不能把这些含义全部放进一个类型字段、JSON 字段或通用关系表中。
+不能把这些含义全部放进一个类型字段、自由 JSON 或无约束字符串关系中。
 
 ## 五、旧生产系统离线收口与新仓边界
 
@@ -219,7 +232,7 @@ Profile 定义元数据字段、必填字段、核心与辅助文件角色、文
 
 新仓必须使用独立数据库和独立文件目录。初始科研业务内容为空，初始化内容分为四类：
 
-1. **migration 创建的结构**：DataAsset、DataFile、AssetFileMembership、Project、专业上下文关系、用户权限和 Django 系统表；
+1. **migration 创建的结构**：Project、ProjectMembership、DataAsset、DataFile、AssetFileMembership、ContextEntity、ExternalIdentifier、三类显式关系、用户权限和 Django 系统表；
 2. **受版本控制的系统配置**：经过确认的最小 DataType/Profile、文件角色、metadata schema、状态和权限规则；
 3. **部署配置**：数据库连接、文件存储根目录、密钥、域名、日志和备份位置，通过环境或部署系统提供，不提交到 Git；
 4. **人工创建的首批业务记录**：首个系统管理账号、数据治理角色、首个组织或课题组、首个 Project 和第一份验证用 DataAsset。
@@ -279,13 +292,13 @@ Profile 定义元数据字段、必填字段、核心与辅助文件角色、文
 
 数据治理人员不等于数据库管理员或系统超级管理员。具体角色、审批流程和管理界面将在后续阶段决定。
 
-- 创建、批准、停用和归档 Profile；
+- 第一阶段通过受评审的 Git 变更维护 Profile/Registry；未来在线治理获独立批准后，创建、批准、停用和归档 Profile；
 - 管理词表和文件角色；
 - 审核新资产登记；
 - 处理数据冲突；
 - 管理项目级权限；
 - 查看审计记录；
-- 在不修改后端代码的情况下增加新数据类型。
+- 在不修改核心 model 和类型分支的情况下增加新数据类型。
 
 已发布或已经被 DataAsset 引用的 Profile 不得物理删除；只有从未发布、从未被引用的草稿 Profile 才允许删除。
 
@@ -327,7 +340,7 @@ Profile 定义元数据字段、必填字段、核心与辅助文件角色、文
 
 - 新增数据类型原则上不需要修改核心 model 或增加类型分支；
 - Profile 能表达文件、元数据和科研上下文规则；
-- DataAsset、DataFile 和专业上下文能够在没有旧数据时独立工作；
+- DataAsset、DataFile、ContextEntity、ExternalIdentifier 和三类关系能够在没有旧数据时独立工作；
 - 权限和文件访问安全失败；
 - 新仓不依赖旧数据库、旧文件路径或旧业务接口。
 
@@ -373,4 +386,16 @@ ADR-004 已批准：
 6. 原 T4 全量回填准备、T5 一致性切换和 T6 迁移后退役路线终止；
 7. 前端能力规划在开发空库和最小后端流程验证后开始。
 
-旧数据库备份介质、`manual_files` 清单与停止写入措施、停止日期、代码删除清单、初始化步骤、前端/API 规划和生产新仓初始化仍按 ADR-004 的 Gate 分别落实。任何后续阶段都不得从本文推断为已经完成。
+ADR-005 已批准：
+
+1. 每个 DataAsset 和 ContextEntity 具有唯一 owning Project，ProjectMembership 是第一阶段真实用户授权边界；
+2. Assembly、Annotation 等具有核心文件的对象表达为 DataAsset，Sample、Subject、Experiment 表达为 ContextEntity，外部编号表达为 ExternalIdentifier；
+3. DataAssetRelation、AssetContextLink、ContextRelation 使用真实外键，并由 Relation Registry 与 source Profile 两层约束；
+4. Registry/Namespace 使用稳定 key、条目版本、digest 和完整历史规则，ExternalIdentifier 不设置 external primary；
+5. Draft 可以不完整但不能不合法，提交、批准和发布分层校验并处理并发；
+6. DataAsset 是业务发布和可见性事实来源，DataFile 只保存物理事实和全局拒绝状态；
+7. 受控的 `released + public` 跨 Project `uses_reference` 不改变目标所有权；
+8. 旧专业实体和固定关系表只有在替代结构、调用切换、测试和 G5 删除附录逐项审批完成后才能通过正向 migration 退出；
+9. Token、非公开跨 Project 共享、真实分析运行血缘以及具体 API/前端继续由后续独立决策处理。
+
+当前代码只实现了部分 DataAsset 基础，正式业务入口、通用上下文、授权收敛、旧调用切换和删除 migration 尚未完成。旧数据库备份介质、`manual_files` 清单与停止写入措施、停止日期、代码删除清单、初始化步骤、前端/API 规划和生产新仓初始化仍按 ADR-004/ADR-005 的 Gate 分别落实。任何后续阶段都不得从本文推断为已经完成。

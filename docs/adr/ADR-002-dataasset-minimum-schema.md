@@ -2,8 +2,9 @@
 title: ADR-002 DataAsset 最小 Schema、文件成员与发布边界
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-25
+last_reviewed: 2026-11-26
 supersedes: null
+amended_by: ADR-004 and ADR-005
 ---
 
 # ADR-002：DataAsset 最小 Schema、文件成员与发布边界
@@ -16,6 +17,8 @@ Accepted，2026-11-18。
 回填或生产切换已经实现。
 
 > **2026-11-25 修订说明：** `DataAsset`、`AssetFileMembership`、DataType/Profile、数据库约束和发布边界继续有效。第 5 节中针对旧权限迁移的要求、第 7 节 T1 到 T2 映射、第 8 节渐进回填路线及其他以旧生产数据转换为前提的内容，已由 ADR-004 替代，仅作为历史设计依据保留。新仓不导入旧业务数据和关系，并通过后续正向 migration 移除旧活动结构。
+
+> **2026-11-26 ADR-005 修订说明：** `DataAsset`、`AssetFileMembership`、DataType/Profile、真实外键和数据库约束继续有效。第 3 节 `DataAssetAccession` 及第 9 节相关验收目标，已由 ADR-005 的 `ExternalIdentifier`、`ContextEntity` 和三类显式关系替代；项目成员、状态转换和 DataFile 权限边界也以 ADR-005 为准。现有 model 和 migration 作为当前实现及历史证据保留，退出必须经过调用切换和独立正向 migration 审批。
 
 ## 背景与生产证据
 
