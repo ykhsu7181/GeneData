@@ -2,7 +2,7 @@
 title: GeneData Active Documents
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-25
+last_reviewed: 2026-11-26
 supersedes: null
 ---
 
@@ -22,6 +22,7 @@ supersedes: null
 | 新仓空库启用与旧系统离线收口 | `docs/adr/ADR-004-greenfield-data-layer-and-legacy-archive.md` | active；旧数据库要求独立备份恢复，`manual_files` 原地保留且不保证恢复；未授权生产操作 |
 | DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；迁移实施段落已被 ADR-004 替代 |
 | Dataset 到 DataAsset 代码审计 | `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md` | reference |
+| ADR-004 G4 代码适用性与调用面审计 | `docs/audits/GeneData_ADR004_G4代码适用性与调用面审计_20261126.md` | reference；本地审计交付物完成，G2 隔离恢复和 G3 仍未验收，不授权删除或实施 |
 | API 使用与接口边界 | `docs/api_pages.md` | active |
 | 开发、CI、部署与运维 | `docs/OPERATIONS.md` | active |
 | ADR-004 G1/G2 离线收口操作 | `docs/GeneData_ADR004_G1_G2离线收口操作清单.md` | active；文档评审通过，G1 已由生产输出验证；G2 备份、清单和隔离恢复仍待验收 |
