@@ -22,6 +22,7 @@ supersedes: null
 | 新仓空库启用与旧系统离线收口 | `docs/adr/ADR-004-greenfield-data-layer-and-legacy-archive.md` | active；旧数据库要求独立备份恢复，`manual_files` 原地保留且不保证恢复；未授权生产操作 |
 | DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；迁移实施段落已被 ADR-004 替代，固定专业实体关系目标已被 ADR-005 替代 |
 | DataAsset 通用上下文、外部标识与 Project 授权 | `docs/adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md` | active；批准目标结构和分阶段实施边界，不表示代码、删除 migration 或生产验收完成 |
+| ADR-005 第一阶段新核心基础实施 | `docs/architecture/GeneData_ADR005_阶段一新核心基础实施方案.md` | active；批准 Gate A 至 Gate D 的阶段一实施、测试和独立提交边界，不表示业务入口切换、生产部署或阶段一已经完成 |
 | Dataset 到 DataAsset 代码审计 | `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md` | reference |
 | ADR-004 G4 代码适用性与调用面审计 | `docs/audits/GeneData_ADR004_G4代码适用性与调用面审计_20261126.md` | reference；本地审计交付物完成，G2 隔离恢复和 G3 仍未验收，不授权删除或实施 |
 | API 使用与接口边界 | `docs/api_pages.md` | active |
