@@ -1,0 +1,72 @@
+{
+  "registry_version": "3",
+  "current_versions": {
+    "bioproject": "1.0.0",
+    "biosample": "1.0.0",
+    "assembly_accession": "1.0.0",
+    "sra_run": "1.0.0",
+    "doi": "1.0.0"
+  },
+  "entries": [
+    {
+      "key": "bioproject",
+      "version": "1.0.0",
+      "name": "NCBI BioProject",
+      "deprecated": false,
+      "replacement": null,
+      "pattern": "^PRJ[A-Z]{2}\\d+$",
+      "normalization": "strip_uppercase",
+      "resolver_url_template": "https://www.ncbi.nlm.nih.gov/bioproject/{value}",
+      "allowed_target_kinds": ["project"],
+      "allowed_context_types": []
+    },
+    {
+      "key": "biosample",
+      "version": "1.0.0",
+      "name": "NCBI BioSample",
+      "deprecated": false,
+      "replacement": null,
+      "pattern": "^SAM[A-Z]+\\d+$",
+      "normalization": "strip_uppercase",
+      "resolver_url_template": "https://www.ncbi.nlm.nih.gov/biosample/{value}",
+      "allowed_target_kinds": ["context"],
+      "allowed_context_types": ["sample"]
+    },
+    {
+      "key": "assembly_accession",
+      "version": "1.0.0",
+      "name": "INSDC Assembly accession",
+      "deprecated": false,
+      "replacement": null,
+      "pattern": "^(GCA|GCF)_\\d+\\.\\d+$",
+      "normalization": "strip_uppercase",
+      "resolver_url_template": "https://www.ncbi.nlm.nih.gov/datasets/genome/{value}",
+      "allowed_target_kinds": ["data_asset"],
+      "allowed_context_types": []
+    },
+    {
+      "key": "sra_run",
+      "version": "1.0.0",
+      "name": "INSDC sequencing run",
+      "deprecated": false,
+      "replacement": null,
+      "pattern": "^(SRR|ERR|DRR)\\d+$",
+      "normalization": "strip_uppercase",
+      "resolver_url_template": "https://www.ncbi.nlm.nih.gov/sra/{value}",
+      "allowed_target_kinds": ["data_asset"],
+      "allowed_context_types": []
+    },
+    {
+      "key": "doi",
+      "version": "1.0.0",
+      "name": "Digital Object Identifier",
+      "deprecated": false,
+      "replacement": null,
+      "pattern": "^10\\.\\d{4,9}/\\S+$",
+      "normalization": "strip_lowercase",
+      "resolver_url_template": "https://doi.org/{value}",
+      "allowed_target_kinds": ["data_asset"],
+      "allowed_context_types": []
+    }
+  ]
+}

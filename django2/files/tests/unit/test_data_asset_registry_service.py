@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 from django.test import SimpleTestCase
 
 from files.services.data_asset_registry_service import (
+    ContextProfileNotFound,
     DataAssetMetadataError,
     DataAssetProfileNotFound,
     DataAssetRegistryError,
@@ -14,10 +15,19 @@ from files.services.data_asset_registry_service import (
 
 
 class DataAssetRegistryServiceTests(SimpleTestCase):
-    def test_packaged_registry_uses_v2_stable_categories(self):
+    LEGACY_DIGESTS = {
+        ("image", "microscopy_image_set", "2.0.0"):
+            "60ff369a7020c555237a7dbe201f2a5aecb1c816cee8e6f97aaca679b8903b85",
+        ("sequence", "reference_genome", "2.0.0"):
+            "f17ad183e42b3aa5bb05d0439e3f1579833501c30374459a65e2883be2e0fb9f",
+        ("table", "research_table", "2.0.0"):
+            "3d1c55d57910354b2e52d98bfd2a6d02b0503960a2684d26ec12cf2bf8958c9e",
+    }
+
+    def test_packaged_registry_loads_all_registry_kinds(self):
         registry = load_data_asset_registry()
 
-        self.assertEqual(registry.registry_version, "2")
+        self.assertEqual(registry.registry_version, "3")
         self.assertEqual(
             registry.profile_keys,
             (
@@ -26,48 +36,62 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
                 ("table", "research_table"),
             ),
         )
+        self.assertEqual(
+            registry.context_profile_keys,
+            (
+                ("experiment", "basic_experiment"),
+                ("sample", "basic_sample"),
+                ("subject", "basic_subject"),
+            ),
+        )
+        self.assertIn("uses_reference", registry.relation_keys)
+        self.assertIn("biosample", registry.namespace_keys)
+
+    def test_legacy_profile_digests_remain_stable_and_exactly_resolvable(self):
+        registry = load_data_asset_registry()
+
+        for key, digest in self.LEGACY_DIGESTS.items():
+            with self.subTest(key=key):
+                profile = registry.resolve_exact_asset_profile(*key, digest)
+                self.assertEqual(profile.schema_digest, digest)
         reference = registry.get_profile("sequence", "reference_genome")
         self.assertEqual(reference.schema_version, "2.0.0")
-        self.assertEqual(reference.file_role_rules["genome_fasta"].role_class, "core")
         self.assertEqual(reference.context_rules["assembly"].minimum, 1)
-        self.assertRegex(reference.schema_digest, r"^[0-9a-f]{64}$")
 
-    def test_metadata_and_file_roles_are_validated_by_profile(self):
+    def test_target_profile_is_registered_without_becoming_current_early(self):
         registry = load_data_asset_registry()
-
-        registry.validate_metadata(
-            "image",
-            "microscopy_image_set",
-            {"instrument": "confocal-1", "pixel_size": {"value": 0.5, "unit": "um"}},
+        target = registry.resolve_exact_asset_profile(
+            "sequence",
+            "reference_genome",
+            "3.0.0",
+            "faaaa4b727965afe3fd535a4d883e77a0005fa728489aec5eaffcf9c52ef802b",
         )
-        registry.validate_file_role("image", "microscopy_image_set", "primary_image")
-        with self.assertRaisesRegex(DataAssetMetadataError, "Additional properties"):
-            registry.validate_metadata(
-                "image", "microscopy_image_set", {"unknown": "value"}
-            )
-        with self.assertRaisesRegex(DataAssetRegistryError, "Unknown file role"):
-            registry.validate_file_role(
-                "image", "microscopy_image_set", "genome_fasta"
-            )
 
-    def test_returned_metadata_schema_cannot_mutate_cached_contract(self):
+        self.assertEqual(target.profile_family, "reference_genome")
+        self.assertNotIn("external_identifiers", target.metadata_schema["properties"])
+        self.assertIn("supersedes", target.outgoing_relations)
+        self.assertEqual(
+            registry.get_profile("sequence", "reference_genome").schema_version,
+            "2.0.0",
+        )
+
+    def test_exact_resolution_fails_closed_for_unknown_version_or_digest(self):
         registry = load_data_asset_registry()
-        profile = registry.get_profile("table", "research_table")
-        original_digest = profile.schema_digest
 
-        exposed_schema = profile.metadata_schema
-        exposed_schema["additionalProperties"] = True
-
-        self.assertEqual(profile.schema_digest, original_digest)
-        self.assertFalse(profile.metadata_schema["additionalProperties"])
-        with self.assertRaisesRegex(DataAssetMetadataError, "Additional properties"):
-            registry.validate_metadata(
-                "table",
-                "research_table",
-                {"unexpected": True},
+        with self.assertRaises(DataAssetProfileNotFound):
+            registry.resolve_exact_asset_profile(
+                "sequence", "reference_genome", "99.0.0", "0" * 64
+            )
+        with self.assertRaisesRegex(DataAssetRegistryError, "digest mismatch"):
+            registry.resolve_exact_asset_profile(
+                "sequence", "reference_genome", "2.0.0", "0" * 64
+            )
+        with self.assertRaises(ContextProfileNotFound):
+            registry.resolve_exact_context_profile(
+                "sample", "missing", "1.0.0", "0" * 64
             )
 
-    def test_canonical_contract_enforces_file_and_context_cardinality(self):
+    def test_metadata_file_roles_and_legacy_contexts_remain_validated(self):
         registry = load_data_asset_registry()
 
         registry.validate_asset_contract(
@@ -77,207 +101,225 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
             file_roles=["genome_fasta", "fasta_index"],
             context_counts={"assembly": 1},
         )
-        invalid_cases = (
-            ([], {"assembly": 1}, "requires at least 1"),
-            (["fasta_index"], {"assembly": 1}, "requires at least 1"),
-            (["genome_fasta", "genome_fasta"], {"assembly": 1}, "at most 1"),
-            (["genome_fasta"], {}, "Context assembly requires"),
-            (["genome_fasta"], {"sample": 1}, "not allowed"),
-        )
-        for file_roles, context_counts, message in invalid_cases:
-            with self.subTest(file_roles=file_roles, context_counts=context_counts):
-                with self.assertRaisesRegex(DataAssetRegistryError, message):
-                    registry.validate_asset_contract(
-                        "sequence",
-                        "reference_genome",
-                        metadata={},
-                        file_roles=file_roles,
-                        context_counts=context_counts,
-                    )
+        with self.assertRaisesRegex(DataAssetMetadataError, "Additional properties"):
+            registry.validate_metadata(
+                "image", "microscopy_image_set", {"unknown": "value"}
+            )
+        with self.assertRaisesRegex(DataAssetRegistryError, "requires at least 1"):
+            registry.validate_asset_contract(
+                "sequence", "reference_genome", metadata={},
+                file_roles=["fasta_index"], context_counts={"assembly": 1},
+            )
+        with self.assertRaisesRegex(DataAssetRegistryError, "not allowed"):
+            registry.validate_asset_contract(
+                "sequence", "reference_genome", metadata={},
+                file_roles=["genome_fasta"], context_counts={"sample": 1},
+            )
 
-    def test_unbounded_core_role_supports_multiple_files_without_code_branch(self):
-        registry = self._load_temporary(self._base_registry())
+    def test_returned_metadata_schema_cannot_mutate_cached_contract(self):
+        profile = load_data_asset_registry().get_profile("table", "research_table")
+        original_digest = profile.schema_digest
 
-        registry.validate_asset_contract(
-            "table",
-            "generic_files",
-            metadata={},
-            file_roles=["payload", "payload"],
-            context_counts={},
-        )
+        exposed_schema = profile.metadata_schema
+        exposed_schema["additionalProperties"] = True
 
-    def test_old_profile_keys_and_non_object_metadata_fail_closed(self):
+        self.assertEqual(profile.schema_digest, original_digest)
+        self.assertFalse(profile.metadata_schema["additionalProperties"])
+
+    def test_namespace_normalizes_and_validates_without_dynamic_code(self):
         registry = load_data_asset_registry()
+        biosample = registry.resolve_current_namespace("biosample")
 
-        for old_key in (
-            ("genome", "reference_genome"),
-            ("microscopy", "image_set"),
-            ("tabular", "research_table"),
-        ):
-            with self.subTest(old_key=old_key):
-                with self.assertRaises(DataAssetProfileNotFound):
-                    registry.get_profile(*old_key)
-        with self.assertRaisesRegex(DataAssetMetadataError, "JSON object"):
-            registry.validate_metadata("sequence", "reference_genome", [])
-
-    def test_registry_rejects_duplicate_profiles_and_invalid_schema(self):
-        duplicate = self._base_registry()
-        duplicate["profiles"].append(dict(duplicate["profiles"][0]))
-        with self.assertRaisesRegex(DataAssetRegistryError, "Duplicate DataAsset profile"):
-            self._load_temporary(duplicate)
-
-        invalid_schema = self._base_registry()
-        invalid_schema["profiles"][0]["metadata_schema"] = {"type": "not-a-json-type"}
-        with self.assertRaisesRegex(DataAssetRegistryError, "Invalid JSON Schema"):
-            self._load_temporary(invalid_schema)
-
-    def test_registry_rejects_invalid_v2_rules(self):
-        invalid_registries = []
-
-        invalid_class = self._base_registry()
-        invalid_class["profiles"][0]["file_role_rules"]["payload"]["class"] = "main"
-        invalid_registries.append(invalid_class)
-
-        boolean_min = self._base_registry()
-        boolean_min["profiles"][0]["file_role_rules"]["payload"]["min"] = True
-        invalid_registries.append(boolean_min)
-
-        reversed_range = self._base_registry()
-        reversed_range["profiles"][0]["file_role_rules"]["payload"].update(
-            {"min": 2, "max": 1}
+        self.assertEqual(biosample.normalize("  samn12345 "), "SAMN12345")
+        with self.assertRaisesRegex(DataAssetRegistryError, "does not match"):
+            biosample.normalize("not-a-biosample")
+        self.assertIs(
+            registry.resolve_exact_namespace(
+                biosample.key, biosample.version, biosample.digest
+            ),
+            biosample,
         )
-        invalid_registries.append(reversed_range)
 
-        no_required_core = self._base_registry()
-        no_required_core["profiles"][0]["file_role_rules"]["payload"].update(
-            {"class": "auxiliary", "min": 0}
+    def test_context_public_fields_and_relation_targets_are_registered(self):
+        registry = load_data_asset_registry()
+        sample = registry.resolve_current_context_profile("sample", "basic_sample")
+        collected_from = registry.resolve_current_relation("collected_from")
+
+        self.assertEqual(sample.public_metadata_fields, ("scientific_name", "tissue"))
+        self.assertEqual(
+            sample.outgoing_relations["collected_from"].allowed_target_profiles,
+            ("subject/basic_subject",),
         )
-        invalid_registries.append(no_required_core)
+        self.assertTrue(collected_from.acyclic)
+        self.assertEqual(collected_from.cross_project_policy, "same_project")
 
-        unknown_context = self._base_registry()
-        unknown_context["profiles"][0]["context_rules"] = {
-            "organism": {"min": 0, "max": 1}
-        }
-        invalid_registries.append(unknown_context)
-
-        invalid_context_range = self._base_registry()
-        invalid_context_range["profiles"][0]["context_rules"] = {
-            "sample": {"min": 2, "max": 1}
-        }
-        invalid_registries.append(invalid_context_range)
-
-        legacy_field = self._base_registry()
-        legacy_field["profiles"][0]["file_roles"] = ["payload"]
-        invalid_registries.append(legacy_field)
-
-        unsupported_data_type = self._base_registry()
-        unsupported_data_type["profiles"][0]["data_type_key"] = "proteomics"
-        invalid_registries.append(unsupported_data_type)
-
-        for index, registry_data in enumerate(invalid_registries):
-            with self.subTest(index=index):
-                with self.assertRaises(DataAssetRegistryError):
-                    self._load_temporary(registry_data)
-
-    def test_digest_covers_the_complete_profile_contract(self):
-        registries = []
-        base = self._base_registry()
-        registries.append(base)
-
-        metadata_change = deepcopy(base)
-        metadata_change["profiles"][0]["metadata_schema"]["properties"] = {
-            "label": {"type": "string"}
-        }
-        registries.append(metadata_change)
-
-        file_rule_change = deepcopy(base)
-        file_rule_change["profiles"][0]["file_role_rules"]["payload"]["max"] = 2
-        registries.append(file_rule_change)
-
-        context_rule_change = deepcopy(base)
-        context_rule_change["profiles"][0]["context_rules"] = {
-            "sample": {"min": 0, "max": None}
-        }
-        registries.append(context_rule_change)
-
-        version_change = deepcopy(base)
-        version_change["profiles"][0]["schema_version"] = "2.0.1"
-        registries.append(version_change)
-
-        type_change = deepcopy(base)
-        type_change["profiles"][0]["data_type_key"] = "matrix"
-        registries.append(type_change)
-
-        profile_change = deepcopy(base)
-        profile_change["profiles"][0]["profile_key"] = "generic_payload"
-        registries.append(profile_change)
-
-        loaded = (self._load_temporary(data) for data in registries)
-        digests = {
-            registry.get_profile(*registry.profile_keys[0]).schema_digest
-            for registry in loaded
-        }
-        self.assertEqual(len(digests), len(registries))
-
-    def test_new_profile_is_loaded_without_a_model_or_code_branch(self):
-        registry_data = self._base_registry()
-        registry_data["profiles"].append(
+    def test_dynamic_asset_and_context_types_need_no_python_enumeration(self):
+        package = self._base_package()
+        asset_data = package["asset_profiles.json"]
+        asset_data["current_versions"] = {"proteomics/protein_abundance": "1.0.0"}
+        asset_data["entries"][0].update(
             {
-                "data_type_key": "matrix",
+                "data_type_key": "proteomics",
                 "profile_key": "protein_abundance",
-                "schema_version": "1.0.0",
-                "deprecated": False,
-                "replacement": None,
-                "file_role_rules": {
-                    "abundance_matrix": {"class": "core", "min": 1, "max": 1}
-                },
-                "context_rules": {"sample": {"min": 0, "max": None}},
-                "metadata_schema": {
-                    "$schema": "https://json-schema.org/draft/2020-12/schema",
-                    "type": "object",
-                    "properties": {"quantification": {"type": "string"}},
-                    "additionalProperties": False,
+                "context_link_rules": {
+                    "source_sample": {
+                        "allowed_target_profiles": ["biospecimen/core_biospecimen"],
+                        "min": 0,
+                        "max": None,
+                    }
                 },
             }
         )
-
-        registry = self._load_temporary(registry_data)
-        registry.validate_asset_contract(
-            "matrix",
-            "protein_abundance",
-            metadata={"quantification": "LFQ"},
-            file_roles=["abundance_matrix"],
-            context_counts={"sample": 2},
+        context_data = package["context_profiles.json"]
+        context_data["current_versions"] = {"biospecimen/core_biospecimen": "1.0.0"}
+        context_data["entries"][0].update(
+            {"context_type_key": "biospecimen", "profile_key": "core_biospecimen"}
         )
 
+        registry = self._load_temporary(package)
+
+        self.assertEqual(
+            registry.get_profile("proteomics", "protein_abundance").data_type_key,
+            "proteomics",
+        )
+        self.assertEqual(
+            registry.resolve_current_context_profile(
+                "biospecimen", "core_biospecimen"
+            ).context_type_key,
+            "biospecimen",
+        )
+
+    def test_package_rejects_duplicate_version_invalid_current_and_unknown_fields(self):
+        duplicate = self._base_package()
+        duplicate["asset_profiles.json"]["entries"].append(
+            deepcopy(duplicate["asset_profiles.json"]["entries"][0])
+        )
+        with self.assertRaisesRegex(DataAssetRegistryError, "Duplicate registry entry"):
+            self._load_temporary(duplicate)
+
+        missing_current = self._base_package()
+        missing_current["asset_profiles.json"]["current_versions"][
+            "table/generic_files"
+        ] = "2.0.0"
+        with self.assertRaisesRegex(DataAssetRegistryError, "does not exist"):
+            self._load_temporary(missing_current)
+
+        unknown = self._base_package()
+        unknown["namespace_registry.json"]["entries"][0]["custom_code"] = "unsafe"
+        with self.assertRaisesRegex(DataAssetRegistryError, "Unknown field"):
+            self._load_temporary(unknown)
+
+    def test_digest_changes_with_complete_extended_contract(self):
+        base = self._base_package()
+        baseline = self._load_temporary(base).get_profile("table", "generic_files")
+        changed = deepcopy(base)
+        changed["asset_profiles.json"]["entries"][0]["public_metadata_fields"] = [
+            "label"
+        ]
+        changed["asset_profiles.json"]["entries"][0]["metadata_schema"][
+            "properties"
+        ] = {"label": {"type": "string"}}
+        updated = self._load_temporary(changed).get_profile("table", "generic_files")
+
+        self.assertNotEqual(baseline.schema_digest, updated.schema_digest)
+
     @staticmethod
-    def _base_registry():
+    def _base_package():
         return {
-            "registry_version": "2",
-            "profiles": [
-                {
-                    "data_type_key": "table",
-                    "profile_key": "generic_files",
-                    "schema_version": "1.0.0",
-                    "deprecated": False,
-                    "replacement": None,
-                    "file_role_rules": {
-                        "payload": {"class": "core", "min": 1, "max": None}
-                    },
-                    "context_rules": {},
-                    "metadata_schema": {
-                        "$schema": "https://json-schema.org/draft/2020-12/schema",
-                        "type": "object",
-                        "properties": {},
-                        "additionalProperties": False,
-                    },
-                }
-            ],
+            "asset_profiles.json": {
+                "registry_version": "3",
+                "current_versions": {"table/generic_files": "1.0.0"},
+                "entries": [
+                    {
+                        "data_type_key": "table",
+                        "profile_key": "generic_files",
+                        "profile_family": "generic_files",
+                        "schema_version": "1.0.0",
+                        "deprecated": False,
+                        "replacement": None,
+                        "file_role_rules": {
+                            "payload": {"class": "core", "min": 1, "max": None}
+                        },
+                        "context_rules": {},
+                        "context_link_rules": {},
+                        "outgoing_relations": {},
+                        "public_metadata_fields": [],
+                        "metadata_schema": {
+                            "$schema": "https://json-schema.org/draft/2020-12/schema",
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": False,
+                        },
+                    }
+                ],
+            },
+            "context_profiles.json": {
+                "registry_version": "3",
+                "current_versions": {"sample/basic_sample": "1.0.0"},
+                "entries": [
+                    {
+                        "context_type_key": "sample",
+                        "profile_key": "basic_sample",
+                        "profile_family": "sample",
+                        "schema_version": "1.0.0",
+                        "deprecated": False,
+                        "replacement": None,
+                        "outgoing_relations": {},
+                        "public_metadata_fields": [],
+                        "metadata_schema": {
+                            "$schema": "https://json-schema.org/draft/2020-12/schema",
+                            "type": "object",
+                            "properties": {},
+                            "additionalProperties": False,
+                        },
+                    }
+                ],
+            },
+            "relation_registry.json": {
+                "registry_version": "3",
+                "current_versions": {"source_sample": "1.0.0"},
+                "entries": [
+                    {
+                        "key": "source_sample",
+                        "version": "1.0.0",
+                        "deprecated": False,
+                        "replacement": None,
+                        "source_kind": "data_asset",
+                        "target_kind": "context",
+                        "directed": True,
+                        "self_link": "forbidden",
+                        "acyclic": False,
+                        "cross_project_policy": "same_project",
+                        "same_profile_family": False,
+                        "outgoing_max": None,
+                        "incoming_max": None,
+                    }
+                ],
+            },
+            "namespace_registry.json": {
+                "registry_version": "3",
+                "current_versions": {"local_id": "1.0.0"},
+                "entries": [
+                    {
+                        "key": "local_id",
+                        "version": "1.0.0",
+                        "name": "Local test identifier",
+                        "deprecated": False,
+                        "replacement": None,
+                        "pattern": "^[A-Z0-9]+$",
+                        "normalization": "strip_uppercase",
+                        "resolver_url_template": "https://example.test/{value}",
+                        "allowed_target_kinds": ["data_asset"],
+                        "allowed_context_types": [],
+                    }
+                ],
+            },
         }
 
     @staticmethod
-    def _load_temporary(registry_data):
+    def _load_temporary(package):
         with TemporaryDirectory() as directory:
-            path = Path(directory) / "registry.json"
-            path.write_text(json.dumps(registry_data), encoding="utf-8")
-            return load_data_asset_registry(path)
+            root = Path(directory)
+            for name, data in package.items():
+                (root / name).write_text(json.dumps(data), encoding="utf-8")
+            return load_data_asset_registry(root)

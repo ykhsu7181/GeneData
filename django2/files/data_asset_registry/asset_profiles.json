@@ -1,0 +1,341 @@
+{
+  "registry_version": "3",
+  "current_versions": {
+    "sequence/reference_genome": "2.0.0",
+    "image/microscopy_image_set": "2.0.0",
+    "table/research_table": "2.0.0"
+  },
+  "entries": [
+    {
+      "data_type_key": "sequence",
+      "profile_key": "reference_genome",
+      "schema_version": "2.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "genome_fasta": {"class": "core", "min": 1, "max": 1},
+        "fasta_index": {"class": "auxiliary", "min": 0, "max": 1},
+        "compression_index": {"class": "auxiliary", "min": 0, "max": 1},
+        "metadata": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {
+        "assembly": {"min": 1, "max": 1}
+      },
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "assembly_method": {"type": "string", "minLength": 1},
+          "sequencing_platforms": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          },
+          "coverage": {"type": "number", "minimum": 0},
+          "external_identifiers": {
+            "type": "object",
+            "additionalProperties": {"type": "string", "minLength": 1}
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "image",
+      "profile_key": "microscopy_image_set",
+      "schema_version": "2.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "primary_image": {"class": "core", "min": 1, "max": null},
+        "thumbnail": {"class": "auxiliary", "min": 0, "max": null},
+        "acquisition_metadata": {"class": "auxiliary", "min": 0, "max": 1}
+      },
+      "context_rules": {
+        "sample": {"min": 0, "max": null}
+      },
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "instrument": {"type": "string", "minLength": 1},
+          "modality": {"type": "string", "minLength": 1},
+          "pixel_size": {
+            "type": "object",
+            "properties": {
+              "value": {"type": "number", "exclusiveMinimum": 0},
+              "unit": {"type": "string", "enum": ["nm", "um", "mm"]}
+            },
+            "required": ["value", "unit"],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "table",
+      "profile_key": "research_table",
+      "schema_version": "2.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "primary_table": {"class": "core", "min": 1, "max": null},
+        "data_dictionary": {"class": "auxiliary", "min": 0, "max": 1},
+        "metadata": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {
+        "sample": {"min": 0, "max": null},
+        "assembly": {"min": 0, "max": null},
+        "annotation": {"min": 0, "max": null}
+      },
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "delimiter": {"type": "string", "enum": ["tab", "comma", "semicolon"]},
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string", "minLength": 1},
+                "data_type": {
+                  "type": "string",
+                  "enum": ["string", "integer", "number", "boolean", "date", "datetime"]
+                },
+                "unit": {"type": "string", "minLength": 1}
+              },
+              "required": ["name", "data_type"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "sequence",
+      "profile_key": "reference_genome",
+      "profile_family": "reference_genome",
+      "schema_version": "3.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "genome_fasta": {"class": "core", "min": 1, "max": 1},
+        "fasta_index": {"class": "auxiliary", "min": 0, "max": 1},
+        "compression_index": {"class": "auxiliary", "min": 0, "max": 1},
+        "metadata": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {},
+      "context_link_rules": {},
+      "outgoing_relations": {
+        "supersedes": {
+          "allowed_target_profiles": ["sequence/reference_genome"],
+          "min": 0,
+          "max": 1
+        }
+      },
+      "public_metadata_fields": ["assembly_method", "coverage"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "assembly_method": {"type": "string", "minLength": 1},
+          "sequencing_platforms": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          },
+          "coverage": {"type": "number", "minimum": 0}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "feature",
+      "profile_key": "genome_annotation",
+      "profile_family": "genome_annotation",
+      "schema_version": "1.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "annotation_gff": {"class": "core", "min": 1, "max": 1},
+        "tabix_index": {"class": "auxiliary", "min": 0, "max": 1},
+        "metadata": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {},
+      "context_link_rules": {},
+      "outgoing_relations": {
+        "uses_reference": {
+          "allowed_target_profiles": ["sequence/reference_genome"],
+          "min": 1,
+          "max": 1
+        },
+        "supersedes": {
+          "allowed_target_profiles": ["feature/genome_annotation"],
+          "min": 0,
+          "max": 1
+        }
+      },
+      "public_metadata_fields": ["annotation_method"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "annotation_method": {"type": "string", "minLength": 1},
+          "feature_count": {"type": "integer", "minimum": 0}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "sequence",
+      "profile_key": "raw_read_collection",
+      "profile_family": "raw_read_collection",
+      "schema_version": "1.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "read_fastq": {"class": "core", "min": 1, "max": null},
+        "quality_report": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {},
+      "context_link_rules": {
+        "source_sample": {
+          "allowed_target_profiles": ["sample/basic_sample"],
+          "min": 1,
+          "max": null
+        },
+        "produced_by_experiment": {
+          "allowed_target_profiles": ["experiment/basic_experiment"],
+          "min": 0,
+          "max": 1
+        }
+      },
+      "outgoing_relations": {
+        "supersedes": {
+          "allowed_target_profiles": ["sequence/raw_read_collection"],
+          "min": 0,
+          "max": 1
+        }
+      },
+      "public_metadata_fields": ["library_layout", "platform"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "library_layout": {"type": "string", "enum": ["single", "paired"]},
+          "library_strategy": {"type": "string", "minLength": 1},
+          "platform": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "image",
+      "profile_key": "microscopy_image_set",
+      "profile_family": "microscopy_image_set",
+      "schema_version": "3.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "primary_image": {"class": "core", "min": 1, "max": null},
+        "thumbnail": {"class": "auxiliary", "min": 0, "max": null},
+        "acquisition_metadata": {"class": "auxiliary", "min": 0, "max": 1}
+      },
+      "context_rules": {},
+      "context_link_rules": {
+        "source_sample": {
+          "allowed_target_profiles": ["sample/basic_sample"],
+          "min": 0,
+          "max": null
+        }
+      },
+      "outgoing_relations": {
+        "supersedes": {
+          "allowed_target_profiles": ["image/microscopy_image_set"],
+          "min": 0,
+          "max": 1
+        }
+      },
+      "public_metadata_fields": ["modality"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "instrument": {"type": "string", "minLength": 1},
+          "modality": {"type": "string", "minLength": 1},
+          "pixel_size": {
+            "type": "object",
+            "properties": {
+              "value": {"type": "number", "exclusiveMinimum": 0},
+              "unit": {"type": "string", "enum": ["nm", "um", "mm"]}
+            },
+            "required": ["value", "unit"],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "data_type_key": "table",
+      "profile_key": "research_table",
+      "profile_family": "research_table",
+      "schema_version": "3.0.0",
+      "deprecated": false,
+      "replacement": null,
+      "file_role_rules": {
+        "primary_table": {"class": "core", "min": 1, "max": null},
+        "data_dictionary": {"class": "auxiliary", "min": 0, "max": 1},
+        "metadata": {"class": "auxiliary", "min": 0, "max": null}
+      },
+      "context_rules": {},
+      "context_link_rules": {
+        "source_sample": {
+          "allowed_target_profiles": ["sample/basic_sample"],
+          "min": 0,
+          "max": null
+        }
+      },
+      "outgoing_relations": {
+        "uses_reference": {
+          "allowed_target_profiles": ["sequence/reference_genome"],
+          "min": 0,
+          "max": 1
+        },
+        "supersedes": {
+          "allowed_target_profiles": ["table/research_table"],
+          "min": 0,
+          "max": 1
+        }
+      },
+      "public_metadata_fields": ["delimiter"],
+      "metadata_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "delimiter": {"type": "string", "enum": ["tab", "comma", "semicolon"]},
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string", "minLength": 1},
+                "data_type": {
+                  "type": "string",
+                  "enum": ["string", "integer", "number", "boolean", "date", "datetime"]
+                },
+                "unit": {"type": "string", "minLength": 1}
+              },
+              "required": ["name", "data_type"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ]
+}
