@@ -9,6 +9,51 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
+
+CORE_AUDIT_MEMBER_EVENTS = (
+    "membership_added",
+    "membership_role_changed",
+    "membership_removed",
+)
+CORE_AUDIT_CONTEXT_EVENTS = (
+    "context_created",
+    "context_updated",
+    "context_activated",
+    "context_archived",
+)
+CORE_AUDIT_ASSET_EVENTS = (
+    "asset_created",
+    "asset_updated",
+    "asset_submitted",
+    "asset_returned",
+    "asset_approved",
+    "asset_approval_withdrawn",
+    "asset_released",
+    "asset_archived",
+)
+CORE_AUDIT_EVENT_TYPES = (
+    *CORE_AUDIT_MEMBER_EVENTS,
+    *CORE_AUDIT_CONTEXT_EVENTS,
+    *CORE_AUDIT_ASSET_EVENTS,
+)
+CORE_AUDIT_ROLES = ("owner", "manager", "contributor", "viewer")
+
+
+class CoreAuditEventImmutableError(RuntimeError):
+    pass
+
+
+class CoreAuditEventQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise CoreAuditEventImmutableError("Core audit events cannot be updated.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise CoreAuditEventImmutableError("Core audit events cannot be updated.")
+
+    def delete(self):
+        raise CoreAuditEventImmutableError("Core audit events cannot be deleted.")
+
+
 class FileType(models.Model):
     """文件类型模型"""
 
@@ -946,6 +991,194 @@ class ExternalIdentifier(models.Model):
             models.CheckConstraint(check=~Q(normalized_value=""), name="external_value_nonempty"),
             models.CheckConstraint(check=~Q(display_value=""), name="external_display_nonempty"),
         ]
+
+
+class CoreAuditEvent(models.Model):
+    EVENT_TYPE_CHOICES = [(event_type, event_type) for event_type in CORE_AUDIT_EVENT_TYPES]
+
+    project = models.ForeignKey(
+        "Project",
+        on_delete=models.PROTECT,
+        related_name="core_audit_events",
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="performed_core_audit_events",
+    )
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="core_audit_events",
+    )
+    context = models.ForeignKey(
+        "ContextEntity",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="core_audit_events",
+    )
+    subject_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="subject_core_audit_events",
+    )
+    from_value = models.CharField(max_length=50, blank=True, default="")
+    to_value = models.CharField(max_length=50, blank=True, default="")
+    before_digest = models.CharField(max_length=64, blank=True, default="")
+    after_digest = models.CharField(max_length=64, blank=True, default="")
+    reason = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = CoreAuditEventQuerySet.as_manager()
+
+    class Meta:
+        db_table = "core_audit_event"
+        ordering = ["created_at", "id"]
+        base_manager_name = "objects"
+        default_manager_name = "objects"
+        indexes = [
+            models.Index(fields=["project", "event_type", "created_at"], name="core_audit_project_event_idx"),
+            models.Index(fields=["asset", "created_at"], name="core_audit_asset_idx"),
+            models.Index(fields=["context", "created_at"], name="core_audit_context_idx"),
+            models.Index(fields=["subject_user", "created_at"], name="core_audit_subject_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    (Q(asset__isnull=False) & Q(context__isnull=True) & Q(subject_user__isnull=True))
+                    | (Q(asset__isnull=True) & Q(context__isnull=False) & Q(subject_user__isnull=True))
+                    | (Q(asset__isnull=True) & Q(context__isnull=True) & Q(subject_user__isnull=False))
+                ),
+                name="core_audit_one_target",
+            ),
+            models.CheckConstraint(
+                check=(
+                    (
+                        Q(event_type__in=CORE_AUDIT_ASSET_EVENTS)
+                        & Q(asset__isnull=False)
+                        & Q(context__isnull=True)
+                        & Q(subject_user__isnull=True)
+                    )
+                    | (
+                        Q(event_type__in=CORE_AUDIT_CONTEXT_EVENTS)
+                        & Q(asset__isnull=True)
+                        & Q(context__isnull=False)
+                        & Q(subject_user__isnull=True)
+                    )
+                    | (
+                        Q(event_type__in=CORE_AUDIT_MEMBER_EVENTS)
+                        & Q(asset__isnull=True)
+                        & Q(context__isnull=True)
+                        & Q(subject_user__isnull=False)
+                    )
+                ),
+                name="core_audit_event_target",
+            ),
+            models.CheckConstraint(
+                check=(
+                    (Q(event_type="membership_added") & Q(from_value="") & Q(to_value__in=CORE_AUDIT_ROLES))
+                    | (
+                        Q(event_type="membership_role_changed")
+                        & Q(from_value__in=CORE_AUDIT_ROLES)
+                        & Q(to_value__in=CORE_AUDIT_ROLES)
+                        & ~Q(from_value=models.F("to_value"))
+                    )
+                    | (Q(event_type="membership_removed") & Q(from_value__in=CORE_AUDIT_ROLES) & Q(to_value=""))
+                    | (Q(event_type="context_created") & Q(from_value="") & Q(to_value="draft"))
+                    | (Q(event_type="context_updated") & Q(from_value="") & Q(to_value=""))
+                    | (Q(event_type="context_activated") & Q(from_value="draft") & Q(to_value="active"))
+                    | (Q(event_type="context_archived") & Q(from_value="active") & Q(to_value="archived"))
+                    | (Q(event_type="asset_created") & Q(from_value="") & Q(to_value="draft"))
+                    | (Q(event_type="asset_updated") & Q(from_value="") & Q(to_value=""))
+                    | (Q(event_type="asset_submitted") & Q(from_value="draft") & Q(to_value="submitted"))
+                    | (Q(event_type="asset_returned") & Q(from_value="submitted") & Q(to_value="draft"))
+                    | (Q(event_type="asset_approved") & Q(from_value="submitted") & Q(to_value="approved"))
+                    | (Q(event_type="asset_approval_withdrawn") & Q(from_value="approved") & Q(to_value="draft"))
+                    | (Q(event_type="asset_released") & Q(from_value="approved") & Q(to_value="released"))
+                    | (Q(event_type="asset_archived") & Q(from_value="released") & Q(to_value="archived"))
+                ),
+                name="core_audit_valid_transition",
+            ),
+            models.CheckConstraint(
+                check=(
+                    (
+                        Q(event_type__in=["asset_created", "context_created"])
+                        & Q(before_digest="")
+                        & ~Q(after_digest="")
+                    )
+                    | (
+                        Q(event_type__in=["asset_updated", "context_updated"])
+                        & ~Q(before_digest="")
+                        & ~Q(after_digest="")
+                        & ~Q(before_digest=models.F("after_digest"))
+                    )
+                    | (
+                        ~Q(
+                            event_type__in=[
+                                "asset_created",
+                                "context_created",
+                                "asset_updated",
+                                "context_updated",
+                            ]
+                        )
+                        & Q(before_digest="")
+                        & Q(after_digest="")
+                    )
+                ),
+                name="core_audit_digest_shape",
+            ),
+            models.CheckConstraint(
+                check=(
+                    ~Q(
+                        event_type__in=[
+                            "asset_returned",
+                            "asset_approval_withdrawn",
+                            "asset_archived",
+                            "context_archived",
+                        ]
+                    )
+                    | ~Q(reason="")
+                ),
+                name="core_audit_reason_required",
+            ),
+            models.CheckConstraint(
+                check=(
+                    ~(
+                        (
+                            Q(event_type="membership_added")
+                            & Q(to_value__in=["owner", "manager"])
+                        )
+                        | (
+                            Q(event_type="membership_role_changed")
+                            & (
+                                Q(from_value__in=["owner", "manager"])
+                                | Q(to_value__in=["owner", "manager"])
+                            )
+                        )
+                        | (
+                            Q(event_type="membership_removed")
+                            & Q(from_value__in=["owner", "manager"])
+                        )
+                    )
+                    | ~Q(reason="")
+                ),
+                name="core_audit_privileged_reason",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            raise CoreAuditEventImmutableError("Core audit events cannot be updated.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise CoreAuditEventImmutableError("Core audit events cannot be deleted.")
 
 
 class Assembly(models.Model):
