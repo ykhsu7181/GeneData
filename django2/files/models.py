@@ -191,6 +191,68 @@ class Project(models.Model):
         return self.project_name or self.project_code
 
 
+class ProjectMembership(models.Model):
+    ROLE_OWNER = "owner"
+    ROLE_MANAGER = "manager"
+    ROLE_CONTRIBUTOR = "contributor"
+    ROLE_VIEWER = "viewer"
+    ROLE_CHOICES = [
+        (ROLE_OWNER, "Owner"),
+        (ROLE_MANAGER, "Manager"),
+        (ROLE_CONTRIBUTOR, "Contributor"),
+        (ROLE_VIEWER, "Viewer"),
+    ]
+
+    project = models.ForeignKey(
+        "Project",
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="project_memberships",
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="created_project_memberships",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "project_membership"
+        ordering = ["project_id", "user_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "user"],
+                name="uniq_project_membership_user",
+            ),
+            models.CheckConstraint(
+                check=models.Q(
+                    role__in=[
+                        "owner",
+                        "manager",
+                        "contributor",
+                        "viewer",
+                    ]
+                ),
+                name="project_membership_valid_role",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["project", "role"], name="project_member_role_idx"),
+            models.Index(fields=["user", "role"], name="user_project_role_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.project.project_code}:{self.user_id}:{self.role}"
+
+
 class Dataset(models.Model):
     DATASET_TYPE_CHOICES = [
         ('genome', 'Genome'),
