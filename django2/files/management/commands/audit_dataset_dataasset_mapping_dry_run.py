@@ -70,6 +70,8 @@ REPORT_FIELDS = {
 }
 
 REFERENCE_PROFILE = ("sequence", "reference_genome")
+REFERENCE_PROFILE_VERSION = "2.0.0"
+REFERENCE_PROFILE_DIGEST = "f17ad183e42b3aa5bb05d0439e3f1579833501c30374459a65e2883be2e0fb9f"
 CHECKSUM_MODE_FULL = "full"
 CHECKSUM_MODE_FAST = "fast"
 REFERENCE_ROLE_MAP = {
@@ -180,7 +182,13 @@ class Command(BaseCommand):
         }
 
     def collect_reports(self, registry, snapshot, checksum_mode):
-        profile = registry.get_profile(*REFERENCE_PROFILE)
+        # T4 is historical evidence for the retired migration route.  Keep it
+        # pinned to the contract used when the audit package was approved.
+        profile = registry.resolve_exact_asset_profile(
+            *REFERENCE_PROFILE,
+            REFERENCE_PROFILE_VERSION,
+            REFERENCE_PROFILE_DIGEST,
+        )
         datasets = snapshot["datasets"]
         data_files = snapshot["data_files"]
         relations = snapshot["relations"]
@@ -469,9 +477,8 @@ class Command(BaseCommand):
                 issues.append(("review", f"multiple_primary_files:{role}"))
 
         try:
-            registry.validate_asset_contract(
-                profile.data_type_key,
-                profile.profile_key,
+            registry.validate_asset_profile_contract(
+                profile,
                 metadata=metadata,
                 file_roles=[row["proposed_file_role"] for row in membership_rows],
                 context_counts={"assembly": 1},

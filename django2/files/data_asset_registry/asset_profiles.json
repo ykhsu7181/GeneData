@@ -1,9 +1,11 @@
 {
   "registry_version": "3",
   "current_versions": {
-    "sequence/reference_genome": "2.0.0",
-    "image/microscopy_image_set": "2.0.0",
-    "table/research_table": "2.0.0"
+    "sequence/reference_genome": "3.0.0",
+    "feature/genome_annotation": "1.0.0",
+    "sequence/raw_read_collection": "1.0.0",
+    "image/microscopy_image_set": "3.0.0",
+    "table/research_table": "3.0.0"
   },
   "entries": [
     {

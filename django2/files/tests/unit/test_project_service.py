@@ -1,10 +1,11 @@
 import threading
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, close_old_connections, transaction
 from django.test import TestCase, TransactionTestCase
 
-from files.models import Project, ProjectMembership
+from files.models import CoreAuditEvent, Project, ProjectMembership
 from files.services.project_service import (
     LastProjectOwnerError,
     ProjectMembershipConflict,
@@ -37,7 +38,7 @@ class ProjectServiceTests(TestCase):
         self.assertEqual(self.project.memberships.count(), 1)
 
     def test_role_matrix_uses_membership_not_legacy_owner_string(self):
-        add_project_member(project=self.project, actor=self.owner, user=self.manager, role="manager")
+        add_project_member(project=self.project, actor=self.owner, user=self.manager, role="manager", reason="appoint manager")
         add_project_member(project=self.project, actor=self.owner, user=self.contributor, role="contributor")
         add_project_member(project=self.project, actor=self.manager, user=self.viewer, role="viewer")
 
@@ -48,25 +49,25 @@ class ProjectServiceTests(TestCase):
         self.assertFalse(can_project_action(project=self.project, user=self.viewer, action="unknown"))
 
     def test_manager_cannot_grant_change_or_remove_owner(self):
-        add_project_member(project=self.project, actor=self.owner, user=self.manager, role="manager")
-        add_project_member(project=self.project, actor=self.owner, user=self.other_owner, role="owner")
+        add_project_member(project=self.project, actor=self.owner, user=self.manager, role="manager", reason="appoint manager")
+        add_project_member(project=self.project, actor=self.owner, user=self.other_owner, role="owner", reason="appoint owner")
 
         with self.assertRaises(ProjectPermissionDenied):
-            add_project_member(project=self.project, actor=self.manager, user=self.viewer, role="owner")
+            add_project_member(project=self.project, actor=self.manager, user=self.viewer, role="owner", reason="forbidden")
         with self.assertRaises(ProjectPermissionDenied):
             change_project_member_role(
-                project=self.project, actor=self.manager, user=self.other_owner, role="viewer"
+                project=self.project, actor=self.manager, user=self.other_owner, role="viewer", reason="forbidden"
             )
         with self.assertRaises(ProjectPermissionDenied):
-            remove_project_member(project=self.project, actor=self.manager, user=self.other_owner)
+            remove_project_member(project=self.project, actor=self.manager, user=self.other_owner, reason="forbidden")
 
     def test_last_owner_cannot_be_demoted_or_removed(self):
         with self.assertRaises(LastProjectOwnerError):
             change_project_member_role(
-                project=self.project, actor=self.owner, user=self.owner, role="manager"
+                project=self.project, actor=self.owner, user=self.owner, role="manager", reason="demote owner"
             )
         with self.assertRaises(LastProjectOwnerError):
-            remove_project_member(project=self.project, actor=self.owner, user=self.owner)
+            remove_project_member(project=self.project, actor=self.owner, user=self.owner, reason="remove owner")
 
     def test_second_owner_allows_first_owner_removal(self):
         add_project_member(
@@ -74,8 +75,9 @@ class ProjectServiceTests(TestCase):
             actor=self.owner,
             user=self.other_owner,
             role="owner",
+            reason="appoint replacement owner",
         )
-        remove_project_member(project=self.project, actor=self.owner, user=self.owner)
+        remove_project_member(project=self.project, actor=self.owner, user=self.owner, reason="transfer ownership")
         self.assertEqual(get_project_role(project=self.project, user=self.other_owner), "owner")
 
     def test_duplicate_membership_has_stable_conflict(self):
@@ -85,6 +87,48 @@ class ProjectServiceTests(TestCase):
         self.assertEqual(
             ProjectMembership.objects.filter(project=self.project, user=self.viewer).count(),
             1,
+        )
+
+    def test_privileged_member_change_requires_reason_and_audit_is_atomic(self):
+        with self.assertRaisesRegex(Exception, "reason"):
+            add_project_member(
+                project=self.project, actor=self.owner, user=self.manager, role="manager"
+            )
+        self.assertFalse(
+            ProjectMembership.objects.filter(project=self.project, user=self.manager).exists()
+        )
+        add_project_member(
+            project=self.project, actor=self.owner, user=self.manager, role="manager",
+            reason="Appointed to review assets",
+        )
+        event = CoreAuditEvent.objects.get(
+            project=self.project, subject_user=self.manager, event_type="membership_added"
+        )
+        self.assertEqual(event.to_value, "manager")
+        self.assertEqual(event.reason, "Appointed to review assets")
+
+    def test_member_write_rolls_back_when_audit_append_fails(self):
+        with patch(
+            "files.services.project_service.append_core_audit_event",
+            side_effect=RuntimeError("audit unavailable"),
+        ), self.assertRaisesRegex(RuntimeError, "audit unavailable"):
+            add_project_member(
+                project=self.project, actor=self.owner, user=self.viewer, role="viewer"
+            )
+        self.assertFalse(
+            ProjectMembership.objects.filter(project=self.project, user=self.viewer).exists()
+        )
+
+    def test_audit_integrity_error_is_not_reported_as_duplicate_membership(self):
+        with patch(
+            "files.services.project_service.append_core_audit_event",
+            side_effect=IntegrityError("audit invariant failed"),
+        ), self.assertRaisesRegex(IntegrityError, "audit invariant failed"):
+            add_project_member(
+                project=self.project, actor=self.owner, user=self.viewer, role="viewer"
+            )
+        self.assertFalse(
+            ProjectMembership.objects.filter(project=self.project, user=self.viewer).exists()
         )
 
     def test_database_rejects_unknown_role_and_duplicate_user(self):
@@ -113,7 +157,7 @@ class ProjectOwnerConcurrencyTests(TransactionTestCase):
         first = user_model.objects.create_user(username="concurrent-owner-1")
         second = user_model.objects.create_user(username="concurrent-owner-2")
         project = create_project(creator=first, project_code="PROJECT_OWNER_RACE")
-        add_project_member(project=project, actor=first, user=second, role="owner")
+        add_project_member(project=project, actor=first, user=second, role="owner", reason="second owner")
         barrier = threading.Barrier(2)
         outcomes = []
         outcome_lock = threading.Lock()
@@ -128,6 +172,7 @@ class ProjectOwnerConcurrencyTests(TransactionTestCase):
                     project=thread_project,
                     actor=actor,
                     user=actor,
+                    reason="concurrent owner removal",
                 )
                 outcome = "removed"
             except LastProjectOwnerError:

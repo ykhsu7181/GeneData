@@ -4,11 +4,13 @@ from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 
 from files.models import (
+    AssetFileMembership,
     AssetContextLink,
     ContextEntity,
     ContextRelation,
     DataAsset,
     DataAssetRelation,
+    DataFile,
     ExternalIdentifier,
     Project,
 )
@@ -206,6 +208,38 @@ class CoreContextModelTests(TestCase):
                 status="published",
                 created_by=self.user,
             )
+
+    def test_invalid_data_asset_status_and_visibility_are_rejected(self):
+        for field, invalid_value in (("status", "unknown"), ("visibility", "shared")):
+            with self.subTest(field=field):
+                with self.assertRaises(IntegrityError), transaction.atomic():
+                    DataAsset.objects.filter(pk=self.asset.pk).update(
+                        **{field: invalid_value}
+                    )
+
+    def test_data_asset_and_membership_creators_are_protected(self):
+        asset_creator = get_user_model().objects.create_user(username="asset-creator-protected")
+        self.asset.created_by = asset_creator
+        self.asset.save(update_fields=["created_by"])
+        with self.assertRaises(ProtectedError):
+            asset_creator.delete()
+
+        membership_creator = get_user_model().objects.create_user(
+            username="membership-creator-protected"
+        )
+        data_file = DataFile.objects.create(
+            file_code="CORE_CONTEXT_FILE",
+            file_name="core-context.txt",
+            file_path="/not-used/core-context.txt",
+        )
+        AssetFileMembership.objects.create(
+            asset=self.asset,
+            data_file=data_file,
+            file_role="primary",
+            created_by=membership_creator,
+        )
+        with self.assertRaises(ProtectedError):
+            membership_creator.delete()
 
     def test_relation_rows_cascade_with_their_endpoints(self):
         DataAssetRelation.objects.create(

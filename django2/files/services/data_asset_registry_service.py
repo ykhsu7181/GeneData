@@ -296,6 +296,18 @@ class DataAssetRegistry:
         _validate_metadata(profile.metadata_schema, metadata, "DataAsset")
         return profile
 
+    def validate_asset_profile_metadata(self, profile, metadata):
+        if not isinstance(profile, DataAssetProfile):
+            raise DataAssetRegistryError("A DataAsset profile is required")
+        _validate_metadata(profile.metadata_schema, metadata, "DataAsset")
+        return profile
+
+    def validate_context_profile_metadata(self, profile, metadata):
+        if not isinstance(profile, ContextProfile):
+            raise DataAssetRegistryError("A Context profile is required")
+        _validate_metadata(profile.metadata_schema, metadata, "ContextEntity")
+        return profile
+
     def validate_file_role(self, data_type_key, profile_key, file_role):
         profile = self.get_profile(data_type_key, profile_key)
         if file_role not in profile.file_role_rules:
@@ -308,7 +320,19 @@ class DataAssetRegistry:
         self, data_type_key, profile_key, *, metadata, file_roles, context_counts,
     ):
         """Validate the current legacy creation contract until Gate D switches it."""
-        profile = self.validate_metadata(data_type_key, profile_key, metadata)
+        profile = self.get_profile(data_type_key, profile_key)
+        return self.validate_asset_profile_contract(
+            profile,
+            metadata=metadata,
+            file_roles=file_roles,
+            context_counts=context_counts,
+        )
+
+    def validate_asset_profile_contract(
+        self, profile, *, metadata, file_roles, context_counts,
+    ):
+        """Validate content against an already resolved current or historical profile."""
+        self.validate_asset_profile_metadata(profile, metadata)
         if isinstance(file_roles, (str, bytes)):
             raise DataAssetRegistryError("DataAsset file_roles must be an iterable of roles")
         if not isinstance(context_counts, Mapping):

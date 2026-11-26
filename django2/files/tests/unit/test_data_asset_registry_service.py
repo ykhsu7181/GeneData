@@ -31,7 +31,9 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
         self.assertEqual(
             registry.profile_keys,
             (
+                ("feature", "genome_annotation"),
                 ("image", "microscopy_image_set"),
+                ("sequence", "raw_read_collection"),
                 ("sequence", "reference_genome"),
                 ("table", "research_table"),
             ),
@@ -54,11 +56,14 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
             with self.subTest(key=key):
                 profile = registry.resolve_exact_asset_profile(*key, digest)
                 self.assertEqual(profile.schema_digest, digest)
-        reference = registry.get_profile("sequence", "reference_genome")
+        reference = registry.resolve_exact_asset_profile(
+            "sequence", "reference_genome", "2.0.0",
+            self.LEGACY_DIGESTS[("sequence", "reference_genome", "2.0.0")],
+        )
         self.assertEqual(reference.schema_version, "2.0.0")
         self.assertEqual(reference.context_rules["assembly"].minimum, 1)
 
-    def test_target_profile_is_registered_without_becoming_current_early(self):
+    def test_target_profile_is_the_current_creation_contract(self):
         registry = load_data_asset_registry()
         target = registry.resolve_exact_asset_profile(
             "sequence",
@@ -72,7 +77,7 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
         self.assertIn("supersedes", target.outgoing_relations)
         self.assertEqual(
             registry.get_profile("sequence", "reference_genome").schema_version,
-            "2.0.0",
+            "3.0.0",
         )
 
     def test_exact_resolution_fails_closed_for_unknown_version_or_digest(self):
@@ -91,7 +96,7 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
                 "sample", "missing", "1.0.0", "0" * 64
             )
 
-    def test_metadata_file_roles_and_legacy_contexts_remain_validated(self):
+    def test_current_metadata_file_roles_and_contexts_are_validated(self):
         registry = load_data_asset_registry()
 
         registry.validate_asset_contract(
@@ -99,7 +104,7 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
             "reference_genome",
             metadata={},
             file_roles=["genome_fasta", "fasta_index"],
-            context_counts={"assembly": 1},
+            context_counts={},
         )
         with self.assertRaisesRegex(DataAssetMetadataError, "Additional properties"):
             registry.validate_metadata(
@@ -108,7 +113,7 @@ class DataAssetRegistryServiceTests(SimpleTestCase):
         with self.assertRaisesRegex(DataAssetRegistryError, "requires at least 1"):
             registry.validate_asset_contract(
                 "sequence", "reference_genome", metadata={},
-                file_roles=["fasta_index"], context_counts={"assembly": 1},
+                file_roles=["fasta_index"], context_counts={},
             )
         with self.assertRaisesRegex(DataAssetRegistryError, "not allowed"):
             registry.validate_asset_contract(

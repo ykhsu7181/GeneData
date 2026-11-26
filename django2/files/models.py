@@ -460,7 +460,7 @@ class DataAsset(models.Model):
     description = models.TextField(blank=True, default="")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         blank=True,
         null=True,
         related_name="created_data_assets",
@@ -483,6 +483,14 @@ class DataAsset(models.Model):
             models.CheckConstraint(check=~Q(profile_key=""), name="chk_da_profile_nonempty"),
             models.CheckConstraint(check=~Q(schema_version=""), name="chk_da_schema_ver_nonempty"),
             models.CheckConstraint(check=~Q(schema_digest=""), name="chk_da_schema_hash_nonempty"),
+            models.CheckConstraint(
+                check=Q(status__in=["draft", "submitted", "approved", "released", "archived"]),
+                name="dataasset_valid_status",
+            ),
+            models.CheckConstraint(
+                check=Q(visibility__in=["private", "lab_internal", "public"]),
+                name="dataasset_valid_visibility",
+            ),
         ]
 
     def __str__(self):
@@ -512,7 +520,7 @@ class AssetFileMembership(models.Model):
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         blank=True,
         null=True,
         related_name="created_asset_file_memberships",
