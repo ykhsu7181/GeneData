@@ -698,6 +698,256 @@ class DataAssetAnnotation(models.Model):
         return f"{self.asset_id}:{self.annotation_id}"
 
 
+class ContextEntity(models.Model):
+    STATUS_DRAFT = "draft"
+    STATUS_ACTIVE = "active"
+    STATUS_ARCHIVED = "archived"
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "Draft"),
+        (STATUS_ACTIVE, "Active"),
+        (STATUS_ARCHIVED, "Archived"),
+    ]
+
+    context_code = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=255, blank=True, default="")
+    project = models.ForeignKey(
+        "Project",
+        on_delete=models.PROTECT,
+        related_name="context_entities",
+    )
+    context_type_key = models.CharField(max_length=100)
+    profile_key = models.CharField(max_length=100)
+    schema_version = models.CharField(max_length=50)
+    schema_digest = models.CharField(max_length=64)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    metadata = models.JSONField(default=dict)
+    description = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_context_entities",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "context_entity"
+        ordering = ["context_code"]
+        indexes = [
+            models.Index(fields=["project", "status"], name="context_project_status_idx"),
+            models.Index(fields=["project", "context_type_key"], name="context_project_type_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(check=~Q(context_code=""), name="context_code_nonempty"),
+            models.CheckConstraint(check=~Q(context_type_key=""), name="context_type_nonempty"),
+            models.CheckConstraint(check=~Q(profile_key=""), name="context_profile_nonempty"),
+            models.CheckConstraint(check=~Q(schema_version=""), name="context_version_nonempty"),
+            models.CheckConstraint(check=~Q(schema_digest=""), name="context_digest_nonempty"),
+            models.CheckConstraint(
+                check=Q(status__in=["draft", "active", "archived"]),
+                name="context_valid_status",
+            ),
+        ]
+
+    def __str__(self):
+        return self.name or self.context_code
+
+
+class DataAssetRelation(models.Model):
+    source_asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="outgoing_asset_relations",
+    )
+    target_asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="incoming_asset_relations",
+    )
+    relation_type = models.CharField(max_length=100)
+    relation_rule_version = models.CharField(max_length=50)
+    relation_rule_digest = models.CharField(max_length=64)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_data_asset_relations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "data_asset_relation"
+        ordering = ["source_asset_id", "relation_type", "target_asset_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_asset", "target_asset", "relation_type"],
+                name="uniq_data_asset_relation",
+            ),
+            models.CheckConstraint(
+                check=~Q(source_asset=models.F("target_asset")),
+                name="asset_relation_no_self",
+            ),
+            models.CheckConstraint(check=~Q(relation_type=""), name="asset_relation_type_nonempty"),
+            models.CheckConstraint(
+                check=~Q(relation_rule_version=""),
+                name="asset_relation_ver_nonempty",
+            ),
+            models.CheckConstraint(
+                check=~Q(relation_rule_digest=""),
+                name="asset_relation_hash_nonempty",
+            ),
+        ]
+
+
+class AssetContextLink(models.Model):
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.CASCADE,
+        related_name="context_links",
+    )
+    context = models.ForeignKey(
+        "ContextEntity",
+        on_delete=models.CASCADE,
+        related_name="asset_links",
+    )
+    relation_type = models.CharField(max_length=100)
+    relation_rule_version = models.CharField(max_length=50)
+    relation_rule_digest = models.CharField(max_length=64)
+    position = models.PositiveIntegerField(default=0)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_asset_context_links",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "asset_context_link"
+        ordering = ["asset_id", "relation_type", "position", "context_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "context", "relation_type"],
+                name="uniq_asset_context_relation",
+            ),
+            models.UniqueConstraint(
+                fields=["asset", "relation_type", "position"],
+                name="uniq_asset_context_position",
+            ),
+            models.CheckConstraint(check=Q(position__gte=0), name="asset_context_position_gte_0"),
+            models.CheckConstraint(check=~Q(relation_type=""), name="asset_context_type_nonempty"),
+            models.CheckConstraint(
+                check=~Q(relation_rule_version=""),
+                name="asset_context_ver_nonempty",
+            ),
+            models.CheckConstraint(
+                check=~Q(relation_rule_digest=""),
+                name="asset_context_hash_nonempty",
+            ),
+        ]
+
+
+class ContextRelation(models.Model):
+    source_context = models.ForeignKey(
+        "ContextEntity",
+        on_delete=models.CASCADE,
+        related_name="outgoing_context_relations",
+    )
+    target_context = models.ForeignKey(
+        "ContextEntity",
+        on_delete=models.CASCADE,
+        related_name="incoming_context_relations",
+    )
+    relation_type = models.CharField(max_length=100)
+    relation_rule_version = models.CharField(max_length=50)
+    relation_rule_digest = models.CharField(max_length=64)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_context_relations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "context_relation"
+        ordering = ["source_context_id", "relation_type", "target_context_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_context", "target_context", "relation_type"],
+                name="uniq_context_relation",
+            ),
+            models.CheckConstraint(
+                check=~Q(source_context=models.F("target_context")),
+                name="context_relation_no_self",
+            ),
+            models.CheckConstraint(check=~Q(relation_type=""), name="context_relation_type_nonempty"),
+            models.CheckConstraint(
+                check=~Q(relation_rule_version=""),
+                name="context_relation_ver_nonempty",
+            ),
+            models.CheckConstraint(
+                check=~Q(relation_rule_digest=""),
+                name="context_relation_hash_nonempty",
+            ),
+        ]
+
+
+class ExternalIdentifier(models.Model):
+    namespace_key = models.CharField(max_length=100)
+    namespace_version = models.CharField(max_length=50)
+    namespace_digest = models.CharField(max_length=64)
+    normalized_value = models.CharField(max_length=255)
+    display_value = models.CharField(max_length=255)
+    project = models.ForeignKey(
+        "Project",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="external_identifiers",
+    )
+    asset = models.ForeignKey(
+        "DataAsset",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="external_identifiers",
+    )
+    context = models.ForeignKey(
+        "ContextEntity",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="external_identifiers",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_external_identifiers",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "external_identifier"
+        ordering = ["namespace_key", "normalized_value"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["namespace_key", "normalized_value"],
+                name="uniq_external_identifier",
+            ),
+            models.CheckConstraint(
+                check=(
+                    (Q(project__isnull=False) & Q(asset__isnull=True) & Q(context__isnull=True))
+                    | (Q(project__isnull=True) & Q(asset__isnull=False) & Q(context__isnull=True))
+                    | (Q(project__isnull=True) & Q(asset__isnull=True) & Q(context__isnull=False))
+                ),
+                name="external_identifier_one_target",
+            ),
+            models.CheckConstraint(check=~Q(namespace_key=""), name="external_namespace_nonempty"),
+            models.CheckConstraint(check=~Q(namespace_version=""), name="external_version_nonempty"),
+            models.CheckConstraint(check=~Q(namespace_digest=""), name="external_digest_nonempty"),
+            models.CheckConstraint(check=~Q(normalized_value=""), name="external_value_nonempty"),
+            models.CheckConstraint(check=~Q(display_value=""), name="external_display_nonempty"),
+        ]
+
+
 class Assembly(models.Model):
     accession = models.ForeignKey(
         'Accession',
@@ -885,6 +1135,16 @@ class DataFile(models.Model):
         (PUBLICATION_RELEASED, 'Released'),
         (PUBLICATION_WITHDRAWN, 'Withdrawn'),
     ]
+    AVAILABILITY_AVAILABLE = 'available'
+    AVAILABILITY_QUARANTINED = 'quarantined'
+    AVAILABILITY_BLOCKED = 'blocked'
+    AVAILABILITY_MISSING = 'missing'
+    AVAILABILITY_STATUS_CHOICES = [
+        (AVAILABILITY_AVAILABLE, 'Available'),
+        (AVAILABILITY_QUARANTINED, 'Quarantined'),
+        (AVAILABILITY_BLOCKED, 'Blocked'),
+        (AVAILABILITY_MISSING, 'Missing'),
+    ]
 
     file_code = models.CharField(max_length=100, unique=True, db_index=True)
     dataset = models.ForeignKey(
@@ -908,6 +1168,12 @@ class DataFile(models.Model):
     md5 = models.CharField(max_length=64, blank=True, null=True)
     sha256 = models.CharField(max_length=64, blank=True, null=True, db_index=True)
     is_current = models.BooleanField(default=True)
+    availability_status = models.CharField(
+        max_length=20,
+        choices=AVAILABILITY_STATUS_CHOICES,
+        default=AVAILABILITY_BLOCKED,
+        db_index=True,
+    )
     access_level = models.CharField(
         max_length=20,
         choices=ACCESS_LEVEL_CHOICES,
@@ -935,6 +1201,19 @@ class DataFile(models.Model):
     class Meta:
         db_table = 'data_file'
         ordering = ['file_code']
+        constraints = [
+            models.CheckConstraint(
+                check=Q(
+                    availability_status__in=[
+                        'available',
+                        'quarantined',
+                        'blocked',
+                        'missing',
+                    ]
+                ),
+                name='datafile_valid_availability',
+            ),
+        ]
 
     def __str__(self):
         return self.file_name
