@@ -23,7 +23,7 @@ supersedes: null
 | DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；迁移实施段落已被 ADR-004 替代，固定专业实体关系目标已被 ADR-005 替代 |
 | DataAsset 通用上下文、外部标识与 Project 授权 | `docs/adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md` | active；阶段一开发与 CI 已于 2026-11-27 收口，阶段二至四、删除 migration 和生产验收未完成 |
 | ADR-005 第一阶段新核心基础实施 | `docs/architecture/GeneData_ADR005_阶段一新核心基础实施方案.md` | reference；阶段一开发与 CI 已完成，未发生业务入口切换、生产部署或旧表删除 |
-| ADR-005 第二阶段权限与保留能力切换 | `docs/architecture/GeneData_ADR005_阶段二权限与保留能力切换实施方案.md` | active；P0 已冻结，Gate A 已提交、推送且 CI 通过；Gate B 代码提交 `6d2a46a` 已推送，本地回归通过，待远程 CI；未授权生产部署或旧表删除 |
+| ADR-005 第二阶段权限与保留能力切换 | `docs/architecture/GeneData_ADR005_阶段二权限与保留能力切换实施方案.md` | active；P0 已冻结；Gate A、Gate B 均已提交、推送且 CI 通过；Gate C 已获准进入、尚未完成；未授权生产部署或旧表删除 |
 | ADR-005 第二阶段 P0 调用面处置矩阵 | `docs/audits/GeneData_ADR005_阶段二P0调用面处置矩阵_20261127.md` | active；基于 commit `1de5530`，规定阶段二各能力入口的唯一去向 |
 | Dataset 到 DataAsset 代码审计 | `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md` | reference |
 | ADR-004 G4 代码适用性与调用面审计 | `docs/audits/GeneData_ADR004_G4代码适用性与调用面审计_20261126.md` | reference；本地审计交付物完成，G2 隔离恢复和 G3 仍未验收，不授权删除或实施 |

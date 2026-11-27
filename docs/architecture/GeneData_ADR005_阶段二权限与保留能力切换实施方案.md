@@ -255,7 +255,7 @@ Gate B 已基于 commit `fba3c776d81486e43c9844ba97bdeba133fac8ef` 在本地完�
 - 13 项 Gate B 针对性测试通过；Gate A、Gate B、旧 DataFile 授权和旧文件 API 相关 52 项回归通过；旧外部文件 API、完整性与数据操作相关 23 项回归通过；完整 `files` 测试 581 项通过、2 项按环境跳过；
 - `manage.py check` 通过，`makemigrations --check --dry-run files` 确认无 schema 变化。
 
-Gate B 代码与本地验收记录已通过独立提交 `6d2a46a` 推送到远程分支；该提交对应的远程 CI 尚未手动运行。因此当前状态是“本地实施、独立评审、修复、回归和代码交付完成，待远程 CI”，不是生产完成。旧正式 API、前端和 JBrowse 仍未切换。
+Gate B 代码与本地验收记录已通过独立提交 `6d2a46a` 推送到远程分支，状态记录提交为 `970ae49`。GitHub Actions `GeneData CI #49` 已在提交 `970ae49` 上成功完成，Django checks and tests、Frontend behavior and build 均通过。因此 Gate B 的本地实施、独立评审、修复、提交、推送和远程 CI 已完成；这仍不是生产完成，旧正式 API、前端和 JBrowse 尚未切换。
 
 ### 8.5 独立评审与修复记录（2026-11-27）
 
