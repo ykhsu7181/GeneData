@@ -1,6 +1,7 @@
 """Fail-closed read authorization for the ADR-005 new warehouse core."""
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 from django.db.models import Q
 
@@ -9,11 +10,16 @@ from files.models import (
     AssetFileMembership,
     ContextEntity,
     DataAsset,
+    DataFile,
     ProjectMembership,
 )
 from files.services.data_asset_registry_service import (
     DataAssetRegistryError,
     load_data_asset_registry,
+)
+from files.services.protected_asset_service import (
+    build_protected_file_response,
+    resolve_protected_datafile_path,
 )
 
 
@@ -58,6 +64,13 @@ class ContextAccessProjection:
     reason: str
     metadata: dict = field(default_factory=dict)
     full: bool = False
+
+
+@dataclass(frozen=True)
+class DataAssetFileAccessDecision:
+    allowed: bool
+    reason: str
+    membership: Optional[AssetFileMembership] = None
 
 
 def resolve_data_asset_access(asset, *, user=None):
@@ -229,17 +242,143 @@ def resolve_data_asset_relation_access(relation, *, user=None):
     return _allow("relation_endpoints_authorized")
 
 
-def resolve_data_asset_file_access(asset, data_file, *, user=None):
-    """Authorize an explicit asset membership; Gate B adds physical file gates."""
+def filter_visible_asset_file_memberships(queryset, *, user=None):
+    """Filter memberships at the database boundary using DataAsset visibility."""
+    visible_assets = filter_visible_data_assets(DataAsset.objects.all(), user=user)
+    return queryset.filter(asset__in=visible_assets).distinct()
+
+
+def resolve_data_asset_file_access(asset, data_file, *, user=None, registry=None):
+    """Authorize one explicit membership and its versioned Profile file role."""
     asset_decision = resolve_data_asset_access(asset, user=user)
     if not asset_decision.allowed:
-        return _deny("asset_not_visible")
-    if not AssetFileMembership.objects.filter(
+        return _deny_file("asset_not_visible")
+    membership = AssetFileMembership.objects.filter(
         asset=asset,
         data_file=data_file,
-    ).exists():
-        return _deny("file_not_asset_member")
-    return _allow("asset_file_membership_authorized")
+    ).first()
+    if membership is None:
+        return _deny_file("file_not_asset_member")
+
+    try:
+        registry = registry or load_data_asset_registry()
+        profile = registry.resolve_exact_asset_profile(
+            asset.data_type_key,
+            asset.profile_key,
+            asset.schema_version,
+            asset.schema_digest,
+        )
+    except DataAssetRegistryError:
+        return _deny_file("asset_profile_unknown")
+    if membership.file_role not in profile.file_role_rules:
+        return _deny_file("file_role_not_allowed")
+    return DataAssetFileAccessDecision(
+        allowed=True,
+        reason="asset_file_membership_authorized",
+        membership=membership,
+    )
+
+
+def resolve_data_asset_file_content_access(
+    asset,
+    data_file,
+    *,
+    user=None,
+    registry=None,
+    roots=None,
+):
+    """Apply the single new-warehouse content gate after membership access."""
+    decision = resolve_data_asset_file_access(
+        asset,
+        data_file,
+        user=user,
+        registry=registry,
+    )
+    if not decision.allowed:
+        return decision
+    if not data_file.is_current:
+        return _deny_file("file_not_current")
+    if data_file.availability_status != DataFile.AVAILABILITY_AVAILABLE:
+        return _deny_file("file_not_available")
+    if data_file.content_version is None:
+        return _deny_file("file_checksum_unverified")
+
+    location = resolve_protected_datafile_path(data_file, roots=roots)
+    if not location.allowed:
+        return _deny_file(location.reason)
+    return DataAssetFileAccessDecision(
+        allowed=True,
+        reason="asset_file_content_authorized",
+        membership=decision.membership,
+    )
+
+
+def resolve_file_code_content_access(
+    file_code,
+    *,
+    user=None,
+    asset_code=None,
+    registry=None,
+    roots=None,
+):
+    """Resolve a file code only through one visible, explicit membership."""
+    data_file = DataFile.objects.filter(file_code=file_code).first()
+    if data_file is None:
+        return _deny_file("file_not_available"), None
+
+    memberships = filter_visible_asset_file_memberships(
+        AssetFileMembership.objects.filter(data_file=data_file).select_related("asset"),
+        user=user,
+    )
+    if asset_code is not None:
+        memberships = memberships.filter(asset__asset_code=asset_code)
+    candidates = list(memberships[:2])
+    if not candidates:
+        return _deny_file("file_not_available"), None
+    if asset_code is None and len(candidates) > 1:
+        return _deny_file("asset_selection_required"), None
+
+    asset = candidates[0].asset
+    decision = resolve_data_asset_file_content_access(
+        asset,
+        data_file,
+        user=user,
+        registry=registry,
+        roots=roots,
+    )
+    if not decision.allowed:
+        return decision, None
+    return decision, data_file
+
+
+def build_data_asset_file_response(
+    asset,
+    data_file,
+    *,
+    user=None,
+    registry=None,
+    roots=None,
+    disposition="attachment",
+):
+    """Authorize and build a checksum-free protected response for a new asset."""
+    decision = resolve_data_asset_file_content_access(
+        asset,
+        data_file,
+        user=user,
+        registry=registry,
+        roots=roots,
+    )
+    if not decision.allowed:
+        return decision, None
+    response = build_protected_file_response(
+        data_file,
+        roots=roots,
+        disposition=disposition,
+        include_etag=False,
+    )
+    if response is None:
+        return _deny_file("file_missing"), None
+    return decision, response
 
 
 def _project_role(project_id, user_id):
@@ -270,3 +409,10 @@ def _deny(reason):
 
 def _deny_context(reason):
     return ContextAccessProjection(allowed=False, reason=reason)
+
+
+def _deny_file(reason):
+    return DataAssetFileAccessDecision(
+        allowed=False,
+        reason=reason,
+    )

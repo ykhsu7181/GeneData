@@ -1,15 +1,82 @@
 import mimetypes
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.utils.http import http_date
 
-from files.services.datafile_access_service import resolve_protected_datafile_path
+
+@dataclass(frozen=True)
+class ProtectedFileLocation:
+    allowed: bool
+    reason: str
+    root_name: str = ""
+    resolved_path: str = ""
+    internal_uri: str = ""
 
 
-def build_protected_file_response(data_file, *, roots=None, disposition="attachment"):
+def resolve_protected_datafile_path(data_file, *, roots=None):
+    """Map a DataFile to an internal URI without root or symlink escape."""
+    if not data_file.file_path:
+        return ProtectedFileLocation(False, "file_path_missing")
+
+    try:
+        candidate = Path(data_file.file_path).resolve(strict=True)
+    except (OSError, RuntimeError):
+        return ProtectedFileLocation(False, "file_missing")
+    if not candidate.is_file():
+        return ProtectedFileLocation(False, "not_a_file")
+
+    configured_roots = roots if roots is not None else getattr(
+        settings, "GENEDATA_PROTECTED_FILE_ROOTS", {}
+    )
+    normalized_roots = []
+    for root_name, root_config in configured_roots.items():
+        try:
+            root = Path(root_config["path"]).resolve(strict=True)
+        except (KeyError, TypeError, OSError, RuntimeError, ValueError):
+            continue
+        if root.is_dir():
+            normalized_roots.append((root_name, root_config, root))
+
+    for root_name, root_config, root in sorted(
+        normalized_roots,
+        key=lambda item: len(item[2].parts),
+        reverse=True,
+    ):
+        try:
+            relative_path = candidate.relative_to(root)
+        except ValueError:
+            continue
+
+        internal_prefix = str(root_config.get("internal_uri") or "").strip()
+        if not internal_prefix.startswith("/"):
+            continue
+        internal_uri = (
+            f"{internal_prefix.rstrip('/')}/"
+            f"{quote(relative_path.as_posix(), safe='/')}"
+        )
+        return ProtectedFileLocation(
+            allowed=True,
+            reason="protected_root_match",
+            root_name=str(root_name),
+            resolved_path=str(candidate),
+            internal_uri=internal_uri,
+        )
+
+    return ProtectedFileLocation(False, "outside_protected_roots")
+
+
+def build_protected_file_response(
+    data_file,
+    *,
+    roots=None,
+    disposition="attachment",
+    include_etag=True,
+):
     """Build an authorization-free X-Accel response after callers grant access."""
     location = resolve_protected_datafile_path(data_file, roots=roots)
     if not location.allowed:
@@ -26,7 +93,7 @@ def build_protected_file_response(data_file, *, roots=None, disposition="attachm
     response["Last-Modified"] = http_date(stat.st_mtime)
     response["Accept-Ranges"] = "bytes"
     response["X-Content-Type-Options"] = "nosniff"
-    if data_file.content_version:
+    if include_etag and data_file.content_version:
         response["ETag"] = f'"sha256-{data_file.sha256.lower()}"'
     return response
 

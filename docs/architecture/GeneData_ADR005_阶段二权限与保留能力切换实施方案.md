@@ -243,6 +243,32 @@ P0 已基于 commit `1de5530a3328b4248512a09b24241c41c87024a6` 形成活动处�
 - 物理阻断可以立即拒绝内容访问且不删除资产关系或审计事实；
 - Gate B 独立评审、提交并推送。
 
+### 8.4 本地实施记录（2026-11-27）
+
+Gate B 已基于 commit `fba3c776d81486e43c9844ba97bdeba133fac8ef` 在本地完成以下范围：
+
+- 原地扩展 `data_asset_access_service.py`，以可见 DataAsset、明确 AssetFileMembership、精确 Profile 文件角色和 DataFile 物理状态作为新仓文件读取的唯一授权链；
+- 增加直接 file code 的零条、一条和多条可见 membership 解析；多条可见 membership 必须显式给出 asset code；
+- 只有 `available`、`is_current=True`、已登记格式有效的 SHA-256 且物理路径位于允许根目录内的文件可以进入受控交付；内容请求不重复计算整文件 SHA-256；
+- 将允许根目录、规范化路径和防符号链接逃逸能力收敛到与旧 Dataset 授权解耦的受控交付 service；旧入口继续通过兼容导入使用原行为，没有调用新仓授权后 fallback；
+- 新仓受控响应不返回绝对路径或 checksum，继续由 `X-Accel-Redirect` 交付并保留 `Accept-Ranges` 等既有响应头；
+- 13 项 Gate B 针对性测试通过；Gate A、Gate B、旧 DataFile 授权和旧文件 API 相关 52 项回归通过；旧外部文件 API、完整性与数据操作相关 23 项回归通过；完整 `files` 测试 581 项通过、2 项按环境跳过；
+- `manage.py check` 通过，`makemigrations --check --dry-run files` 确认无 schema 变化。
+
+Gate B 尚未独立提交、推送或运行该提交对应的远程 CI，因此当前状态是“本地实施、独立评审和修复后回归通过，待独立交付验证”，不是生产完成。旧正式 API、前端和 JBrowse 仍未切换。
+
+### 8.5 独立评审与修复记录（2026-11-27）
+
+独立评审覆盖授权语义、拒绝路径的信息最小化、受控交付路径绑定、旧入口兼容和测试边界。评审发现并修复：
+
+1. 直接 file code 已解析到可见 membership、但随后被物理状态拒绝时，原实现仍向调用者返回 `DataFile`；现已改为所有拒绝一律返回空文件结果；
+2. 原拒绝决定可能携带 membership 或解析后的服务器绝对路径；现已改为拒绝决定只保留 `allowed=False` 和稳定 reason code；
+3. 受控响应构造器原先允许调用者传入预解析 location，可能使授权对象与实际交付路径绑定错误；现已取消该参数，并在构造响应时根据同一 `DataFile` 重新执行允许根目录和路径逃逸检查。
+
+修复后未发现新仓路径读取 Dataset、FileRelation、旧 Token 或 DataFile 旧发布字段，也未发现响应暴露绝对路径或 checksum。新增拒绝路径回归测试，并完成 52 项针对性回归及 581 项完整 `files` 测试。
+
+本地测试只能验证 Django 生成的 `X-Accel-Redirect`、`Accept-Ranges` 等响应头和路径解析逻辑；真实 Nginx 的 HEAD、Range、内部 location 和符号链接策略仍属于部署及生产验收，当前未执行、不得描述为已完成。
+
 ## 9. Gate C：JBrowse 与索引切换
 
 ### 9.1 能力契约
