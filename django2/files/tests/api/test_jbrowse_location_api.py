@@ -141,7 +141,7 @@ class JBrowseLocationApiTestCase(TestCase):
             },
         )
 
-    def test_one_click_workflow_contract_from_query_through_browser_assets(self):
+    def test_legacy_config_does_not_bypass_dataasset_browser_authorization(self):
         status_url = f"/gd/api/files/assemblies/{self.assembly.id}/jbrowse-status/"
         selection = {"annotation_id": self.annotation.id}
 
@@ -191,10 +191,7 @@ class JBrowseLocationApiTestCase(TestCase):
         for asset_uri in asset_uris:
             with self.subTest(asset_uri=asset_uri):
                 asset_response = self.client.get(asset_uri, HTTP_RANGE="bytes=0-0")
-                self.assertEqual(asset_response.status_code, 200)
-                self.assertEqual(asset_response["Accept-Ranges"], "bytes")
-                self.assertTrue(asset_response["X-Accel-Redirect"].startswith("/_protected_"))
-                self.assertEqual(asset_response.content, b"")
+                self.assertEqual(asset_response.status_code, 404)
 
     def test_annotation_query_includes_feature_id(self):
         response = self.client.get(

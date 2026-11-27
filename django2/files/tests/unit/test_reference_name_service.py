@@ -3,7 +3,6 @@ import os
 import tempfile
 from pathlib import Path
 
-from django.core.management import call_command
 from django.test import TestCase, override_settings
 
 from files.models import Accession, Assembly, DataFile, FileRelation
@@ -98,19 +97,3 @@ class ReferenceNameServiceTestCase(TestCase):
 
         with self.assertRaisesRegex(ReferenceNameError, "FAI changed"):
             load_current_refname_mapping(self.assembly, self.genome, self.fai)
-
-    def test_single_assembly_command_supports_dry_run_and_apply(self):
-        call_command(
-            "backfill_jbrowse_refname_aliases",
-            assembly_id=self.assembly.id,
-            dry_run=True,
-        )
-        self.assertFalse(FileRelation.objects.filter(file_role=REFNAME_MAPPING_ROLE).exists())
-
-        call_command(
-            "backfill_jbrowse_refname_aliases",
-            assembly_id=self.assembly.id,
-            apply=True,
-            output_dir=str(self.root / "derived"),
-        )
-        self.assertTrue(FileRelation.objects.filter(file_role=REFNAME_MAPPING_ROLE).exists())

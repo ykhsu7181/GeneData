@@ -310,6 +310,35 @@ JBrowse 不根据 metadata 开关或文件扩展名猜测能力。第一批能�
 - 新 JBrowse/index service 不导入旧 Assembly、Annotation 或 FileRelation；
 - Gate C 独立评审、提交并推送。
 
+### 9.5 Gate C0 model/migration 评审结论（2026-11-27）
+
+Gate C 编码前对 `AnnotationFeatureIndex` 的过渡形状作如下冻结：
+
+- 在现有表增加可空、唯一的 `annotation_asset` 外键，目标为 Annotation DataAsset，删除 DataAsset 时级联删除其派生索引；不创建第二张索引表；
+- 旧 `annotation` 一对一外键改为可空，只继续服务 legacy 行；
+- 数据库检查约束保证每行必须且只能指向 `annotation` 或 `annotation_asset` 其中一个，禁止同时为空或同时存在；
+- migration 只做 additive schema 变化，不扫描、不回填旧生产数据；现有旧行因已有 `annotation` 可直接满足约束；
+- Gate C 新构建与读取路径只使用 `annotation_asset`，旧函数只使用 `annotation`，两条路径不互相 fallback；
+- Profile family、`annotation_gff` 文件角色、`uses_reference`、状态、可见性和文件物理状态由 service 在每次使用时校验，不能仅依赖外键；
+- 阶段三在旧 JBrowse/Annotation 入口退出并确认无 legacy 索引调用后，另行审批删除旧 `annotation` 外键；历史 migration 保留。
+
+该变更不改变正式 URL 或前端。回滚 schema 的前提是尚未写入 `annotation_asset` 行；一旦新索引存在，回滚代码前必须先停止新路径并保留或重建派生索引，不得静默删除科研资产、DataFile 或关系事实。
+
+### 9.6 Gate C0-C4 本地实施与最终独立评审记录（2026-11-27）
+
+Gate C 的代码层 C0-C4 已在本地完成并通过本轮评审：
+
+- C0 新增正向 migration `0032`，按 9.5 的冻结形状扩展现有 `AnnotationFeatureIndex`；没有数据 migration、旧数据扫描或旧表删除；
+- C1 将 AnnotationFeatureIndex 的通用持久化和 stale 校验收敛到中性核心；旧 Annotation/FileRelation 适配器与新 Annotation DataAsset 适配器分离。新适配器只读取 `AssetFileMembership(annotation_gff)`，不导入旧 Assembly、Annotation 或 FileRelation，也没有新旧 fallback；
+- C2 新增 DataAsset-only JBrowse 能力解析：Annotation 必须精确匹配 `genome_annotation`，恰好以一条 `uses_reference` 指向已 released 的 `reference_genome`，跨 Project 目标必须为 public + released，并分别授权两个资产和实际使用的每个 DataFile；
+- C3 新增 DataAsset-only config/status/location、FAI/TBI/AnnotationFeatureIndex/refName 构建能力；`build_fasta_indexes`、`build_annotation_feature_indexes`、`build_jbrowse_indexes` 和 `backfill_jbrowse_refname_aliases` 已改为从 Profile、AssetFileMembership 与 `uses_reference` 选择输入，不读取 FileRelation。FAI/TBI 只通过受控维护 service 登记为原资产的辅助成员：目标 Project 的 owner/manager 才能写入，资产必须为 draft 或 released，角色必须由精确 Profile 声明为最大基数一的 auxiliary；公开可读、viewer 或非成员不能据此获得写权限；
+- 生成文件使用稳定的确定性 `file_code`，既有路径属于其他 DataFile 或既有 code 指向其他路径时失败关闭，不再按路径覆盖 DataFile 身份；输出目录必须位于 `GENEDATA_DERIVED_DATA_DIR` 内并拒绝目标符号链接，数据库登记失败时删除新文件或恢复原文件；refName JSON 是 Annotation 资产下的可重建缓存，不登记为 DataFile；未 bgzip 的 Annotation GFF 明确拒绝，不能暗中替换核心文件；
+- C4 保留现有 `browser-assets/<file_id>/` 受控交付 URL，但要求显式 `asset_code`，只允许 `reference_genome` 的 `genome_fasta/fasta_index` 和 `genome_annotation` 的 `annotation_gff/tabix_index`，并逐文件复用 Gate B 授权及物理路径检查；该路由不能退化为通用下载 API；
+- 旧 Assembly/Annotation config/status/location URL 仍为 legacy，没有添加 DataAsset fallback。其 FileRelation 生成的旧 browser URL 不再能绕过新资产授权；正式新 URL 与前端接入仍属于阶段四，因此 Gate C 代码不得单独部署到生产；
+- 首轮独立交付评审发现并阻断了写权限、released 资产直接写成员、DataFile 身份覆盖、输出根和文件补偿四类问题；修复后新增 owner/manager、viewer、Profile 角色、状态、身份冲突、目录越界和登记失败恢复回归。Gate C 目标回归 60 项通过；完整 `files` 测试 600 项通过、2 项按环境跳过；`manage.py check` 通过，`makemigrations --check --dry-run files` 无漂移，`git diff --check` 无空白错误。最终独立评审未再发现阻断交付的问题。
+
+Gate C 尚未完成独立提交、推送和远程 CI，也未执行生产 migration、部署、真实 Nginx HEAD/Range 验收或真实数据验收。因此当前状态是“本地代码实施与评审通过，待独立交付验证”，不是生产完成。
+
 ## 10. Gate D：新仓导入、内部查询与阶段二收口
 
 ### 10.1 导入边界

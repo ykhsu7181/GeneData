@@ -6,8 +6,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from files.models import Annotation, DataFile, FileRelation
-from files.services.assembly_visibility import visible_assembly_queryset
+from files.services.data_asset_access_service import build_data_asset_file_response
+from files.services.jbrowse_asset_service import (
+    JBrowseAssetError,
+    resolve_jbrowse_browser_file,
+)
 from files.services.jbrowse_config_service import (
     JBrowseAssemblyNotFound,
     get_jbrowse_config,
@@ -17,16 +20,6 @@ from files.services.jbrowse_location_service import (
     JBrowseLocationError,
     resolve_jbrowse_location,
 )
-from files.services.protected_asset_service import build_protected_file_response
-
-
-ROLE_SUFFIXES = {
-    "genome": (".fa", ".fasta", ".fna"),
-    "genome_fasta": (".fa", ".fasta", ".fna"),
-    "genome_index": (".fai",),
-    "jbrowse_annotation_gff3": (".gff.gz", ".gff3.gz"),
-    "jbrowse_annotation_tabix": (".tbi",),
-}
 
 
 @api_view(["GET"])
@@ -82,64 +75,28 @@ def jbrowse_location(request, assembly_id, annotation_id, feature_id):
 @api_view(["GET", "HEAD"])
 @permission_classes([AllowAny])
 def browser_asset(request, file_id):
-    data_file = DataFile.objects.filter(id=file_id, is_current=True).first()
-    if data_file is None:
+    asset_code = request.query_params.get("asset_code") or ""
+    if not asset_code:
         return _not_found()
-
-    relation = _visible_jbrowse_relation(data_file)
-    if relation is None:
+    try:
+        asset, data_file = resolve_jbrowse_browser_file(
+            asset_code,
+            file_id,
+            user=request.user,
+            roots=_jbrowse_protected_roots(),
+        )
+    except JBrowseAssetError:
         return _not_found()
-
-    response = build_protected_file_response(
+    decision, response = build_data_asset_file_response(
+        asset,
         data_file,
+        user=request.user,
         roots=_jbrowse_protected_roots(),
         disposition="inline",
     )
-    if response is None:
+    if not decision.allowed or response is None:
         return _not_found()
     return response
-
-
-def _visible_jbrowse_relation(data_file):
-    relations = list(
-        FileRelation.objects.filter(
-            file=data_file,
-            file_role__in=ROLE_SUFFIXES,
-        ).order_by("id")
-    )
-    if not relations:
-        return None
-
-    visible_assembly_ids = set(
-        visible_assembly_queryset().values_list("id", flat=True)
-    )
-    annotation_ids = []
-    for relation in relations:
-        if relation.related_type == "assembly":
-            related_id = _integer_id(relation.related_id)
-            if related_id in visible_assembly_ids and _role_matches_path(
-                relation.file_role, data_file.file_path
-            ):
-                return relation
-        elif relation.related_type == "annotation":
-            related_id = _integer_id(relation.related_id)
-            if related_id is not None:
-                annotation_ids.append(related_id)
-
-    visible_annotation_ids = set(
-        Annotation.objects.filter(
-            id__in=annotation_ids,
-            assembly_id__in=visible_assembly_ids,
-        ).values_list("id", flat=True)
-    )
-    for relation in relations:
-        if (
-            relation.related_type == "annotation"
-            and _integer_id(relation.related_id) in visible_annotation_ids
-            and _role_matches_path(relation.file_role, data_file.file_path)
-        ):
-            return relation
-    return None
 
 
 def _jbrowse_protected_roots():
@@ -161,11 +118,6 @@ def _jbrowse_protected_roots():
             ),
         },
     }
-
-
-def _role_matches_path(role, file_path):
-    normalized = str(file_path or "").lower()
-    return any(normalized.endswith(suffix) for suffix in ROLE_SUFFIXES.get(role, ()))
 
 
 def _integer_id(value):

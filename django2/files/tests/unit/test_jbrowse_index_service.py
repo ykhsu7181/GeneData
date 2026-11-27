@@ -1,12 +1,8 @@
-import json
 import os
 import tempfile
-from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
-from django.core.management import call_command
-from django.core.management.base import CommandError
 from django.test import TestCase
 
 from files.models import Accession, Annotation, Assembly, DataFile, FileRelation
@@ -211,27 +207,6 @@ class JBrowseIndexDryRunTestCase(TestCase):
 
         self.assertEqual(result["status"], "coordinate_out_of_bounds")
         self.assertEqual(result["out_of_bounds_gff_seqids"], ["chr1"])
-
-    def test_command_outputs_json_and_remains_read_only(self):
-        output_root = os.path.join(self.temporary_directory.name, "command-derived")
-        stdout = StringIO()
-
-        call_command(
-            "build_jbrowse_indexes",
-            assembly_id=self.assembly.id,
-            dry_run=True,
-            output_dir=output_root,
-            stdout=stdout,
-        )
-
-        payload = json.loads(stdout.getvalue())
-        self.assertEqual(payload["status"], "ready_for_build")
-        self.assertFalse(payload["write_performed"])
-        self.assertFalse(os.path.exists(output_root))
-
-    def test_command_requires_explicit_mode(self):
-        with self.assertRaisesRegex(CommandError, "exactly one"):
-            call_command("build_jbrowse_indexes", assembly_id=self.assembly.id)
 
     def test_apply_builds_registers_and_sorts_artifacts(self):
         output_root = os.path.join(self.temporary_directory.name, "apply-derived")

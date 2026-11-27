@@ -1,56 +1,41 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from files.models import FileRelation
-from files.services.fasta_index_service import build_and_link_fasta_index
+from files.management.data_asset_command_support import command_user, profile_assets
+from files.services.jbrowse_asset_build_service import build_reference_fasta_index
 
 
 class Command(BaseCommand):
-    help = 'Build and register .fai sidecar files for current genome FASTA relations.'
+    help = "Build DataAsset-owned FASTA indexes from reference_genome Profiles."
 
     def add_arguments(self, parser):
-        parser.add_argument('--data-file-id', action='append', type=int, dest='data_file_ids')
+        selection = parser.add_mutually_exclusive_group(required=True)
+        selection.add_argument("--asset-code", action="append", dest="asset_codes")
+        selection.add_argument("--all", action="store_true", dest="all_assets")
+        parser.add_argument("--username", required=True)
+        parser.add_argument("--output-root")
 
     def handle(self, *args, **options):
-        queryset = (
-            FileRelation.objects.select_related('file')
-            .filter(file_role__in=('genome_fasta', 'genome'), file__is_current=True)
-            .order_by('id')
+        user = command_user(options["username"])
+        assets, registry = profile_assets(
+            user=user, family="reference_genome", asset_codes=options["asset_codes"]
         )
-        if options['data_file_ids']:
-            queryset = queryset.filter(file_id__in=options['data_file_ids'])
-        relation_groups = {}
-        for relation in queryset:
-            relation_groups.setdefault(relation.file_id, []).append(relation)
+        if options["asset_codes"] and not assets:
+            raise CommandError("No authorized reference_genome DataAsset matched")
         built = failed = 0
-        for relations in relation_groups.values():
-            relation = relations[0]
+        for asset in assets:
             try:
-                index_file, sequence_count = build_and_link_fasta_index(
-                    genome_file=relation.file,
-                    related_type=relation.related_type,
-                    related_id=relation.related_id,
-                    related_code=relation.related_code,
+                index_file, sequence_count = build_reference_fasta_index(
+                    asset,
+                    user=user,
+                    registry=registry,
+                    output_root=options["output_root"],
                 )
-                for extra_relation in relations[1:]:
-                    FileRelation.objects.update_or_create(
-                        file=index_file,
-                        related_type=extra_relation.related_type,
-                        related_id=str(extra_relation.related_id),
-                        file_role='genome_index',
-                        defaults={
-                            'related_code': extra_relation.related_code,
-                            'is_primary': False,
-                            'description': f'Index for genome DataFile {relation.file_id}',
-                        },
-                    )
             except Exception as exc:
                 failed += 1
-                self.stderr.write(f'file={relation.file_id} failed: {exc}')
+                self.stderr.write(f"asset={asset.asset_code} failed: {exc}")
                 continue
             built += 1
             self.stdout.write(
-                f'file={relation.file_id} index={index_file.id} sequences={sequence_count}'
+                f"asset={asset.asset_code} index={index_file.file_code} sequences={sequence_count}"
             )
-        if options['data_file_ids'] and not relation_groups:
-            raise CommandError('No current genome FASTA relation matched --data-file-id')
-        self.stdout.write(self.style.SUCCESS(f'FASTA indexes: built={built} failed={failed}'))
+        self.stdout.write(self.style.SUCCESS(f"FASTA indexes: built={built} failed={failed}"))

@@ -1574,7 +1574,18 @@ class AnnotationFeatureIndex(models.Model):
     ]
 
     annotation = models.OneToOneField(
-        'Annotation', on_delete=models.CASCADE, related_name='feature_index'
+        'Annotation',
+        on_delete=models.CASCADE,
+        related_name='feature_index',
+        blank=True,
+        null=True,
+    )
+    annotation_asset = models.OneToOneField(
+        'DataAsset',
+        on_delete=models.CASCADE,
+        related_name='annotation_feature_index',
+        blank=True,
+        null=True,
     )
     source_file = models.ForeignKey(
         'DataFile', on_delete=models.PROTECT, related_name='annotation_feature_indexes'
@@ -1593,6 +1604,15 @@ class AnnotationFeatureIndex(models.Model):
 
     class Meta:
         db_table = 'annotation_feature_index'
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    Q(annotation__isnull=False, annotation_asset__isnull=True)
+                    | Q(annotation__isnull=True, annotation_asset__isnull=False)
+                ),
+                name='annotation_index_single_target',
+            ),
+        ]
 
 
 class AnnotationFeature(models.Model):
