@@ -2,7 +2,7 @@
 title: GeneData Active Documents
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-27
 supersedes: null
 ---
 
@@ -21,8 +21,10 @@ supersedes: null
 | 通用科研数据仓库总体设计 | `docs/architecture/GeneData_通用科研数据仓库重新定位说明.md` | active；替代原总体设计 |
 | 新仓空库启用与旧系统离线收口 | `docs/adr/ADR-004-greenfield-data-layer-and-legacy-archive.md` | active；旧数据库要求独立备份恢复，`manual_files` 原地保留且不保证恢复；未授权生产操作 |
 | DataAsset 核心载荷与专业上下文边界 | `docs/adr/ADR-003-dataasset-payload-and-context-boundaries.md` | active；迁移实施段落已被 ADR-004 替代，固定专业实体关系目标已被 ADR-005 替代 |
-| DataAsset 通用上下文、外部标识与 Project 授权 | `docs/adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md` | active；批准目标结构和分阶段实施边界，不表示代码、删除 migration 或生产验收完成 |
-| ADR-005 第一阶段新核心基础实施 | `docs/architecture/GeneData_ADR005_阶段一新核心基础实施方案.md` | active；批准 Gate A 至 Gate D 的阶段一实施、测试和独立提交边界，不表示业务入口切换、生产部署或阶段一已经完成 |
+| DataAsset 通用上下文、外部标识与 Project 授权 | `docs/adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md` | active；阶段一开发与 CI 已于 2026-11-27 收口，阶段二至四、删除 migration 和生产验收未完成 |
+| ADR-005 第一阶段新核心基础实施 | `docs/architecture/GeneData_ADR005_阶段一新核心基础实施方案.md` | reference；阶段一开发与 CI 已完成，未发生业务入口切换、生产部署或旧表删除 |
+| ADR-005 第二阶段权限与保留能力切换 | `docs/architecture/GeneData_ADR005_阶段二权限与保留能力切换实施方案.md` | active；P0 已冻结，Gate A 本地实施与评审通过，待独立提交、推送和 CI；未授权生产部署或旧表删除 |
+| ADR-005 第二阶段 P0 调用面处置矩阵 | `docs/audits/GeneData_ADR005_阶段二P0调用面处置矩阵_20261127.md` | active；基于 commit `1de5530`，规定阶段二各能力入口的唯一去向 |
 | Dataset 到 DataAsset 代码审计 | `docs/audits/GeneData_Dataset到DataAsset实施前审计_20261118.md` | reference |
 | ADR-004 G4 代码适用性与调用面审计 | `docs/audits/GeneData_ADR004_G4代码适用性与调用面审计_20261126.md` | reference；本地审计交付物完成，G2 隔离恢复和 G3 仍未验收，不授权删除或实施 |
 | API 使用与接口边界 | `docs/api_pages.md` | active |

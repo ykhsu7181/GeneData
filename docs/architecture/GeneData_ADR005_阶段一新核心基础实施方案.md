@@ -1,16 +1,17 @@
 ---
 title: GeneData ADR-005 第一阶段：新核心基础实施方案
-status: active
+status: reference
 owner: 徐杨珂
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-27
 supersedes: null
+implementation_status: completed
 ---
 
 # GeneData ADR-005 第一阶段：新核心基础实施方案
 
 ## 1. 文档状态与依据
 
-本文把已批准的 [ADR-005](../adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md) 第一阶段拆成可评审、可测试、可独立提交的实施 Gate。本文于 2026-11-26 正式批准为 `active`，是阶段一实施依据；批准本文不表示相关 model、migration、service、生产部署或真实数据验收已经完成。
+本文把已批准的 [ADR-005](../adr/ADR-005-dataasset-context-identifiers-and-project-authorization.md) 第一阶段拆成可评审、可测试、可独立提交的实施 Gate。本文于 2026-11-26 正式批准为实施依据，阶段一于 2026-11-27 完成开发与 CI 收口。本文现转为 `reference` 保存实施边界和验收证据，不再指导阶段二实施；阶段一完成不表示业务入口切换、生产 migration、部署或真实数据验收已经完成。
 
 权威依据按以下顺序执行：
 
@@ -21,6 +22,17 @@ supersedes: null
 5. 当前代码、migration、测试和 CI 所证明的实现事实。
 
 本文只规划 ADR-005 阶段一，不改变阶段二至阶段四的职责。
+
+### 1.1 阶段一收口记录
+
+- Gate A：`b7855ce`；
+- Gate B：`83be363`；
+- Gate C：`0f49b5a`；
+- Gate D0：`6a71fa1`；
+- Gate D1、D2 与收口修复：`1de5530`；
+- 本地 MySQL 8.0 `files` 全量测试：560 项通过、1 项跳过；
+- GitHub Actions：`GeneData CI #46`，commit `1de5530a3328b4248512a09b24241c41c87024a6`，Django 与前端 job 均成功；
+- 未执行：生产 migration、生产部署、旧数据迁移、旧表删除和真实数据验收。
 
 ## 2. 四阶段边界复审结论
 
@@ -43,7 +55,9 @@ ADR-005 当前四阶段划分可以执行，依赖方向和完成标准清楚：
 
 因此不建议再合并四个阶段，也不建议把阶段一拆回多个对外汇报阶段。阶段一内部使用四个 Gate 控制风险即可。
 
-## 3. 当前实现基线
+## 3. 实施前基线（历史）
+
+本节记录阶段一开始时的代码状态，用于解释实施差异；其“尚未实现”表述不代表 2026-11-27 的当前状态。当前实现事实以代码、migration、测试、CI 和第 1.1 节收口记录为准。
 
 ### 3.1 已实现且可复用
 
@@ -636,3 +650,9 @@ ADR-005 第 7 节是最终完成标准，不要求全部在阶段一关闭。按
 5. 再进入 ProjectMembership 的 model/migration 设计。
 
 这样可以先把后续 model 和 service 依赖的规则固定下来，减少反复修改 migration 的风险。
+
+## 16. 阶段一收口结论
+
+2026-11-27 复审确认，阶段一 15 项总体验收标准已经由 model、additive migration、唯一 service、MySQL 约束与并发测试、独立提交和 CI 证据覆盖。阶段一正式批准完成并转为历史实施参考。
+
+阶段一没有改变旧 API、前端、JBrowse、导入和查询入口，没有形成新旧双写或 fallback。`Dataset`、`FileRelation`、四张固定专业关系表及旧专业实体仍是未切换的遗留实现，只能由阶段二先切换保留能力、阶段三逐项批准退出。

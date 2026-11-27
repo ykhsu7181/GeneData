@@ -2,7 +2,7 @@
 title: ADR-005 DataAsset 通用上下文、外部标识与 Project 授权边界
 status: active
 owner: 徐杨珂
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-27
 supersedes: null
 amends:
   - ADR-001 section 3
@@ -19,6 +19,8 @@ Accepted，2026-11-26。
 本文批准新仓目标结构、授权边界和旧结构退出前置条件，不表示相关 model、migration、service、API、前端、删除 migration、生产部署或真实数据验收已经完成。实施仍须按第 6 节拆分为独立阶段，并分别评审、测试和验收。
 
 > **2026-11-26 实施分组修订：** 原 11 个顺序步骤合并为 4 个大阶段，原步骤保留为阶段内部 Gate。该修订只简化项目管理和汇报层级，不改变技术顺序、验收标准、独立提交边界或破坏性删除审批要求。
+
+> **2026-11-27 阶段一收口：** 阶段一新核心基础已经完成本地 MySQL 8.0 验证、独立提交和 GitHub CI #46 验证；这只证明开发代码和 CI 验收完成，不表示业务入口、生产 migration、部署、旧表退出或真实数据验收完成。
 
 ## 1. 背景
 
@@ -683,12 +685,36 @@ ADR-005 实施完成至少需要证明：
 - 在 ADR-003 增加被 ADR-005 修订的说明，不改写历史正文；
 - 修订重新定位说明中的固定专业实体和目标 schema 描述。
 
-批准本文只允许进入第 6 节的分阶段本地实施，不授权跨阶段重写、破坏性生产操作或删除现有活动表。以下 Gate 仍未完成：
+批准本文只允许进入第 6 节的分阶段本地实施，不授权跨阶段重写、破坏性生产操作或删除现有活动表。
+
+### 10.1 阶段一批准记录
+
+阶段一于 2026-11-27 正式完成开发与 CI 收口，证据如下：
+
+- Gate A：`b7855ce`，Registry、状态机和版本化规则基础；
+- Gate B：`83be363`，ProjectMembership 与最后 owner 保护；
+- Gate C：`0f49b5a`，ContextEntity、三类关系、ExternalIdentifier 与 DataFile 物理状态；
+- Gate D0：`6a71fa1`，不可变 CoreAuditEvent；
+- Gate D1、D2 与收口修复：`1de5530`，唯一业务 service、生命周期、授权写入、并发测试和 DataAsset 数据库约束；
+- 本地 MySQL 8.0 `files` 全量测试 560 项通过、1 项跳过；
+- GitHub Actions `GeneData CI #46` 对 commit `1de5530a3328b4248512a09b24241c41c87024a6` 验证成功，Django 与前端两个 job 均通过。
+
+阶段一结束时仍保留 `Dataset`、`FileRelation`、旧专业实体和旧业务入口；没有执行生产 migration、生产部署、旧数据迁移、回填或删表。这些不是阶段一缺陷，而是 ADR-005 已批准的阶段边界。
+
+以下工作仍未完成：
 
 1. ADR-004 G2 隔离恢复和 G3 旧服务离线验收；
-2. Registry、状态机、ProjectMembership、ContextEntity、关系和 ExternalIdentifier 的实施方案与代码；
-3. DataAsset/DataFile 唯一授权路径及真实 MySQL 测试；
-4. JBrowse、索引、API、前端和旧调用切换；
-5. G5 删除附录和逐项正向删除 migration 审批；
-6. G5 空库、G6 最小后端流程、G7 API/前端及独立 Token ADR；
-7. 生产 migration、部署和真实数据验收。
+2. 阶段二的 DataAsset/DataFile 唯一读取授权路径，以及 JBrowse、索引、导入和查询后端能力切换；
+3. 阶段三的旧入口清除、删除附录、逐项正向删除 migration、G5 空库和 G6 最小后端流程；
+4. 阶段四的新 API、前端，以及开始阶段四前单独批准的 Token ADR；
+5. 生产 migration、部署和真实数据验收。
+
+### 10.2 阶段二批准记录
+
+用户于 2026-11-27 正式批准《GeneData ADR-005 第二阶段：权限与保留能力切换实施方案》，并要求先重新核对当前 HEAD 的旧调用入口、形成 P0 处置矩阵，再进入 Gate A。该批准的边界为：
+
+- P0 只冻结调用面事实和后续去向，不删除或静默改义旧入口；
+- Gate A 只建立真实 Django 用户、ProjectMembership、DataAsset、ContextEntity、关系和资产文件 membership 的新仓唯一读取授权；
+- Gate A 不修改正式 API、前端、JBrowse、导入、旧 Token、旧 Dataset/FileRelation 入口或生产环境；
+- Gate B 至 Gate D 必须按阶段二实施方案分别评审和验收；
+- 阶段三删除 migration、阶段四正式 API/前端和任何生产部署仍未授权。
